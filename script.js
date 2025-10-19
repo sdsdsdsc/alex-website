@@ -45,13 +45,23 @@ uploadBtn.addEventListener("click", async () => {
 async function loadGallery() {
   gallery.innerHTML = "";
   const snapshot = await getDocs(collection(db, "posts"));
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    const img = document.createElement("img");
-    img.src = data.imageUrl;
-    img.title = data.message;
-    gallery.appendChild(img);
-  });
+ snapshot.forEach(doc => {
+  const data = doc.data();
+
+  const postDiv = document.createElement("div");
+  postDiv.classList.add("post");
+
+  const img = document.createElement("img");
+  img.src = data.imageUrl;
+
+  const caption = document.createElement("p");
+  caption.textContent = data.message;
+
+  postDiv.appendChild(img);
+  postDiv.appendChild(caption);
+  gallery.appendChild(postDiv);
+});
+
 }
 
 loadGallery();
