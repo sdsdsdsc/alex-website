@@ -33,7 +33,15 @@ uploadBtn.addEventListener("click", async () => {
   await uploadBytes(storageRef, file);
   const url = await getDownloadURL(storageRef);
 
-  await addDoc(collection(db, "posts"), { message: msg, imageUrl: url });
+  import { serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+// ...
+
+await addDoc(collection(db, "posts"), {
+  message: msg,
+  imageUrl: url,
+  createdAt: serverTimestamp()
+});
 
   fileInput.value = "";
   msgInput.value = "";
@@ -45,23 +53,41 @@ uploadBtn.addEventListener("click", async () => {
 async function loadGallery() {
   gallery.innerHTML = "";
   const snapshot = await getDocs(collection(db, "posts"));
- snapshot.forEach(doc => {
-  const data = doc.data();
+  const posts = [];
 
-  const postDiv = document.createElement("div");
-  postDiv.classList.add("post");
+  snapshot.forEach(doc => posts.push(doc.data()));
 
-  const img = document.createElement("img");
-  img.src = data.imageUrl;
+  // Sort posts newest → oldest
+  posts.sort((a, b) => {
+    if (!a.createdAt || !b.createdAt) return 0;
+    return b.createdAt.seconds - a.createdAt.seconds;
+  });
 
-  const caption = document.createElement("p");
-  caption.textContent = data.message;
+  posts.forEach(data => {
+    const postDiv = document.createElement("div");
+    postDiv.classList.add("post");
 
-  postDiv.appendChild(img);
-  postDiv.appendChild(caption);
-  gallery.appendChild(postDiv);
-});
+    const img = document.createElement("img");
+    img.src = data.imageUrl;
 
+    const caption = document.createElement("p");
+    caption.textContent = data.message;
+
+    const time = document.createElement("p");
+    time.classList.add("timestamp");
+
+    if (data.createdAt) {
+      const date = new Date(data.createdAt.seconds * 1000);
+      time.textContent = `Posted on ${date.toDateString()}`;
+    } else {
+      time.textContent = "Posted recently";
+    }
+
+    postDiv.appendChild(img);
+    postDiv.appendChild(caption);
+    postDiv.appendChild(time);
+    gallery.appendChild(postDiv);
+  });
 }
 
 loadGallery();
