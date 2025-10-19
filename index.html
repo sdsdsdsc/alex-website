@@ -8,9 +8,21 @@
   <script type="module" src="script.js" defer></script>
 </head>
 <body>
-  <h1>📸 Alex's Photo Board</h1>
+  <!-- Top Bar -->
+  <header>
+    <h1>📸 Alex's Photo Board</h1>
+  </header>
 
-  <div class="upload-section">
+  <!-- Community Menu -->
+  <div class="menu">
+    <button id="communityBtn">Community ▼</button>
+    <div id="menuContent" class="hidden">
+      <button id="imageUploadBtn">🖼️ Image</button>
+    </div>
+  </div>
+
+  <!-- Hidden Upload Section -->
+  <div class="upload-section hidden" id="uploadSection">
     <input type="file" id="fileInput">
     <input type="text" id="nameInput" placeholder="Your name">
     <input type="text" id="msgInput" placeholder="Leave a message">

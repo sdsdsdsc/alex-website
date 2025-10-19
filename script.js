@@ -32,11 +32,27 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
+// DOM elements
+const communityBtn = document.getElementById("communityBtn");
+const menuContent = document.getElementById("menuContent");
+const imageUploadBtn = document.getElementById("imageUploadBtn");
+const uploadSection = document.getElementById("uploadSection");
+
 const uploadBtn = document.getElementById("uploadBtn");
 const fileInput = document.getElementById("fileInput");
 const nameInput = document.getElementById("nameInput");
 const msgInput = document.getElementById("msgInput");
 const gallery = document.getElementById("gallery");
+
+// Toggle dropdown menu
+communityBtn.addEventListener("click", () => {
+  menuContent.classList.toggle("hidden");
+});
+
+// Show upload section when clicking “Image”
+imageUploadBtn.addEventListener("click", () => {
+  uploadSection.classList.toggle("hidden");
+});
 
 // Upload image + message + name
 uploadBtn.addEventListener("click", async () => {
@@ -106,7 +122,7 @@ async function loadGallery() {
     likeBtn.addEventListener("click", async () => {
       const docRef = doc(db, "posts", data.id);
       await updateDoc(docRef, { likes: increment(1) });
-      loadGallery(); // refresh
+      loadGallery();
     });
 
     const likeCount = document.createElement("p");

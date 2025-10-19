@@ -2,22 +2,78 @@ body {
   font-family: Arial, sans-serif;
   background: #f9f9f9;
   text-align: center;
-  padding: 40px;
+  margin: 0;
   color: #222;
 }
 
+/* Top bar */
+header {
+  background: #1d3557;
+  color: #fff;
+  padding: 15px 0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+/* Community menu */
+.menu {
+  margin-top: 15px;
+}
+
+#communityBtn {
+  background: #457b9d;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#communityBtn:hover {
+  background: #356389;
+}
+
+#menuContent {
+  margin-top: 8px;
+}
+
+#menuContent button {
+  background: #a8dadc;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+#menuContent button:hover {
+  background: #90c9cb;
+}
+
+/* Upload section (hidden by default) */
 .upload-section {
-  margin-bottom: 30px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  padding: 20px;
+  display: inline-block;
+  margin: 20px auto;
 }
 
-h1 {
-  margin-bottom: 10px;
+.hidden {
+  display: none;
 }
 
-h2 {
-  margin-top: 40px;
-}
-
+/* Gallery styling */
 #gallery {
   display: flex;
   flex-wrap: wrap;
