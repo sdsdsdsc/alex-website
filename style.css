@@ -65,3 +65,22 @@ h2 {
   color: #777;
   margin-top: 4px;
 }
+
+.like-btn {
+  background: none;
+  border: none;
+  color: #e63946;
+  font-size: 18px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: transform 0.1s ease;
+}
+
+.like-btn:hover {
+  transform: scale(1.2);
+}
+
+.likes {
+  font-size: 14px;
+  color: #555;
+}

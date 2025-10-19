@@ -5,6 +5,9 @@ import {
   collection, 
   addDoc, 
   getDocs, 
+  doc, 
+  updateDoc, 
+  increment, 
   serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { 
@@ -51,6 +54,7 @@ uploadBtn.addEventListener("click", async () => {
       name: name,
       message: msg,
       imageUrl: url,
+      likes: 0,
       createdAt: serverTimestamp()
     });
 
@@ -71,9 +75,12 @@ async function loadGallery() {
   const snapshot = await getDocs(collection(db, "posts"));
   const posts = [];
 
-  snapshot.forEach(doc => posts.push(doc.data()));
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    posts.push({ id: docSnap.id, ...data });
+  });
 
-  // Sort posts newest → oldest
+  // Sort newest → oldest
   posts.sort((a, b) => {
     if (!a.createdAt || !b.createdAt) return 0;
     return b.createdAt.seconds - a.createdAt.seconds;
@@ -93,6 +100,19 @@ async function loadGallery() {
     author.classList.add("author");
     author.textContent = data.name ? `👤 ${data.name}` : "👤 Anonymous";
 
+    const likeBtn = document.createElement("button");
+    likeBtn.classList.add("like-btn");
+    likeBtn.textContent = "❤️";
+    likeBtn.addEventListener("click", async () => {
+      const docRef = doc(db, "posts", data.id);
+      await updateDoc(docRef, { likes: increment(1) });
+      loadGallery(); // refresh
+    });
+
+    const likeCount = document.createElement("p");
+    likeCount.classList.add("likes");
+    likeCount.textContent = `${data.likes || 0} likes`;
+
     const time = document.createElement("p");
     time.classList.add("timestamp");
 
@@ -106,6 +126,8 @@ async function loadGallery() {
     postDiv.appendChild(img);
     postDiv.appendChild(caption);
     postDiv.appendChild(author);
+    postDiv.appendChild(likeBtn);
+    postDiv.appendChild(likeCount);
     postDiv.appendChild(time);
     gallery.appendChild(postDiv);
   });
