@@ -1,11 +1,22 @@
 // Import Firebase SDKs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  getDocs, 
+  serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { 
+  getStorage, 
+  ref, 
+  uploadBytes, 
+  getDownloadURL 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
-// 🔑 Your Firebase config (paste yours here)
+// 🔑 Your Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
+  apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
   authDomain: "alexs-community-efcd8.firebaseapp.com",
   projectId: "alexs-community-efcd8",
   storageBucket: "alexs-community-efcd8.firebasestorage.app",
@@ -29,24 +40,25 @@ uploadBtn.addEventListener("click", async () => {
   const msg = msgInput.value.trim();
   if (!file || !msg) return alert("Pick a file and type a message!");
 
-  const storageRef = ref(storage, `uploads/${file.name}`);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
+  try {
+    const storageRef = ref(storage, `uploads/${file.name}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
 
-  import { serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    await addDoc(collection(db, "posts"), {
+      message: msg,
+      imageUrl: url,
+      createdAt: serverTimestamp()
+    });
 
-// ...
-
-await addDoc(collection(db, "posts"), {
-  message: msg,
-  imageUrl: url,
-  createdAt: serverTimestamp()
-});
-
-  fileInput.value = "";
-  msgInput.value = "";
-  alert("Uploaded!");
-  loadGallery();
+    fileInput.value = "";
+    msgInput.value = "";
+    alert("Uploaded!");
+    loadGallery();
+  } catch (err) {
+    console.error("Upload error:", err);
+    alert("Something went wrong during upload!");
+  }
 });
 
 // Load gallery
