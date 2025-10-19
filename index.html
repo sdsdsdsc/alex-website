@@ -17,11 +17,12 @@
   <div class="menu">
     <button id="communityBtn">Community ▼</button>
     <div id="menuContent" class="hidden">
-      <button id="imageUploadBtn">🖼️ Image</button>
+      <button id="galleryBtn">🖼️ Gallery</button>
+      <button id="imageUploadBtn">📤 Image</button>
     </div>
   </div>
 
-  <!-- Hidden Upload Section -->
+  <!-- Upload Section -->
   <div class="upload-section hidden" id="uploadSection">
     <input type="file" id="fileInput">
     <input type="text" id="nameInput" placeholder="Your name">
@@ -29,7 +30,10 @@
     <button id="uploadBtn">Upload</button>
   </div>
 
-  <h2>Gallery</h2>
-  <div id="gallery"></div>
+  <!-- Gallery Section -->
+  <div id="gallerySection" class="hidden">
+    <h2>Gallery</h2>
+    <div id="gallery"></div>
+  </div>
 </body>
 </html>

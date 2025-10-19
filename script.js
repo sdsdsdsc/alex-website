@@ -1,23 +1,9 @@
-// Import Firebase SDKs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { 
-  getFirestore, 
-  collection, 
-  addDoc, 
-  getDocs, 
-  doc, 
-  updateDoc, 
-  increment, 
-  serverTimestamp 
+  getFirestore, collection, addDoc, getDocs, doc, updateDoc, increment, serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-import { 
-  getStorage, 
-  ref, 
-  uploadBytes, 
-  getDownloadURL 
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
-// 🔑 Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
   authDomain: "alexs-community-efcd8.firebaseapp.com",
@@ -27,38 +13,45 @@ const firebaseConfig = {
   appId: "1:214395622099:web:44f99a181741caf3117a26"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// DOM
+// DOM elements
 const communityBtn = document.getElementById("communityBtn");
 const menuContent = document.getElementById("menuContent");
+const galleryBtn = document.getElementById("galleryBtn");
 const imageUploadBtn = document.getElementById("imageUploadBtn");
 const uploadSection = document.getElementById("uploadSection");
+const gallerySection = document.getElementById("gallerySection");
 const uploadBtn = document.getElementById("uploadBtn");
 const fileInput = document.getElementById("fileInput");
 const nameInput = document.getElementById("nameInput");
 const msgInput = document.getElementById("msgInput");
 const gallery = document.getElementById("gallery");
 
-// Menu toggle
+// --- MENU LOGIC --- //
 communityBtn.addEventListener("click", () => {
   menuContent.classList.toggle("hidden");
 });
 
-// Show upload form
-imageUploadBtn.addEventListener("click", () => {
-  uploadSection.classList.toggle("hidden");
+galleryBtn.addEventListener("click", () => {
+  gallerySection.classList.toggle("hidden");
+  uploadSection.classList.add("hidden");
+  loadGallery();
 });
 
-// Upload new post
+imageUploadBtn.addEventListener("click", () => {
+  uploadSection.classList.toggle("hidden");
+  gallerySection.classList.add("hidden");
+});
+
+// --- UPLOAD IMAGE --- //
 uploadBtn.addEventListener("click", async () => {
   const file = fileInput.files[0];
   const name = nameInput.value.trim() || "Anonymous";
   const msg = msgInput.value.trim();
-  if (!file || !msg) return alert("Pick a file and type a message!");
+  if (!file || !msg) return alert("Please choose a file and write a message.");
 
   try {
     const storageRef = ref(storage, `uploads/${file.name}`);
@@ -73,18 +66,17 @@ uploadBtn.addEventListener("click", async () => {
       createdAt: serverTimestamp()
     });
 
+    alert("Uploaded successfully!");
     fileInput.value = "";
-    nameInput.value = "";
     msgInput.value = "";
-    alert("Uploaded!");
+    nameInput.value = "";
     loadGallery();
   } catch (err) {
-    console.error(err);
-    alert("Upload failed!");
+    console.error("Upload error:", err);
   }
 });
 
-// Load posts + comments
+// --- LOAD GALLERY --- //
 async function loadGallery() {
   gallery.innerHTML = "";
   const snapshot = await getDocs(collection(db, "posts"));
@@ -128,56 +120,7 @@ async function loadGallery() {
       time.textContent = `Posted on ${date.toDateString()}`;
     }
 
-    // --- Comment section ---
-    const commentSection = document.createElement("div");
-    commentSection.classList.add("comment-section");
-
-    const commentList = document.createElement("div");
-    commentList.classList.add("comment-list");
-
-    // Load comments
-    const commentsSnap = await getDocs(collection(db, "posts", post.id, "comments"));
-    commentsSnap.forEach(c => {
-      const data = c.data();
-      const comment = document.createElement("p");
-      comment.classList.add("comment");
-      comment.textContent = `💬 ${data.name || "Anonymous"}: ${data.text}`;
-      commentList.appendChild(comment);
-    });
-
-    const commentInput = document.createElement("input");
-    commentInput.classList.add("comment-input");
-    commentInput.placeholder = "Write a comment...";
-
-    const commentBtn = document.createElement("button");
-    commentBtn.classList.add("comment-btn");
-    commentBtn.textContent = "Post";
-    commentBtn.addEventListener("click", async () => {
-      const text = commentInput.value.trim();
-      if (!text) return;
-      await addDoc(collection(db, "posts", post.id, "comments"), {
-        text,
-        name: "Anonymous",
-        createdAt: serverTimestamp()
-      });
-      commentInput.value = "";
-      loadGallery();
-    });
-
-    commentSection.appendChild(commentList);
-    commentSection.appendChild(commentInput);
-    commentSection.appendChild(commentBtn);
-
-    // Assemble post
-    postDiv.appendChild(img);
-    postDiv.appendChild(caption);
-    postDiv.appendChild(author);
-    postDiv.appendChild(likeBtn);
-    postDiv.appendChild(likeCount);
-    postDiv.appendChild(time);
-    postDiv.appendChild(commentSection);
+    postDiv.append(img, caption, author, likeBtn, likeCount, time);
     gallery.appendChild(postDiv);
   }
 }
-
-loadGallery();
