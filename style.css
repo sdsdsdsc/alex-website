@@ -59,7 +59,7 @@ header h1 {
   background: #90c9cb;
 }
 
-/* Upload section (hidden by default) */
+/* Upload section */
 .upload-section {
   background: #fff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -73,7 +73,7 @@ header h1 {
   display: none;
 }
 
-/* Gallery styling */
+/* Gallery */
 #gallery {
   display: flex;
   flex-wrap: wrap;
@@ -87,7 +87,7 @@ header h1 {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   overflow: hidden;
-  width: 220px;
+  width: 260px;
   text-align: center;
   padding-bottom: 10px;
   transition: transform 0.2s ease;
@@ -139,4 +139,40 @@ header h1 {
 .likes {
   font-size: 14px;
   color: #555;
+}
+
+/* Comments */
+.comment-section {
+  text-align: left;
+  margin: 10px;
+  border-top: 1px solid #eee;
+  padding-top: 8px;
+}
+
+.comment {
+  font-size: 14px;
+  color: #333;
+  margin: 3px 0;
+}
+
+.comment-input {
+  width: 80%;
+  padding: 6px;
+  margin-top: 6px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.comment-btn {
+  padding: 6px 10px;
+  margin-left: 5px;
+  background: #457b9d;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.comment-btn:hover {
+  background: #356389;
 }
