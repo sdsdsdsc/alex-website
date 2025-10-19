@@ -31,12 +31,14 @@ const storage = getStorage(app);
 
 const uploadBtn = document.getElementById("uploadBtn");
 const fileInput = document.getElementById("fileInput");
+const nameInput = document.getElementById("nameInput");
 const msgInput = document.getElementById("msgInput");
 const gallery = document.getElementById("gallery");
 
-// Upload image + message
+// Upload image + message + name
 uploadBtn.addEventListener("click", async () => {
   const file = fileInput.files[0];
+  const name = nameInput.value.trim() || "Anonymous";
   const msg = msgInput.value.trim();
   if (!file || !msg) return alert("Pick a file and type a message!");
 
@@ -46,12 +48,14 @@ uploadBtn.addEventListener("click", async () => {
     const url = await getDownloadURL(storageRef);
 
     await addDoc(collection(db, "posts"), {
+      name: name,
       message: msg,
       imageUrl: url,
       createdAt: serverTimestamp()
     });
 
     fileInput.value = "";
+    nameInput.value = "";
     msgInput.value = "";
     alert("Uploaded!");
     loadGallery();
@@ -85,6 +89,10 @@ async function loadGallery() {
     const caption = document.createElement("p");
     caption.textContent = data.message;
 
+    const author = document.createElement("p");
+    author.classList.add("author");
+    author.textContent = data.name ? `👤 ${data.name}` : "👤 Anonymous";
+
     const time = document.createElement("p");
     time.classList.add("timestamp");
 
@@ -97,6 +105,7 @@ async function loadGallery() {
 
     postDiv.appendChild(img);
     postDiv.appendChild(caption);
+    postDiv.appendChild(author);
     postDiv.appendChild(time);
     gallery.appendChild(postDiv);
   });

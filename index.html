@@ -3,16 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Alex's Photo Board</title>
+  <title>📸 Alex's Photo Board</title>
   <link rel="stylesheet" href="style.css">
   <script type="module" src="script.js" defer></script>
 </head>
 <body>
   <h1>📸 Alex's Photo Board</h1>
 
-  <input type="file" id="fileInput">
-  <input type="text" id="msgInput" placeholder="Leave a message">
-  <button id="uploadBtn">Upload</button>
+  <div class="upload-section">
+    <input type="file" id="fileInput">
+    <input type="text" id="nameInput" placeholder="Your name">
+    <input type="text" id="msgInput" placeholder="Leave a message">
+    <button id="uploadBtn">Upload</button>
+  </div>
 
   <h2>Gallery</h2>
   <div id="gallery"></div>
