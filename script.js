@@ -76,7 +76,7 @@ uploadBtn.addEventListener("click", async () => {
   }
 });
 
-// --- LOAD GALLERY --- //
+// --- LOAD GALLERY WITH COMMENTS --- //
 async function loadGallery() {
   gallery.innerHTML = "";
   const snapshot = await getDocs(collection(db, "posts"));
@@ -120,7 +120,45 @@ async function loadGallery() {
       time.textContent = `Posted on ${date.toDateString()}`;
     }
 
-    postDiv.append(img, caption, author, likeBtn, likeCount, time);
+    // --- Comments ---
+    const commentSection = document.createElement("div");
+    commentSection.classList.add("comment-section");
+
+    const commentList = document.createElement("div");
+    commentList.classList.add("comment-list");
+
+    // Load comments
+    const commentsSnap = await getDocs(collection(db, "posts", post.id, "comments"));
+    commentsSnap.forEach(c => {
+      const data = c.data();
+      const comment = document.createElement("p");
+      comment.classList.add("comment");
+      comment.textContent = `💬 ${data.name || "Anonymous"}: ${data.text}`;
+      commentList.appendChild(comment);
+    });
+
+    const commentInput = document.createElement("input");
+    commentInput.classList.add("comment-input");
+    commentInput.placeholder = "Write a comment...";
+
+    const commentBtn = document.createElement("button");
+    commentBtn.classList.add("comment-btn");
+    commentBtn.textContent = "Post";
+    commentBtn.addEventListener("click", async () => {
+      const text = commentInput.value.trim();
+      if (!text) return;
+      await addDoc(collection(db, "posts", post.id, "comments"), {
+        text,
+        name: "Anonymous",
+        createdAt: serverTimestamp()
+      });
+      commentInput.value = "";
+      loadGallery();
+    });
+
+    commentSection.append(commentList, commentInput, commentBtn);
+
+    postDiv.append(img, caption, author, likeBtn, likeCount, time, commentSection);
     gallery.appendChild(postDiv);
   }
 }
