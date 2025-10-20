@@ -1,23 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Upload | Alex's Photo Board</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
   <script type="module" src="script.js" defer></script>
 </head>
 <body>
+  <!-- Header -->
   <header>
     <h1>📸 Alex's Photo Board</h1>
+    <nav class="menu-bar">
+      <div class="menu">
+        <button id="communityBtn">Community ▼</button>
+        <div id="communityMenu" class="hidden">
+          <button onclick="window.location.href='gallery.html'">🖼️ Gallery</button>
+          <button onclick="window.location.href='upload.html'">📤 Image</button>
+        </div>
+      </div>
+
+      <div class="menu">
+        <button id="newsBtn">What's News ▼</button>
+        <div id="newsMenu" class="hidden">
+          <button onclick="window.location.href='news.html'">🗞️ News</button>
+          <button onclick="window.location.href='history.html'">📚 History Stories</button>
+        </div>
+      </div>
+    </nav>
   </header>
 
-  <section class="upload-section">
-    <h2>Upload Your Image</h2>
-    <input type="file" id="fileInput">
-    <input type="text" id="nameInput" placeholder="Your name">
-    <input type="text" id="msgInput" placeholder="Leave a message">
-    <button id="uploadBtn">Upload</button>
-  </section>
+  <!-- Upload Section -->
+  <main>
+    <h2 style="text-align:center; margin-top: 20px;">Upload Your Image</h2>
+
+    <div id="uploadSection">
+      <input type="file" id="imageFile" accept="image/*" />
+      <input type="text" id="username" placeholder="Your name" />
+      <input type="text" id="message" placeholder="Leave a message" />
+      <button id="uploadBtn">Upload</button>
+    </div>
+
+    <div id="uploadStatus" style="text-align:center; margin-top:10px; color:green;"></div>
+  </main>
+
+  <footer>
+    © 2025 Alex's Photo Board | All Rights Reserved
+  </footer>
 </body>
 </html>

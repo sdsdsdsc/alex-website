@@ -20,12 +20,10 @@ if (newsBtn && newsMenu) {
 
 // Hide menus when clicking outside
 document.addEventListener("click", (e) => {
-  if (!e.target.closest("#communityBtn") && !e.target.closest("#communityMenu")) {
+  if (!e.target.closest("#communityBtn") && !e.target.closest("#communityMenu"))
     communityMenu?.classList.add("hidden");
-  }
-  if (!e.target.closest("#newsBtn") && !e.target.closest("#newsMenu")) {
+  if (!e.target.closest("#newsBtn") && !e.target.closest("#newsMenu"))
     newsMenu?.classList.add("hidden");
-  }
 });
 
 
@@ -39,9 +37,9 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstati
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
-  authDomain: "alexs-community-efcd8.firebaseapp.com",
-  projectId: "alexs-community-efcd8",
-  storageBucket: "alexs-community-efcd8.firebasestorage.app",
+  authDomain: "alex-photo-board.firebaseapp.com",
+  projectId: "alex-photo-board",
+  storageBucket: "alex-photo-board.firebasestorage.app",
   messagingSenderId: "214395622099",
   appId: "1:214395622099:web:44f99a181741caf3117a26"
 };
@@ -50,21 +48,27 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
+
 // === Upload Image Logic ===
 const uploadBtn = document.getElementById("uploadBtn");
 if (uploadBtn) {
   uploadBtn.addEventListener("click", async () => {
-    const fileInput = document.getElementById("fileInput");
-    const nameInput = document.getElementById("nameInput");
-    const msgInput = document.getElementById("msgInput");
+    const fileInput = document.getElementById("imageFile");
+    const nameInput = document.getElementById("username");
+    const msgInput = document.getElementById("message");
+    const statusDiv = document.getElementById("uploadStatus");
 
     const file = fileInput.files[0];
     const name = nameInput.value.trim() || "Anonymous";
     const msg = msgInput.value.trim();
 
-    if (!file || !msg) return alert("Please select an image and add a message.");
+    if (!file || !msg) {
+      alert("Please select an image and add a message.");
+      return;
+    }
 
     try {
+      statusDiv.textContent = "Uploading...";
       const storageRef = ref(storage, `uploads/${file.name}`);
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
@@ -78,10 +82,11 @@ if (uploadBtn) {
         createdAt: serverTimestamp(),
       });
 
-      alert("Uploaded successfully!");
+      statusDiv.textContent = "Uploaded successfully!";
       fileInput.value = msgInput.value = nameInput.value = "";
     } catch (err) {
       console.error("Upload failed:", err);
+      statusDiv.textContent = "Upload failed. Check console for details.";
     }
   });
 }
@@ -117,15 +122,6 @@ async function loadGallery() {
       <input type="text" class="comment-input" placeholder="Write a comment...">
       <button class="comment-btn">Post</button>
     `;
-
-    const likeBtn = div.querySelector(".like-btn");
-    if (likeBtn) {
-      likeBtn.addEventListener("click", async () => {
-        const refDoc = doc(db, "posts", docSnap.id);
-        await updateDoc(refDoc, { likes: increment(1) });
-        loadGallery();
-      });
-    }
 
     const commentSection = div.querySelector(".comment-section");
     if (post.comments && post.comments.length > 0) {
@@ -190,6 +186,6 @@ async function loadArticles(containerId, collectionName) {
   });
 }
 
-// Load if these containers exist
+// auto-load if present
 loadArticles("newsContainer", "news");
 loadArticles("historyContainer", "history");
