@@ -29,7 +29,8 @@ async function loadArticle() {
     document.getElementById("articleContent").textContent = data.content;
   } else {
     document.getElementById("articleTitle").textContent = "Article not found";
-    document.getElementById("articleContent").textContent = "Sorry, this article doesn’t exist.";
+    document.getElementById("articleContent").textContent =
+      "Sorry, this article doesn’t exist.";
   }
 }
 loadArticle();

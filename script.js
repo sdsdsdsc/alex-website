@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { 
+import {
   getFirestore, collection, addDoc, getDocs, doc, updateDoc, increment, serverTimestamp, orderBy, query
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
@@ -25,7 +25,6 @@ const imageUploadBtn = document.getElementById("imageUploadBtn");
 const uploadSection = document.getElementById("uploadSection");
 const gallerySection = document.getElementById("gallerySection");
 const gallery = document.getElementById("gallery");
-
 const newsBtn = document.getElementById("newsBtn");
 const newsMenu = document.getElementById("newsMenu");
 const showNews = document.getElementById("showNews");
@@ -33,7 +32,7 @@ const showHistory = document.getElementById("showHistory");
 const newsSection = document.getElementById("newsSection");
 const historySection = document.getElementById("historySection");
 
-// Toggle dropdowns
+// Toggle menus
 communityBtn.addEventListener("click", () => {
   communityMenu.classList.toggle("hidden");
   newsMenu.classList.add("hidden");
@@ -43,6 +42,7 @@ newsBtn.addEventListener("click", () => {
   communityMenu.classList.add("hidden");
 });
 
+// Section toggling
 galleryBtn.addEventListener("click", () => {
   toggleSection(gallerySection);
   hideAll([uploadSection, newsSection, historySection]);
@@ -66,7 +66,7 @@ showHistory.addEventListener("click", () => {
 function toggleSection(sec) { sec.classList.toggle("hidden"); }
 function hideAll(arr) { arr.forEach(s => s.classList.add("hidden")); }
 
-// Upload Image
+// Upload post
 const uploadBtn = document.getElementById("uploadBtn");
 const fileInput = document.getElementById("fileInput");
 const nameInput = document.getElementById("nameInput");
@@ -88,6 +88,7 @@ uploadBtn.addEventListener("click", async () => {
       message: msg,
       imageUrl: url,
       likes: 0,
+      comments: [],
       createdAt: serverTimestamp()
     });
     alert("Uploaded successfully!");
@@ -105,23 +106,59 @@ async function loadGallery() {
     const post = docSnap.data();
     const div = document.createElement("div");
     div.classList.add("post");
+
+    let formattedDate = "";
+    if (post.createdAt?.seconds) {
+      const date = new Date(post.createdAt.seconds * 1000);
+      formattedDate = date.toDateString();
+    }
+
     div.innerHTML = `
       <img src="${post.imageUrl}">
       <p>${post.message}</p>
       <p class="author">👤 ${post.name}</p>
       <button class="like-btn">❤️</button>
       <p class="likes">${post.likes || 0} likes</p>
+      <p class="timestamp">🕒 ${formattedDate}</p>
+      <div class="comment-section"></div>
+      <input type="text" class="comment-input" placeholder="Write a comment...">
+      <button class="comment-btn">Post</button>
     `;
+
+    // Like button
     div.querySelector(".like-btn").addEventListener("click", async () => {
       const refDoc = doc(db, "posts", docSnap.id);
       await updateDoc(refDoc, { likes: increment(1) });
       loadGallery();
     });
+
+    // Comments
+    const commentSection = div.querySelector(".comment-section");
+    if (post.comments && post.comments.length > 0) {
+      post.comments.forEach(c => {
+        const p = document.createElement("p");
+        p.classList.add("comment");
+        p.textContent = `💬 ${c}`;
+        commentSection.appendChild(p);
+      });
+    }
+
+    div.querySelector(".comment-btn").addEventListener("click", async () => {
+      const commentInput = div.querySelector(".comment-input");
+      const commentText = commentInput.value.trim();
+      if (commentText) {
+        const refDoc = doc(db, "posts", docSnap.id);
+        await updateDoc(refDoc, { comments: [...(post.comments || []), commentText] });
+        commentInput.value = "";
+        loadGallery();
+      }
+    });
+
     gallery.appendChild(div);
   });
 }
 
-// Load News & History from Firestore
+// Load News / History
 async function loadArticles(containerId, collectionName) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
@@ -132,9 +169,17 @@ async function loadArticles(containerId, collectionName) {
     const article = docSnap.data();
     const card = document.createElement("div");
     card.classList.add("article-card");
+
+    let formattedDate = "";
+    if (article.createdAt?.seconds) {
+      const date = new Date(article.createdAt.seconds * 1000);
+      formattedDate = date.toDateString();
+    }
+
     card.innerHTML = `
       <img src="${article.imageUrl}" alt="">
       <h3>${article.title}</h3>
+      <p class="timestamp">${formattedDate}</p>
     `;
     card.querySelector("h3").addEventListener("click", () => {
       window.open(`article.html?id=${docSnap.id}&type=${collectionName}`, "_blank");
