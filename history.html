@@ -10,8 +10,29 @@
 <body>
   <header>
     <h1>📸 Alex's Photo Board</h1>
+    <nav class="menu-bar">
+      <div class="menu">
+        <button id="communityBtn">Community ▼</button>
+        <div id="communityMenu" class="hidden">
+          <button onclick="window.location.href='gallery.html'">🖼️ Gallery</button>
+          <button onclick="window.location.href='upload.html'">📤 Image</button>
+        </div>
+      </div>
+      <div class="menu">
+        <button id="newsBtn">What's News ▼</button>
+        <div id="newsMenu" class="hidden">
+          <button onclick="window.location.href='news.html'">🗞️ News</button>
+          <button onclick="window.location.href='history.html'">📚 History Stories</button>
+        </div>
+      </div>
+    </nav>
   </header>
+
   <h2>History Stories</h2>
   <div id="historyContainer" class="article-container"></div>
+
+  <footer>
+    © 2025 Alex's Photo Board | All Rights Reserved
+  </footer>
 </body>
 </html>
