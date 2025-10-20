@@ -1,30 +1,32 @@
-// === Dropdown Menu Logic ===
+// === Dropdown Menu Logic (fixed version) ===
 const communityBtn = document.getElementById("communityBtn");
 const communityMenu = document.getElementById("communityMenu");
 const newsBtn = document.getElementById("newsBtn");
 const newsMenu = document.getElementById("newsMenu");
 
+// Community dropdown
 if (communityBtn && communityMenu) {
-  communityBtn.addEventListener("click", () => {
-    communityMenu.classList.toggle("hidden");
-    if (newsMenu) newsMenu.classList.add("hidden");
+  communityBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    communityMenu.classList.toggle("show");
+    newsMenu?.classList.remove("show");
   });
 }
 
+// News dropdown
 if (newsBtn && newsMenu) {
-  newsBtn.addEventListener("click", () => {
-    newsMenu.classList.toggle("hidden");
-    if (communityMenu) communityMenu.classList.add("hidden");
+  newsBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    newsMenu.classList.toggle("show");
+    communityMenu?.classList.remove("show");
   });
 }
 
-// Hide menus when clicking outside
+// Hide dropdowns when clicking outside
 document.addEventListener("click", (e) => {
-  if (!e.target.closest("#communityBtn") && !e.target.closest("#communityMenu")) {
-    communityMenu?.classList.add("hidden");
-  }
-  if (!e.target.closest("#newsBtn") && !e.target.closest("#newsMenu")) {
-    newsMenu?.classList.add("hidden");
+  if (!e.target.closest(".menu")) {
+    communityMenu?.classList.remove("show");
+    newsMenu?.classList.remove("show");
   }
 });
 
@@ -49,6 +51,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
+
 
 // === Upload Image Logic ===
 const uploadBtn = document.getElementById("uploadBtn");
@@ -118,15 +121,6 @@ async function loadGallery() {
       <button class="comment-btn">Post</button>
     `;
 
-    const likeBtn = div.querySelector(".like-btn");
-    if (likeBtn) {
-      likeBtn.addEventListener("click", async () => {
-        const refDoc = doc(db, "posts", docSnap.id);
-        await updateDoc(refDoc, { likes: increment(1) });
-        loadGallery();
-      });
-    }
-
     const commentSection = div.querySelector(".comment-section");
     if (post.comments && post.comments.length > 0) {
       post.comments.forEach(c => {
@@ -190,6 +184,6 @@ async function loadArticles(containerId, collectionName) {
   });
 }
 
-// Load if these containers exist
+// Load News and History articles
 loadArticles("newsContainer", "news");
 loadArticles("historyContainer", "history");

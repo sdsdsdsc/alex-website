@@ -49,18 +49,23 @@ header h1 {
   background: #356389;
 }
 
-/* Dropdown container */
+/* Dropdown container (hidden by default) */
 .menu div {
   position: absolute;
   top: 110%;
   left: 0;
-  display: flex;
+  display: none; /* hidden by default */
   flex-direction: column;
   background: #f1f1f1;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   padding: 5px;
   z-index: 99;
+}
+
+/* Dropdown visible state */
+.menu div.show {
+  display: flex;
 }
 
 /* Dropdown buttons */
@@ -75,11 +80,6 @@ header h1 {
 }
 .menu div button:hover {
   background: #ddd;
-}
-
-/* Hide dropdowns by default */
-.hidden {
-  display: none;
 }
 
 /* ====== Hero Section ====== */
