@@ -1,9 +1,3 @@
-.hidden {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0;
-}
-
 body {
   font-family: Arial, sans-serif;
   background: #f9f9f9;
@@ -207,9 +201,3 @@ header h1 {
   line-height: 1.6;
   white-space: pre-line;
 }
-.hidden {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0;
-}
-
