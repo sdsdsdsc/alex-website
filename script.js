@@ -17,7 +17,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Elements
+// Menus
 const communityBtn = document.getElementById("communityBtn");
 const communityMenu = document.getElementById("communityMenu");
 const galleryBtn = document.getElementById("galleryBtn");
@@ -43,7 +43,6 @@ newsBtn.addEventListener("click", () => {
   communityMenu.classList.add("hidden");
 });
 
-// Section control
 galleryBtn.addEventListener("click", () => {
   toggleSection(gallerySection);
   hideAll([uploadSection, newsSection, historySection]);
@@ -67,7 +66,7 @@ showHistory.addEventListener("click", () => {
 function toggleSection(sec) { sec.classList.toggle("hidden"); }
 function hideAll(arr) { arr.forEach(s => s.classList.add("hidden")); }
 
-// Upload image
+// Upload Image
 const uploadBtn = document.getElementById("uploadBtn");
 const fileInput = document.getElementById("fileInput");
 const nameInput = document.getElementById("nameInput");
@@ -104,25 +103,25 @@ async function loadGallery() {
   const snapshot = await getDocs(q);
   snapshot.forEach(docSnap => {
     const post = docSnap.data();
-    const postDiv = document.createElement("div");
-    postDiv.classList.add("post");
-    postDiv.innerHTML = `
-      <img src="${post.imageUrl}" alt="">
+    const div = document.createElement("div");
+    div.classList.add("post");
+    div.innerHTML = `
+      <img src="${post.imageUrl}">
       <p>${post.message}</p>
       <p class="author">👤 ${post.name}</p>
       <button class="like-btn">❤️</button>
       <p class="likes">${post.likes || 0} likes</p>
     `;
-    postDiv.querySelector(".like-btn").addEventListener("click", async () => {
+    div.querySelector(".like-btn").addEventListener("click", async () => {
       const refDoc = doc(db, "posts", docSnap.id);
       await updateDoc(refDoc, { likes: increment(1) });
       loadGallery();
     });
-    gallery.appendChild(postDiv);
+    gallery.appendChild(div);
   });
 }
 
-// Load News / History dynamically
+// Load News & History from Firestore
 async function loadArticles(containerId, collectionName) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
@@ -137,7 +136,9 @@ async function loadArticles(containerId, collectionName) {
       <img src="${article.imageUrl}" alt="">
       <h3>${article.title}</h3>
     `;
-    card.querySelector("h3").addEventListener("click", () => window.open(article.url, "_blank"));
+    card.querySelector("h3").addEventListener("click", () => {
+      window.open(`article.html?id=${docSnap.id}&type=${collectionName}`, "_blank");
+    });
     container.appendChild(card);
   });
 }
