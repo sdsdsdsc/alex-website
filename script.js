@@ -17,14 +17,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// UI elements
+// Elements
 const uploadSection = document.getElementById("uploadSection");
 const gallerySection = document.getElementById("gallerySection");
 const newsSection = document.getElementById("newsSection");
 const historySection = document.getElementById("historySection");
 const gallery = document.getElementById("gallery");
 
-// Menu buttons
 const communityBtn = document.getElementById("communityBtn");
 const communityMenu = document.getElementById("communityMenu");
 const galleryBtn = document.getElementById("galleryBtn");
@@ -34,7 +33,7 @@ const newsMenu = document.getElementById("newsMenu");
 const showNews = document.getElementById("showNews");
 const showHistory = document.getElementById("showHistory");
 
-// Toggle menus
+// Toggle Menus
 communityBtn.addEventListener("click", () => {
   communityMenu.classList.toggle("hidden");
   newsMenu.classList.add("hidden");
@@ -44,34 +43,32 @@ newsBtn.addEventListener("click", () => {
   communityMenu.classList.add("hidden");
 });
 
-// Toggle sections
+// Hide / show sections
 galleryBtn.addEventListener("click", () => {
+  uploadSection.classList.add("hidden");
   toggleSection(gallerySection);
-  hideAll([uploadSection, newsSection, historySection]);
+  hideAll([newsSection, historySection]);
   loadGallery();
 });
 imageUploadBtn.addEventListener("click", () => {
-  toggleSection(uploadSection);
   hideAll([gallerySection, newsSection, historySection]);
+  uploadSection.classList.remove("hidden");
 });
 showNews.addEventListener("click", () => {
+  uploadSection.classList.add("hidden");
   toggleSection(newsSection);
-  hideAll([gallerySection, uploadSection, historySection]);
+  hideAll([gallerySection, historySection]);
   loadArticles("newsContainer", "news");
 });
 showHistory.addEventListener("click", () => {
+  uploadSection.classList.add("hidden");
   toggleSection(historySection);
-  hideAll([gallerySection, uploadSection, newsSection]);
+  hideAll([gallerySection, newsSection]);
   loadArticles("historyContainer", "history");
 });
 
-function toggleSection(sec) {
-  sec.classList.toggle("hidden");
-  uploadSection.classList.add("hidden"); // Hide upload bar when switching pages
-}
-function hideAll(arr) {
-  arr.forEach(s => s.classList.add("hidden"));
-}
+function toggleSection(sec) { sec.classList.toggle("hidden"); }
+function hideAll(arr) { arr.forEach(s => s.classList.add("hidden")); }
 
 // Upload post
 const uploadBtn = document.getElementById("uploadBtn");
@@ -104,12 +101,11 @@ uploadBtn.addEventListener("click", async () => {
   } catch (err) { console.error(err); }
 });
 
-// Load Gallery
+// Load Gallery + Comments
 async function loadGallery() {
   gallery.innerHTML = "";
   const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
-
   snapshot.forEach(docSnap => {
     const post = docSnap.data();
     const div = document.createElement("div");
@@ -128,12 +124,44 @@ async function loadGallery() {
       <button class="like-btn">❤️</button>
       <p class="likes">${post.likes || 0} likes</p>
       <p class="timestamp">🕒 ${formattedDate}</p>
+      <div class="comment-section"></div>
+      <input type="text" class="comment-input" placeholder="Write a comment...">
+      <button class="comment-btn">Post</button>
     `;
+
+    const likeBtn = div.querySelector(".like-btn");
+    likeBtn.addEventListener("click", async () => {
+      const refDoc = doc(db, "posts", docSnap.id);
+      await updateDoc(refDoc, { likes: increment(1) });
+      loadGallery();
+    });
+
+    const commentSection = div.querySelector(".comment-section");
+    if (post.comments && post.comments.length > 0) {
+      post.comments.forEach(c => {
+        const p = document.createElement("p");
+        p.classList.add("comment");
+        p.textContent = `💬 ${c}`;
+        commentSection.appendChild(p);
+      });
+    }
+
+    const commentBtn = div.querySelector(".comment-btn");
+    commentBtn.addEventListener("click", async () => {
+      const input = div.querySelector(".comment-input");
+      const text = input.value.trim();
+      if (!text) return;
+      const refDoc = doc(db, "posts", docSnap.id);
+      await updateDoc(refDoc, { comments: [...(post.comments || []), text] });
+      input.value = "";
+      loadGallery();
+    });
+
     gallery.appendChild(div);
   });
 }
 
-// Load News & History
+// Load News / History
 async function loadArticles(containerId, collectionName) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";

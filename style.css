@@ -60,6 +60,7 @@ header h1 {
 .menu div button:hover {
   background: #90c9cb;
 }
+
 .hidden {
   display: none;
 }
@@ -99,6 +100,40 @@ header h1 {
   height: 200px;
   object-fit: cover;
 }
+.timestamp {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Comments */
+.comment-section {
+  margin-top: 8px;
+  padding: 5px 10px;
+}
+.comment {
+  font-size: 14px;
+  color: #333;
+  text-align: left;
+  margin: 3px 0;
+}
+.comment-input {
+  width: 80%;
+  padding: 6px;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.comment-btn {
+  padding: 5px 10px;
+  font-size: 13px;
+  border: none;
+  background: #457b9d;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.comment-btn:hover {
+  background: #356389;
+}
 
 /* Articles */
 .article-container {
@@ -132,19 +167,13 @@ header h1 {
   cursor: pointer;
   text-decoration: underline;
 }
-.timestamp {
-  font-size: 13px;
-  color: #666;
-  margin-left: 10px;
-  margin-bottom: 8px;
-}
 
-/* Article Page (clean layout) */
+/* Article Page */
 .article-page-header {
   background: #1d3557;
   color: #fff;
   padding: 15px 0;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  text-align: center;
 }
 .article-main {
   max-width: 800px;
