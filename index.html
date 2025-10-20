@@ -13,12 +13,24 @@
     <h1>📸 Alex's Photo Board</h1>
   </header>
 
-  <!-- Community Menu -->
-  <div class="menu">
-    <button id="communityBtn">Community ▼</button>
-    <div id="menuContent" class="hidden">
-      <button id="galleryBtn">🖼️ Gallery</button>
-      <button id="imageUploadBtn">📤 Image</button>
+  <!-- Menu Bar -->
+  <div class="menu-bar">
+    <!-- Community -->
+    <div class="menu">
+      <button id="communityBtn">Community ▼</button>
+      <div id="communityMenu" class="hidden">
+        <button id="galleryBtn">🖼️ Gallery</button>
+        <button id="imageUploadBtn">📤 Image</button>
+      </div>
+    </div>
+
+    <!-- What's News -->
+    <div class="menu">
+      <button id="newsBtn">What's News ▼</button>
+      <div id="newsMenu" class="hidden">
+        <button id="showNews">🗞️ News</button>
+        <button id="showHistory">📚 History Stories</button>
+      </div>
     </div>
   </div>
 
@@ -34,6 +46,18 @@
   <div id="gallerySection" class="hidden">
     <h2>Gallery</h2>
     <div id="gallery"></div>
+  </div>
+
+  <!-- News Section -->
+  <div id="newsSection" class="hidden">
+    <h2>Latest News</h2>
+    <div id="newsContainer" class="article-container"></div>
+  </div>
+
+  <!-- History Section -->
+  <div id="historySection" class="hidden">
+    <h2>History Stories</h2>
+    <div id="historyContainer" class="article-container"></div>
   </div>
 </body>
 </html>

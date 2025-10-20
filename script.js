@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { 
-  getFirestore, collection, addDoc, getDocs, doc, updateDoc, increment, serverTimestamp 
+  getFirestore, collection, addDoc, getDocs, doc, updateDoc, increment, serverTimestamp, orderBy, query
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
@@ -17,36 +17,62 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// DOM elements
+// Elements
 const communityBtn = document.getElementById("communityBtn");
-const menuContent = document.getElementById("menuContent");
+const communityMenu = document.getElementById("communityMenu");
 const galleryBtn = document.getElementById("galleryBtn");
 const imageUploadBtn = document.getElementById("imageUploadBtn");
 const uploadSection = document.getElementById("uploadSection");
 const gallerySection = document.getElementById("gallerySection");
+const gallery = document.getElementById("gallery");
+
+const newsBtn = document.getElementById("newsBtn");
+const newsMenu = document.getElementById("newsMenu");
+const showNews = document.getElementById("showNews");
+const showHistory = document.getElementById("showHistory");
+const newsSection = document.getElementById("newsSection");
+const historySection = document.getElementById("historySection");
+
+// Toggle dropdowns
+communityBtn.addEventListener("click", () => {
+  communityMenu.classList.toggle("hidden");
+  newsMenu.classList.add("hidden");
+});
+newsBtn.addEventListener("click", () => {
+  newsMenu.classList.toggle("hidden");
+  communityMenu.classList.add("hidden");
+});
+
+// Section control
+galleryBtn.addEventListener("click", () => {
+  toggleSection(gallerySection);
+  hideAll([uploadSection, newsSection, historySection]);
+  loadGallery();
+});
+imageUploadBtn.addEventListener("click", () => {
+  toggleSection(uploadSection);
+  hideAll([gallerySection, newsSection, historySection]);
+});
+showNews.addEventListener("click", () => {
+  toggleSection(newsSection);
+  hideAll([gallerySection, uploadSection, historySection]);
+  loadArticles("newsContainer", "news");
+});
+showHistory.addEventListener("click", () => {
+  toggleSection(historySection);
+  hideAll([gallerySection, uploadSection, newsSection]);
+  loadArticles("historyContainer", "history");
+});
+
+function toggleSection(sec) { sec.classList.toggle("hidden"); }
+function hideAll(arr) { arr.forEach(s => s.classList.add("hidden")); }
+
+// Upload image
 const uploadBtn = document.getElementById("uploadBtn");
 const fileInput = document.getElementById("fileInput");
 const nameInput = document.getElementById("nameInput");
 const msgInput = document.getElementById("msgInput");
-const gallery = document.getElementById("gallery");
 
-// --- MENU LOGIC --- //
-communityBtn.addEventListener("click", () => {
-  menuContent.classList.toggle("hidden");
-});
-
-galleryBtn.addEventListener("click", () => {
-  gallerySection.classList.toggle("hidden");
-  uploadSection.classList.add("hidden");
-  loadGallery();
-});
-
-imageUploadBtn.addEventListener("click", () => {
-  uploadSection.classList.toggle("hidden");
-  gallerySection.classList.add("hidden");
-});
-
-// --- UPLOAD IMAGE --- //
 uploadBtn.addEventListener("click", async () => {
   const file = fileInput.files[0];
   const name = nameInput.value.trim() || "Anonymous";
@@ -65,100 +91,53 @@ uploadBtn.addEventListener("click", async () => {
       likes: 0,
       createdAt: serverTimestamp()
     });
-
     alert("Uploaded successfully!");
-    fileInput.value = "";
-    msgInput.value = "";
-    nameInput.value = "";
+    fileInput.value = msgInput.value = nameInput.value = "";
     loadGallery();
-  } catch (err) {
-    console.error("Upload error:", err);
-  }
+  } catch (err) { console.error(err); }
 });
 
-// --- LOAD GALLERY WITH COMMENTS --- //
+// Load gallery
 async function loadGallery() {
   gallery.innerHTML = "";
-  const snapshot = await getDocs(collection(db, "posts"));
-  const posts = [];
-
-  snapshot.forEach(docSnap => posts.push({ id: docSnap.id, ...docSnap.data() }));
-
-  posts.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
-  for (const post of posts) {
+  const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  snapshot.forEach(docSnap => {
+    const post = docSnap.data();
     const postDiv = document.createElement("div");
     postDiv.classList.add("post");
-
-    const img = document.createElement("img");
-    img.src = post.imageUrl;
-
-    const caption = document.createElement("p");
-    caption.textContent = post.message;
-
-    const author = document.createElement("p");
-    author.classList.add("author");
-    author.textContent = `👤 ${post.name}`;
-
-    const likeBtn = document.createElement("button");
-    likeBtn.classList.add("like-btn");
-    likeBtn.textContent = "❤️";
-    likeBtn.addEventListener("click", async () => {
-      const refDoc = doc(db, "posts", post.id);
+    postDiv.innerHTML = `
+      <img src="${post.imageUrl}" alt="">
+      <p>${post.message}</p>
+      <p class="author">👤 ${post.name}</p>
+      <button class="like-btn">❤️</button>
+      <p class="likes">${post.likes || 0} likes</p>
+    `;
+    postDiv.querySelector(".like-btn").addEventListener("click", async () => {
+      const refDoc = doc(db, "posts", docSnap.id);
       await updateDoc(refDoc, { likes: increment(1) });
       loadGallery();
     });
-
-    const likeCount = document.createElement("p");
-    likeCount.classList.add("likes");
-    likeCount.textContent = `${post.likes || 0} likes`;
-
-    const time = document.createElement("p");
-    time.classList.add("timestamp");
-    if (post.createdAt) {
-      const date = new Date(post.createdAt.seconds * 1000);
-      time.textContent = `Posted on ${date.toDateString()}`;
-    }
-
-    // --- Comments ---
-    const commentSection = document.createElement("div");
-    commentSection.classList.add("comment-section");
-
-    const commentList = document.createElement("div");
-    commentList.classList.add("comment-list");
-
-    // Load comments
-    const commentsSnap = await getDocs(collection(db, "posts", post.id, "comments"));
-    commentsSnap.forEach(c => {
-      const data = c.data();
-      const comment = document.createElement("p");
-      comment.classList.add("comment");
-      comment.textContent = `💬 ${data.name || "Anonymous"}: ${data.text}`;
-      commentList.appendChild(comment);
-    });
-
-    const commentInput = document.createElement("input");
-    commentInput.classList.add("comment-input");
-    commentInput.placeholder = "Write a comment...";
-
-    const commentBtn = document.createElement("button");
-    commentBtn.classList.add("comment-btn");
-    commentBtn.textContent = "Post";
-    commentBtn.addEventListener("click", async () => {
-      const text = commentInput.value.trim();
-      if (!text) return;
-      await addDoc(collection(db, "posts", post.id, "comments"), {
-        text,
-        name: "Anonymous",
-        createdAt: serverTimestamp()
-      });
-      commentInput.value = "";
-      loadGallery();
-    });
-
-    commentSection.append(commentList, commentInput, commentBtn);
-
-    postDiv.append(img, caption, author, likeBtn, likeCount, time, commentSection);
     gallery.appendChild(postDiv);
-  }
+  });
+}
+
+// Load News / History dynamically
+async function loadArticles(containerId, collectionName) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+  const q = query(collection(db, collectionName), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+
+  snapshot.forEach(docSnap => {
+    const article = docSnap.data();
+    const card = document.createElement("div");
+    card.classList.add("article-card");
+    card.innerHTML = `
+      <img src="${article.imageUrl}" alt="">
+      <h3>${article.title}</h3>
+    `;
+    card.querySelector("h3").addEventListener("click", () => window.open(article.url, "_blank"));
+    container.appendChild(card);
+  });
 }
