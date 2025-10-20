@@ -17,20 +17,22 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Menus
+// UI elements
+const uploadSection = document.getElementById("uploadSection");
+const gallerySection = document.getElementById("gallerySection");
+const newsSection = document.getElementById("newsSection");
+const historySection = document.getElementById("historySection");
+const gallery = document.getElementById("gallery");
+
+// Menu buttons
 const communityBtn = document.getElementById("communityBtn");
 const communityMenu = document.getElementById("communityMenu");
 const galleryBtn = document.getElementById("galleryBtn");
 const imageUploadBtn = document.getElementById("imageUploadBtn");
-const uploadSection = document.getElementById("uploadSection");
-const gallerySection = document.getElementById("gallerySection");
-const gallery = document.getElementById("gallery");
 const newsBtn = document.getElementById("newsBtn");
 const newsMenu = document.getElementById("newsMenu");
 const showNews = document.getElementById("showNews");
 const showHistory = document.getElementById("showHistory");
-const newsSection = document.getElementById("newsSection");
-const historySection = document.getElementById("historySection");
 
 // Toggle menus
 communityBtn.addEventListener("click", () => {
@@ -42,7 +44,7 @@ newsBtn.addEventListener("click", () => {
   communityMenu.classList.add("hidden");
 });
 
-// Section toggling
+// Toggle sections
 galleryBtn.addEventListener("click", () => {
   toggleSection(gallerySection);
   hideAll([uploadSection, newsSection, historySection]);
@@ -63,8 +65,13 @@ showHistory.addEventListener("click", () => {
   loadArticles("historyContainer", "history");
 });
 
-function toggleSection(sec) { sec.classList.toggle("hidden"); }
-function hideAll(arr) { arr.forEach(s => s.classList.add("hidden")); }
+function toggleSection(sec) {
+  sec.classList.toggle("hidden");
+  uploadSection.classList.add("hidden"); // Hide upload bar when switching pages
+}
+function hideAll(arr) {
+  arr.forEach(s => s.classList.add("hidden"));
+}
 
 // Upload post
 const uploadBtn = document.getElementById("uploadBtn");
@@ -97,11 +104,12 @@ uploadBtn.addEventListener("click", async () => {
   } catch (err) { console.error(err); }
 });
 
-// Load gallery
+// Load Gallery
 async function loadGallery() {
   gallery.innerHTML = "";
   const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
+
   snapshot.forEach(docSnap => {
     const post = docSnap.data();
     const div = document.createElement("div");
@@ -120,45 +128,12 @@ async function loadGallery() {
       <button class="like-btn">❤️</button>
       <p class="likes">${post.likes || 0} likes</p>
       <p class="timestamp">🕒 ${formattedDate}</p>
-      <div class="comment-section"></div>
-      <input type="text" class="comment-input" placeholder="Write a comment...">
-      <button class="comment-btn">Post</button>
     `;
-
-    // Like button
-    div.querySelector(".like-btn").addEventListener("click", async () => {
-      const refDoc = doc(db, "posts", docSnap.id);
-      await updateDoc(refDoc, { likes: increment(1) });
-      loadGallery();
-    });
-
-    // Comments
-    const commentSection = div.querySelector(".comment-section");
-    if (post.comments && post.comments.length > 0) {
-      post.comments.forEach(c => {
-        const p = document.createElement("p");
-        p.classList.add("comment");
-        p.textContent = `💬 ${c}`;
-        commentSection.appendChild(p);
-      });
-    }
-
-    div.querySelector(".comment-btn").addEventListener("click", async () => {
-      const commentInput = div.querySelector(".comment-input");
-      const commentText = commentInput.value.trim();
-      if (commentText) {
-        const refDoc = doc(db, "posts", docSnap.id);
-        await updateDoc(refDoc, { comments: [...(post.comments || []), commentText] });
-        commentInput.value = "";
-        loadGallery();
-      }
-    });
-
     gallery.appendChild(div);
   });
 }
 
-// Load News / History
+// Load News & History
 async function loadArticles(containerId, collectionName) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
