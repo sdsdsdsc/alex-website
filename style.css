@@ -1,3 +1,4 @@
+/* ====== Global Reset ====== */
 body {
   font-family: "Segoe UI", Arial, sans-serif;
   margin: 0;
@@ -5,7 +6,7 @@ body {
   color: #222;
 }
 
-/* ===== Header ===== */
+/* ====== Header ====== */
 header {
   background: #1d3557;
   color: #fff;
@@ -22,7 +23,7 @@ header h1 {
   letter-spacing: 0.5px;
 }
 
-/* ===== Menus ===== */
+/* ====== Menus ====== */
 .menu-bar {
   display: flex;
   justify-content: center;
@@ -48,6 +49,7 @@ header h1 {
   background: #356389;
 }
 
+/* Dropdown container */
 .menu div {
   position: absolute;
   top: 110%;
@@ -61,6 +63,7 @@ header h1 {
   z-index: 99;
 }
 
+/* Dropdown buttons */
 .menu div button {
   color: #000;
   background: transparent;
@@ -68,16 +71,18 @@ header h1 {
   text-align: left;
   padding: 8px 16px;
   border-radius: 4px;
+  font-size: 15px;
 }
 .menu div button:hover {
   background: #ddd;
 }
 
+/* Hide dropdowns by default */
 .hidden {
   display: none;
 }
 
-/* ===== Hero Section ===== */
+/* ====== Hero Section ====== */
 .hero {
   background-image: url("Manurewa High.png");
   background-size: cover;
@@ -107,7 +112,7 @@ header h1 {
   max-width: 800px;
 }
 .hero-text h2 {
-  font-size: 40px;
+  font-size: 42px;
   font-weight: 700;
   margin-bottom: 10px;
 }
@@ -130,7 +135,7 @@ header h1 {
   background: #ffcd66;
 }
 
-/* ===== Upload Section ===== */
+/* ====== Upload Section ====== */
 .upload-section {
   background: #fff;
   max-width: 600px;
@@ -159,7 +164,7 @@ header h1 {
   background: #26466e;
 }
 
-/* ===== Gallery ===== */
+/* ====== Gallery ====== */
 #gallery {
   display: flex;
   flex-wrap: wrap;
@@ -185,8 +190,42 @@ header h1 {
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
 }
+.timestamp {
+  font-size: 13px;
+  color: #666;
+}
 
-/* ===== Articles ===== */
+/* ====== Comments ====== */
+.comment-section {
+  margin-top: 8px;
+  padding: 5px 10px;
+}
+.comment {
+  font-size: 14px;
+  color: #333;
+  text-align: left;
+  margin: 3px 0;
+}
+.comment-input {
+  width: 80%;
+  padding: 6px;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.comment-btn {
+  padding: 5px 10px;
+  font-size: 13px;
+  border: none;
+  background: #457b9d;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.comment-btn:hover {
+  background: #356389;
+}
+
+/* ====== Articles ====== */
 .article-container {
   display: flex;
   flex-wrap: wrap;
@@ -218,12 +257,49 @@ header h1 {
   cursor: pointer;
 }
 
-/* ===== Footer ===== */
+/* ====== Article Page ====== */
+.article-page {
+  max-width: 900px;
+  margin: 50px auto;
+  background: transparent;
+  padding: 30px;
+  box-shadow: none;
+}
+.article-page h2 {
+  text-align: center;
+  font-size: 30px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #1d3557;
+}
+.article-page .timestamp {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+.article-page img {
+  width: 100%;
+  max-height: 600px;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  margin: 0 auto 20px;
+}
+.article-page p {
+  font-size: 17px;
+  line-height: 1.8;
+  color: #222;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ====== Footer ====== */
 footer {
   text-align: center;
   background: #1d3557;
   color: #fff;
   padding: 15px;
-  margin-top: 40px;
+  margin-top: 0;
   font-size: 14px;
 }
