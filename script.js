@@ -17,7 +17,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Elements
+// DOM elements
 const uploadSection = document.getElementById("uploadSection");
 const gallerySection = document.getElementById("gallerySection");
 const newsSection = document.getElementById("newsSection");
@@ -33,7 +33,7 @@ const newsMenu = document.getElementById("newsMenu");
 const showNews = document.getElementById("showNews");
 const showHistory = document.getElementById("showHistory");
 
-// Toggle Menus
+// --- Toggle menus ---
 communityBtn.addEventListener("click", () => {
   communityMenu.classList.toggle("hidden");
   newsMenu.classList.add("hidden");
@@ -43,34 +43,39 @@ newsBtn.addEventListener("click", () => {
   communityMenu.classList.add("hidden");
 });
 
-// Hide / show sections
+// --- Section controls ---
 galleryBtn.addEventListener("click", () => {
-  uploadSection.classList.add("hidden");
-  toggleSection(gallerySection);
-  hideAll([newsSection, historySection]);
+  showOnly(gallerySection);
   loadGallery();
 });
+
 imageUploadBtn.addEventListener("click", () => {
-  hideAll([gallerySection, newsSection, historySection]);
-  uploadSection.classList.remove("hidden");
+  showOnly(uploadSection);
 });
+
 showNews.addEventListener("click", () => {
-  uploadSection.classList.add("hidden");
-  toggleSection(newsSection);
-  hideAll([gallerySection, historySection]);
+  showOnly(newsSection);
   loadArticles("newsContainer", "news");
 });
+
 showHistory.addEventListener("click", () => {
-  uploadSection.classList.add("hidden");
-  toggleSection(historySection);
-  hideAll([gallerySection, newsSection]);
+  showOnly(historySection);
   loadArticles("historyContainer", "history");
 });
 
-function toggleSection(sec) { sec.classList.toggle("hidden"); }
-function hideAll(arr) { arr.forEach(s => s.classList.add("hidden")); }
+// Helper to hide all others, show only one
+function showOnly(sectionToShow) {
+  const sections = [uploadSection, gallerySection, newsSection, historySection];
+  sections.forEach(sec => {
+    if (sec === sectionToShow) {
+      sec.classList.remove("hidden");
+    } else {
+      sec.classList.add("hidden");
+    }
+  });
+}
 
-// Upload post
+// --- Upload post ---
 const uploadBtn = document.getElementById("uploadBtn");
 const fileInput = document.getElementById("fileInput");
 const nameInput = document.getElementById("nameInput");
@@ -95,17 +100,21 @@ uploadBtn.addEventListener("click", async () => {
       comments: [],
       createdAt: serverTimestamp()
     });
+
     alert("Uploaded successfully!");
     fileInput.value = msgInput.value = nameInput.value = "";
     loadGallery();
-  } catch (err) { console.error(err); }
+  } catch (err) {
+    console.error("Upload error:", err);
+  }
 });
 
-// Load Gallery + Comments
+// --- Load Gallery (with comments) ---
 async function loadGallery() {
   gallery.innerHTML = "";
   const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
+
   snapshot.forEach(docSnap => {
     const post = docSnap.data();
     const div = document.createElement("div");
@@ -124,18 +133,20 @@ async function loadGallery() {
       <button class="like-btn">❤️</button>
       <p class="likes">${post.likes || 0} likes</p>
       <p class="timestamp">🕒 ${formattedDate}</p>
+
       <div class="comment-section"></div>
       <input type="text" class="comment-input" placeholder="Write a comment...">
       <button class="comment-btn">Post</button>
     `;
 
-    const likeBtn = div.querySelector(".like-btn");
-    likeBtn.addEventListener("click", async () => {
+    // Like button
+    div.querySelector(".like-btn").addEventListener("click", async () => {
       const refDoc = doc(db, "posts", docSnap.id);
       await updateDoc(refDoc, { likes: increment(1) });
       loadGallery();
     });
 
+    // Load comments
     const commentSection = div.querySelector(".comment-section");
     if (post.comments && post.comments.length > 0) {
       post.comments.forEach(c => {
@@ -146,6 +157,7 @@ async function loadGallery() {
       });
     }
 
+    // Add comment
     const commentBtn = div.querySelector(".comment-btn");
     commentBtn.addEventListener("click", async () => {
       const input = div.querySelector(".comment-input");
@@ -161,7 +173,7 @@ async function loadGallery() {
   });
 }
 
-// Load News / History
+// --- Load News / History ---
 async function loadArticles(containerId, collectionName) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
