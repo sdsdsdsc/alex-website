@@ -3,13 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gallery | Alex's Photo Board</title>
+  <title>Community Map | Alex's Photo Board</title>
   <link rel="stylesheet" href="style.css">
-  <script type="module" src="script.js" defer></script>
+
+  <!-- Leaflet Map Library -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Firebase -->
+  <script type="module" src="map.js" defer></script>
 </head>
 <body>
   <header>
-    <h1>📸 Alex's Photo Board</h1>
+    <h1>📍 Community Map</h1>
     <nav class="menu-bar">
   <div class="menu">
     <button id="communityBtn">Community ▼</button>
@@ -34,7 +40,14 @@
 </nav>
   </header>
 
-  <h2>Gallery</h2>
-  <div id="gallery"></div>
+  <section>
+    <h2 style="text-align:center; margin-top:20px;">Explore & Contribute to the Map</h2>
+    <p style="text-align:center;">Click anywhere on the map to add a new point with a title and description.</p>
+    <div id="map" style="height:600px; width:90%; margin:20px auto; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.2);"></div>
+  </section>
+
+  <footer>
+    © 2025 Alex's Photo Board | All Rights Reserved
+  </footer>
 </body>
 </html>
