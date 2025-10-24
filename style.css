@@ -312,3 +312,45 @@ footer {
   margin-top: 0;
   font-size: 14px;
 }
+/* ====== Drupal News Section ====== */
+#drupalNewsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 30px;
+  gap: 20px;
+}
+
+.drupal-article .article-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 280px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.drupal-article .article-card:hover {
+  transform: translateY(-4px);
+}
+
+.drupal-article img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-bottom: 1px solid #eee;
+}
+
+.drupal-article h3 {
+  margin: 10px;
+  font-size: 18px;
+  color: #1d3557;
+  text-decoration: underline;
+}
+
+.drupal-article p {
+  margin: 10px;
+  color: #333;
+  line-height: 1.6;
+}
+

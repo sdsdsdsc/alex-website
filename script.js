@@ -187,3 +187,46 @@ async function loadArticles(containerId, collectionName) {
 // Load News and History articles
 loadArticles("newsContainer", "news");
 loadArticles("historyContainer", "history");
+// === FETCH DRUPAL NEWS FROM OPEN CMS ===
+async function loadDrupalNews() {
+  const container = document.getElementById("drupalNewsContainer");
+  if (!container) return;
+
+  try {
+    const res = await fetch("https://dev-alex-photo-cms.pantheonsite.io/jsonapi/node/article");
+    if (!res.ok) throw new Error("Failed to fetch Drupal data");
+    const json = await res.json();
+
+    const { data, included = [] } = json;
+    container.innerHTML = ""; // clear
+
+    data.forEach(item => {
+      const title = item.attributes.title;
+      const body = item.attributes.body.value;
+      const created = new Date(item.attributes.created).toDateString();
+
+      // find image
+      let imageUrl = "";
+      const rel = item.relationships.field_image?.data;
+      if (rel) {
+        const file = included.find(f => f.id === rel.id && f.type === "file--file");
+        if (file) imageUrl = file.attributes.uri.url;
+      }
+
+      const article = document.createElement("div");
+      article.classList.add("drupal-article");
+      article.innerHTML = `
+        <div class="article-card">
+          ${imageUrl ? `<img src="${imageUrl}" alt="">` : ""}
+          <h3>${title}</h3>
+          <p class="timestamp">${created}</p>
+          <p>${body}</p>
+        </div>
+      `;
+      container.appendChild(article);
+    });
+  } catch (err) {
+    console.error("Error loading Drupal news:", err);
+    container.innerHTML = "<p>Failed to load news from CMS.</p>";
+  }
+}
