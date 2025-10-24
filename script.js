@@ -202,7 +202,7 @@ export async function loadDrupalNews() {
 
     data.forEach(item => {
       const title = item.attributes.title;
-      const body = item.attributes.body.value;
+      const body = item.attributes.body?.processed || item.attributes.body?.value || "";
       const created = new Date(item.attributes.created).toDateString();
 
       // find image
@@ -212,6 +212,9 @@ export async function loadDrupalNews() {
         const file = included.find(f => f.id === rel.id && f.type === "file--file");
         if (file) imageUrl = file.attributes.uri.url;
       }
+      if (imageUrl && imageUrl.startsWith("/sites")) {
+        imageUrl = `https://dev-alex-photo-cms.pantheonsite.io${imageUrl}`;
+      }
 
       const article = document.createElement("div");
       article.classList.add("drupal-article");
@@ -220,7 +223,7 @@ export async function loadDrupalNews() {
           ${imageUrl ? `<img src="${imageUrl}" alt="">` : ""}
           <h3>${title}</h3>
           <p class="timestamp">${created}</p>
-          <p>${body}</p>
+          <div class="article-body">${body}</div>
         </div>
       `;
       container.appendChild(article);
