@@ -188,7 +188,7 @@ async function loadArticles(containerId, collectionName) {
 loadArticles("newsContainer", "news");
 loadArticles("historyContainer", "history");
 // === FETCH DRUPAL NEWS FROM OPEN CMS ===
-async function loadDrupalNews() {
+export async function loadDrupalNews() {
   const container = document.getElementById("drupalNewsContainer");
   if (!container) return;
 

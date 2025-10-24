@@ -47,8 +47,10 @@
     © 2025 Alex's Photo Board | All Rights Reserved
   </footer>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", loadDrupalNews);
-  </script>
+<script type="module">
+  import { loadDrupalNews } from './script.js';
+  document.addEventListener("DOMContentLoaded", () => loadDrupalNews());
+</script>
+
 </body>
 </html>
