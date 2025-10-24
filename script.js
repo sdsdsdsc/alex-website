@@ -193,37 +193,38 @@ export async function loadDrupalNews() {
   if (!container) return;
 
   try {
-    const res = await fetch("https://dev-alex-photo-cms.pantheonsite.io/jsonapi/node/article");
+    const res = await fetch("https://dev-alex-photo-cms.pantheonsite.io/jsonapi/node/article?include=field_image");
     if (!res.ok) throw new Error("Failed to fetch Drupal data");
     const json = await res.json();
 
     const { data, included = [] } = json;
-    container.innerHTML = ""; // clear
+    container.innerHTML = "";
 
     data.forEach(item => {
-      const title = item.attributes.title;
-      const body = item.attributes.body?.processed || item.attributes.body?.value || "";
+      const title = item.attributes.title || "Untitled";
+      const bodyHtml = item.attributes.body?.processed || "";
       const created = new Date(item.attributes.created).toDateString();
 
-      // find image
+      // Find full image path
       let imageUrl = "";
       const rel = item.relationships.field_image?.data;
       if (rel) {
         const file = included.find(f => f.id === rel.id && f.type === "file--file");
         if (file) imageUrl = file.attributes.uri.url;
       }
-      if (imageUrl && imageUrl.startsWith("/sites")) {
+      if (imageUrl && imageUrl.startsWith("/")) {
         imageUrl = `https://dev-alex-photo-cms.pantheonsite.io${imageUrl}`;
       }
 
+      // Build and render
       const article = document.createElement("div");
       article.classList.add("drupal-article");
       article.innerHTML = `
         <div class="article-card">
-          ${imageUrl ? `<img src="${imageUrl}" alt="">` : ""}
+          ${imageUrl ? `<img src="${imageUrl}" alt="news image">` : ""}
           <h3>${title}</h3>
           <p class="timestamp">${created}</p>
-          <div class="article-body">${body}</div>
+          <div class="article-body">${bodyHtml}</div>
         </div>
       `;
       container.appendChild(article);

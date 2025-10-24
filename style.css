@@ -302,6 +302,11 @@ header h1 a.home-link:hover {
   max-width: 900px;
   margin: 0 auto;
 }
+.article-body p {
+  margin: 8px 10px;
+  line-height: 1.7;
+  color: #333;
+}
 
 /* ====== Footer ====== */
 footer {
