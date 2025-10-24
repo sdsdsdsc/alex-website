@@ -197,15 +197,15 @@ export async function loadDrupalNews() {
     if (!res.ok) throw new Error("Failed to fetch Drupal data");
     const json = await res.json();
 
-    const { data, included = [] } = json;
     container.innerHTML = "";
+    const { data, included = [] } = json;
 
     data.forEach(item => {
       const title = item.attributes.title || "Untitled";
       const bodyHtml = item.attributes.body?.processed || "";
       const created = new Date(item.attributes.created).toDateString();
 
-      // Find full image path
+      // find full image URL
       let imageUrl = "";
       const rel = item.relationships.field_image?.data;
       if (rel) {
@@ -216,18 +216,16 @@ export async function loadDrupalNews() {
         imageUrl = `https://dev-alex-photo-cms.pantheonsite.io${imageUrl}`;
       }
 
-      // Build and render
-      const article = document.createElement("div");
-      article.classList.add("drupal-article");
-      article.innerHTML = `
+      const div = document.createElement("div");
+      div.classList.add("drupal-article");
+      div.innerHTML = `
         <div class="article-card">
-          ${imageUrl ? `<img src="${imageUrl}" alt="news image">` : ""}
+          ${imageUrl ? `<img src="${imageUrl}" alt="">` : ""}
           <h3>${title}</h3>
           <p class="timestamp">${created}</p>
           <div class="article-body">${bodyHtml}</div>
-        </div>
-      `;
-      container.appendChild(article);
+        </div>`;
+      container.appendChild(div);
     });
   } catch (err) {
     console.error("Error loading Drupal news:", err);
