@@ -1,8 +1,6 @@
 // === Firebase Imports ===
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import {
-  getFirestore, doc, getDoc
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -27,13 +25,8 @@ const articleImage = document.getElementById("articleImage");
 const articleContent = document.getElementById("articleContent");
 const articleDate = document.getElementById("articleDate");
 
-// === Load Article ===
-async function loadArticle() {
-  if (!id || !type) {
-    articleContent.textContent = "Invalid article link.";
-    return;
-  }
-
+// === Load Firebase Article ===
+async function loadFirebaseArticle() {
   try {
     const refDoc = doc(db, type, id);
     const snap = await getDoc(refDoc);
@@ -44,9 +37,7 @@ async function loadArticle() {
     }
 
     const data = snap.data();
-
-    // --- Fill Page ---
-    document.title = data.title + " | Alex's Photo Board";
+    document.title = `${data.title} | Alex's Photo Board`;
     articleTitle.textContent = data.title;
     articleImage.src = data.imageUrl;
     articleContent.textContent = data.content;
@@ -55,11 +46,49 @@ async function loadArticle() {
       const date = new Date(data.createdAt.seconds * 1000);
       articleDate.textContent = date.toDateString();
     }
-
   } catch (err) {
     console.error("Error loading article:", err);
     articleContent.textContent = "Error loading this article.";
   }
 }
 
-loadArticle();
+// === Load Drupal Article ===
+async function loadDrupalArticle(id) {
+  try {
+    const res = await fetch(`https://dev-alex-photo-cms.pantheonsite.io/jsonapi/node/article/${id}?include=field_image`);
+    if (!res.ok) throw new Error("Failed to fetch article data");
+    const json = await res.json();
+    const article = json.data;
+
+    const title = article.attributes.title;
+    const bodyHtml = article.attributes.body?.processed || "";
+    const created = new Date(article.attributes.created).toDateString();
+
+    let imageUrl = "";
+    const included = json.included || [];
+    const rel = article.relationships.field_image?.data;
+    if (rel) {
+      const file = included.find(f => f.id === rel.id && f.type === "file--file");
+      if (file) imageUrl = file.attributes.uri.url;
+    }
+    if (imageUrl && imageUrl.startsWith("/")) {
+      imageUrl = `https://dev-alex-photo-cms.pantheonsite.io${imageUrl}`;
+    }
+
+    document.title = `${title} | Alex's Photo Board`;
+    articleTitle.textContent = title;
+    articleImage.src = imageUrl;
+    articleDate.textContent = created;
+    articleContent.innerHTML = bodyHtml;
+  } catch (err) {
+    console.error("Error loading Drupal article:", err);
+    articleContent.textContent = "Failed to load this article.";
+  }
+}
+
+// === Router ===
+if (type === "drupal") {
+  loadDrupalArticle(id);
+} else {
+  loadFirebaseArticle();
+}

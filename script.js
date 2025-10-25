@@ -35,7 +35,7 @@ document.addEventListener("click", (e) => {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, getDocs, doc, updateDoc,
-  increment, orderBy, query, serverTimestamp
+  orderBy, query, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
@@ -150,7 +150,7 @@ async function loadGallery() {
 loadGallery();
 
 
-// === Load Articles (News & History) ===
+// === Load Firebase Articles (News & History) ===
 async function loadArticles(containerId, collectionName) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -184,9 +184,11 @@ async function loadArticles(containerId, collectionName) {
   });
 }
 
-// Load News and History articles
+// Load Firebase News and History
 loadArticles("newsContainer", "news");
 loadArticles("historyContainer", "history");
+
+
 // === FETCH DRUPAL NEWS FROM OPEN CMS ===
 export async function loadDrupalNews() {
   const container = document.getElementById("drupalNewsContainer");
@@ -221,10 +223,17 @@ export async function loadDrupalNews() {
       div.innerHTML = `
         <div class="article-card">
           ${imageUrl ? `<img src="${imageUrl}" alt="">` : ""}
-          <h3>${title}</h3>
+          <h3 class="drupal-title" style="cursor:pointer; color:#007bff; text-decoration:underline;">${title}</h3>
           <p class="timestamp">${created}</p>
-          <div class="article-body">${bodyHtml}</div>
-        </div>`;
+        </div>
+      `;
+
+      const titleEl = div.querySelector(".drupal-title");
+      titleEl.addEventListener("click", () => {
+        const articleId = item.id;
+        window.open(`article.html?id=${articleId}&type=drupal`, "_blank");
+      });
+
       container.appendChild(div);
     });
   } catch (err) {
