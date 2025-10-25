@@ -1,37 +1,3 @@
-// === Dropdown Menu Logic (fixed version) ===
-const communityBtn = document.getElementById("communityBtn");
-const communityMenu = document.getElementById("communityMenu");
-const newsBtn = document.getElementById("newsBtn");
-const newsMenu = document.getElementById("newsMenu");
-
-// Community dropdown
-if (communityBtn && communityMenu) {
-  communityBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    communityMenu.classList.toggle("show");
-    newsMenu?.classList.remove("show");
-  });
-}
-
-// News dropdown
-if (newsBtn && newsMenu) {
-  newsBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    newsMenu.classList.toggle("show");
-    communityMenu?.classList.remove("show");
-  });
-}
-
-// Hide dropdowns when clicking outside
-document.addEventListener("click", (e) => {
-  if (!e.target.closest(".menu")) {
-    communityMenu?.classList.remove("show");
-    newsMenu?.classList.remove("show");
-  }
-});
-
-
-// === Firebase Logic ===
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, getDocs, doc, updateDoc,
@@ -39,6 +5,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
+// === Firebase setup ===
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
   authDomain: "alexs-community-efcd8.firebaseapp.com",
@@ -52,8 +19,32 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
+// === Dropdowns ===
+const communityBtn = document.getElementById("communityBtn");
+const communityMenu = document.getElementById("communityMenu");
+const newsBtn = document.getElementById("newsBtn");
+const newsMenu = document.getElementById("newsMenu");
 
-// === Upload Image Logic ===
+communityBtn?.addEventListener("click", e => {
+  e.stopPropagation();
+  communityMenu.classList.toggle("show");
+  newsMenu?.classList.remove("show");
+});
+
+newsBtn?.addEventListener("click", e => {
+  e.stopPropagation();
+  newsMenu.classList.toggle("show");
+  communityMenu?.classList.remove("show");
+});
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".menu")) {
+    communityMenu?.classList.remove("show");
+    newsMenu?.classList.remove("show");
+  }
+});
+
+// === Firebase Upload ===
 const uploadBtn = document.getElementById("uploadBtn");
 if (uploadBtn) {
   uploadBtn.addEventListener("click", async () => {
@@ -65,7 +56,7 @@ if (uploadBtn) {
     const name = nameInput.value.trim() || "Anonymous";
     const msg = msgInput.value.trim();
 
-    if (!file || !msg) return alert("Please select an image and add a message.");
+    if (!file || !msg) return alert("Please select an image and write a message.");
 
     try {
       const storageRef = ref(storage, `uploads/${file.name}`);
@@ -78,10 +69,10 @@ if (uploadBtn) {
         imageUrl: url,
         likes: 0,
         comments: [],
-        createdAt: serverTimestamp(),
+        createdAt: serverTimestamp()
       });
 
-      alert("Uploaded successfully!");
+      alert("Upload successful!");
       fileInput.value = msgInput.value = nameInput.value = "";
     } catch (err) {
       console.error("Upload failed:", err);
@@ -89,68 +80,7 @@ if (uploadBtn) {
   });
 }
 
-
-// === Load Gallery ===
-async function loadGallery() {
-  const gallery = document.getElementById("gallery");
-  if (!gallery) return;
-
-  gallery.innerHTML = "";
-  const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
-  const snapshot = await getDocs(q);
-
-  snapshot.forEach(docSnap => {
-    const post = docSnap.data();
-    const div = document.createElement("div");
-    div.classList.add("post");
-
-    let formattedDate = "";
-    if (post.createdAt?.seconds) {
-      const date = new Date(post.createdAt.seconds * 1000);
-      formattedDate = date.toDateString();
-    }
-
-    div.innerHTML = `
-      <img src="${post.imageUrl}" alt="">
-      <p>${post.message}</p>
-      <p>👤 ${post.name}</p>
-      <p>❤️ ${post.likes || 0} likes</p>
-      <p class="timestamp">${formattedDate}</p>
-      <div class="comment-section"></div>
-      <input type="text" class="comment-input" placeholder="Write a comment...">
-      <button class="comment-btn">Post</button>
-    `;
-
-    const commentSection = div.querySelector(".comment-section");
-    if (post.comments && post.comments.length > 0) {
-      post.comments.forEach(c => {
-        const p = document.createElement("p");
-        p.classList.add("comment");
-        p.textContent = `💬 ${c}`;
-        commentSection.appendChild(p);
-      });
-    }
-
-    const commentBtn = div.querySelector(".comment-btn");
-    if (commentBtn) {
-      commentBtn.addEventListener("click", async () => {
-        const input = div.querySelector(".comment-input");
-        const text = input.value.trim();
-        if (!text) return;
-        const refDoc = doc(db, "posts", docSnap.id);
-        await updateDoc(refDoc, { comments: [...(post.comments || []), text] });
-        input.value = "";
-        loadGallery();
-      });
-    }
-
-    gallery.appendChild(div);
-  });
-}
-loadGallery();
-
-
-// === Load Firebase Articles (News & History) ===
+// === Load Firebase Articles ===
 async function loadArticles(containerId, collectionName) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -160,20 +90,18 @@ async function loadArticles(containerId, collectionName) {
   const snapshot = await getDocs(q);
 
   snapshot.forEach(docSnap => {
-    const article = docSnap.data();
+    const data = docSnap.data();
     const card = document.createElement("div");
     card.classList.add("article-card");
 
-    let formattedDate = "";
-    if (article.createdAt?.seconds) {
-      const date = new Date(article.createdAt.seconds * 1000);
-      formattedDate = date.toDateString();
-    }
+    const date = data.createdAt?.seconds
+      ? new Date(data.createdAt.seconds * 1000).toDateString()
+      : "";
 
     card.innerHTML = `
-      <img src="${article.imageUrl}" alt="">
-      <h3>${article.title}</h3>
-      <p class="timestamp">${formattedDate}</p>
+      <img src="${data.imageUrl}" alt="">
+      <h3>${data.title}</h3>
+      <p class="timestamp">${date}</p>
     `;
 
     card.querySelector("h3").addEventListener("click", () => {
@@ -184,19 +112,14 @@ async function loadArticles(containerId, collectionName) {
   });
 }
 
-// Load Firebase News and History
-loadArticles("newsContainer", "news");
-loadArticles("historyContainer", "history");
-
-
-// === FETCH DRUPAL NEWS FROM OPEN CMS ===
-export async function loadDrupalNews() {
+// === Load Drupal CMS Articles ===
+async function loadDrupalNews() {
   const container = document.getElementById("drupalNewsContainer");
   if (!container) return;
 
   try {
     const res = await fetch("https://dev-alex-photo-cms.pantheonsite.io/jsonapi/node/article?include=field_image");
-    if (!res.ok) throw new Error("Failed to fetch Drupal data");
+    if (!res.ok) throw new Error("Failed to fetch CMS data");
     const json = await res.json();
 
     container.innerHTML = "";
@@ -204,32 +127,27 @@ export async function loadDrupalNews() {
 
     data.forEach(item => {
       const title = item.attributes.title || "Untitled";
-      const bodyHtml = item.attributes.body?.processed || "";
       const created = new Date(item.attributes.created).toDateString();
 
-      // find full image URL
       let imageUrl = "";
       const rel = item.relationships.field_image?.data;
       if (rel) {
         const file = included.find(f => f.id === rel.id && f.type === "file--file");
         if (file) imageUrl = file.attributes.uri.url;
       }
-      if (imageUrl && imageUrl.startsWith("/")) {
+      if (imageUrl.startsWith("/")) {
         imageUrl = `https://dev-alex-photo-cms.pantheonsite.io${imageUrl}`;
       }
 
       const div = document.createElement("div");
-      div.classList.add("drupal-article");
+      div.classList.add("article-card");
       div.innerHTML = `
-        <div class="article-card">
-          ${imageUrl ? `<img src="${imageUrl}" alt="">` : ""}
-          <h3 class="drupal-title" style="cursor:pointer; color:#007bff; text-decoration:underline;">${title}</h3>
-          <p class="timestamp">${created}</p>
-        </div>
+        ${imageUrl ? `<img src="${imageUrl}" alt="">` : ""}
+        <h3 class="cms-title" style="cursor:pointer; color:#007bff; text-decoration:underline;">${title}</h3>
+        <p class="timestamp">${created}</p>
       `;
 
-      const titleEl = div.querySelector(".drupal-title");
-      titleEl.addEventListener("click", () => {
+      div.querySelector(".cms-title").addEventListener("click", () => {
         const articleId = item.id;
         window.open(`article.html?id=${articleId}&type=drupal`, "_blank");
       });
@@ -237,7 +155,11 @@ export async function loadDrupalNews() {
       container.appendChild(div);
     });
   } catch (err) {
-    console.error("Error loading Drupal news:", err);
-    container.innerHTML = "<p>Failed to load news from CMS.</p>";
+    console.error("Error loading CMS:", err);
+    container.innerHTML = "<p>Failed to load CMS news.</p>";
   }
 }
+
+// === Execute loads ===
+loadArticles("newsContainer", "news");
+loadDrupalNews();
