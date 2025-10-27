@@ -160,7 +160,7 @@ async function loadDrupalNews() {
   }
 }
 
-// === Load Gallery Posts ===
+// === Load Gallery Posts (Full version with likes & comments) ===
 async function loadGallery() {
   const gallery = document.getElementById("gallery");
   if (!gallery) return;
@@ -171,10 +171,12 @@ async function loadGallery() {
 
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
+    const postId = docSnap.id;
+
     const div = document.createElement("div");
     div.classList.add("post");
     div.innerHTML = `
-      <img src="${data.imageUrl}" alt="">
+      <img src="${data.imageUrl}" alt="post image">
       <div style="padding:10px;">
         <h4>${data.name || "Anonymous"}</h4>
         <p>${data.message || ""}</p>
@@ -183,11 +185,41 @@ async function loadGallery() {
             ? new Date(data.createdAt.seconds * 1000).toDateString()
             : ""
         }</p>
+        <p>❤️ ${data.likes || 0} likes</p>
+        <div class="comment-section" id="comments-${postId}">
+          ${(data.comments || [])
+            .map(c => `<p class="comment">💬 ${c}</p>`)
+            .join("")}
+          <input type="text" class="comment-input" id="input-${postId}" placeholder="Write a comment...">
+          <button class="comment-btn" onclick="addComment('${postId}')">Post</button>
+        </div>
       </div>
     `;
     gallery.appendChild(div);
   });
 }
+
+// === Add Comment (client-side only) ===
+window.addComment = async function (postId) {
+  const input = document.getElementById(`input-${postId}`);
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+
+  const postRef = doc(db, "posts", postId);
+  const snapshot = await getDocs(query(collection(db, "posts")));
+  const data = snapshot.docs.find(d => d.id === postId)?.data();
+  const comments = data?.comments || [];
+
+  comments.push(text);
+  await updateDoc(postRef, { comments });
+
+  const commentSection = document.getElementById(`comments-${postId}`);
+  const newComment = document.createElement("p");
+  newComment.className = "comment";
+  newComment.textContent = `💬 ${text}`;
+  commentSection.insertBefore(newComment, commentSection.querySelector("input"));
+};
 
 // === Load History Articles ===
 async function loadHistory() {
