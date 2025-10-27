@@ -358,48 +358,42 @@ footer {
   color: #333;
   line-height: 1.6;
 }
-/* === Fix dropdown menu positions === */
-.menu {
-  position: relative;
+/* ====== News Page Layout Fix ====== */
+.news-section {
+  margin: 60px auto;
+  max-width: 1100px;
+}
+
+.news-section h2 {
+  font-size: 24px;
+  color: #1d3557;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #457b9d;
+  padding-bottom: 8px;
+}
+
+.article-container {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 25px;
 }
 
-.dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: #ffffff;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  border-radius: 8px;
-  z-index: 1000;
-  min-width: 150px;
-}
-
-.dropdown a {
-  display: block;
-  padding: 10px 15px;
-  color: #333;
-  text-decoration: none;
-}
-
-.dropdown a:hover {
-  background-color: #f2f2f2;
-}
-
-.show {
-  display: block;
-}
-
-/* ensure dropdowns align under their own button */
+#newsMenu,
 #communityMenu {
+  top: 110%;
   left: 0;
+  transform: translateX(0);
+  background: #f1f1f1;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-#newsMenu {
-  left: auto;
-  right: 0;
+.menu div.hidden {
+  display: none;
 }
 
+.menu div.show {
+  display: flex;
+  flex-direction: column;
+}

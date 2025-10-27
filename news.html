@@ -10,34 +10,44 @@
 
   <!-- Header -->
   <header>
-    <h1 onclick="window.location.href='index.html'" style="cursor:pointer;">Alex's Photo Board</h1>
-    <nav class="menu">
+  <h1>
+    <a href="index.html" class="home-link">📸 Alex's Photo Board</a>
+  </h1>
+  <nav class="menu-bar">
+    <div class="menu">
       <button id="communityBtn">Community ▼</button>
-      <div id="communityMenu" class="dropdown">
-        <a href="gallery.html">Gallery</a>
-        <a href="upload.html">Upload</a>
+      <div id="communityMenu" class="hidden">
+        <button onclick="window.location.href='gallery.html'">🖼️ Gallery</button>
+        <button onclick="window.location.href='upload.html'">📤 Image</button>
       </div>
+    </div>
+
+    <div class="menu">
       <button id="newsBtn">What's News ▼</button>
-      <div id="newsMenu" class="dropdown">
-        <a href="news.html">Latest News</a>
-        <a href="history.html">Heritage History</a>
+      <div id="newsMenu" class="hidden">
+        <button onclick="window.location.href='news.html'">🗞️ News</button>
+        <button onclick="window.location.href='history.html'">📚 History Stories</button>
       </div>
-      <button onclick="window.location.href='map.html'">Map</button>
-    </nav>
-  </header>
+    </div>
+
+    <div class="menu">
+      <button onclick="window.location.href='map.html'">🗺️ Map</button>
+    </div>
+  </nav>
+</header>
 
   <!-- News sections -->
-  <main>
-    <section class="news-section">
-      <h2>Community News (From Firebase)</h2>
-      <div id="newsContainer" class="article-container"></div>
-    </section>
+  <main style="max-width:1200px; margin:auto; padding:30px 20px;">
+  <section class="news-section">
+    <h2>🗞️ Community News (From Firebase)</h2>
+    <div id="newsContainer" class="article-container"></div>
+  </section>
 
-    <section class="news-section">
-      <h2>Heritage News (From Open CMS)</h2>
-      <div id="drupalNewsContainer" class="article-container"></div>
-    </section>
-  </main>
+  <section class="news-section">
+    <h2>🏛️ Heritage News (From Open CMS)</h2>
+    <div id="drupalNewsContainer" class="article-container"></div>
+  </section>
+</main>
 
   <footer>
     <p>© 2025 Alex's Photo Board</p>
