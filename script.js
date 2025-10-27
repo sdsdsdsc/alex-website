@@ -80,7 +80,7 @@ if (uploadBtn) {
   });
 }
 
-// === Load Firebase Articles ===
+// === Load Firebase Articles (News) ===
 async function loadArticles(containerId, collectionName) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -160,6 +160,68 @@ async function loadDrupalNews() {
   }
 }
 
-// === Execute loads ===
+// === Load Gallery Posts ===
+async function loadGallery() {
+  const gallery = document.getElementById("gallery");
+  if (!gallery) return;
+
+  gallery.innerHTML = "";
+  const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const div = document.createElement("div");
+    div.classList.add("post");
+    div.innerHTML = `
+      <img src="${data.imageUrl}" alt="">
+      <div style="padding:10px;">
+        <h4>${data.name || "Anonymous"}</h4>
+        <p>${data.message || ""}</p>
+        <p class="timestamp">${
+          data.createdAt?.seconds
+            ? new Date(data.createdAt.seconds * 1000).toDateString()
+            : ""
+        }</p>
+      </div>
+    `;
+    gallery.appendChild(div);
+  });
+}
+
+// === Load History Articles ===
+async function loadHistory() {
+  const container = document.getElementById("historyContainer");
+  if (!container) return;
+
+  container.innerHTML = "";
+  const q = query(collection(db, "history"), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const card = document.createElement("div");
+    card.classList.add("article-card");
+
+    const date = data.createdAt?.seconds
+      ? new Date(data.createdAt.seconds * 1000).toDateString()
+      : "";
+
+    card.innerHTML = `
+      <img src="${data.imageUrl}" alt="">
+      <h3>${data.title}</h3>
+      <p class="timestamp">${date}</p>
+    `;
+    card.querySelector("h3").addEventListener("click", () => {
+      window.open(`article.html?id=${docSnap.id}&type=history`, "_blank");
+    });
+
+    container.appendChild(card);
+  });
+}
+
+// === Run functions automatically on correct pages ===
 loadArticles("newsContainer", "news");
 loadDrupalNews();
+loadGallery();
+loadHistory();
