@@ -397,16 +397,3 @@ footer {
   display: flex;
   flex-direction: column;
 }
-.tags {
-  margin-top: 20px;
-  font-size: 15px;
-  color: #444;
-  background: #f1f1f1;
-  padding: 10px 14px;
-  border-radius: 8px;
-  display: inline-block;
-}
-.tags strong {
-  color: #1d3557;
-}
-

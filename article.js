@@ -22,61 +22,45 @@ const articleImage = document.getElementById("articleImage");
 const articleContent = document.getElementById("articleContent");
 const articleDate = document.getElementById("articleDate");
 
+async function loadFirebaseArticle() {
+  const refDoc = doc(db, type, id);
+  const snap = await getDoc(refDoc);
+  if (!snap.exists()) {
+    articleContent.textContent = "Article not found.";
+    return;
+  }
+  const data = snap.data();
+  articleTitle.textContent = data.title;
+  articleImage.src = data.imageUrl;
+  articleContent.textContent = data.content;
+  if (data.createdAt?.seconds) {
+    articleDate.textContent = new Date(data.createdAt.seconds * 1000).toDateString();
+  }
+}
+
 async function loadDrupalArticle(id) {
-  const res = await fetch(
-    `https://dev-alex-photo-cms.pantheonsite.io/jsonapi/node/article/${id}?include=field_image,uid,field_tags`
-  );
+  const res = await fetch(`https://dev-alex-photo-cms.pantheonsite.io/jsonapi/node/article/${id}?include=field_image`);
   const json = await res.json();
   const article = json.data;
-
   const title = article.attributes.title;
   const body = article.attributes.body?.processed || "";
   const created = new Date(article.attributes.created).toDateString();
 
-  // === Author ===
-  let author = "Anonymous";
-  const included = json.included || [];
-  const authorRel = article.relationships.uid?.data;
-  if (authorRel) {
-    const authorObj = included.find(
-      (item) => item.id === authorRel.id && item.type === "user--user"
-    );
-    if (authorObj) author = authorObj.attributes.name;
-  }
-
-  // === Tags ===
-  const tags = [];
-  const tagRels = article.relationships.field_tags?.data || [];
-  tagRels.forEach((tagRel) => {
-    const tagObj = included.find(
-      (item) => item.id === tagRel.id && item.type === "taxonomy_term--tags"
-    );
-    if (tagObj) tags.push(tagObj.attributes.name);
-  });
-
-  // === Image ===
   let imageUrl = "";
+  const included = json.included || [];
   const rel = article.relationships.field_image?.data;
   if (rel) {
-    const file = included.find((f) => f.id === rel.id && f.type === "file--file");
+    const file = included.find(f => f.id === rel.id && f.type === "file--file");
     if (file) imageUrl = file.attributes.uri.url;
   }
   if (imageUrl.startsWith("/")) {
     imageUrl = `https://dev-alex-photo-cms.pantheonsite.io${imageUrl}`;
   }
 
-  // === Render ===
   articleTitle.textContent = title;
   articleImage.src = imageUrl;
-  articleDate.textContent = `${created} | by ${author}`;
-  articleContent.innerHTML = `
-    <div class="article-body">${body}</div>
-    ${
-      tags.length
-        ? `<div class="tags">🏷️ <strong>Tags:</strong> ${tags.join(", ")}</div>`
-        : ""
-    }
-  `;
+  articleDate.textContent = created;
+  articleContent.innerHTML = body;
 }
 
 if (type === "drupal") loadDrupalArticle(id);
