@@ -22,6 +22,7 @@ header h1 {
   font-size: 26px;
   letter-spacing: 0.5px;
 }
+/* Make site title clickable and styled */
 header h1 a.home-link {
   color: #fff;
   text-decoration: none;
@@ -31,7 +32,7 @@ header h1 a.home-link:hover {
   opacity: 0.8;
 }
 
-/* ====== Menu Bar ====== */
+/* ====== Menus ====== */
 .menu-bar {
   display: flex;
   justify-content: center;
@@ -41,72 +42,53 @@ header h1 a.home-link:hover {
 
 .menu {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
-/* === Buttons === */
 .menu button {
-  background-color: #15385b;
-  color: white;
+  background: #457b9d;
+  color: #fff;
   border: none;
+  padding: 10px 20px;
   border-radius: 6px;
-  padding: 10px 15px;
   cursor: pointer;
-  font-weight: 500;
-  font-size: 15px;
-  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+  font-size: 16px;
+  transition: background 0.3s ease;
 }
 .menu button:hover {
-  background-color: #1e4a78;
-  transform: translateY(-1px);
+  background: #356389;
 }
 
-/* === Dropdowns === */
-.dropdown {
-  display: none;
+/* Dropdown container (hidden by default) */
+.menu div {
   position: absolute;
-  top: 100%;
-  background-color: #1e4a78;
-  border-radius: 6px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  min-width: 170px;
-  z-index: 1000;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(-8px);
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-/* Fade-in animation when opened */
-.show {
-  display: block;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Align dropdowns correctly */
-#communityMenu {
+  top: 110%;
   left: 0;
+  display: none; /* hidden by default */
+  flex-direction: column;
+  background: #f1f1f1;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 5px;
+  z-index: 99;
 }
 
-#newsMenu {
-  right: 0;
+/* Dropdown visible state */
+.menu div.show {
+  display: flex;
 }
 
-/* === Dropdown Links === */
-.dropdown a {
-  display: block;
-  padding: 10px 14px;
-  color: #ffffff;
-  text-decoration: none;
+/* Dropdown buttons */
+.menu div button {
+  color: #000;
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 8px 16px;
+  border-radius: 4px;
   font-size: 15px;
-  transition: background-color 0.2s ease-in-out;
 }
-
-.dropdown a:hover {
-  background-color: #285f93;
+.menu div button:hover {
+  background: #ddd;
 }
 
 /* ====== Hero Section ====== */
@@ -335,7 +317,6 @@ footer {
   margin-top: 0;
   font-size: 14px;
 }
-
 /* ====== Drupal News Section ====== */
 #drupalNewsContainer {
   display: flex;
@@ -344,3 +325,81 @@ footer {
   margin: 30px;
   gap: 20px;
 }
+
+.drupal-article .article-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 280px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.drupal-article .article-card:hover {
+  transform: translateY(-4px);
+}
+
+.drupal-article img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-bottom: 1px solid #eee;
+}
+
+.drupal-article h3 {
+  margin: 10px;
+  font-size: 18px;
+  color: #1d3557;
+  text-decoration: underline;
+}
+
+.drupal-article p {
+  margin: 10px;
+  color: #333;
+  line-height: 1.6;
+}
+/* === Fix dropdown menu positions === */
+.menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #ffffff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  z-index: 1000;
+  min-width: 150px;
+}
+
+.dropdown a {
+  display: block;
+  padding: 10px 15px;
+  color: #333;
+  text-decoration: none;
+}
+
+.dropdown a:hover {
+  background-color: #f2f2f2;
+}
+
+.show {
+  display: block;
+}
+
+/* ensure dropdowns align under their own button */
+#communityMenu {
+  left: 0;
+}
+
+#newsMenu {
+  left: auto;
+  right: 0;
+}
+
