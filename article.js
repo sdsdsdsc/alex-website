@@ -36,7 +36,7 @@ async function loadFirebaseArticle() {
   articleTitle.textContent = data.title || "Untitled";
   articleImage.src = data.imageUrl || "";
   articleContent.innerHTML = `
-    <p>${data.content || ""}</p>
+    <p>${data.content || data.message || ""}</p>
     ${
       data.tags
         ? `<div class="tags">🏷️ <strong>Tags:</strong> ${data.tags.join(", ")}</div>`
@@ -45,6 +45,14 @@ async function loadFirebaseArticle() {
   `;
   if (data.createdAt?.seconds) {
     articleDate.textContent = new Date(data.createdAt.seconds * 1000).toDateString();
+  }
+
+  // === Inject JSON-LD into <head> for semantic web readers
+  if (data.jsonld) {
+    const ldScript = document.createElement("script");
+    ldScript.type = "application/ld+json";
+    ldScript.textContent = JSON.stringify(data.jsonld, null, 2);
+    document.head.appendChild(ldScript);
   }
 }
 
@@ -59,7 +67,7 @@ async function loadDrupalArticle(id) {
   const body = article.attributes.body?.processed || "";
   const created = new Date(article.attributes.created).toDateString();
 
-  // === Author ===
+  // === Author
   let author = "Anonymous";
   const included = json.included || [];
   const authorRel = article.relationships.uid?.data;
@@ -70,7 +78,7 @@ async function loadDrupalArticle(id) {
     if (authorObj) author = authorObj.attributes.name;
   }
 
-  // === Tags ===
+  // === Tags
   const tags = [];
   const tagRels = article.relationships.field_tags?.data || [];
   tagRels.forEach((tagRel) => {
@@ -80,7 +88,7 @@ async function loadDrupalArticle(id) {
     if (tagObj) tags.push(tagObj.attributes.name);
   });
 
-  // === Image ===
+  // === Image
   let imageUrl = "";
   const rel = article.relationships.field_image?.data;
   if (rel) {
@@ -91,7 +99,7 @@ async function loadDrupalArticle(id) {
     imageUrl = `https://dev-alex-photo-cms.pantheonsite.io${imageUrl}`;
   }
 
-  // === Render ===
+  // === Render
   articleTitle.textContent = title;
   articleImage.src = imageUrl;
   articleDate.textContent = `${created} | by ${author}`;

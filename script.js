@@ -45,6 +45,45 @@ document.addEventListener("click", e => {
 });
 
 // === Firebase Upload ===
+const firebaseConfig = {
+  apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
+  authDomain: "alexs-community-efcd8.firebaseapp.com",
+  projectId: "alexs-community-efcd8",
+  storageBucket: "alexs-community-efcd8.firebasestorage.app",
+  messagingSenderId: "214395622099",
+  appId: "1:214395622099:web:44f99a181741caf3117a26"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// === Dropdowns ===
+const communityBtn = document.getElementById("communityBtn");
+const communityMenu = document.getElementById("communityMenu");
+const newsBtn = document.getElementById("newsBtn");
+const newsMenu = document.getElementById("newsMenu");
+
+communityBtn?.addEventListener("click", e => {
+  e.stopPropagation();
+  communityMenu.classList.toggle("show");
+  newsMenu?.classList.remove("show");
+});
+
+newsBtn?.addEventListener("click", e => {
+  e.stopPropagation();
+  newsMenu.classList.toggle("show");
+  communityMenu?.classList.remove("show");
+});
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".menu")) {
+    communityMenu?.classList.remove("show");
+    newsMenu?.classList.remove("show");
+  }
+});
+
+// === Firebase Upload (with JSON-LD metadata) ===
 const uploadBtn = document.getElementById("uploadBtn");
 if (uploadBtn) {
   uploadBtn.addEventListener("click", async () => {
@@ -62,17 +101,34 @@ if (uploadBtn) {
       const storageRef = ref(storage, `uploads/${file.name}`);
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
+      const createdAt = new Date();
 
+      // === Create semantic JSON-LD metadata
+      const jsonld = {
+        "@context": {
+          "schema": "https://schema.org/",
+          "dc": "http://purl.org/dc/elements/1.1/"
+        },
+        "@type": "schema:Photograph",
+        "schema:name": msg,
+        "schema:creator": { "@type": "schema:Person", "schema:name": name },
+        "schema:contentUrl": url,
+        "schema:source": "Alex's Photo Board",
+        "dc:date": createdAt.toISOString()
+      };
+
+      // === Upload post + metadata
       await addDoc(collection(db, "posts"), {
         name,
         message: msg,
         imageUrl: url,
         likes: 0,
         comments: [],
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        jsonld
       });
 
-      alert("Upload successful!");
+      alert("✅ Upload successful (with semantic metadata)!");
       fileInput.value = msgInput.value = nameInput.value = "";
     } catch (err) {
       console.error("Upload failed:", err);
