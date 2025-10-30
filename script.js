@@ -30,52 +30,11 @@ communityBtn?.addEventListener("click", e => {
   communityMenu.classList.toggle("show");
   newsMenu?.classList.remove("show");
 });
-
 newsBtn?.addEventListener("click", e => {
   e.stopPropagation();
   newsMenu.classList.toggle("show");
   communityMenu?.classList.remove("show");
 });
-
-document.addEventListener("click", e => {
-  if (!e.target.closest(".menu")) {
-    communityMenu?.classList.remove("show");
-    newsMenu?.classList.remove("show");
-  }
-});
-
-// === Firebase Upload ===
-const firebaseConfig = {
-  apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
-  authDomain: "alexs-community-efcd8.firebaseapp.com",
-  projectId: "alexs-community-efcd8",
-  storageBucket: "alexs-community-efcd8.firebasestorage.app",
-  messagingSenderId: "214395622099",
-  appId: "1:214395622099:web:44f99a181741caf3117a26"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-// === Dropdowns ===
-const communityBtn = document.getElementById("communityBtn");
-const communityMenu = document.getElementById("communityMenu");
-const newsBtn = document.getElementById("newsBtn");
-const newsMenu = document.getElementById("newsMenu");
-
-communityBtn?.addEventListener("click", e => {
-  e.stopPropagation();
-  communityMenu.classList.toggle("show");
-  newsMenu?.classList.remove("show");
-});
-
-newsBtn?.addEventListener("click", e => {
-  e.stopPropagation();
-  newsMenu.classList.toggle("show");
-  communityMenu?.classList.remove("show");
-});
-
 document.addEventListener("click", e => {
   if (!e.target.closest(".menu")) {
     communityMenu?.classList.remove("show");
@@ -101,9 +60,9 @@ if (uploadBtn) {
       const storageRef = ref(storage, `uploads/${file.name}`);
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
-      const createdAt = new Date();
 
-      // === Create semantic JSON-LD metadata
+      // Create semantic JSON-LD metadata
+      const createdAt = new Date();
       const jsonld = {
         "@context": {
           "schema": "https://schema.org/",
@@ -117,7 +76,6 @@ if (uploadBtn) {
         "dc:date": createdAt.toISOString()
       };
 
-      // === Upload post + metadata
       await addDoc(collection(db, "posts"), {
         name,
         message: msg,
@@ -136,55 +94,42 @@ if (uploadBtn) {
   });
 }
 
-// === Load Firebase Articles (News) ===
+// === Loaders (unchanged core logic) ===
 async function loadArticles(containerId, collectionName) {
   const container = document.getElementById(containerId);
   if (!container) return;
-
   container.innerHTML = "";
   const q = query(collection(db, collectionName), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
-
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
     const card = document.createElement("div");
     card.classList.add("article-card");
-
     const date = data.createdAt?.seconds
       ? new Date(data.createdAt.seconds * 1000).toDateString()
       : "";
-
     card.innerHTML = `
       <img src="${data.imageUrl}" alt="">
-      <h3>${data.title}</h3>
-      <p class="timestamp">${date}</p>
-    `;
-
+      <h3>${data.title || data.message}</h3>
+      <p class="timestamp">${date}</p>`;
     card.querySelector("h3").addEventListener("click", () => {
       window.open(`article.html?id=${docSnap.id}&type=${collectionName}`, "_blank");
     });
-
     container.appendChild(card);
   });
 }
 
-// === Load Drupal CMS Articles ===
 async function loadDrupalNews() {
   const container = document.getElementById("drupalNewsContainer");
   if (!container) return;
-
   try {
     const res = await fetch("https://dev-alex-photo-cms.pantheonsite.io/jsonapi/node/article?include=field_image");
-    if (!res.ok) throw new Error("Failed to fetch CMS data");
     const json = await res.json();
-
     container.innerHTML = "";
     const { data, included = [] } = json;
-
     data.forEach(item => {
       const title = item.attributes.title || "Untitled";
       const created = new Date(item.attributes.created).toDateString();
-
       let imageUrl = "";
       const rel = item.relationships.field_image?.data;
       if (rel) {
@@ -194,20 +139,16 @@ async function loadDrupalNews() {
       if (imageUrl.startsWith("/")) {
         imageUrl = `https://dev-alex-photo-cms.pantheonsite.io${imageUrl}`;
       }
-
       const div = document.createElement("div");
       div.classList.add("article-card");
       div.innerHTML = `
         ${imageUrl ? `<img src="${imageUrl}" alt="">` : ""}
-        <h3 class="cms-title" style="cursor:pointer; color:#007bff; text-decoration:underline;">${title}</h3>
-        <p class="timestamp">${created}</p>
-      `;
-
+        <h3 class="cms-title" style="cursor:pointer;color:#007bff;text-decoration:underline;">${title}</h3>
+        <p class="timestamp">${created}</p>`;
       div.querySelector(".cms-title").addEventListener("click", () => {
         const articleId = item.id;
         window.open(`article.html?id=${articleId}&type=drupal`, "_blank");
       });
-
       container.appendChild(div);
     });
   } catch (err) {
@@ -216,19 +157,15 @@ async function loadDrupalNews() {
   }
 }
 
-// === Load Gallery Posts (Full version with likes & comments) ===
 async function loadGallery() {
   const gallery = document.getElementById("gallery");
   if (!gallery) return;
-
   gallery.innerHTML = "";
   const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
-
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
     const postId = docSnap.id;
-
     const div = document.createElement("div");
     div.classList.add("post");
     div.innerHTML = `
@@ -236,40 +173,29 @@ async function loadGallery() {
       <div style="padding:10px;">
         <h4>${data.name || "Anonymous"}</h4>
         <p>${data.message || ""}</p>
-        <p class="timestamp">${
-          data.createdAt?.seconds
-            ? new Date(data.createdAt.seconds * 1000).toDateString()
-            : ""
-        }</p>
+        <p class="timestamp">${data.createdAt?.seconds ? new Date(data.createdAt.seconds * 1000).toDateString() : ""}</p>
         <p>❤️ ${data.likes || 0} likes</p>
         <div class="comment-section" id="comments-${postId}">
-          ${(data.comments || [])
-            .map(c => `<p class="comment">💬 ${c}</p>`)
-            .join("")}
+          ${(data.comments || []).map(c => `<p class="comment">💬 ${c}</p>`).join("")}
           <input type="text" class="comment-input" id="input-${postId}" placeholder="Write a comment...">
           <button class="comment-btn" onclick="addComment('${postId}')">Post</button>
         </div>
-      </div>
-    `;
+      </div>`;
     gallery.appendChild(div);
   });
 }
 
-// === Add Comment (client-side only) ===
 window.addComment = async function (postId) {
   const input = document.getElementById(`input-${postId}`);
   const text = input.value.trim();
   if (!text) return;
   input.value = "";
-
   const postRef = doc(db, "posts", postId);
   const snapshot = await getDocs(query(collection(db, "posts")));
   const data = snapshot.docs.find(d => d.id === postId)?.data();
   const comments = data?.comments || [];
-
   comments.push(text);
   await updateDoc(postRef, { comments });
-
   const commentSection = document.getElementById(`comments-${postId}`);
   const newComment = document.createElement("p");
   newComment.className = "comment";
@@ -277,38 +203,29 @@ window.addComment = async function (postId) {
   commentSection.insertBefore(newComment, commentSection.querySelector("input"));
 };
 
-// === Load History Articles ===
 async function loadHistory() {
   const container = document.getElementById("historyContainer");
   if (!container) return;
-
   container.innerHTML = "";
   const q = query(collection(db, "history"), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
-
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
     const card = document.createElement("div");
     card.classList.add("article-card");
-
-    const date = data.createdAt?.seconds
-      ? new Date(data.createdAt.seconds * 1000).toDateString()
-      : "";
-
+    const date = data.createdAt?.seconds ? new Date(data.createdAt.seconds * 1000).toDateString() : "";
     card.innerHTML = `
       <img src="${data.imageUrl}" alt="">
-      <h3>${data.title}</h3>
-      <p class="timestamp">${date}</p>
-    `;
+      <h3>${data.title || data.message}</h3>
+      <p class="timestamp">${date}</p>`;
     card.querySelector("h3").addEventListener("click", () => {
       window.open(`article.html?id=${docSnap.id}&type=history`, "_blank");
     });
-
     container.appendChild(card);
   });
 }
 
-// === Run functions automatically on correct pages ===
+// === Initialize ===
 loadArticles("newsContainer", "news");
 loadDrupalNews();
 loadGallery();
