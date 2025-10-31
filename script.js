@@ -94,27 +94,54 @@ if (uploadBtn) {
   });
 }
 
-// === Loaders (unchanged core logic) ===
+// === Improved article loader for both NEWS and HISTORY ===
 async function loadArticles(containerId, collectionName) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = "";
+
   const q = query(collection(db, collectionName), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
+
+  if (snapshot.empty) {
+    container.innerHTML = "<p>No articles yet.</p>";
+    return;
+  }
+
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
-    const card = document.createElement("div");
-    card.classList.add("article-card");
     const date = data.createdAt?.seconds
       ? new Date(data.createdAt.seconds * 1000).toDateString()
       : "";
+
+    // === Detect image (for new HTML articles or normal posts)
+    let imageUrl = "";
+    if (data.imageUrl) {
+      imageUrl = data.imageUrl;
+    } else if (data.jsonld?.["schema:contentUrl"]) {
+      imageUrl = data.jsonld["schema:contentUrl"];
+    }
+
+    // === Create card element ===
+    const card = document.createElement("div");
+    card.classList.add("article-card");
+
+    // Show small badge if it's a new rich-format article
+    const badge = data.htmlUrl
+      ? `<span class="badge" style="background:#007bff;color:#fff;padding:2px 6px;border-radius:6px;font-size:12px;">Rich Format</span>`
+      : "";
+
     card.innerHTML = `
-      <img src="${data.imageUrl}" alt="">
-      <h3>${data.title || data.message}</h3>
-      <p class="timestamp">${date}</p>`;
+      ${imageUrl ? `<img src="${imageUrl}" alt="thumbnail">` : ""}
+      <h3>${data.title || data.message || "Untitled"} ${badge}</h3>
+      <p class="timestamp">${date}</p>
+    `;
+
+    // === Clicking opens article viewer ===
     card.querySelector("h3").addEventListener("click", () => {
       window.open(`article.html?id=${docSnap.id}&type=${collectionName}`, "_blank");
     });
+
     container.appendChild(card);
   });
 }
