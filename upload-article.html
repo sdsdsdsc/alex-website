@@ -1,18 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upload Article (Admin Only)</title>
-  <script type="module">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload New Article</title>
 
-    // === Firebase imports ===
+  <!-- Quill Editor -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <style>
+    body { font-family: system-ui; max-width: 900px; margin: 40px auto; }
+    #editor { height: 300px; background: #fff; }
+    button { padding: 10px 20px; margin-top: 20px; }
+  </style>
+</head>
+
+<body>
+  <h1>📰 Upload New Article</h1>
+  <input type="text" id="title" placeholder="Article Title" style="width:100%;padding:8px;margin-bottom:10px;">
+  <select id="category" style="width:100%;padding:8px;margin-bottom:10px;">
+    <option value="">-- choose category --</option>
+    <option value="news">News</option>
+    <option value="history">History</option>
+  </select>
+
+  <!-- Live rich text editor -->
+  <div id="editor"></div>
+
+  <!-- Optional cover image -->
+  <input type="file" id="imageFile" accept="image/*" style="margin-top:20px;"><br>
+
+  <button id="publishBtn">Publish</button>
+
+  <!-- Quill + Firebase -->
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
-    // import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-    // === Firebase config ===
+    // === Firebase Config ===
     const firebaseConfig = {
       apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
       authDomain: "alexs-community-efcd8.firebaseapp.com",
@@ -25,100 +51,79 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const storage = getStorage(app);
-    // const auth = getAuth(app);
 
-    // === Temporary: disable admin check for testing ===
-    /*
-    onAuthStateChanged(auth, user => {
-      if (!user || user.email !== "YOUR_EMAIL@example.com") {
-        alert("Access denied — admin only");
-        window.location.href = "index.html";
+    // === Quill Setup ===
+    const quill = new Quill('#editor', {
+      theme: 'snow',
+      placeholder: 'Write your article here...',
+      modules: {
+        toolbar: [
+          [{ header: [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          ['link', 'blockquote', 'code-block', 'image'],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['clean']
+        ]
       }
     });
-    */
 
-    // === Handle form submission ===
-    document.addEventListener("DOMContentLoaded", () => {
-      const form = document.getElementById("uploadForm");
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
+    // === Publish Article ===
+    document.getElementById("publishBtn").addEventListener("click", async () => {
+      const title = document.getElementById("title").value.trim();
+      const category = document.getElementById("category").value;
+      const imageFile = document.getElementById("imageFile").files[0];
+      const content = quill.root.innerHTML;
 
-        const title = document.getElementById("title").value;
-        const category = document.getElementById("category").value; // news / history / posts
-        const htmlFile = document.getElementById("htmlFile").files[0];
-        const imageFile = document.getElementById("imageFile").files[0];
+      if (!title || !category || !content) {
+        alert("Please fill out all fields.");
+        return;
+      }
 
-        if (!title || !category || !htmlFile) {
-          alert("Please fill all fields and upload an HTML file.");
-          return;
+      try {
+        // upload image if selected
+        let imageUrl = "";
+        if (imageFile) {
+          const imgRef = ref(storage, `article-images/${Date.now()}_${imageFile.name}`);
+          await uploadBytes(imgRef, imageFile);
+          imageUrl = await getDownloadURL(imgRef);
         }
 
-        try {
-          // 1️⃣ Upload HTML file
-          const htmlRef = ref(storage, `articles/${Date.now()}_${htmlFile.name}`);
-          await uploadBytes(htmlRef, htmlFile);
-          const htmlUrl = await getDownloadURL(htmlRef);
+        // upload article HTML
+        const htmlBlob = new Blob([content], { type: "text/html" });
+        const htmlRef = ref(storage, `articles/${Date.now()}_${title.replace(/\s+/g, "_")}.html`);
+        await uploadBytes(htmlRef, htmlBlob);
+        const htmlUrl = await getDownloadURL(htmlRef);
 
-          // 2️⃣ Upload image if provided
-          let imageUrl = "";
-          if (imageFile) {
-            const imgRef = ref(storage, `article-images/${Date.now()}_${imageFile.name}`);
-            await uploadBytes(imgRef, imageFile);
-            imageUrl = await getDownloadURL(imgRef);
+        // save to Firestore
+        await addDoc(collection(db, category), {
+          title,
+          htmlUrl,
+          imageUrl,
+          createdAt: serverTimestamp(),
+          jsonld: {
+            "@context": {
+              "schema": "https://schema.org/",
+              "dc": "http://purl.org/dc/elements/1.1/"
+            },
+            "@type": "schema:Article",
+            "schema:name": title,
+            "schema:contentUrl": htmlUrl,
+            "schema:image": imageUrl,
+            "schema:source": "Alex's Photo Board (Firebase)",
+            "dc:date": new Date().toISOString()
           }
+        });
 
-          // 3️⃣ Save metadata in Firestore
-          await addDoc(collection(db, category), {
-            title,
-            htmlUrl,
-            imageUrl,
-            createdAt: serverTimestamp(),
-            jsonld: {
-              "@context": {
-                "schema": "https://schema.org/",
-                "dc": "http://purl.org/dc/elements/1.1/"
-              },
-              "@type": "schema:Article",
-              "schema:name": title,
-              "schema:contentUrl": htmlUrl,
-              "schema:image": imageUrl,
-              "schema:source": "Alex's Photo Board (Firebase)",
-              "dc:date": new Date().toISOString()
-            }
-          });
-
-          alert("✅ Article uploaded successfully!");
-          form.reset();
-        } catch (err) {
-          console.error("Upload failed:", err);
-          alert("Upload failed — check console for details.");
-        }
-      });
+        alert("✅ Article published!");
+        quill.root.innerHTML = "";
+        document.getElementById("title").value = "";
+        document.getElementById("category").value = "";
+        document.getElementById("imageFile").value = "";
+      } catch (err) {
+        console.error("Error uploading article:", err);
+        alert("❌ Upload failed. Check console for details.");
+      }
     });
   </script>
-</head>
-
-<body style="font-family: system-ui; max-width: 600px; margin: 40px auto;">
-  <h1>📰 Upload New Article</h1>
-  <form id="uploadForm">
-    <label>Title:</label><br>
-    <input type="text" id="title" required style="width:100%; margin-bottom:10px;"><br>
-
-    <label>Category:</label><br>
-    <select id="category" required style="width:100%; margin-bottom:10px;">
-      <option value="">-- choose --</option>
-      <option value="news">News</option>
-      <option value="history">History</option>
-      <option value="posts">Posts</option>
-    </select><br>
-
-    <label>Article HTML File:</label><br>
-    <input type="file" id="htmlFile" accept=".html" required><br><br>
-
-    <label>Cover Image (optional):</label><br>
-    <input type="file" id="imageFile" accept="image/*"><br><br>
-
-    <button type="submit">Upload</button>
-  </form>
 </body>
 </html>
