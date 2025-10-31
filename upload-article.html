@@ -3,54 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upload New Article | Alex's Photo Board</title>
-  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    body { font-family: sans-serif; background: #f7f8fa; }
-    header { text-align: center; padding: 1rem; background: #0b3d6e; color: #fff; }
-    main { max-width: 900px; margin: 2rem auto; background: #fff; padding: 2rem; border-radius: 10px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
-    #login-box { max-width: 400px; margin: 5rem auto; background: #fff; padding: 2rem; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    input, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc; }
-    button { background: #0b3d6e; color: #fff; font-weight: bold; cursor: pointer; }
-    #logoutBtn { background: crimson; margin-top: 10px; }
-    .hidden { display: none; }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>📝 Upload New Article</h1>
-    <p>Admin access required</p>
-  </header>
-
-  <!-- === Login Box === -->
-  <div id="login-box">
-    <h2>Admin Login</h2>
-    <input type="email" id="loginEmail" placeholder="Email" />
-    <input type="password" id="loginPassword" placeholder="Password" />
-    <button id="loginBtn">Login</button>
-    <p id="loginMessage" style="color:red;font-size:0.9rem;"></p>
-  </div>
-
-  <!-- === Editor Panel (hidden until logged in) === -->
-  <main id="editor-panel" class="hidden">
-    <input type="text" id="title" placeholder="Article Title" />
-    <input type="text" id="author" placeholder="Author" value="Alex" />
-    <div id="editor-container" style="height:300px;margin-top:10px;"></div>
-    <button id="publishBtn">Publish Article</button>
-    <button id="logoutBtn">Logout</button>
-  </main>
-
-  <!-- Quill -->
-  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-
+  <title>Upload Article (Admin Only)</title>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-    import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
-    // === Firebase Config ===
+    // === Firebase imports ===
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+    // import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    // === Firebase config ===
     const firebaseConfig = {
       apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
       authDomain: "alexs-community-efcd8.firebaseapp.com",
@@ -61,101 +23,102 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getFirestore(app);
     const storage = getStorage(app);
+    // const auth = getAuth(app);
 
-    const loginBox = document.getElementById("login-box");
-    const editorPanel = document.getElementById("editor-panel");
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const loginMsg = document.getElementById("loginMessage");
-
-    // === Login function ===
-    loginBtn.addEventListener("click", async () => {
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value.trim();
-      if (!email || !password) {
-        loginMsg.textContent = "Please enter email and password.";
-        return;
-      }
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        loginMsg.textContent = "";
-      } catch (err) {
-        loginMsg.textContent = "Invalid credentials.";
-        console.error(err);
+    // === Temporary: disable admin check for testing ===
+    /*
+    onAuthStateChanged(auth, user => {
+      if (!user || user.email !== "YOUR_EMAIL@example.com") {
+        alert("Access denied — admin only");
+        window.location.href = "index.html";
       }
     });
+    */
 
-    // === Logout function ===
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      loginBox.classList.remove("hidden");
-      editorPanel.classList.add("hidden");
-    });
+    // === Handle form submission ===
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("uploadForm");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-    // === Auth state ===
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // Logged in
-        loginBox.classList.add("hidden");
-        editorPanel.classList.remove("hidden");
-      } else {
-        // Logged out
-        loginBox.classList.remove("hidden");
-        editorPanel.classList.add("hidden");
-      }
-    });
+        const title = document.getElementById("title").value;
+        const category = document.getElementById("category").value; // news / history / posts
+        const htmlFile = document.getElementById("htmlFile").files[0];
+        const imageFile = document.getElementById("imageFile").files[0];
 
-    // === Quill Editor ===
-    const quill = new Quill("#editor-container", { theme: "snow" });
+        if (!title || !category || !htmlFile) {
+          alert("Please fill all fields and upload an HTML file.");
+          return;
+        }
 
-    // === Publish button ===
-    document.getElementById("publishBtn").addEventListener("click", async () => {
-      const title = document.getElementById("title").value.trim();
-      const author = document.getElementById("author").value.trim();
-      const content = quill.root.innerHTML;
+        try {
+          // 1️⃣ Upload HTML file
+          const htmlRef = ref(storage, `articles/${Date.now()}_${htmlFile.name}`);
+          await uploadBytes(htmlRef, htmlFile);
+          const htmlUrl = await getDownloadURL(htmlRef);
 
-      if (!title || !content) {
-        alert("Please enter a title and content.");
-        return;
-      }
+          // 2️⃣ Upload image if provided
+          let imageUrl = "";
+          if (imageFile) {
+            const imgRef = ref(storage, `article-images/${Date.now()}_${imageFile.name}`);
+            await uploadBytes(imgRef, imageFile);
+            imageUrl = await getDownloadURL(imgRef);
+          }
 
-      try {
-        // Upload HTML to Firebase Storage
-        const htmlRef = ref(storage, `articles/${title.replace(/\s+/g, "_")}.html`);
-        await uploadString(htmlRef, content, "raw");
-        const htmlUrl = await getDownloadURL(htmlRef);
+          // 3️⃣ Save metadata in Firestore
+          await addDoc(collection(db, category), {
+            title,
+            htmlUrl,
+            imageUrl,
+            createdAt: serverTimestamp(),
+            jsonld: {
+              "@context": {
+                "schema": "https://schema.org/",
+                "dc": "http://purl.org/dc/elements/1.1/"
+              },
+              "@type": "schema:Article",
+              "schema:name": title,
+              "schema:contentUrl": htmlUrl,
+              "schema:image": imageUrl,
+              "schema:source": "Alex's Photo Board (Firebase)",
+              "dc:date": new Date().toISOString()
+            }
+          });
 
-        // Build JSON-LD
-        const jsonld = {
-          "@context": {"schema": "https://schema.org/"},
-          "@type": "schema:Article",
-          "schema:headline": title,
-          "schema:author": {"@type": "schema:Person", "schema:name": author},
-          "schema:datePublished": new Date().toISOString(),
-          "schema:contentUrl": htmlUrl,
-          "schema:source": "Alex's Photo Board"
-        };
-
-        // Save to Firestore
-        await addDoc(collection(db, "news"), {
-          title,
-          author,
-          htmlUrl,
-          createdAt: serverTimestamp(),
-          jsonld
-        });
-
-        alert("✅ Article published successfully!");
-        quill.root.innerHTML = "";
-        document.getElementById("title").value = "";
-      } catch (err) {
-        console.error("Upload failed:", err);
-        alert("❌ Error uploading article. Check console.");
-      }
+          alert("✅ Article uploaded successfully!");
+          form.reset();
+        } catch (err) {
+          console.error("Upload failed:", err);
+          alert("Upload failed — check console for details.");
+        }
+      });
     });
   </script>
+</head>
+
+<body style="font-family: system-ui; max-width: 600px; margin: 40px auto;">
+  <h1>📰 Upload New Article</h1>
+  <form id="uploadForm">
+    <label>Title:</label><br>
+    <input type="text" id="title" required style="width:100%; margin-bottom:10px;"><br>
+
+    <label>Category:</label><br>
+    <select id="category" required style="width:100%; margin-bottom:10px;">
+      <option value="">-- choose --</option>
+      <option value="news">News</option>
+      <option value="history">History</option>
+      <option value="posts">Posts</option>
+    </select><br>
+
+    <label>Article HTML File:</label><br>
+    <input type="file" id="htmlFile" accept=".html" required><br><br>
+
+    <label>Cover Image (optional):</label><br>
+    <input type="file" id="imageFile" accept="image/*"><br><br>
+
+    <button type="submit">Upload</button>
+  </form>
 </body>
 </html>
