@@ -106,44 +106,41 @@
       const category = document.getElementById("category").value;
       const contentHTML = quill.root.innerHTML;
       const coverFile = document.getElementById("coverImage").files[0];
-      const createdAt = new Date().toISOString();
-
-      // Build JSON-LD metadata
-      const jsonld = {
-        "@context": {
-          "schema": "https://schema.org/",
-          "dc": "http://purl.org/dc/elements/1.1/"
-        },
-        "@type": "schema:Article",
-        "schema:name": title,
-        "schema:creator": {
-          "@type": "schema:Person",
-          "schema:name": "Alex"
-        },
-        "schema:source": "Alex's Photo Board",
-        "dc:date": createdAt
-      };
 
       try {
         let imageUrl = "";
         let htmlUrl = "";
 
-        // If user picked an image, upload to Firebase Storage
+        // 1️⃣ Upload cover image if provided
         if (coverFile) {
           const imageRef = ref(storage, `covers/${Date.now()}_${coverFile.name}`);
           await uploadBytes(imageRef, coverFile);
           imageUrl = await getDownloadURL(imageRef);
         }
 
-        // === Storage upload (HTML) if image exists or you want hosted version ===
-        if (coverFile) {
-          const htmlBlob = new Blob([contentHTML], { type: "text/html" });
-          const htmlRef = ref(storage, `articles/${Date.now()}_${title}.html`);
-          await uploadBytes(htmlRef, htmlBlob);
-          htmlUrl = await getDownloadURL(htmlRef);
-        }
+        // 2️⃣ Always upload HTML content
+        const htmlBlob = new Blob([contentHTML], { type: "text/html" });
+        const htmlRef = ref(storage, `articles/${Date.now()}_${title}.html`);
+        await uploadBytes(htmlRef, htmlBlob);
+        htmlUrl = await getDownloadURL(htmlRef);
 
-        // === Firestore write ===
+        // 3️⃣ Build JSON-LD *after* uploads
+        const createdAt = new Date().toISOString();
+        const jsonld = {
+          "@context": {
+            "schema": "https://schema.org/",
+            "dc": "http://purl.org/dc/elements/1.1/"
+          },
+          "@type": "schema:Article",
+          "schema:name": title,
+          "schema:creator": { "@type": "schema:Person", "schema:name": "Alex" },
+          "schema:contentUrl": htmlUrl,
+          "schema:image": imageUrl,
+          "schema:source": "Alex's Photo Board",
+          "dc:date": createdAt
+        };
+
+        // 4️⃣ Save to Firestore
         await addDoc(collection(db, category), {
           title,
           category,
