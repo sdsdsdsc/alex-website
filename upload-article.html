@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Upload a New Article</title>
 
-  <!-- ✅ Quill CSS (stable and compatible version) -->
+  <!-- ✅ Quill CSS -->
   <link href="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.snow.css" rel="stylesheet">
 
   <style>
@@ -107,7 +107,7 @@
     const db = firebase.firestore();
     const storage = firebase.storage();
 
-    // === Full Quill Toolbar ===
+    // === Quill Setup ===
     const quill = new Quill("#editor", {
       theme: "snow",
       placeholder: "Write your article here...",
@@ -164,6 +164,13 @@
           if (match) coverUrl = match[1];
         }
 
+        // === Upload article HTML to Firebase Storage ===
+        const blob = new Blob([processedHtml], { type: "text/html" });
+        const htmlFileRef = storage.ref(`articles/${Date.now()}_${title.replace(/\s+/g, "_")}.html`);
+        await htmlFileRef.put(blob);
+        const htmlDownloadURL = await htmlFileRef.getDownloadURL();
+
+        // === Firestore Entry ===
         const articleData = {
           title,
           htmlContent: processedHtml,
@@ -176,7 +183,7 @@
             },
             "@type": "schema:Article",
             "schema:name": title,
-            "schema:contentUrl": "",
+            "schema:contentUrl": htmlDownloadURL,
             "schema:image": coverUrl || "",
             "dc:date": new Date().toISOString(),
             "schema:source": "Alex's Photo Board (Firestore)",
