@@ -1,7 +1,7 @@
+// === Firebase imports ===
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
-  getFirestore, collection, addDoc, getDocs, doc, updateDoc,
-  orderBy, query, serverTimestamp
+  getFirestore, collection, addDoc, getDocs, doc, updateDoc, orderBy, query, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
@@ -19,30 +19,32 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// === Dropdowns ===
+// === Dropdown Menus ===
 const communityBtn = document.getElementById("communityBtn");
 const communityMenu = document.getElementById("communityMenu");
 const newsBtn = document.getElementById("newsBtn");
 const newsMenu = document.getElementById("newsMenu");
 
-communityBtn?.addEventListener("click", e => {
+communityBtn?.addEventListener("click", (e) => {
   e.stopPropagation();
   communityMenu.classList.toggle("show");
   newsMenu?.classList.remove("show");
 });
-newsBtn?.addEventListener("click", e => {
+
+newsBtn?.addEventListener("click", (e) => {
   e.stopPropagation();
   newsMenu.classList.toggle("show");
   communityMenu?.classList.remove("show");
 });
-document.addEventListener("click", e => {
+
+document.addEventListener("click", (e) => {
   if (!e.target.closest(".menu")) {
     communityMenu?.classList.remove("show");
     newsMenu?.classList.remove("show");
   }
 });
 
-// === Firebase Upload (with JSON-LD metadata) ===
+// === Image Upload (Gallery) ===
 const uploadBtn = document.getElementById("uploadBtn");
 if (uploadBtn) {
   uploadBtn.addEventListener("click", async () => {
@@ -61,7 +63,6 @@ if (uploadBtn) {
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
 
-      // Create semantic JSON-LD metadata
       const createdAt = new Date();
       const jsonld = {
         "@context": {
@@ -94,7 +95,8 @@ if (uploadBtn) {
   });
 }
 
-// === Improved article loader for both NEWS and HISTORY ===
+// === 🧩 Fixed Article Loader ===
+// Works for new Firestore (htmlContent) + old Firebase (htmlUrl)
 async function loadArticles(containerId, collectionName) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -108,39 +110,39 @@ async function loadArticles(containerId, collectionName) {
     return;
   }
 
-  snapshot.forEach(docSnap => {
+  snapshot.forEach((docSnap) => {
     const data = docSnap.data();
     const date = data.createdAt?.seconds
       ? new Date(data.createdAt.seconds * 1000).toDateString()
       : "";
 
-    // === Detect image (for new HTML articles or normal posts)
+    // === Detect image (supports both htmlContent + old schema:image)
     let imageUrl = "";
-   if (data.imageUrl) {
-  imageUrl = data.imageUrl;
-} else if (data.jsonld?.["schema:image"]) {
-  imageUrl = data.jsonld["schema:image"];
-} else if (data.jsonld?.["schema:contentUrl"]) {
-  imageUrl = data.jsonld["schema:contentUrl"];
-}
+    if (data.imageUrl) {
+      imageUrl = data.imageUrl;
+    } else if (data.jsonld?.["schema:image"]) {
+      imageUrl = data.jsonld["schema:image"];
+    } else if (data.jsonld?.["schema:contentUrl"]) {
+      imageUrl = data.jsonld["schema:contentUrl"];
+    }
 
-    // === Create card element ===
+    // === Detect if it's a Quill / Rich-format article
+    const isRich = !!data.htmlContent || !!data.htmlUrl;
+    const badge = isRich
+      ? `<span class="badge" style="background:#007bff;color:#fff;padding:2px 6px;border-radius:6px;font-size:12px;">Rich Format</span>`
+      : "";
+
+    const title = data.title || data.message || "Untitled";
+
+    // === Build card ===
     const card = document.createElement("div");
     card.classList.add("article-card");
-
-    // Show small badge if it's a new rich-format article (supports htmlContent or htmlUrl)
-const badge =
-  data.htmlContent || data.htmlUrl
-    ? `<span class="badge" style="background:#007bff;color:#fff;padding:2px 6px;border-radius:6px;font-size:12px;">Rich Format</span>`
-    : "";
-
     card.innerHTML = `
       ${imageUrl ? `<img src="${imageUrl}" alt="thumbnail">` : ""}
-      <h3>${data.title || data.message || "Untitled"} ${badge}</h3>
+      <h3>${title} ${badge}</h3>
       <p class="timestamp">${date}</p>
     `;
 
-    // === Clicking opens article viewer ===
     card.querySelector("h3").addEventListener("click", () => {
       window.open(`article.html?id=${docSnap.id}&type=${collectionName}`, "_blank");
     });
@@ -149,114 +151,30 @@ const badge =
   });
 }
 
-async function loadDrupalNews() {
-  const container = document.getElementById("drupalNewsContainer");
-  if (!container) return;
-  try {
-    const res = await fetch("https://dev-alex-photo-cms.pantheonsite.io/jsonapi/node/article?include=field_image");
-    const json = await res.json();
-    container.innerHTML = "";
-    const { data, included = [] } = json;
-    data.forEach(item => {
-      const title = item.attributes.title || "Untitled";
-      const created = new Date(item.attributes.created).toDateString();
-      let imageUrl = "";
-      const rel = item.relationships.field_image?.data;
-      if (rel) {
-        const file = included.find(f => f.id === rel.id && f.type === "file--file");
-        if (file) imageUrl = file.attributes.uri.url;
-      }
-      if (imageUrl.startsWith("/")) {
-        imageUrl = `https://dev-alex-photo-cms.pantheonsite.io${imageUrl}`;
-      }
-      const div = document.createElement("div");
-      div.classList.add("article-card");
-      div.innerHTML = `
-        ${imageUrl ? `<img src="${imageUrl}" alt="">` : ""}
-        <h3 class="cms-title" style="cursor:pointer;color:#007bff;text-decoration:underline;">${title}</h3>
-        <p class="timestamp">${created}</p>`;
-      div.querySelector(".cms-title").addEventListener("click", () => {
-        const articleId = item.id;
-        window.open(`article.html?id=${articleId}&type=drupal`, "_blank");
-      });
-      container.appendChild(div);
-    });
-  } catch (err) {
-    console.error("Error loading CMS:", err);
-    container.innerHTML = "<p>Failed to load CMS news.</p>";
-  }
-}
-
+// === Load Functions ===
 async function loadGallery() {
-  const gallery = document.getElementById("gallery");
+  const gallery = document.getElementById("galleryContainer");
   if (!gallery) return;
   gallery.innerHTML = "";
+
   const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
-  snapshot.forEach(docSnap => {
+
+  snapshot.forEach((docSnap) => {
     const data = docSnap.data();
-    const postId = docSnap.id;
-    const div = document.createElement("div");
-    div.classList.add("post");
-    div.innerHTML = `
-      <img src="${data.imageUrl}" alt="post image">
-      <div style="padding:10px;">
-        <h4>${data.name || "Anonymous"}</h4>
-        <p>${data.message || ""}</p>
-        <p class="timestamp">${data.createdAt?.seconds ? new Date(data.createdAt.seconds * 1000).toDateString() : ""}</p>
-        <p>❤️ ${data.likes || 0} likes</p>
-        <div class="comment-section" id="comments-${postId}">
-          ${(data.comments || []).map(c => `<p class="comment">💬 ${c}</p>`).join("")}
-          <input type="text" class="comment-input" id="input-${postId}" placeholder="Write a comment...">
-          <button class="comment-btn" onclick="addComment('${postId}')">Post</button>
-        </div>
-      </div>`;
-    gallery.appendChild(div);
+    const img = document.createElement("img");
+    img.src = data.imageUrl;
+    img.alt = data.message;
+    img.classList.add("gallery-img");
+    gallery.appendChild(img);
   });
 }
 
-window.addComment = async function (postId) {
-  const input = document.getElementById(`input-${postId}`);
-  const text = input.value.trim();
-  if (!text) return;
-  input.value = "";
-  const postRef = doc(db, "posts", postId);
-  const snapshot = await getDocs(query(collection(db, "posts")));
-  const data = snapshot.docs.find(d => d.id === postId)?.data();
-  const comments = data?.comments || [];
-  comments.push(text);
-  await updateDoc(postRef, { comments });
-  const commentSection = document.getElementById(`comments-${postId}`);
-  const newComment = document.createElement("p");
-  newComment.className = "comment";
-  newComment.textContent = `💬 ${text}`;
-  commentSection.insertBefore(newComment, commentSection.querySelector("input"));
-};
-
 async function loadHistory() {
-  const container = document.getElementById("historyContainer");
-  if (!container) return;
-  container.innerHTML = "";
-  const q = query(collection(db, "history"), orderBy("createdAt", "desc"));
-  const snapshot = await getDocs(q);
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const card = document.createElement("div");
-    card.classList.add("article-card");
-    const date = data.createdAt?.seconds ? new Date(data.createdAt.seconds * 1000).toDateString() : "";
-    card.innerHTML = `
-      <img src="${data.imageUrl}" alt="">
-      <h3>${data.title || data.message}</h3>
-      <p class="timestamp">${date}</p>`;
-    card.querySelector("h3").addEventListener("click", () => {
-      window.open(`article.html?id=${docSnap.id}&type=history`, "_blank");
-    });
-    container.appendChild(card);
-  });
+  loadArticles("historyContainer", "history");
 }
 
 // === Initialize ===
 loadArticles("newsContainer", "news");
-loadDrupalNews();
 loadGallery();
 loadHistory();
