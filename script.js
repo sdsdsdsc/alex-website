@@ -116,20 +116,23 @@ async function loadArticles(containerId, collectionName) {
 
     // === Detect image (for new HTML articles or normal posts)
     let imageUrl = "";
-    if (data.imageUrl) {
-      imageUrl = data.imageUrl;
-    } else if (data.jsonld?.["schema:contentUrl"]) {
-      imageUrl = data.jsonld["schema:contentUrl"];
-    }
+   if (data.imageUrl) {
+  imageUrl = data.imageUrl;
+} else if (data.jsonld?.["schema:image"]) {
+  imageUrl = data.jsonld["schema:image"];
+} else if (data.jsonld?.["schema:contentUrl"]) {
+  imageUrl = data.jsonld["schema:contentUrl"];
+}
 
     // === Create card element ===
     const card = document.createElement("div");
     card.classList.add("article-card");
 
-    // Show small badge if it's a new rich-format article
-    const badge = data.htmlUrl
-      ? `<span class="badge" style="background:#007bff;color:#fff;padding:2px 6px;border-radius:6px;font-size:12px;">Rich Format</span>`
-      : "";
+    // Show small badge if it's a new rich-format article (supports htmlContent or htmlUrl)
+const badge =
+  data.htmlContent || data.htmlUrl
+    ? `<span class="badge" style="background:#007bff;color:#fff;padding:2px 6px;border-radius:6px;font-size:12px;">Rich Format</span>`
+    : "";
 
     card.innerHTML = `
       ${imageUrl ? `<img src="${imageUrl}" alt="thumbnail">` : ""}
