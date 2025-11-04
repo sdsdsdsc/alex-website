@@ -1,102 +1,154 @@
-// === Firebase imports ===
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+// article.js
+// Loads an article document from Firestore and renders it.
+// If the Firestore doc contains `htmlContent` we use that.
+// If it contains `htmlUrl` (a Firebase Storage download URL), we fetch that file and inject its HTML.
+// Otherwise we fall back to `content` (plain text).
+
+/*
+Notes:
+- This file assumes Firebase app is already initialized on the page (your other scripts do that).
+- It imports only Firestore functions and uses fetch() to load htmlUrl.
+- Replace collection-mapping if your collections use different names.
+*/
+
 import {
   getFirestore,
   doc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// === Firebase config ===
-const firebaseConfig = {
-  apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
-  authDomain: "alexs-community-efcd8.firebaseapp.com",
-  projectId: "alexs-community-efcd8",
-  storageBucket: "alexs-community-efcd8.firebasestorage.app",
-  messagingSenderId: "214395622099",
-  appId: "1:214395622099:web:44f99a181741caf3117a26"
-};
+(async function () {
+  // Helper: read query param
+  function getQueryParam(name) {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name);
+  }
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+  // DOM nodes (adjust IDs if your markup uses different ids)
+  const titleEl = document.getElementById('articleTitle');
+  const dateEl = document.getElementById('articleDate');
+  const imgEl = document.getElementById('articleImage');
+  const articleContent = document.getElementById('articleContent');
+  const spinnerEl = document.getElementById('articleSpinner'); // optional spinner in markup
 
-// === Get params from URL ===
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
-const type = params.get("type"); // e.g. "news" or "history"
+  // Show/Hide spinner helper
+  function showSpinner() {
+    if (spinnerEl) spinnerEl.style.display = '';
+  }
+  function hideSpinner() {
+    if (spinnerEl) spinnerEl.style.display = 'none';
+  }
 
-// === Page elements ===
-const articleTitle = document.getElementById("articleTitle");
-const articleImage = document.getElementById("articleImage");
-const articleDate = document.getElementById("articleDate");
-const articleContent = document.getElementById("articleContent");
+  // Collection selection based on "type" param (customize if needed)
+  function collectionForType(t) {
+    if (!t) return 'news';
+    const map = {
+      news: 'news',
+      history: 'history',
+      gallery: 'gallery',
+      // add more mappings if you use other collection names
+    };
+    return map[t] || 'news';
+  }
 
-// === Load article ===
-async function loadArticle() {
-  try {
-    const refDoc = doc(db, type, id);
-    const snap = await getDoc(refDoc);
-    if (!snap.exists()) {
-      articleContent.textContent = "Article not found.";
+  // Main loader
+  async function loadArticle() {
+    const id = getQueryParam('id');
+    const type = getQueryParam('type') || 'news';
+    if (!id) {
+      console.error('No article id provided in URL');
+      if (articleContent) articleContent.innerHTML = '<p>No article specified.</p>';
       return;
     }
 
-    const data = snap.data();
+    showSpinner();
 
-    // === Set article info ===
-    articleTitle.textContent = data.title || "Untitled";
-    articleDate.textContent = data.createdAt?.seconds
-      ? new Date(data.createdAt.seconds * 1000).toDateString()
-      : "";
-    articleImage.src = data.imageUrl || "";
+    try {
+      const db = getFirestore();
+      const coll = collectionForType(type);
+      const docRef = doc(db, coll, id);
+      const snap = await getDoc(docRef);
 
-    // === Render HTML directly from Firestore ===
-if (data.htmlContent) {
-  // Newer docs where the HTML is stored inside Firestore
-  articleContent.innerHTML = data.htmlContent;
+      if (!snap.exists()) {
+        console.warn('Article doc not found:', id, 'collection:', coll);
+        if (titleEl) titleEl.textContent = 'Article not found';
+        if (articleContent) articleContent.innerHTML = '<p>Article not found.</p>';
+        return;
+      }
 
-} else if (data.htmlUrl) {
-  // Older / Quill docs where HTML was uploaded to Firebase Storage
-  try {
-    const res = await fetch(data.htmlUrl);
-    if (!res.ok) throw new Error('Fetch failed: ' + res.status);
-    const html = await res.text();
-    articleContent.innerHTML = html;
-  } catch (err) {
-    console.error('Could not load htmlUrl:', err);
-    articleContent.innerHTML = `<p>⚠️ Failed to load article content.</p>`;
+      const data = snap.data();
+
+      // Title
+      if (titleEl) titleEl.textContent = data.title || data.name || '';
+
+      // Date (try a few fields)
+      if (dateEl) {
+        const dateVal = data.date || data.publishedAt || data.createdAt || data.time;
+        if (dateVal) {
+          // simple formatting
+          try {
+            const d = new Date(dateVal);
+            if (!isNaN(d)) {
+              dateEl.textContent = d.toDateString();
+            } else {
+              dateEl.textContent = dateVal;
+            }
+          } catch (e) {
+            dateEl.textContent = dateVal;
+          }
+        } else {
+          dateEl.textContent = '';
+        }
+      }
+
+      // Image
+      if (imgEl) {
+        const imgUrl = data.image || data.coverImage || data.photoUrl || data.thumbnail;
+        if (imgUrl) {
+          imgEl.src = imgUrl;
+          imgEl.style.display = '';
+        } else {
+          imgEl.style.display = 'none';
+        }
+      }
+
+      // === Render content ===
+      // Priority: htmlContent -> htmlUrl (fetch file) -> content (plain) -> quillHtml / body
+      if (data.htmlContent) {
+        articleContent.innerHTML = data.htmlContent;
+      } else if (data.htmlUrl) {
+        // htmlUrl should be a full download URL (getDownloadURL() result)
+        try {
+          const res = await fetch(data.htmlUrl, { method: 'GET' });
+          if (!res.ok) {
+            throw new Error('Fetch failed, status: ' + res.status);
+          }
+          const html = await res.text();
+          articleContent.innerHTML = html;
+        } catch (err) {
+          console.error('Failed to fetch htmlUrl:', err);
+          articleContent.innerHTML = `<p>Failed to load article content.</p>`;
+        }
+      } else if (data.content) {
+        // If content is stored as HTML, use innerHTML; otherwise escape?
+        // We assume it's safe/intentional HTML from Quill or similar.
+        articleContent.innerHTML = data.content;
+      } else if (data.quillHtml) {
+        articleContent.innerHTML = data.quillHtml;
+      } else if (data.body) {
+        articleContent.innerHTML = data.body;
+      } else {
+        articleContent.innerHTML = '<p>No content available for this article.</p>';
+      }
+    } catch (err) {
+      console.error('Error loading article:', err);
+      if (articleContent) articleContent.innerHTML = '<p>Error loading article. See console for details.</p>';
+    } finally {
+      hideSpinner();
+    }
   }
 
-} else {
-  // Fallback: plain text content
-  articleContent.innerHTML = `<p>${data.content || ""}</p>`;
-}
+  // Run
+  loadArticle();
 
-    // === Inject JSON-LD ===
-    const jsonld = data.jsonld || {
-      "@context": {
-        "schema": "https://schema.org/",
-        "dc": "http://purl.org/dc/elements/1.1/"
-      },
-      "@type": "schema:Article",
-      "schema:name": data.title || "Untitled",
-      "schema:creator": {
-        "@type": "schema:Person",
-        "schema:name": data.author || "Anonymous"
-      },
-      "schema:contentUrl": window.location.href,
-      "schema:image": data.imageUrl || "",
-      "schema:source": "Alex's Photo Board (Firestore)",
-      "dc:date": new Date().toISOString()
-    };
-
-    const ldScript = document.createElement("script");
-    ldScript.type = "application/ld+json";
-    ldScript.textContent = JSON.stringify(jsonld, null, 2);
-    document.head.appendChild(ldScript);
-  } catch (err) {
-    console.error("Error loading article:", err);
-    articleContent.textContent = "Failed to load article.";
-  }
-}
-
-loadArticle();
+})();
