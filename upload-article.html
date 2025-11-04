@@ -12,6 +12,7 @@
         getFirestore,
         collection,
         addDoc,
+        updateDoc,
         serverTimestamp
       } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
       import {
@@ -76,9 +77,22 @@
             }
           };
 
-          await addDoc(collection(db, type), articleData);
-          alert("✅ Article published successfully!");
-          location.reload();
+// === Upload to Firestore and get the doc reference ===
+const docRef = await addDoc(collection(db, type), articleData);
+
+// === Generate a public, referenceable page URL ===
+const publicArticleUrl = `https://alexsphotoboard.web.app/article.html?id=${docRef.id}`;
+
+// === Update the JSON-LD inside the same document ===
+await updateDoc(docRef, {
+  "jsonld.schema:contentUrl": publicArticleUrl,
+  "jsonld.schema:source": "https://alexsphotoboard.web.app/",
+  "jsonld.schema:author": "https://alexsphotoboard.web.app/about.html#alex"
+});
+
+alert("✅ Article published successfully!");
+location.reload();
+
         } catch (err) {
           console.error(err);
           alert("❌ Upload failed. Check console for details.");
