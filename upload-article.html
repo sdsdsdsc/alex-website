@@ -184,14 +184,44 @@
               if (imgMatch) coverUrl = imgMatch[1];
             }
 
-            // Upload HTML content file
-            const htmlBlob = new Blob([quillHtml], { type: "text/html" });
-            const htmlRef = ref(
-              storage,
-              `articles/${Date.now()}_${title.replace(/\s+/g, "_")}.html`
-            );
-            await uploadBytes(htmlRef, htmlBlob);
-            const htmlDownloadURL = await getDownloadURL(htmlRef);
+            // Wrap content into full standalone HTML
+const fullHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  ${quill.root.innerHTML}
+</body>
+</html>
+`;
+
+const htmlBlob = new Blob([fullHtml], { type: "text/html" });
+const htmlRef = ref(
+  storage,
+  `articles/${Date.now()}_${title.replace(/\s+/g, "_")}.html`
+);
+await uploadBytes(htmlRef, htmlBlob);
+const htmlDownloadURL = await getDownloadURL(htmlRef);
 
             // Compose Firestore entry
             const articleData = {
