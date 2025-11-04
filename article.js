@@ -4,12 +4,9 @@
 // If it contains `htmlUrl` (a Firebase Storage download URL), we fetch that file and inject its HTML.
 // Otherwise we fall back to `content` (plain text).
 
-/*
-Notes:
-- This file assumes Firebase app is already initialized on the page (your other scripts do that).
-- It imports only Firestore functions and uses fetch() to load htmlUrl.
-- Replace collection-mapping if your collections use different names.
-*/
+import {
+  getApps
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 
 import {
   getFirestore,
@@ -24,6 +21,23 @@ import {
     return url.searchParams.get(name);
   }
 
+  // Simple sleep
+  const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+
+  // Wait for firebase app to be initialized (polls getApps())
+  async function waitForFirebaseInit(timeoutMs = 5000, intervalMs = 100) {
+    const attempts = Math.ceil(timeoutMs / intervalMs);
+    for (let i = 0; i < attempts; i++) {
+      try {
+        if (getApps && getApps().length > 0) return true;
+      } catch (e) {
+        // ignore occasional transient errors
+      }
+      await sleep(intervalMs);
+    }
+    return false;
+  }
+
   // DOM nodes (adjust IDs if your markup uses different ids)
   const titleEl = document.getElementById('articleTitle');
   const dateEl = document.getElementById('articleDate');
@@ -31,7 +45,6 @@ import {
   const articleContent = document.getElementById('articleContent');
   const spinnerEl = document.getElementById('articleSpinner'); // optional spinner in markup
 
-  // Show/Hide spinner helper
   function showSpinner() {
     if (spinnerEl) spinnerEl.style.display = '';
   }
@@ -39,19 +52,16 @@ import {
     if (spinnerEl) spinnerEl.style.display = 'none';
   }
 
-  // Collection selection based on "type" param (customize if needed)
   function collectionForType(t) {
     if (!t) return 'news';
     const map = {
       news: 'news',
       history: 'history',
       gallery: 'gallery',
-      // add more mappings if you use other collection names
     };
     return map[t] || 'news';
   }
 
-  // Main loader
   async function loadArticle() {
     const id = getQueryParam('id');
     const type = getQueryParam('type') || 'news';
@@ -62,6 +72,16 @@ import {
     }
 
     showSpinner();
+
+    // Wait for Firebase to be initialized by other scripts (e.g., your firebase config/init)
+    const firebaseReady = await waitForFirebaseInit(5000, 100);
+    if (!firebaseReady) {
+      console.error('Firebase app not initialized: article.js waited but no app detected. Ensure your firebase initializeApp() runs before article.js.');
+      if (titleEl) titleEl.textContent = 'Error loading article';
+      if (articleContent) articleContent.innerHTML = '<p>Error loading article: Firebase not initialized. Make sure your Firebase initialization script runs before article.js.</p>';
+      hideSpinner();
+      return;
+    }
 
     try {
       const db = getFirestore();
@@ -81,18 +101,13 @@ import {
       // Title
       if (titleEl) titleEl.textContent = data.title || data.name || '';
 
-      // Date (try a few fields)
+      // Date
       if (dateEl) {
         const dateVal = data.date || data.publishedAt || data.createdAt || data.time;
         if (dateVal) {
-          // simple formatting
           try {
             const d = new Date(dateVal);
-            if (!isNaN(d)) {
-              dateEl.textContent = d.toDateString();
-            } else {
-              dateEl.textContent = dateVal;
-            }
+            dateEl.textContent = !isNaN(d) ? d.toDateString() : dateVal;
           } catch (e) {
             dateEl.textContent = dateVal;
           }
@@ -113,11 +128,9 @@ import {
       }
 
       // === Render content ===
-      // Priority: htmlContent -> htmlUrl (fetch file) -> content (plain) -> quillHtml / body
       if (data.htmlContent) {
         articleContent.innerHTML = data.htmlContent;
       } else if (data.htmlUrl) {
-        // htmlUrl should be a full download URL (getDownloadURL() result)
         try {
           const res = await fetch(data.htmlUrl, { method: 'GET' });
           if (!res.ok) {
@@ -130,8 +143,6 @@ import {
           articleContent.innerHTML = `<p>Failed to load article content.</p>`;
         }
       } else if (data.content) {
-        // If content is stored as HTML, use innerHTML; otherwise escape?
-        // We assume it's safe/intentional HTML from Quill or similar.
         articleContent.innerHTML = data.content;
       } else if (data.quillHtml) {
         articleContent.innerHTML = data.quillHtml;
@@ -148,7 +159,6 @@ import {
     }
   }
 
-  // Run
   loadArticle();
 
 })();
