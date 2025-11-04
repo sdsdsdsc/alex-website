@@ -48,10 +48,6 @@
         try {
           // Detect image from Quill or coverUrl
           let coverUrl = coverUrlInput;
-          if (!coverUrl) {
-            const imgMatch = quillHtml.match(/<img[^>]+src="([^">]+)"/);
-            if (imgMatch) coverUrl = imgMatch[1];
-          }
 
           // === Upload HTML version for schema:contentUrl ===
           const htmlFile = new Blob([quillHtml], { type: "text/html" });
