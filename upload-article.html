@@ -190,6 +190,26 @@
           }
         });
       });
+      // Handle image uploads to Firebase Storage
+const toolbar = quill.getModule("toolbar");
+toolbar.addHandler("image", () => {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+
+    const storageRef = firebase.storage().ref(`article-images/${Date.now()}_${file.name}`);
+    await storageRef.put(file);
+    const downloadURL = await storageRef.getDownloadURL();
+
+    // Insert uploaded image URL into the editor
+    const range = quill.getSelection(true);
+    quill.insertEmbed(range.index, "image", downloadURL);
+  };
+  input.click();
+});
     </script>
   </body>
 </html>
