@@ -50,11 +50,26 @@ async function loadArticle() {
     articleImage.src = data.imageUrl || "";
 
     // === Render HTML directly from Firestore ===
-    if (data.htmlContent) {
-      articleContent.innerHTML = data.htmlContent;
-    } else {
-      articleContent.innerHTML = `<p>${data.content || ""}</p>`;
-    }
+if (data.htmlContent) {
+  // Newer docs where the HTML is stored inside Firestore
+  articleContent.innerHTML = data.htmlContent;
+
+} else if (data.htmlUrl) {
+  // Older / Quill docs where HTML was uploaded to Firebase Storage
+  try {
+    const res = await fetch(data.htmlUrl);
+    if (!res.ok) throw new Error('Fetch failed: ' + res.status);
+    const html = await res.text();
+    articleContent.innerHTML = html;
+  } catch (err) {
+    console.error('Could not load htmlUrl:', err);
+    articleContent.innerHTML = `<p>⚠️ Failed to load article content.</p>`;
+  }
+
+} else {
+  // Fallback: plain text content
+  articleContent.innerHTML = `<p>${data.content || ""}</p>`;
+}
 
     // === Inject JSON-LD ===
     const jsonld = data.jsonld || {
