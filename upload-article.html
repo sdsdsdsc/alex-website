@@ -64,7 +64,7 @@
             title,
             htmlUrl: htmlDownloadURL,
             imageUrl: coverUrl || "",
-            content: quillHtml, //
+            content: quillHtml, // ✅ text stored directly in Firestore
             createdAt: serverTimestamp(),
             jsonld: {
               "@context": {
@@ -88,6 +88,44 @@
           alert("❌ Upload failed. Check console for details.");
         }
       };
+
+      // Wait for DOM & Quill to load before defining toolbar
+      window.addEventListener("DOMContentLoaded", () => {
+        window.quill = new Quill("#editor", {
+          theme: "snow",
+          modules: {
+            toolbar: [
+              [{ header: [1, 2, false] }],
+              ["bold", "italic", "underline", "strike"],
+              ["blockquote", "code-block"],
+              [{ list: "ordered" }, { list: "bullet" }],
+              ["link", "image"],
+              [{ color: [] }, { background: [] }],
+              ["clean"]
+            ]
+          }
+        });
+
+        // ✅ Safe image upload handler
+        const toolbar = window.quill.getModule("toolbar");
+        toolbar.addHandler("image", () => {
+          const input = document.createElement("input");
+          input.type = "file";
+          input.accept = "image/*";
+          input.onchange = async () => {
+            const file = input.files[0];
+            if (!file) return;
+
+            const storageRef = ref(storage, `article-images/${Date.now()}_${file.name}`);
+            await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(storageRef);
+
+            const range = window.quill.getSelection(true);
+            window.quill.insertEmbed(range.index, "image", downloadURL);
+          };
+          input.click();
+        });
+      });
     </script>
 
     <!-- Quill -->
@@ -173,44 +211,5 @@
 
       <button onclick="handleUpload()">Publish Article</button>
     </div>
-
-    <script>
-      window.addEventListener("DOMContentLoaded", () => {
-        window.quill = new Quill("#editor", {
-          theme: "snow",
-          modules: {
-            toolbar: [
-              [{ header: [1, 2, false] }],
-              ["bold", "italic", "underline", "strike"],
-              ["blockquote", "code-block"],
-              [{ list: "ordered" }, { list: "bullet" }],
-              ["link", "image"],
-              [{ color: [] }, { background: [] }],
-              ["clean"]
-            ]
-          }
-        });
-      });
-      // Handle image uploads to Firebase Storage
-const toolbar = quill.getModule("toolbar");
-toolbar.addHandler("image", () => {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.onchange = async () => {
-    const file = input.files[0];
-    if (!file) return;
-
-    const storageRef = firebase.storage().ref(`article-images/${Date.now()}_${file.name}`);
-    await storageRef.put(file);
-    const downloadURL = await storageRef.getDownloadURL();
-
-    // Insert uploaded image URL into the editor
-    const range = quill.getSelection(true);
-    quill.insertEmbed(range.index, "image", downloadURL);
-  };
-  input.click();
-});
-    </script>
   </body>
 </html>
