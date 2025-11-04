@@ -5,6 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Upload a New Article</title>
 
+    <!-- Firebase -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        serverTimestamp
+      } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+      import {
+        getStorage,
+        ref,
+        uploadBytes,
+        getDownloadURL
+      } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
+        authDomain: "alexs-community-efcd8.firebaseapp.com",
+        projectId: "alexs-community-efcd8",
+        storageBucket: "alexs-community-efcd8.firebasestorage.app",
+        messagingSenderId: "214395622099",
+        appId: "1:214395622099:web:44f99a181741caf3117a26"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const storage = getStorage(app);
+
+      window.handleUpload = async function () {
+        const title = document.getElementById("articleTitle").value.trim();
+        const coverUrlInput = document.getElementById("coverUrl").value.trim();
+        const type = document.querySelector('input[name="type"]:checked')?.value;
+        const quillHtml = window.quill.root.innerHTML.trim();
+
+        if (!title || !quillHtml || !type) {
+          alert("⚠️ Please fill in all fields.");
+          return;
+        }
+
+        try {
+          // Detect image from Quill or coverUrl
+          let coverUrl = coverUrlInput;
+          if (!coverUrl) {
+            const imgMatch = quillHtml.match(/<img[^>]+src="([^">]+)"/);
+            if (imgMatch) coverUrl = imgMatch[1];
+          }
+
+          // === Upload HTML version for schema:contentUrl ===
+          const htmlFile = new Blob([quillHtml], { type: "text/html" });
+          const htmlRef = ref(storage, `articles/${Date.now()}_${title.replace(/\s+/g, "_")}.html`);
+          await uploadBytes(htmlRef, htmlFile);
+          const htmlDownloadURL = await getDownloadURL(htmlRef);
+
+          // === Prepare full article data ===
+          const articleData = {
+            title,
+            htmlUrl: htmlDownloadURL,
+            imageUrl: coverUrl || "",
+            content: quillHtml, //
+            createdAt: serverTimestamp(),
+            jsonld: {
+              "@context": {
+                schema: "https://schema.org/",
+                dc: "http://purl.org/dc/elements/1.1/"
+              },
+              "@type": "schema:Article",
+              "schema:name": title,
+              "schema:contentUrl": htmlDownloadURL,
+              "schema:image": coverUrl || "",
+              "dc:date": new Date().toISOString(),
+              "schema:source": "Alex's Photo Board (Firebase)"
+            }
+          };
+
+          await addDoc(collection(db, type), articleData);
+          alert("✅ Article published successfully!");
+          location.reload();
+        } catch (err) {
+          console.error(err);
+          alert("❌ Upload failed. Check console for details.");
+        }
+      };
+    </script>
+
     <!-- Quill -->
     <link
       href="https://cdn.quilljs.com/1.3.6/quill.snow.css"
@@ -35,7 +120,8 @@
       label {
         font-weight: bold;
       }
-      input {
+      input,
+      textarea {
         width: 100%;
         padding: 8px;
         margin: 8px 0 15px;
@@ -43,7 +129,7 @@
         border-radius: 6px;
       }
       #editor {
-        height: 300px;
+        height: 250px;
         margin-bottom: 25px;
       }
       button {
@@ -88,170 +174,43 @@
       <button onclick="handleUpload()">Publish Article</button>
     </div>
 
-    <!-- Firebase -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-      import {
-        getFirestore,
-        collection,
-        addDoc,
-        serverTimestamp,
-      } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-      import {
-        getStorage,
-        ref,
-        uploadBytes,
-        getDownloadURL,
-      } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
-
-      const firebaseConfig = {
-        apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
-        authDomain: "alexs-community-efcd8.firebaseapp.com",
-        projectId: "alexs-community-efcd8",
-        storageBucket: "alexs-community-efcd8.firebasestorage.app",
-        messagingSenderId: "214395622099",
-        appId: "1:214395622099:web:44f99a181741caf3117a26",
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-      const storage = getStorage(app);
-
-      // Initialize Quill AFTER page is loaded
+    <script>
       window.addEventListener("DOMContentLoaded", () => {
-        const quill = new Quill("#editor", {
+        window.quill = new Quill("#editor", {
           theme: "snow",
           modules: {
             toolbar: [
-              [{ header: [1, 2, 3, false] }],
+              [{ header: [1, 2, false] }],
               ["bold", "italic", "underline", "strike"],
               ["blockquote", "code-block"],
               [{ list: "ordered" }, { list: "bullet" }],
-              [{ indent: "-1" }, { indent: "+1" }],
-              [{ align: [] }],
-              ["link", "image", "video"],
+              ["link", "image"],
               [{ color: [] }, { background: [] }],
-              ["clean"],
-            ],
-          },
-        });
-
-        // === Upload image to Firebase when user inserts one ===
-        const toolbar = quill.getModule("toolbar");
-        toolbar.addHandler("image", () => {
-          const input = document.createElement("input");
-          input.type = "file";
-          input.accept = "image/*";
-          input.click();
-
-          input.onchange = async () => {
-            const file = input.files[0];
-            if (!file) return;
-
-            const imageRef = ref(
-              storage,
-              `article-images/${Date.now()}_${file.name}`
-            );
-            await uploadBytes(imageRef, file);
-            const downloadURL = await getDownloadURL(imageRef);
-
-            // Insert uploaded image link in editor
-            const range = quill.getSelection(true);
-            quill.insertEmbed(range.index, "image", downloadURL);
-          };
-        });
-
-        // === Handle publish button ===
-        window.handleUpload = async function () {
-          const title = document.getElementById("articleTitle").value.trim();
-          const coverUrlInput =
-            document.getElementById("coverUrl").value.trim() || "";
-          const type = document.querySelector(
-            'input[name="type"]:checked'
-          )?.value;
-          const quillHtml = quill.root.innerHTML.trim();
-
-          if (!title || !quillHtml || !type) {
-            alert("⚠️ Please fill in all fields.");
-            return;
+              ["clean"]
+            ]
           }
-
-          try {
-            // Auto-detect cover image
-            let coverUrl = coverUrlInput;
-            if (!coverUrl) {
-              const imgMatch = quillHtml.match(/<img[^>]+src="([^">]+)"/);
-              if (imgMatch) coverUrl = imgMatch[1];
-            }
-
-            // Wrap content into full standalone HTML
-const fullHtml = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title}</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      padding: 20px;
-      max-width: 800px;
-      margin: auto;
-      background: #fff;
-    }
-    img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 8px;
-      margin: 10px 0;
-    }
-  </style>
-</head>
-<body>
-  ${quill.root.innerHTML}
-</body>
-</html>
-`;
-
-const htmlBlob = new Blob([fullHtml], { type: "text/html" });
-const htmlRef = ref(
-  storage,
-  `articles/${Date.now()}_${title.replace(/\s+/g, "_")}.html`
-);
-await uploadBytes(htmlRef, htmlBlob);
-const htmlDownloadURL = await getDownloadURL(htmlRef);
-
-            // Compose Firestore entry
-            const articleData = {
-              title,
-              htmlUrl: htmlDownloadURL,
-              imageUrl: coverUrl || "",
-              createdAt: serverTimestamp(),
-              jsonld: {
-                "@context": {
-                  schema: "https://schema.org/",
-                  dc: "http://purl.org/dc/elements/1.1/",
-                },
-                "@type": "schema:Article",
-                "schema:name": title,
-                "schema:contentUrl": htmlDownloadURL,
-                "schema:image": coverUrl || "",
-                "dc:date": new Date().toISOString(),
-                "schema:source": "Alex's Photo Board (Firebase)",
-              },
-            };
-
-            await addDoc(collection(db, type), articleData);
-            alert("✅ Article uploaded successfully!");
-            location.reload();
-          } catch (error) {
-            console.error("Upload error:", error);
-            alert("❌ Upload failed. Check console for details.");
-          }
-        };
+        });
       });
+      // Handle image uploads to Firebase Storage
+const toolbar = quill.getModule("toolbar");
+toolbar.addHandler("image", () => {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+
+    const storageRef = firebase.storage().ref(`article-images/${Date.now()}_${file.name}`);
+    await storageRef.put(file);
+    const downloadURL = await storageRef.getDownloadURL();
+
+    // Insert uploaded image URL into the editor
+    const range = quill.getSelection(true);
+    quill.insertEmbed(range.index, "image", downloadURL);
+  };
+  input.click();
+});
     </script>
   </body>
 </html>
