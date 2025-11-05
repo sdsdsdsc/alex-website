@@ -33,8 +33,41 @@ const articleContent = document.getElementById("articleContent");
 // === Load article ===
 async function loadArticle() {
   try {
+    // === 🏛 If it's a Drupal CMS article ===
+    if (type === "drupal") {
+      const res = await fetch(`https://dev-alex-photo-cms.pantheonsite.io/jsonapi/node/article/${id}?include=field_image`);
+      const json = await res.json();
+      const data = json.data;
+      const included = json.included || [];
+
+      const title = data.attributes.title || "Untitled";
+      const created = new Date(data.attributes.created).toDateString();
+      const body = data.attributes.body?.value || "No content available.";
+
+      // === Handle image ===
+      let imageUrl = "";
+      const rel = data.relationships.field_image?.data;
+      if (rel) {
+        const file = included.find(f => f.id === rel.id && f.type === "file--file");
+        if (file) imageUrl = file.attributes.uri.url;
+        if (imageUrl.startsWith("/")) {
+          imageUrl = `https://dev-alex-photo-cms.pantheonsite.io${imageUrl}`;
+        }
+      }
+
+      // === Render content ===
+      articleTitle.textContent = title;
+      articleDate.textContent = created;
+      articleImage.src = imageUrl || "";
+      articleContent.innerHTML = body;
+
+      return;
+    }
+
+    // === 🧱 Otherwise load from Firestore ===
     const refDoc = doc(db, type, id);
     const snap = await getDoc(refDoc);
+
     if (!snap.exists()) {
       articleContent.textContent = "Article not found.";
       return;
