@@ -426,6 +426,16 @@ footer {
   display: block;
 }
 
+/* === Article body images (normal size) === */
+.article-body img {
+  max-width: 90%;
+  height: auto;
+  border-radius: 10px;
+  margin: 20px auto;
+  display: block;
+  object-fit: contain;
+}
+
 /* Optional: pull the image closer to the top of the page */
 .article-page {
   margin-top: 0;
