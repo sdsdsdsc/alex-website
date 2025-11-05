@@ -287,14 +287,14 @@ header h1 a.home-link:hover {
   font-size: 14px;
   margin-bottom: 20px;
 }
-.article-page img {
+/* .article-page img {
   width: 100%;
   max-height: 600px;
   object-fit: cover;
   border-radius: 10px;
   display: block;
   margin: 0 auto 20px;
-}
+} */
 .article-page p {
   font-size: 17px;
   line-height: 1.8;
