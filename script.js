@@ -203,7 +203,7 @@ async function loadDrupalNews() {
         <p class="timestamp">${created}</p>`;
       div.querySelector(".cms-title").addEventListener("click", () => {
         const articleId = item.id;
-        window.open(\`article.html?id=\${articleId}&type=drupal\`, "_blank");
+        window.open(`article.html?id=${articleId}&type=drupal`, "_blank");
       });
       container.appendChild(div);
     });
