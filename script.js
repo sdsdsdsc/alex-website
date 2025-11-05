@@ -173,8 +173,47 @@ async function loadGallery() {
 async function loadHistory() {
   loadArticles("historyContainer", "history");
 }
+// === 🏛 Load Heritage News (From Open CMS / Drupal) ===
+async function loadDrupalNews() {
+  const container = document.getElementById("drupalNewsContainer");
+  if (!container) return;
+  try {
+    const res = await fetch("https://dev-alex-photo-cms.pantheonsite.io/jsonapi/node/article?include=field_image");
+    const json = await res.json();
+    container.innerHTML = "";
+    const { data, included = [] } = json;
+    data.forEach(item => {
+      const title = item.attributes.title || "Untitled";
+      const created = new Date(item.attributes.created).toDateString();
+      let imageUrl = "";
+      const rel = item.relationships.field_image?.data;
+      if (rel) {
+        const file = included.find(f => f.id === rel.id && f.type === "file--file");
+        if (file) imageUrl = file.attributes.uri.url;
+      }
+      if (imageUrl.startsWith("/")) {
+        imageUrl = `https://dev-alex-photo-cms.pantheonsite.io${imageUrl}`;
+      }
+      const div = document.createElement("div");
+      div.classList.add("article-card");
+      div.innerHTML = `
+        ${imageUrl ? `<img src="${imageUrl}" alt="">` : ""}
+        <h3 class="cms-title" style="cursor:pointer;color:#007bff;text-decoration:underline;">${title}</h3>
+        <p class="timestamp">${created}</p>`;
+      div.querySelector(".cms-title").addEventListener("click", () => {
+        const articleId = item.id;
+        window.open(\`article.html?id=\${articleId}&type=drupal\`, "_blank");
+      });
+      container.appendChild(div);
+    });
+  } catch (err) {
+    console.error("Error loading CMS:", err);
+    container.innerHTML = "<p>Failed to load CMS news.</p>";
+  }
+}
 
 // === Initialize ===
 loadArticles("newsContainer", "news");
 loadGallery();
 loadHistory();
+loadDrupalNews();
