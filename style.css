@@ -268,10 +268,10 @@ header h1 a.home-link:hover {
 
 /* ====== Article Page ====== */
 .article-page {
-  max-width: 900px;
-  margin: 50px auto;
+  width: 100%;
+  margin: 0 auto;
   background: transparent;
-  padding: 30px;
+  padding: 0;
   box-shadow: none;
 }
 .article-page h2 {
