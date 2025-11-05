@@ -410,3 +410,24 @@ footer {
   color: #1d3557;
 }
 
+/* === Article Hero Image (full-width banner) === */
+.hero-image-container {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.hero-image-container img {
+  width: 100%;
+  height: 65vh; /* adjust height as you like (e.g., 70vh for taller) */
+  object-fit: cover;
+  display: block;
+}
+
+/* Optional: pull the image closer to the top of the page */
+.article-page {
+  margin-top: 0;
+  padding-top: 0;
+}
+
