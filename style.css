@@ -420,8 +420,9 @@ footer {
 
 .hero-image-container img {
   width: 100%;
-  height: 65vh; /* adjust height as you like (e.g., 70vh for taller) */
-  object-fit: cover;
+  height: 65vh; /* adjust this value to make it taller or shorter (50–70vh works great) */
+  object-fit: cover;      /* makes it fill and crop naturally */
+  object-position: center 35%;  /* trims a little from the top and bottom, focusing on mid-upper part */
   display: block;
 }
 
