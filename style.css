@@ -438,6 +438,43 @@ footer {
   display: block;
 }
 
+/* === Floating Image Info Box === */
+.image-info-box {
+  position: absolute;
+  bottom: 20px;
+  right: 40px;
+  width: 300px;
+  background: rgba(255, 255, 255, 0.95);
+  border-left: 5px solid #ffca00;
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  z-index: 5;
+}
+
+.info-header {
+  background: #ffca00;
+  color: #000;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.info-content {
+  padding: 10px 14px;
+  color: #333;
+  display: block; /* set to 'none' if you want it collapsed by default */
+}
+
+.dropdown-icon {
+  font-size: 0.9rem;
+}
+
 /* === Article body content centered === */
 .article-body {
   max-width: 900px;

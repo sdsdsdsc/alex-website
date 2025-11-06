@@ -55,6 +55,21 @@ async function loadArticle() {
         }
       }
 
+      // === Toggle "About this image" panel ===
+document.addEventListener("DOMContentLoaded", () => {
+  const infoHeader = document.querySelector(".info-header");
+  const infoContent = document.querySelector(".info-content");
+  const icon = document.querySelector(".dropdown-icon");
+
+  if (infoHeader && infoContent) {
+    infoHeader.addEventListener("click", () => {
+      const isOpen = infoContent.style.display !== "none";
+      infoContent.style.display = isOpen ? "none" : "block";
+      icon.textContent = isOpen ? "▲" : "▼";
+    });
+  }
+});
+
       // === Render content ===
       articleTitle.textContent = title;
       articleDate.textContent = created;
