@@ -420,10 +420,18 @@ footer {
 
 .hero-image-container img {
   width: 100%;
-  height: 65vh; /* adjust this value to make it taller or shorter (50–70vh works great) */
+  height: 50vh; /* adjust this value to make it taller or shorter (50–70vh works great) */
   object-fit: cover;      /* makes it fill and crop naturally */
-  object-position: center 35%;  /* trims a little from the top and bottom, focusing on mid-upper part */
+  object-position: center 20%;  /* trims a little from the top and bottom, focusing on mid-upper part */
   display: block;
+}
+
+/* === Article body content centered === */
+.article-body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+  line-height: 1.8;
 }
 
 /* === Article body images (normal size) === */
