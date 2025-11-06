@@ -153,21 +153,75 @@ async function loadArticles(containerId, collectionName) {
 
 // === Load Functions ===
 async function loadGallery() {
-  const gallery = document.getElementById("galleryContainer");
-  if (!gallery) return;
-  gallery.innerHTML = "";
+  const galleryContainer = document.getElementById("galleryContainer");
+  if (!galleryContainer) return;
+  galleryContainer.innerHTML = "";
 
-  const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
-  const snapshot = await getDocs(q);
+  try {
+    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
 
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    const img = document.createElement("img");
-    img.src = data.imageUrl;
-    img.alt = data.message;
-    img.classList.add("gallery-img");
-    gallery.appendChild(img);
-  });
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const id = docSnap.id;
+      const jsonld = data.jsonld || {}; // ✅ Keep JSON-LD data
+
+      const post = document.createElement("div");
+      post.classList.add("post");
+
+      post.innerHTML = `
+        <img src="${data.imageUrl}" alt="${data.message || "User photo"}">
+        <div class="comment-section">
+          <p class="timestamp">
+            ${new Date(data.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString()}
+          </p>
+          <p><strong>${data.name || "Anonymous"}</strong>: ${data.message || ""}</p>
+          ${
+            jsonld["schema:contentUrl"]
+              ? `<p class="linked-data">📎 <a href="${jsonld["schema:contentUrl"]}" target="_blank">Open JSON-LD link</a></p>`
+              : ""
+          }
+          <button class="like-btn">❤️ ${data.likes || 0}</button>
+          <div class="comments"></div>
+          <input class="comment-input" placeholder="Write a comment...">
+          <button class="comment-btn">Send</button>
+        </div>
+      `;
+      galleryContainer.appendChild(post);
+
+      const likeBtn = post.querySelector(".like-btn");
+      likeBtn.addEventListener("click", async () => {
+        const newLikes = (data.likes || 0) + 1;
+        await updateDoc(doc(db, "posts", id), { likes: newLikes });
+        likeBtn.textContent = `❤️ ${newLikes}`;
+      });
+
+      const commentBtn = post.querySelector(".comment-btn");
+      const commentInput = post.querySelector(".comment-input");
+      const commentList = post.querySelector(".comments");
+
+      commentBtn.addEventListener("click", async () => {
+        const text = commentInput.value.trim();
+        if (!text) return;
+        const newComments = [...(data.comments || []), text];
+        await updateDoc(doc(db, "posts", id), { comments: newComments });
+        const newComment = document.createElement("p");
+        newComment.classList.add("comment");
+        newComment.textContent = text;
+        commentList.appendChild(newComment);
+        commentInput.value = "";
+      });
+
+      (data.comments || []).forEach((c) => {
+        const p = document.createElement("p");
+        p.classList.add("comment");
+        p.textContent = c;
+        commentList.appendChild(p);
+      });
+    });
+  } catch (err) {
+    console.error("Gallery load error:", err);
+  }
 }
 
 async function loadHistory() {
