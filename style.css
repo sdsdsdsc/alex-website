@@ -271,8 +271,9 @@ header h1 a.home-link:hover {
   width: 100%;
   margin: 0 auto;
   background: transparent;
-  padding: 0;
+  padding: 0 5vw;
   box-shadow: none;
+  box-sizing: border-box;
 }
 .article-page h2 {
   text-align: center;
