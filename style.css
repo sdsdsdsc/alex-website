@@ -428,10 +428,11 @@ footer {
 
 /* === Article body content centered === */
 .article-body {
-  max-width: 900px;
+  max-width: 1100px;
+  font-size: 1.05rem;
   margin: 0 auto;
   padding: 0 20px;
-  line-height: 1.8;
+  line-height: 1.9;
 }
 
 /* === Article body images (normal size) === */
