@@ -39,20 +39,32 @@ map.on('click', async (e) => {
   const marker = L.marker([lat, lng]).addTo(map);
   marker.bindPopup(`<b>${name}</b><br>${desc}`).openPopup();
 
-  // Save to Firebase
-  try {
-    await addDoc(collection(db, "mapPoints"), {
-      name,
-      desc,
-      lat,
-      lng,
-      createdAt: serverTimestamp()
-    });
-    console.log("✅ Point added:", name);
-  } catch (err) {
-    console.error("❌ Error adding point:", err);
-  }
-});
+  // Save to Firebase (with semantic fields)
+try {
+  await addDoc(collection(db, "mapPoints"), {
+    name,
+    desc,
+    lat,
+    lng,
+    type: "schema:Place",
+    linkedArticle: "https://alexsphotoboard.web.app/article.html?id=abc", // optional
+    createdAt: serverTimestamp(),
+    jsonld: {
+      "@context": "https://schema.org",
+      "@type": "Place",
+      "name": name,
+      "description": desc,
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": lat,
+        "longitude": lng
+      }
+    }
+  });
+  console.log("✅ Semantic point added:", name);
+} catch (err) {
+  console.error("❌ Error adding point:", err);
+} 
 
 // === Load existing markers ===
 async function loadMarkers() {
@@ -61,8 +73,33 @@ async function loadMarkers() {
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
     const marker = L.marker([data.lat, data.lng]).addTo(map);
-    marker.bindPopup(`<b>${data.name}</b><br>${data.desc}`);
-  });
+marker.bindPopup(`
+  <b>${data.name}</b><br>${data.desc}<br>
+  <small><i>Type:</i> ${data.type || "schema:Place"}</small><br>
+  ${data.linkedArticle ? `<a href="${data.linkedArticle}" target="_blank">Linked Article</a>` : ""}
+`);
 }
 
 loadMarkers();
+
+// === Export all mapPoints as JSON-LD in <head> ===
+async function exportJSONLD() {
+  const snapshot = await getDocs(collection(db, "mapPoints"));
+  const all = [];
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    if (d.jsonld) all.push(d.jsonld);
+  });
+
+  // If the <script id="map-jsonld"> doesn't exist yet, create it
+  let el = document.getElementById("map-jsonld");
+  if (!el) {
+    el = document.createElement("script");
+    el.type = "application/ld+json";
+    el.id = "map-jsonld";
+    document.head.appendChild(el);
+  }
+
+  el.textContent = JSON.stringify(all, null, 2);
+}
+exportJSONLD();
