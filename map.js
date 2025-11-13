@@ -60,11 +60,12 @@ try {
         "longitude": lng
       }
     }
-  });
+  }); 
   console.log("✅ Semantic point added:", name);
 } catch (err) {
   console.error("❌ Error adding point:", err);
 } 
+});
 
 // === Load existing markers ===
 async function loadMarkers() {
@@ -77,7 +78,8 @@ marker.bindPopup(`
   <b>${data.name}</b><br>${data.desc}<br>
   <small><i>Type:</i> ${data.type || "schema:Place"}</small><br>
   ${data.linkedArticle ? `<a href="${data.linkedArticle}" target="_blank">Linked Article</a>` : ""}
-`);
+ `);
+});
 }
 
 loadMarkers();
