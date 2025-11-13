@@ -74,11 +74,18 @@ async function loadMarkers() {
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
     const marker = L.marker([data.lat, data.lng]).addTo(map);
-marker.bindPopup(`
+let popupContent = `
   <b>${data.name}</b><br>${data.desc}<br>
-  <small><i>Type:</i> ${data.type || "schema:Place"}</small><br>
-  ${data.linkedArticle ? `<a href="${data.linkedArticle}" target="_blank">Linked Article</a>` : ""}
- `);
+  <small><i>Type:</i> ${data.type || "schema:Place"}</small>
+`;
+
+// Only show link if one exists
+if (data.linkedArticle && data.linkedArticle.trim() !== "") {
+  popupContent += `<br><a href="${data.linkedArticle}" target="_blank" style="color:#007bff;">View Linked Article</a>`;
+}
+
+// Set popup content
+marker.bindPopup(popupContent);
 });
 }
 
