@@ -20,11 +20,36 @@ const db = getFirestore(app);
 // === Initialize Map ===
 const map = L.map('map').setView([51.505, -0.09], 13);
 
-// Base map (OpenStreetMap)
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// === Base Maps ===
+
+// OpenStreetMap (Global)
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
+  attribution: '&copy; OpenStreetMap contributors'
+});
+
+// Carto Voyager (Crisp, modern)
+const carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; OpenStreetMap contributors & CartoDB'
+});
+
+// Gaode / AMap (China Coverage)
+const gaode = L.tileLayer.chinaProvider('GaoDe.Normal.Map', {
+  maxZoom: 18,
+  minZoom: 3,
+  attribution: '&copy; 高德地图 © AMap'
+});
+
+// === Add layer control ===
+const baseMaps = {
+  "Carto Voyager": carto,
+  "OpenStreetMap": osm,
+  "Gaode (AMap)": gaode
+};
+
+carto.addTo(map); // default map when opening
+L.control.layers(baseMaps).addTo(map);
 
 // === Add new marker on click ===
 map.on('click', async (e) => {
