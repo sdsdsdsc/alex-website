@@ -4,6 +4,9 @@ import {
   getFirestore, collection, addDoc, getDocs, query, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+// === Import Chinese map provider plugin ===
+import "https://unpkg.com/leaflet.chinatmsproviders/dist/leaflet.ChineseTmsProviders.min.js";
+
 // === Firebase Config (use yours) ===
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -19,37 +22,10 @@ const db = getFirestore(app);
 
 // === Initialize Map ===
 const map = L.map('map').setView([51.505, -0.09], 13);
-
-// === Base Maps ===
-
-// OpenStreetMap (Global)
-const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
-  attribution: '&copy; OpenStreetMap contributors'
-});
-
-// Carto Voyager (Crisp, modern)
-const carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '&copy; OpenStreetMap contributors & CartoDB'
-});
-
-// Gaode / AMap (China Coverage)
-const gaode = L.tileLayer.chinaProvider('GaoDe.Normal.Map', {
-  maxZoom: 18,
-  minZoom: 3,
-  attribution: '&copy; 高德地图 © AMap'
-});
-
-// === Add layer control ===
-const baseMaps = {
-  "Carto Voyager": carto,
-  "OpenStreetMap": osm,
-  "Gaode (AMap)": gaode
-};
-
-carto.addTo(map); // default map when opening
-L.control.layers(baseMaps).addTo(map);
+  attribution: '&copy; OpenStreetMap'
+}).addTo(map);
 
 // === Add new marker on click ===
 map.on('click', async (e) => {
@@ -65,31 +41,31 @@ map.on('click', async (e) => {
   marker.bindPopup(`<b>${name}</b><br>${desc}`).openPopup();
 
   // Save to Firebase (with semantic fields)
-  try {
-    await addDoc(collection(db, "mapPoints"), {
-      name,
-      desc,
-      lat,
-      lng,
-      type: "schema:Place",
-      linkedArticle: "https://alexsphotoboard.web.app/article.html?id=abc", // optional
-      createdAt: serverTimestamp(),
-      jsonld: {
-        "@context": "https://schema.org",
-        "@type": "Place",
-        "name": name,
-        "description": desc,
-        "geo": {
-          "@type": "GeoCoordinates",
-          "latitude": lat,
-          "longitude": lng
-        }
+try {
+  await addDoc(collection(db, "mapPoints"), {
+    name,
+    desc,
+    lat,
+    lng,
+    type: "schema:Place",
+    linkedArticle: "https://alexsphotoboard.web.app/article.html?id=abc", // optional
+    createdAt: serverTimestamp(),
+    jsonld: {
+      "@context": "https://schema.org",
+      "@type": "Place",
+      "name": name,
+      "description": desc,
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": lat,
+        "longitude": lng
       }
-    });
-    console.log("✅ Semantic point added:", name);
-  } catch (err) {
-    console.error("❌ Error adding point:", err);
-  }
+    }
+  }); 
+  console.log("✅ Semantic point added:", name);
+} catch (err) {
+  console.error("❌ Error adding point:", err);
+} 
 });
 
 // === Load existing markers ===

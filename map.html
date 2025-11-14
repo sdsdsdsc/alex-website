@@ -9,40 +9,37 @@
   <!-- Leaflet Map Library -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- Gaode/AMap provider (CORS-safe) -->
-  <script src="https://cdn.jsdelivr.net/npm/leaflet.chinatmsproviders@3.0.6/dist/leaflet.ChineseTmsProviders.min.js" crossorigin="anonymous"></script>
-
+ 
   <!-- Firebase -->
   <script type="module" src="map.js" defer></script>
 </head>
 <body>
   <header>
     <h1>
-      <a href="index.html" class="home-link">📸 Alex's Photo Board</a>
-    </h1>
+  <a href="index.html" class="home-link">📸 Alex's Photo Board</a>
+</h1>
     <nav class="menu-bar">
-      <div class="menu">
-        <button id="communityBtn">Community ▼</button>
-        <div id="communityMenu" class="hidden">
-          <button onclick="window.location.href='gallery.html'">🖼️ Gallery</button>
-          <button onclick="window.location.href='upload.html'">📤 Image</button>
-        </div>
-      </div>
+  <div class="menu">
+    <button id="communityBtn">Community ▼</button>
+    <div id="communityMenu" class="hidden">
+      <button onclick="window.location.href='gallery.html'">🖼️ Gallery</button>
+      <button onclick="window.location.href='upload.html'">📤 Image</button>
+    </div>
+  </div>
 
-      <div class="menu">
-        <button id="newsBtn">What's News ▼</button>
-        <div id="newsMenu" class="hidden">
-          <button onclick="window.location.href='news.html'">🗞️ News</button>
-          <button onclick="window.location.href='history.html'">📚 History Stories</button>
-        </div>
-      </div>
+  <div class="menu">
+    <button id="newsBtn">What's News ▼</button>
+    <div id="newsMenu" class="hidden">
+      <button onclick="window.location.href='news.html'">🗞️ News</button>
+      <button onclick="window.location.href='history.html'">📚 History Stories</button>
+    </div>
+  </div>
 
-      <!-- 🗺️ New top-level Map tab -->
-      <div class="menu">
-        <button onclick="window.location.href='map.html'">🗺️ Map</button>
-      </div>
-    </nav>
+  <!-- 🗺️ New top-level Map tab -->
+  <div class="menu">
+    <button onclick="window.location.href='map.html'">🗺️ Map</button>
+  </div>
+</nav>
   </header>
 
   <section>
