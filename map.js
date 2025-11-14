@@ -4,9 +4,6 @@ import {
   getFirestore, collection, addDoc, getDocs, query, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// === Import Chinese map provider plugin ===
-import "https://unpkg.com/leaflet.chinatmsproviders/dist/leaflet.ChineseTmsProviders.min.js";
-
 // === Firebase Config (use yours) ===
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -22,9 +19,11 @@ const db = getFirestore(app);
 
 // === Initialize Map ===
 const map = L.map('map').setView([51.505, -0.09], 13);
+
+// Base map (OpenStreetMap)
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
-  attribution: '&copy; OpenStreetMap'
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
 // === Add new marker on click ===
