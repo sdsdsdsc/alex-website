@@ -4,9 +4,6 @@ import {
   getFirestore, collection, addDoc, getDocs, query, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// === Import Chinese map provider plugin ===
-import "https://unpkg.com/leaflet.chinatmsproviders/dist/leaflet.ChineseTmsProviders.min.js";
-
 // === Firebase Config (use yours) ===
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -68,31 +65,31 @@ map.on('click', async (e) => {
   marker.bindPopup(`<b>${name}</b><br>${desc}`).openPopup();
 
   // Save to Firebase (with semantic fields)
-try {
-  await addDoc(collection(db, "mapPoints"), {
-    name,
-    desc,
-    lat,
-    lng,
-    type: "schema:Place",
-    linkedArticle: "https://alexsphotoboard.web.app/article.html?id=abc", // optional
-    createdAt: serverTimestamp(),
-    jsonld: {
-      "@context": "https://schema.org",
-      "@type": "Place",
-      "name": name,
-      "description": desc,
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": lat,
-        "longitude": lng
+  try {
+    await addDoc(collection(db, "mapPoints"), {
+      name,
+      desc,
+      lat,
+      lng,
+      type: "schema:Place",
+      linkedArticle: "https://alexsphotoboard.web.app/article.html?id=abc", // optional
+      createdAt: serverTimestamp(),
+      jsonld: {
+        "@context": "https://schema.org",
+        "@type": "Place",
+        "name": name,
+        "description": desc,
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": lat,
+          "longitude": lng
+        }
       }
-    }
-  }); 
-  console.log("✅ Semantic point added:", name);
-} catch (err) {
-  console.error("❌ Error adding point:", err);
-} 
+    });
+    console.log("✅ Semantic point added:", name);
+  } catch (err) {
+    console.error("❌ Error adding point:", err);
+  }
 });
 
 // === Load existing markers ===
