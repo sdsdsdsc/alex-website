@@ -4,6 +4,9 @@ import {
   getFirestore, collection, addDoc, getDocs, query, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+// === Import Chinese map provider plugin ===
+import "https://unpkg.com/leaflet.chinatmsproviders/dist/leaflet.ChineseTmsProviders.min.js";
+
 // === Firebase Config (use yours) ===
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
