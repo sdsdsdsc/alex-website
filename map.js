@@ -71,22 +71,38 @@ try {
 async function loadMarkers() {
   const q = query(collection(db, "mapPoints"));
   const snapshot = await getDocs(q);
+
+  const markers = []; // 🌍 store all marker coordinates
+
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
     const marker = L.marker([data.lat, data.lng]).addTo(map);
-let popupContent = `
-  <b>${data.name}</b><br>${data.desc}<br>
-  <small><i>Type:</i> ${data.type || "schema:Place"}</small>
-`;
 
-// Only show link if one exists
-if (data.linkedArticle && data.linkedArticle.trim() !== "") {
-  popupContent += `<br><a href="${data.linkedArticle}" target="_blank" style="color:#007bff;">View Linked Article</a>`;
-}
+    let popupContent = `
+      <b>${data.name}</b><br>${data.desc}<br>
+      <small><i>Type:</i> ${data.type || "schema:Place"}</small>
+    `;
 
-// Set popup content
-marker.bindPopup(popupContent);
-});
+    // Only show link if one exists
+    if (data.linkedArticle && data.linkedArticle.trim() !== "") {
+      popupContent += `<br><a href="${data.linkedArticle}" target="_blank" style="color:#007bff;">View Linked Article</a>`;
+    }
+
+    marker.bindPopup(popupContent);
+    markers.push([data.lat, data.lng]); // 🌍 collect coordinates
+  });
+
+  // 🌍 Automatically adjust the map to fit all points
+  if (markers.length > 0) {
+    const bounds = L.latLngBounds(markers);
+    map.fitBounds(bounds, { padding: [50, 50] });
+
+    // Optional: if there’s only one point, zoom in closer
+    if (markers.length === 1) {
+      map.setZoom(14);
+      map.panTo(bounds.getCenter());
+    }
+  }
 }
 
 loadMarkers();
