@@ -21,9 +21,9 @@ const db = getFirestore(app);
 const map = L.map('map').setView([51.505, -0.09], 13);
 
 // Base map (OpenStreetMap)
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
-  attribution: '&copy; OpenStreetMap contributors & CartoDB'
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
 // === Add new marker on click ===
