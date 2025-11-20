@@ -37,13 +37,23 @@ const gaode = L.tileLayer(
   }
 );
 
+// Esri World Street Map
+const esri = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+  {
+    maxZoom: 19,
+    attribution: "Tiles © Esri — Source: Esri, HERE, Garmin, OpenStreetMap contributors"
+  }
+);
+
 // Default base layer
 osm.addTo(map);
 
 // Layer switcher (top-right control)
 const baseMaps = {
   "OpenStreetMap": osm,
-  "Gaode (AMap)": gaode
+  "Gaode (AMap)": gaode,
+  "Esri World Street": esri
 };
 L.control.layers(baseMaps).addTo(map);
 
