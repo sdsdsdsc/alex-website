@@ -20,11 +20,32 @@ const db = getFirestore(app);
 // === Initialize Map ===
 const map = L.map('map').setView([51.505, -0.09], 13);
 
-// Base map (OpenStreetMap)
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// Base maps
+
+// OpenStreetMap
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
+});
+
+// Gaode / AMap
+const gaode = L.tileLayer(
+  'https://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}',
+  {
+    maxZoom: 20,
+    attribution: '© 高德地图'
+  }
+);
+
+// Default base layer
+osm.addTo(map);
+
+// Layer switcher (top-right control)
+const baseMaps = {
+  "OpenStreetMap": osm,
+  "Gaode (AMap)": gaode
+};
+L.control.layers(baseMaps).addTo(map);
 
 // === Add new marker on click ===
 map.on('click', async (e) => {
