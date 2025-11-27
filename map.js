@@ -54,6 +54,8 @@ osm.addTo(map);
 // === Polygon layer group ===
 const drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
+// Only create point markers when this mode is active
+let addPointMode = false;
 
 // Layer switcher (top-right control)
 const baseMaps = {
@@ -77,6 +79,33 @@ const drawControl = new L.Control.Draw({
   }
 });
 map.addControl(drawControl);
+
+// === Custom Add Point Button ===
+const AddPointControl = L.Control.extend({
+  onAdd: function () {
+    const btn = L.DomUtil.create('button', 'leaflet-bar');
+    btn.innerHTML = "➕";
+    btn.title = "Add a Map Point";
+
+    btn.style.width = "32px";
+    btn.style.height = "32px";
+    btn.style.cursor = "pointer";
+
+    btn.onclick = () => {
+      addPointMode = !addPointMode;
+      btn.style.background = addPointMode ? "#66cc66" : "white";
+    };
+
+    return btn;
+  }
+});
+
+map.addControl(new AddPointControl({ position: "topleft" }));
+
+// Turn off add-point mode automatically when drawing starts
+map.on(L.Draw.Event.DRAWSTART, () => {
+  addPointMode = false;
+});
 
 // === Save polygon to Firebase ===
 map.on(L.Draw.Event.CREATED, async (event) => {
@@ -124,6 +153,7 @@ map.on(L.Draw.Event.CREATED, async (event) => {
 
 // === Add new marker on click ===
 map.on('click', async (e) => {
+  if (!addPointMode) return; // only create points when addPointMode is active
   const name = prompt("Enter a title for this location:");
   const desc = prompt("Enter a short description:");
   if (!name || !desc) return;
