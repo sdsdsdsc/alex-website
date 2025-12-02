@@ -54,6 +54,7 @@ osm.addTo(map);
 // === Polygon layer group ===
 const drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
+drawnItems.bringToFront();  // <-- FIX 1: ensure polygon handles sit above markers
 // Only create point markers when this mode is active
 let addPointMode = false;
 
@@ -105,6 +106,16 @@ map.addControl(new AddPointControl({ position: "topleft" }));
 // Turn off add-point mode automatically when drawing starts
 map.on(L.Draw.Event.DRAWSTART, () => {
   addPointMode = false;
+
+  // Disable marker click events temporarily so polygon drawing isn't interrupted
+  map.eachLayer(layer => {
+    if (layer instanceof L.Marker) {
+      layer.off('click');
+      // store original interactive setting so we can restore later
+      layer._originalInteractive = layer.options.interactive;
+      layer.options.interactive = false;
+    }
+  });
 });
 
 // === Save polygon to Firebase ===
@@ -149,6 +160,12 @@ map.on(L.Draw.Event.CREATED, async (event) => {
   `);
 
   drawnItems.addLayer(layer);
+  // Re-enable marker interaction after drawing completes
+  map.eachLayer(layerIter => {
+    if (layerIter instanceof L.Marker) {
+      layerIter.options.interactive = (layerIter._originalInteractive !== false);
+    }
+  });
 });
 
 // === Add new marker on click ===
@@ -294,19 +311,4 @@ async function exportJSONLD() {
 }
 exportJSONLD();
 
-// === CES Legend ===
-const legend = L.control({ position: 'bottomright' });
 
-legend.onAdd = function () {
-  const div = L.DomUtil.create('div', 'info legend');
-  div.innerHTML = `
-    <h4>CES Score</h4>
-    <i style="background:#006d2c"></i> 76–100<br>
-    <i style="background:#31a354"></i> 51–75<br>
-    <i style="background:#fed976"></i> 26–50<br>
-    <i style="background:#fc4e2a"></i> 0–25<br>
-  `;
-  return div;
-};
-
-legend.addTo(map);
