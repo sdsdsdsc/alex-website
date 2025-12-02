@@ -16,13 +16,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-// Polygon storage
-const polygonsRef = collection(db, "polygons");
 
 // === Initialize Map ===
-const map = L.map('map', {
-  preferCanvas: false   // REQUIRED for stable polygon drawing
-}).setView([51.505, -0.09], 13);
+const map = L.map('map').setView([51.505, -0.09], 13);
 
 // Base maps
 
@@ -53,13 +49,6 @@ const esri = L.tileLayer(
 // Default base layer
 osm.addTo(map);
 
-// === Polygon layer group ===
-const drawnItems = new L.FeatureGroup();
-map.addLayer(drawnItems);
-drawnItems.bringToFront();  // <-- FIX 1: ensure polygon handles sit above markers
-// Only create point markers when this mode is active
-let addPointMode = false;
-
 // Layer switcher (top-right control)
 const baseMaps = {
   "OpenStreetMap": osm,
@@ -68,137 +57,8 @@ const baseMaps = {
 };
 L.control.layers(baseMaps).addTo(map);
 
-// === Improved Draw Control (fixes polygon closing problem) ===
-const drawControl = new L.Control.Draw({
-  draw: {
-    polygon: {
-      allowIntersection: true,
-      showArea: false,
-      drawError: false,
-      shapeOptions: {
-        color: '#3388ff',
-        weight: 2
-      },
-      touchExtend: true,
-      repeatMode: false
-    },
-    marker: false,
-    circle: false,
-    rectangle: false,
-    polyline: false
-  },
-  edit: {
-    featureGroup: drawnItems
-  }
-});
-
-map.addControl(drawControl);
-
-// === Increase snapping distance (major fix!) ===
-if (L.Draw && L.Draw.Polygon && L.Draw.Polygon.prototype && L.Draw.Polygon.prototype.options) {
-  L.Draw.Polygon.prototype.options.snappingDistance = 15;
-}
-
-// === Custom Add Point Button ===
-const AddPointControl = L.Control.extend({
-  onAdd: function () {
-    const btn = L.DomUtil.create('button', 'leaflet-bar');
-    btn.innerHTML = "➕";
-    btn.title = "Add a Map Point";
-
-    btn.style.width = "32px";
-    btn.style.height = "32px";
-    btn.style.cursor = "pointer";
-
-    btn.onclick = () => {
-      addPointMode = !addPointMode;
-      btn.style.background = addPointMode ? "#66cc66" : "white";
-    };
-
-    return btn;
-  }
-});
-
-map.addControl(new AddPointControl({ position: "topleft" }));
-
-// Turn off add-point mode automatically when drawing starts
-map.on(L.Draw.Event.DRAWSTART, () => {
-  addPointMode = false;
-
-  // Disable marker click events temporarily so polygon drawing isn't interrupted
-  map.eachLayer(layer => {
-    if (layer instanceof L.Marker) {
-      // store original interactive setting so we can restore later
-      layer._originalInteractive = layer.options.interactive;
-      layer.options.interactive = false;
-    }
-  });
-});
-
-// If drawing is stopped/cancelled, restore marker interactivity
-map.on(L.Draw.Event.DRAWSTOP, () => {
-  map.eachLayer(layer => {
-    if (layer instanceof L.Marker) {
-      layer.options.interactive = (layer._originalInteractive !== false);
-    }
-  });
-});
-
-// === Save polygon to Firebase ===
-map.on(L.Draw.Event.CREATED, async (event) => {
-  const layer = event.layer;
-
-  // Random test values (real formula later)
-  const score_use = 18;
-  const score_activities = 12;
-  const score_infra = 20;
-  const score_care = 14;
-  const CES = score_use + score_activities + score_infra + score_care;
-
-  const geojson = layer.toGeoJSON();
-
-  // Save to Firebase
-  await addDoc(polygonsRef, {
-    name: "Test Community Block",
-    geojson: geojson,
-    score_use,
-    score_activities,
-    score_infra,
-    score_care,
-    CES,
-    createdAt: serverTimestamp()
-  });
-
-  // Style it immediately
-  layer.setStyle({
-    color: getCESColor(CES),
-    weight: 2,
-    fillOpacity: 0.45
-  });
-
-  // Add popup
-  layer.bindPopup(`
-    <b>Community Engagement Score:</b> ${CES}/100<br><br>
-    U (Use): ${score_use}<br>
-    A (Activities): ${score_activities}<br>
-    I (Infrastructure): ${score_infra}<br>
-    C (Care): ${score_care}
-  `);
-
-  drawnItems.addLayer(layer);
-  // Re-enable marker click interactions
-  map.eachLayer(layerIter => {
-    if (layerIter instanceof L.Marker) {
-      if (layerIter._originalInteractive !== undefined) {
-        layerIter.options.interactive = layerIter._originalInteractive;
-      }
-    }
-  });
-});
-
 // === Add new marker on click ===
 map.on('click', async (e) => {
-  if (!addPointMode) return; // only create points when addPointMode is active
   const name = prompt("Enter a title for this location:");
   const desc = prompt("Enter a short description:");
   if (!name || !desc) return;
@@ -276,45 +136,6 @@ async function loadMarkers() {
   }
 }
 
-
-// === CES color scale ===
-function getCESColor(score) {
-  return score > 75 ? "#006d2c" :      // very high (dark green)
-         score > 50 ? "#31a354" :      // high (green)
-         score > 25 ? "#fed976" :      // medium (yellow)
-                       "#fc4e2a";      // low (red)
-}
-
-// === Load polygons from Firebase ===
-async function loadPolygons() {
-  const snapshot = await getDocs(polygonsRef);
-
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-
-    const layer = L.geoJSON(data.geojson, {
-      style: {
-        color: getCESColor(data.CES),
-        weight: 2,
-        fillOpacity: 0.45
-      }
-    });
-
-    layer.bindPopup(`
-      <b>${data.name}</b><br>
-      <b>Community Engagement Score:</b> ${data.CES}/100<br><br>
-      U (Use): ${data.score_use}<br>
-      A (Activities): ${data.score_activities}<br>
-      I (Infrastructure): ${data.score_infra}<br>
-      C (Care): ${data.score_care}
-    `);
-
-    layer.addTo(map);
-    drawnItems.addLayer(layer);
-  });
-}
-
-loadPolygons();
 loadMarkers();
 
 // === Export all mapPoints as JSON-LD in <head> ===
@@ -338,5 +159,3 @@ async function exportJSONLD() {
   el.textContent = JSON.stringify(all, null, 2);
 }
 exportJSONLD();
-
-
