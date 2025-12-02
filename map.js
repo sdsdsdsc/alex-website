@@ -20,7 +20,9 @@ const db = getFirestore(app);
 const polygonsRef = collection(db, "polygons");
 
 // === Initialize Map ===
-const map = L.map('map').setView([51.505, -0.09], 13);
+const map = L.map('map', {
+  preferCanvas: false   // REQUIRED for stable polygon drawing
+}).setView([51.505, -0.09], 13);
 
 // Base maps
 
@@ -66,20 +68,36 @@ const baseMaps = {
 };
 L.control.layers(baseMaps).addTo(map);
 
-// === Enable Draw Controls ===
+// === Improved Draw Control (fixes polygon closing problem) ===
 const drawControl = new L.Control.Draw({
   draw: {
-    polygon: true,
+    polygon: {
+      allowIntersection: true,
+      showArea: false,
+      drawError: false,
+      shapeOptions: {
+        color: '#3388ff',
+        weight: 2
+      },
+      touchExtend: true,
+      repeatMode: false
+    },
     marker: false,
     circle: false,
     rectangle: false,
-    polyline: false,
+    polyline: false
   },
   edit: {
     featureGroup: drawnItems
   }
 });
+
 map.addControl(drawControl);
+
+// === Increase snapping distance (major fix!) ===
+if (L.Draw && L.Draw.Polygon && L.Draw.Polygon.prototype && L.Draw.Polygon.prototype.options) {
+  L.Draw.Polygon.prototype.options.snappingDistance = 15;
+}
 
 // === Custom Add Point Button ===
 const AddPointControl = L.Control.extend({
@@ -168,10 +186,12 @@ map.on(L.Draw.Event.CREATED, async (event) => {
   `);
 
   drawnItems.addLayer(layer);
-  // Re-enable marker interaction after drawing completes
+  // Re-enable marker click interactions
   map.eachLayer(layerIter => {
     if (layerIter instanceof L.Marker) {
-      layerIter.options.interactive = (layerIter._originalInteractive !== false);
+      if (layerIter._originalInteractive !== undefined) {
+        layerIter.options.interactive = layerIter._originalInteractive;
+      }
     }
   });
 });
