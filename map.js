@@ -110,10 +110,18 @@ map.on(L.Draw.Event.DRAWSTART, () => {
   // Disable marker click events temporarily so polygon drawing isn't interrupted
   map.eachLayer(layer => {
     if (layer instanceof L.Marker) {
-      layer.off('click');
       // store original interactive setting so we can restore later
       layer._originalInteractive = layer.options.interactive;
       layer.options.interactive = false;
+    }
+  });
+});
+
+// If drawing is stopped/cancelled, restore marker interactivity
+map.on(L.Draw.Event.DRAWSTOP, () => {
+  map.eachLayer(layer => {
+    if (layer instanceof L.Marker) {
+      layer.options.interactive = (layer._originalInteractive !== false);
     }
   });
 });
