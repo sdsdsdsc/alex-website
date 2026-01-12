@@ -74,7 +74,6 @@ const drawControl = new L.Control.Draw({
     polygon: {
       allowIntersection: true,
       showArea: false,
-      drawError: false,
       shapeOptions: {
         color: '#3388ff',
         weight: 2
@@ -93,6 +92,9 @@ const drawControl = new L.Control.Draw({
 });
 
 map.addControl(drawControl);
+
+// Track the active polygon handler so we can safely finish shapes on double-click.
+let activePolygonHandler = null;
 
 // === Increase snapping distance (major fix!) ===
 if (L.Draw && L.Draw.Polygon && L.Draw.Polygon.prototype && L.Draw.Polygon.prototype.options) {
@@ -122,8 +124,13 @@ const AddPointControl = L.Control.extend({
 map.addControl(new AddPointControl({ position: "topleft" }));
 
 // Turn off add-point mode automatically when drawing starts
-map.on(L.Draw.Event.DRAWSTART, () => {
+map.on(L.Draw.Event.DRAWSTART, (event) => {
   addPointMode = false;
+  const polygonMode = drawControl._toolbars?.draw?._modes?.polygon;
+  if (event.layerType === "polygon" && polygonMode?.handler) {
+    activePolygonHandler = polygonMode.handler;
+    map.doubleClickZoom.disable();
+  }
 
   // Disable marker click events temporarily so polygon drawing isn't interrupted
   map.eachLayer(layer => {
@@ -142,6 +149,15 @@ map.on(L.Draw.Event.DRAWSTOP, () => {
       layer.options.interactive = (layer._originalInteractive !== false);
     }
   });
+  activePolygonHandler = null;
+  map.doubleClickZoom.enable();
+});
+
+// Allow users to double-click to close polygons if the first point isn't clickable.
+map.on('dblclick', () => {
+  if (activePolygonHandler && activePolygonHandler._markers?.length > 2) {
+    activePolygonHandler.completeShape();
+  }
 });
 
 // === Save polygon to Firebase ===
@@ -338,5 +354,3 @@ async function exportJSONLD() {
   el.textContent = JSON.stringify(all, null, 2);
 }
 exportJSONLD();
-
-
