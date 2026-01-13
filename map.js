@@ -20,9 +20,7 @@ const db = getFirestore(app);
 const polygonsRef = collection(db, "polygons");
 
 // === Initialize Map ===
-const map = L.map('map', {
-  preferCanvas: false   // REQUIRED for stable polygon drawing
-}).setView([51.505, -0.09], 13);
+const map = L.map('map').setView([51.505, -0.09], 13);
 
 // Base maps
 
@@ -53,91 +51,61 @@ const esri = L.tileLayer(
 // Default base layer
 osm.addTo(map);
 
-// === Save polygon to Firebase (FIXED: never let polygon vanish) ===
-map.on(L.Draw.Event.CREATED, (event) => {
-  const layer = event.layer;
+// === Polygon layer group ===
+const drawnItems = new L.FeatureGroup();
+map.addLayer(drawnItems);
+drawnItems.bringToFront();  // <-- FIX 1: ensure polygon handles sit above markers
+// Only create point markers when this mode is active
+let addPointMode = false;
 
-  // Random test values (real formula later)
-  const score_use = 18;
-  const score_activities = 12;
-  const score_infra = 20;
-  const score_care = 14;
-  const CES = score_use + score_activities + score_infra + score_care;
+// Layer switcher (top-right control)
+const baseMaps = {
+  "OpenStreetMap": osm,
+  "Gaode (AMap)": gaode,
+  "Esri World Street": esri
+};
+L.control.layers(baseMaps).addTo(map);
 
-  // ✅ Style + add to map FIRST (so it never disappears)
-  layer.setStyle({
-    color: getCESColor(CES),
-    weight: 2,
-    fillOpacity: 0.45
-  });
-
-  layer.bindPopup(`
-    <b>Community Engagement Score:</b> ${CES}/100<br><br>
-    U (Use): ${score_use}<br>
-    A (Activities): ${score_activities}<br>
-    I (Infrastructure): ${score_infra}<br>
-    C (Care): ${score_care}<br><br>
-    <small>Saving…</small>
-  `);
-
-  drawnItems.addLayer(layer);
-
-  // Re-enable marker click interactions
-  map.eachLayer(layerIter => {
-    if (layerIter instanceof L.Marker) {
-      if (layerIter._originalInteractive !== undefined) {
-        layerIter.options.interactive = layerIter._originalInteractive;
-      }
-    }
-  });
-
-  // ✅ Save to Firebase AFTER, with error handling
-  const geojson = layer.toGeoJSON();
-
-  addDoc(polygonsRef, {
-    name: "Test Community Block",
-    geojson: geojson,
-    score_use,
-    score_activities,
-    score_infra,
-    score_care,
-    CES,
-    createdAt: serverTimestamp()
-  })
-    .then(() => {
-      layer.setPopupContent(`
-        <b>Community Engagement Score:</b> ${CES}/100<br><br>
-        U (Use): ${score_use}<br>
-        A (Activities): ${score_activities}<br>
-        I (Infrastructure): ${score_infra}<br>
-        C (Care): ${score_care}<br><br>
-        <small>✅ Saved</small>
-      `);
-    })
-    .catch((err) => {
-      console.error("❌ Polygon save failed:", err);
-      layer.setPopupContent(`
-        <b>Community Engagement Score:</b> ${CES}/100<br><br>
-        U (Use): ${score_use}<br>
-        A (Activities): ${score_activities}<br>
-        I (Infrastructure): ${score_infra}<br>
-        C (Care): ${score_care}<br><br>
-        <small style="color:#c00;">❌ Save failed (check Console + Firestore rules)</small>
-      `);
-    });
+// === Enable Draw Controls ===
+const drawControl = new L.Control.Draw({
+  draw: {
+    polygon: true,
+    marker: false,
+    circle: false,
+    rectangle: false,
+    polyline: false,
+  },
+  edit: {
+    featureGroup: drawnItems
+  }
 });
-    btn.title = "Add a Map Point";
+map.addControl(drawControl);
+
+// --- Add Point Mode Control (FIXED) ---
+const AddPointControl = L.Control.extend({
+  options: { position: "topleft" },
+
+  onAdd: function () {
+    const btn = L.DomUtil.create("button", "leaflet-bar");
+    btn.type = "button";
+    btn.title = "Toggle add-point mode";
+    btn.innerHTML = "📍";
 
     btn.style.width = "32px";
     btn.style.height = "32px";
     btn.style.cursor = "pointer";
+    btn.style.background = "white";
+
+    // Prevent map drag/zoom when clicking the button
+    L.DomEvent.disableClickPropagation(btn);
+    L.DomEvent.disableScrollPropagation(btn);
 
     btn.onclick = () => {
       addPointMode = !addPointMode;
       btn.style.background = addPointMode ? "#66cc66" : "white";
     };
 
-    return btn;
+    return btn; // ✅ MUST be inside onAdd()
   }
 });
 
@@ -208,12 +176,10 @@ map.on(L.Draw.Event.CREATED, async (event) => {
   `);
 
   drawnItems.addLayer(layer);
-  // Re-enable marker click interactions
+  // Re-enable marker interaction after drawing completes
   map.eachLayer(layerIter => {
     if (layerIter instanceof L.Marker) {
-      if (layerIter._originalInteractive !== undefined) {
-        layerIter.options.interactive = layerIter._originalInteractive;
-      }
+      layerIter.options.interactive = (layerIter._originalInteractive !== false);
     }
   });
 });
