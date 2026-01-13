@@ -58,6 +58,21 @@ drawnItems.bringToFront();  // <-- FIX 1: ensure polygon handles sit above marke
 // Only create point markers when this mode is active
 let addPointMode = false;
 
+
+function setMarkersPointerEvents(disabled) {
+  map.eachLayer(layer => {
+    if (layer instanceof L.Marker) {
+      if (layer._originalInteractive === undefined) {
+        layer._originalInteractive = layer.options.interactive !== false;
+      }
+      layer.options.interactive = !disabled;
+
+      const el = layer.getElement && layer.getElement();
+      if (el) el.style.pointerEvents = disabled ? "none" : "auto";
+    }
+  });
+}
+
 // Layer switcher (top-right control)
 const baseMaps = {
   "OpenStreetMap": osm,
@@ -114,28 +129,20 @@ map.addControl(new AddPointControl({ position: "topleft" }));
 // Turn off add-point mode automatically when drawing starts
 map.on(L.Draw.Event.DRAWSTART, () => {
   addPointMode = false;
+  setMarkersPointerEvents(true);
+});
 
-  // Disable marker click events temporarily so polygon drawing isn't interrupted
-  map.eachLayer(layer => {
-    if (layer instanceof L.Marker) {
-      // store original interactive setting so we can restore later
-      layer._originalInteractive = layer.options.interactive;
-      layer.options.interactive = false;
-    }
-  });
 });
 
 // If drawing is stopped/cancelled, restore marker interactivity
 map.on(L.Draw.Event.DRAWSTOP, () => {
-  map.eachLayer(layer => {
-    if (layer instanceof L.Marker) {
-      layer.options.interactive = (layer._originalInteractive !== false);
-    }
-  });
+  setMarkersPointerEvents(false);
 });
 
-// === Save polygon to Firebase ===
-map.on(L.Draw.Event.CREATED, async (event) => {
+});
+
+// === Save polygon to Firebase (UI-first + Firestore-safe) ===
+map.on(L.Draw.Event.CREATED, (event) => {
   const layer = event.layer;
 
   // Random test values (real formula later)
@@ -145,44 +152,63 @@ map.on(L.Draw.Event.CREATED, async (event) => {
   const score_care = 14;
   const CES = score_use + score_activities + score_infra + score_care;
 
-  const geojson = layer.toGeoJSON();
-
-  // Save to Firebase
-  await addDoc(polygonsRef, {
-    name: "Test Community Block",
-    geojson: geojson,
-    score_use,
-    score_activities,
-    score_infra,
-    score_care,
-    CES,
-    createdAt: serverTimestamp()
-  });
-
-  // Style it immediately
+  // ✅ Style + add to map immediately (never "disappears")
   layer.setStyle({
     color: getCESColor(CES),
     weight: 2,
     fillOpacity: 0.45
   });
 
-  // Add popup
   layer.bindPopup(`
     <b>Community Engagement Score:</b> ${CES}/100<br><br>
     U (Use): ${score_use}<br>
     A (Activities): ${score_activities}<br>
     I (Infrastructure): ${score_infra}<br>
-    C (Care): ${score_care}
+    C (Care): ${score_care}<br><br>
+    <small>Saving…</small>
   `);
 
   drawnItems.addLayer(layer);
-  // Re-enable marker interaction after drawing completes
-  map.eachLayer(layerIter => {
-    if (layerIter instanceof L.Marker) {
-      layerIter.options.interactive = (layerIter._originalInteractive !== false);
-    }
-  });
+
+  // ✅ Drawing finished → restore marker interactions
+  setMarkersPointerEvents(false);
+
+  // Firestore cannot store GeoJSON Polygon coordinates (nested arrays) directly
+  const geojsonStr = JSON.stringify(layer.toGeoJSON());
+
+  addDoc(polygonsRef, {
+    name: "Test Community Block",
+    geojsonStr,
+    score_use,
+    score_activities,
+    score_infra,
+    score_care,
+    CES,
+    createdAt: serverTimestamp()
+  })
+    .then(() => {
+      layer.setPopupContent(`
+        <b>Community Engagement Score:</b> ${CES}/100<br><br>
+        U (Use): ${score_use}<br>
+        A (Activities): ${score_activities}<br>
+        I (Infrastructure): ${score_infra}<br>
+        C (Care): ${score_care}<br><br>
+        <small>✅ Saved</small>
+      `);
+    })
+    .catch((err) => {
+      console.error("❌ Polygon save failed:", err);
+      layer.setPopupContent(`
+        <b>Community Engagement Score:</b> ${CES}/100<br><br>
+        U (Use): ${score_use}<br>
+        A (Activities): ${score_activities}<br>
+        I (Infrastructure): ${score_infra}<br>
+        C (Care): ${score_care}<br><br>
+        <small style="color:#c00;">❌ Save failed</small>
+      `);
+    });
 });
+
 
 // === Add new marker on click ===
 map.on('click', async (e) => {
@@ -280,7 +306,9 @@ async function loadPolygons() {
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
 
-    const layer = L.geoJSON(data.geojson, {
+    const geojson = data.geojsonStr ? JSON.parse(data.geojsonStr) : data.geojson;
+
+    const layer = L.geoJSON(geojson, {
       style: {
         color: getCESColor(data.CES),
         weight: 2,
