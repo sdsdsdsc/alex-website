@@ -18,6 +18,9 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 // Polygon storage
 const polygonsRef = collection(db, "polygons");
+// Drawing state and add-point mode
+let isDrawing = false;
+let addPointMode = true; // toggle this from UI if you want to enable/disable add-point behavior
 
 // === Initialize Map ===
 const map = L.map('map').setView([51.505, -0.09], 13);
@@ -54,24 +57,6 @@ osm.addTo(map);
 // === Polygon layer group ===
 const drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
-drawnItems.bringToFront();  // <-- FIX 1: ensure polygon handles sit above markers
-// Only create point markers when this mode is active
-let addPointMode = false;
-
-
-function setMarkersPointerEvents(disabled) {
-  map.eachLayer(layer => {
-    if (layer instanceof L.Marker) {
-      if (layer._originalInteractive === undefined) {
-        layer._originalInteractive = layer.options.interactive !== false;
-      }
-      layer.options.interactive = !disabled;
-
-      const el = layer.getElement && layer.getElement();
-      if (el) el.style.pointerEvents = disabled ? "none" : "auto";
-    }
-  });
-}
 
 // Layer switcher (top-right control)
 const baseMaps = {
@@ -96,51 +81,18 @@ const drawControl = new L.Control.Draw({
 });
 map.addControl(drawControl);
 
-// --- Add Point Mode Control (FIXED) ---
-const AddPointControl = L.Control.extend({
-  options: { position: "topleft" },
-
-  onAdd: function () {
-    const btn = L.DomUtil.create("button", "leaflet-bar");
-    btn.type = "button";
-    btn.title = "Toggle add-point mode";
-    btn.innerHTML = "📍";
-
-    btn.style.width = "32px";
-    btn.style.height = "32px";
-    btn.style.cursor = "pointer";
-    btn.style.background = "white";
-
-    // Prevent map drag/zoom when clicking the button
-    L.DomEvent.disableClickPropagation(btn);
-    L.DomEvent.disableScrollPropagation(btn);
-
-    btn.onclick = () => {
-      addPointMode = !addPointMode;
-      btn.style.background = addPointMode ? "#66cc66" : "white";
-    };
-
-    return btn; // ✅ MUST be inside onAdd()
-  }
-});
-
-map.addControl(new AddPointControl({ position: "topleft" }));
-
-// Turn off add-point mode automatically when drawing starts
+// === Track draw start/stop to prevent click conflicts ===
 map.on(L.Draw.Event.DRAWSTART, () => {
-  addPointMode = false;
-  setMarkersPointerEvents(true);
+  isDrawing = true;
+  addPointMode = false; // turn off custom point mode while drawing
 });
 
-
-// If drawing is stopped/cancelled, restore marker interactivity
 map.on(L.Draw.Event.DRAWSTOP, () => {
-  setMarkersPointerEvents(false);
+  isDrawing = false;
 });
 
-
-// === Save polygon to Firebase (UI-first + Firestore-safe) ===
-map.on(L.Draw.Event.CREATED, (event) => {
+// === Save polygon to Firebase ===
+map.on(L.Draw.Event.CREATED, async (event) => {
   const layer = event.layer;
 
   // Random test values (real formula later)
@@ -150,104 +102,90 @@ map.on(L.Draw.Event.CREATED, (event) => {
   const score_care = 14;
   const CES = score_use + score_activities + score_infra + score_care;
 
-  // ✅ Style + add to map immediately (never "disappears")
-  layer.setStyle({
-    color: getCESColor(CES),
-    weight: 2,
-    fillOpacity: 0.45
-  });
+  const geojson = layer.toGeoJSON();
 
-  layer.bindPopup(`
-    <b>Community Engagement Score:</b> ${CES}/100<br><br>
-    U (Use): ${score_use}<br>
-    A (Activities): ${score_activities}<br>
-    I (Infrastructure): ${score_infra}<br>
-    C (Care): ${score_care}<br><br>
-    <small>Saving…</small>
-  `);
-
-  drawnItems.addLayer(layer);
-
-  // ✅ Drawing finished → restore marker interactions
-  setMarkersPointerEvents(false);
-
-  // Firestore cannot store GeoJSON Polygon coordinates (nested arrays) directly
-  const geojsonStr = JSON.stringify(layer.toGeoJSON());
-
-  addDoc(polygonsRef, {
+  // Save to Firebase
+  await addDoc(polygonsRef, {
     name: "Test Community Block",
-    geojsonStr,
+    geojson: geojson,
     score_use,
     score_activities,
     score_infra,
     score_care,
     CES,
     createdAt: serverTimestamp()
-  })
-    .then(() => {
-      layer.setPopupContent(`
-        <b>Community Engagement Score:</b> ${CES}/100<br><br>
-        U (Use): ${score_use}<br>
-        A (Activities): ${score_activities}<br>
-        I (Infrastructure): ${score_infra}<br>
-        C (Care): ${score_care}<br><br>
-        <small>✅ Saved</small>
-      `);
-    })
-    .catch((err) => {
-      console.error("❌ Polygon save failed:", err);
-      layer.setPopupContent(`
-        <b>Community Engagement Score:</b> ${CES}/100<br><br>
-        U (Use): ${score_use}<br>
-        A (Activities): ${score_activities}<br>
-        I (Infrastructure): ${score_infra}<br>
-        C (Care): ${score_care}<br><br>
-        <small style="color:#c00;">❌ Save failed</small>
-      `);
-    });
+  });
+
+  // Style it immediately
+  layer.setStyle({
+    color: getCESColor(CES),
+    weight: 2,
+    fillOpacity: 0.45
+  });
+
+  // Add popup
+  layer.bindPopup(`
+    <b>Community Engagement Score:</b> ${CES}/100<br><br>
+    U (Use): ${score_use}<br>
+    A (Activities): ${score_activities}<br>
+    I (Infrastructure): ${score_infra}<br>
+    C (Care): ${score_care}
+  `);
+
+  drawnItems.addLayer(layer);
 });
 
-
-// === Add new marker on click ===
-map.on('click', async (e) => {
-  if (!addPointMode) return; // only create points when addPointMode is active
+// Helper to add marker at a given LatLng and save to Firestore
+async function addMarkerAt(latlng) {
   const name = prompt("Enter a title for this location:");
   const desc = prompt("Enter a short description:");
   if (!name || !desc) return;
 
-  const lat = e.latlng.lat;
-  const lng = e.latlng.lng;
+  const lat = latlng.lat;
+  const lng = latlng.lng;
 
   // Add to map immediately
   const marker = L.marker([lat, lng]).addTo(map);
   marker.bindPopup(`<b>${name}</b><br>${desc}`).openPopup();
 
   // Save to Firebase (with semantic fields)
-try {
-  await addDoc(collection(db, "mapPoints"), {
-    name,
-    desc,
-    lat,
-    lng,
-    type: "schema:Place",
-    linkedArticle: "https://alexsphotoboard.web.app/article.html?id=abc", // optional
-    createdAt: serverTimestamp(),
-    jsonld: {
-      "@context": "https://schema.org",
-      "@type": "Place",
-      "name": name,
-      "description": desc,
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": lat,
-        "longitude": lng
+  try {
+    await addDoc(collection(db, "mapPoints"), {
+      name,
+      desc,
+      lat,
+      lng,
+      type: "schema:Place",
+      linkedArticle: "https://alexsphotoboard.web.app/article.html?id=abc", // optional
+      createdAt: serverTimestamp(),
+      jsonld: {
+        "@context": "https://schema.org",
+        "@type": "Place",
+        "name": name,
+        "description": desc,
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": lat,
+          "longitude": lng
+        }
       }
-    }
-  }); 
-  console.log("✅ Semantic point added:", name);
-} catch (err) {
-  console.error("❌ Error adding point:", err);
-} 
+    });
+    console.log("✅ Semantic point added:", name);
+  } catch (err) {
+    console.error("❌ Error adding point:", err);
+  }
+}
+
+// === Add new marker on click (guarded when drawing) ===
+map.on("click", (e) => {
+  // 🔴 If Leaflet.draw is active, do NOTHING
+  if (isDrawing) return;
+
+  // Only handle clicks in add-point mode
+  if (!addPointMode) return;
+
+  // Delegate to helper
+  addMarkerAt(e.latlng);
 });
 
 // === Load existing markers ===
@@ -304,9 +242,7 @@ async function loadPolygons() {
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
 
-    const geojson = data.geojsonStr ? JSON.parse(data.geojsonStr) : data.geojson;
-
-    const layer = L.geoJSON(geojson, {
+    const layer = L.geoJSON(data.geojson, {
       style: {
         color: getCESColor(data.CES),
         weight: 2,
@@ -353,4 +289,19 @@ async function exportJSONLD() {
 }
 exportJSONLD();
 
+// === CES Legend ===
+const legend = L.control({ position: 'bottomright' });
 
+legend.onAdd = function () {
+  const div = L.DomUtil.create('div', 'info legend');
+  div.innerHTML = `
+    <h4>CES Score</h4>
+    <i style="background:#006d2c"></i> 76–100<br>
+    <i style="background:#31a354"></i> 51–75<br>
+    <i style="background:#fed976"></i> 26–50<br>
+    <i style="background:#fc4e2a"></i> 0–25<br>
+  `;
+  return div;
+};
+
+legend.addTo(map);
