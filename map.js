@@ -132,14 +132,12 @@ map.on(L.Draw.Event.DRAWSTART, () => {
   setMarkersPointerEvents(true);
 });
 
-});
 
 // If drawing is stopped/cancelled, restore marker interactivity
 map.on(L.Draw.Event.DRAWSTOP, () => {
   setMarkersPointerEvents(false);
 });
 
-});
 
 // === Save polygon to Firebase (UI-first + Firestore-safe) ===
 map.on(L.Draw.Event.CREATED, (event) => {
