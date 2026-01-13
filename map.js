@@ -53,59 +53,79 @@ const esri = L.tileLayer(
 // Default base layer
 osm.addTo(map);
 
-// === Polygon layer group ===
-const drawnItems = new L.FeatureGroup();
-map.addLayer(drawnItems);
-drawnItems.bringToFront();  // <-- FIX 1: ensure polygon handles sit above markers
-// Only create point markers when this mode is active
-let addPointMode = false;
+// === Save polygon to Firebase (FIXED: never let polygon vanish) ===
+map.on(L.Draw.Event.CREATED, (event) => {
+  const layer = event.layer;
 
-// Layer switcher (top-right control)
-const baseMaps = {
-  "OpenStreetMap": osm,
-  "Gaode (AMap)": gaode,
-  "Esri World Street": esri
-};
-L.control.layers(baseMaps).addTo(map);
+  // Random test values (real formula later)
+  const score_use = 18;
+  const score_activities = 12;
+  const score_infra = 20;
+  const score_care = 14;
+  const CES = score_use + score_activities + score_infra + score_care;
 
-// === Improved Draw Control (fixes polygon closing problem) ===
-const drawControl = new L.Control.Draw({
-  draw: {
-    polygon: {
-      allowIntersection: true,
-      showArea: false,
-      shapeOptions: {
-        color: '#3388ff',
-        weight: 2
-      },
-      touchExtend: true,
-      repeatMode: false
-    },
-    marker: false,
-    circle: false,
-    rectangle: false,
-    polyline: false
-  },
-  edit: {
-    featureGroup: drawnItems
-  }
+  // ✅ Style + add to map FIRST (so it never disappears)
+  layer.setStyle({
+    color: getCESColor(CES),
+    weight: 2,
+    fillOpacity: 0.45
+  });
+
+  layer.bindPopup(`
+    <b>Community Engagement Score:</b> ${CES}/100<br><br>
+    U (Use): ${score_use}<br>
+    A (Activities): ${score_activities}<br>
+    I (Infrastructure): ${score_infra}<br>
+    C (Care): ${score_care}<br><br>
+    <small>Saving…</small>
+  `);
+
+  drawnItems.addLayer(layer);
+
+  // Re-enable marker click interactions
+  map.eachLayer(layerIter => {
+    if (layerIter instanceof L.Marker) {
+      if (layerIter._originalInteractive !== undefined) {
+        layerIter.options.interactive = layerIter._originalInteractive;
+      }
+    }
+  });
+
+  // ✅ Save to Firebase AFTER, with error handling
+  const geojson = layer.toGeoJSON();
+
+  addDoc(polygonsRef, {
+    name: "Test Community Block",
+    geojson: geojson,
+    score_use,
+    score_activities,
+    score_infra,
+    score_care,
+    CES,
+    createdAt: serverTimestamp()
+  })
+    .then(() => {
+      layer.setPopupContent(`
+        <b>Community Engagement Score:</b> ${CES}/100<br><br>
+        U (Use): ${score_use}<br>
+        A (Activities): ${score_activities}<br>
+        I (Infrastructure): ${score_infra}<br>
+        C (Care): ${score_care}<br><br>
+        <small>✅ Saved</small>
+      `);
+    })
+    .catch((err) => {
+      console.error("❌ Polygon save failed:", err);
+      layer.setPopupContent(`
+        <b>Community Engagement Score:</b> ${CES}/100<br><br>
+        U (Use): ${score_use}<br>
+        A (Activities): ${score_activities}<br>
+        I (Infrastructure): ${score_infra}<br>
+        C (Care): ${score_care}<br><br>
+        <small style="color:#c00;">❌ Save failed (check Console + Firestore rules)</small>
+      `);
+    });
 });
-
-map.addControl(drawControl);
-
-// Track the active polygon handler so we can safely finish shapes on double-click.
-let activePolygonHandler = null;
-
-// === Increase snapping distance (major fix!) ===
-if (L.Draw && L.Draw.Polygon && L.Draw.Polygon.prototype && L.Draw.Polygon.prototype.options) {
-  L.Draw.Polygon.prototype.options.snappingDistance = 15;
-}
-
-// === Custom Add Point Button ===
-const AddPointControl = L.Control.extend({
-  onAdd: function () {
-    const btn = L.DomUtil.create('button', 'leaflet-bar');
-    btn.innerHTML = "➕";
     btn.title = "Add a Map Point";
 
     btn.style.width = "32px";
@@ -124,13 +144,8 @@ const AddPointControl = L.Control.extend({
 map.addControl(new AddPointControl({ position: "topleft" }));
 
 // Turn off add-point mode automatically when drawing starts
-map.on(L.Draw.Event.DRAWSTART, (event) => {
+map.on(L.Draw.Event.DRAWSTART, () => {
   addPointMode = false;
-  const polygonMode = drawControl._toolbars?.draw?._modes?.polygon;
-  if (event.layerType === "polygon" && polygonMode?.handler) {
-    activePolygonHandler = polygonMode.handler;
-    map.doubleClickZoom.disable();
-  }
 
   // Disable marker click events temporarily so polygon drawing isn't interrupted
   map.eachLayer(layer => {
@@ -149,15 +164,6 @@ map.on(L.Draw.Event.DRAWSTOP, () => {
       layer.options.interactive = (layer._originalInteractive !== false);
     }
   });
-  activePolygonHandler = null;
-  map.doubleClickZoom.enable();
-});
-
-// Allow users to double-click to close polygons if the first point isn't clickable.
-map.on('dblclick', () => {
-  if (activePolygonHandler && activePolygonHandler._markers?.length > 2) {
-    activePolygonHandler.completeShape();
-  }
 });
 
 // === Save polygon to Firebase ===
@@ -354,3 +360,5 @@ async function exportJSONLD() {
   el.textContent = JSON.stringify(all, null, 2);
 }
 exportJSONLD();
+
+
