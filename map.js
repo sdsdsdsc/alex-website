@@ -57,8 +57,39 @@ const baseMaps = {
 };
 L.control.layers(baseMaps).addTo(map);
 
+// === Drawing Layer (Leaflet.Draw) ===
+const drawnItems = new L.FeatureGroup();
+map.addLayer(drawnItems);
+
+const drawControl = new L.Control.Draw({
+  draw: {
+    polygon: true,
+    polyline: false,
+    rectangle: false,
+    circle: false,
+    marker: false,
+    circlemarker: false
+  },
+  edit: {
+    featureGroup: drawnItems,
+    edit: false,
+    remove: false
+  }
+});
+map.addControl(drawControl);
+
+let isDrawing = false;
+map.on(L.Draw.Event.DRAWSTART, () => {
+  isDrawing = true;
+});
+map.on(L.Draw.Event.DRAWSTOP, () => {
+  isDrawing = false;
+});
+
 // === Add new marker on click ===
 map.on('click', async (e) => {
+  if (isDrawing) return;
+
   const name = prompt("Enter a title for this location:");
   const desc = prompt("Enter a short description:");
   if (!name || !desc) return;
@@ -96,6 +127,35 @@ try {
 } catch (err) {
   console.error("❌ Error adding point:", err);
 } 
+});
+
+// === Save polygon drawn by user ===
+map.on(L.Draw.Event.CREATED, async (event) => {
+  const { layer, layerType } = event;
+  if (layerType !== "polygon") return;
+
+  drawnItems.addLayer(layer);
+
+  const title = prompt("Enter a title for this polygon (optional):") || "";
+  const desc = prompt("Enter a description for this polygon (optional):") || "";
+  const latlngs = layer.getLatLngs()[0].map(({ lat, lng }) => ({ lat, lng }));
+
+  if (title || desc) {
+    layer.bindPopup(`<b>${title || "Polygon"}</b><br>${desc}`).openPopup();
+  }
+
+  try {
+    await addDoc(collection(db, "mapPolygons"), {
+      title,
+      desc,
+      points: latlngs,
+      type: "schema:Place",
+      createdAt: serverTimestamp()
+    });
+    console.log("✅ Polygon added");
+  } catch (err) {
+    console.error("❌ Error adding polygon:", err);
+  }
 });
 
 // === Load existing markers ===
@@ -137,6 +197,35 @@ async function loadMarkers() {
 }
 
 loadMarkers();
+
+// === Load existing polygons ===
+async function loadPolygons() {
+  const snapshot = await getDocs(query(collection(db, "mapPolygons")));
+
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    if (!Array.isArray(data.points) || data.points.length < 3) return;
+
+    const polygonCoords = data.points
+      .filter((p) => Number.isFinite(p?.lat) && Number.isFinite(p?.lng))
+      .map((p) => [p.lat, p.lng]);
+
+    if (polygonCoords.length < 3) return;
+
+    const polygon = L.polygon(polygonCoords, {
+      color: "#1f6feb",
+      fillOpacity: 0.25
+    });
+
+    if (data.title || data.desc) {
+      polygon.bindPopup(`<b>${data.title || "Polygon"}</b><br>${data.desc || ""}`);
+    }
+
+    drawnItems.addLayer(polygon);
+  });
+}
+
+loadPolygons();
 
 // === Export all mapPoints as JSON-LD in <head> ===
 async function exportJSONLD() {
