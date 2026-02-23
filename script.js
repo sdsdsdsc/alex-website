@@ -1,7 +1,17 @@
 // === Firebase imports ===
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
-  getFirestore, collection, addDoc, getDocs, doc, updateDoc, orderBy, query, serverTimestamp
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+  orderBy,
+  query,
+  serverTimestamp,
+  increment,
+  arrayUnion
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
@@ -15,9 +25,33 @@ const firebaseConfig = {
   appId: "1:214395622099:web:44f99a181741caf3117a26"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
+
+function toSafeUrl(value) {
+  if (!value) return "";
+  try {
+    const parsed = new URL(value, window.location.href);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.href;
+    }
+  } catch (err) {
+    console.warn("Invalid URL skipped:", value);
+  }
+  return "";
+}
+
+function openInNewTab(url) {
+  const win = window.open(url, "_blank", "noopener,noreferrer");
+  if (win) win.opener = null;
+}
+
+function formatDate(createdAt) {
+  return createdAt?.seconds
+    ? new Date(createdAt.seconds * 1000).toDateString()
+    : "";
+}
 
 // === Dropdown Menus ===
 const communityBtn = document.getElementById("communityBtn");
@@ -27,13 +61,13 @@ const newsMenu = document.getElementById("newsMenu");
 
 communityBtn?.addEventListener("click", (e) => {
   e.stopPropagation();
-  communityMenu.classList.toggle("show");
+  communityMenu?.classList.toggle("show");
   newsMenu?.classList.remove("show");
 });
 
 newsBtn?.addEventListener("click", (e) => {
   e.stopPropagation();
-  newsMenu.classList.toggle("show");
+  newsMenu?.classList.toggle("show");
   communityMenu?.classList.remove("show");
 });
 
@@ -52,22 +86,29 @@ if (uploadBtn) {
     const nameInput = document.getElementById("nameInput");
     const msgInput = document.getElementById("msgInput");
 
-    const file = fileInput.files[0];
-    const name = nameInput.value.trim() || "Anonymous";
-    const msg = msgInput.value.trim();
+    const file = fileInput?.files?.[0];
+    const name = nameInput?.value.trim() || "Anonymous";
+    const msg = msgInput?.value.trim() || "";
 
-    if (!file || !msg) return alert("Please select an image and write a message.");
+    if (!file || !msg) {
+      alert("Please select an image and write a message.");
+      return;
+    }
+
+    uploadBtn.disabled = true;
 
     try {
-      const storageRef = ref(storage, `uploads/${file.name}`);
+      const safeFileName = file.name.replace(/[^\w.-]/g, "_");
+      const suffix = globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2, 10);
+      const storageRef = ref(storage, `uploads/${Date.now()}_${suffix}_${safeFileName}`);
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
 
       const createdAt = new Date();
       const jsonld = {
         "@context": {
-          "schema": "https://schema.org/",
-          "dc": "http://purl.org/dc/elements/1.1/"
+          schema: "https://schema.org/",
+          dc: "http://purl.org/dc/elements/1.1/"
         },
         "@type": "schema:Photograph",
         "schema:name": msg,
@@ -88,74 +129,90 @@ if (uploadBtn) {
       });
 
       alert("✅ Upload successful (with semantic metadata)!");
-      fileInput.value = msgInput.value = nameInput.value = "";
+      if (fileInput) fileInput.value = "";
+      if (msgInput) msgInput.value = "";
+      if (nameInput) nameInput.value = "";
     } catch (err) {
       console.error("Upload failed:", err);
+      alert("❌ Upload failed. Please try again.");
+    } finally {
+      uploadBtn.disabled = false;
     }
   });
 }
 
-// === 🧩 Fixed Article Loader ===
-// Works for new Firestore (htmlContent) + old Firebase (htmlUrl)
+// === Article Loader ===
 async function loadArticles(containerId, collectionName) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  container.innerHTML = "";
+  container.textContent = "";
 
-  const q = query(collection(db, collectionName), orderBy("createdAt", "desc"));
-  const snapshot = await getDocs(q);
+  try {
+    const q = query(collection(db, collectionName), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
 
-  if (snapshot.empty) {
-    container.innerHTML = "<p>No articles yet.</p>";
-    return;
-  }
-
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    const date = data.createdAt?.seconds
-      ? new Date(data.createdAt.seconds * 1000).toDateString()
-      : "";
-
-    // === Detect image (supports both htmlContent + old schema:image)
-    let imageUrl = "";
-    if (data.imageUrl) {
-      imageUrl = data.imageUrl;
-    } else if (data.jsonld?.["schema:image"]) {
-      imageUrl = data.jsonld["schema:image"];
-    } else if (data.jsonld?.["schema:contentUrl"]) {
-      imageUrl = data.jsonld["schema:contentUrl"];
+    if (snapshot.empty) {
+      container.textContent = "No articles yet.";
+      return;
     }
 
-    // === Detect if it's a Quill / Rich-format article
-    const isRich = !!data.htmlContent || !!data.htmlUrl;
-    const badge = isRich
-      ? `<span class="badge" style="background:#007bff;color:#fff;padding:2px 6px;border-radius:6px;font-size:12px;">Rich Format</span>`
-      : "";
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const title = String(data.title || data.message || "Untitled");
+      const isRich = Boolean(data.htmlContent || data.htmlUrl || data.content);
+      const imageCandidate = data.imageUrl || data.jsonld?.["schema:image"] || "";
+      const imageUrl = toSafeUrl(imageCandidate);
 
-    const title = data.title || data.message || "Untitled";
+      const card = document.createElement("div");
+      card.classList.add("article-card");
 
-    // === Build card ===
-    const card = document.createElement("div");
-    card.classList.add("article-card");
-    card.innerHTML = `
-      ${imageUrl ? `<img src="${imageUrl}" alt="thumbnail">` : ""}
-      <h3>${title} ${badge}</h3>
-      <p class="timestamp">${date}</p>
-    `;
+      if (imageUrl) {
+        const image = document.createElement("img");
+        image.src = imageUrl;
+        image.alt = title;
+        card.appendChild(image);
+      }
 
-    card.querySelector("h3").addEventListener("click", () => {
-      window.open(`article.html?id=${docSnap.id}&type=${collectionName}`, "_blank");
+      const heading = document.createElement("h3");
+      heading.textContent = title;
+      heading.tabIndex = 0;
+
+      if (isRich) {
+        const badge = document.createElement("span");
+        badge.className = "badge";
+        badge.style.cssText = "background:#007bff;color:#fff;padding:2px 6px;border-radius:6px;font-size:12px;margin-left:6px;";
+        badge.textContent = "Rich Format";
+        heading.appendChild(badge);
+      }
+
+      heading.addEventListener("click", () => {
+        openInNewTab(`article.html?id=${encodeURIComponent(docSnap.id)}&type=${encodeURIComponent(collectionName)}`);
+      });
+      heading.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          openInNewTab(`article.html?id=${encodeURIComponent(docSnap.id)}&type=${encodeURIComponent(collectionName)}`);
+        }
+      });
+
+      const timestamp = document.createElement("p");
+      timestamp.className = "timestamp";
+      timestamp.textContent = formatDate(data.createdAt);
+
+      card.appendChild(heading);
+      card.appendChild(timestamp);
+      container.appendChild(card);
     });
-
-    container.appendChild(card);
-  });
+  } catch (err) {
+    console.error(`Failed to load ${collectionName}:`, err);
+    container.textContent = "Failed to load articles.";
+  }
 }
 
-// === Load Functions ===
+// === Gallery Loader ===
 async function loadGallery() {
   const galleryContainer = document.getElementById("galleryContainer");
   if (!galleryContainer) return;
-  galleryContainer.innerHTML = "";
+  galleryContainer.textContent = "";
 
   try {
     const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
@@ -163,107 +220,176 @@ async function loadGallery() {
 
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      const id = docSnap.id;
-      const jsonld = data.jsonld || {}; // ✅ Keep JSON-LD data
+      const postRef = doc(db, "posts", docSnap.id);
+      const jsonld = data.jsonld || {};
 
       const post = document.createElement("div");
       post.classList.add("post");
 
-      post.innerHTML = `
-        <img src="${data.imageUrl}" alt="${data.message || "User photo"}">
-        <div class="comment-section">
-          <p class="timestamp">
-            ${new Date(data.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString()}
-          </p>
-          <p><strong>${data.name || "Anonymous"}</strong>: ${data.message || ""}</p>
-          ${
-            jsonld["schema:contentUrl"]
-              ? `<p class="linked-data">📎 <a href="${jsonld["schema:contentUrl"]}" target="_blank">Open JSON-LD link</a></p>`
-              : ""
-          }
-          <button class="like-btn">❤️ ${data.likes || 0}</button>
-          <div class="comments"></div>
-          <input class="comment-input" placeholder="Write a comment...">
-          <button class="comment-btn">Send</button>
-        </div>
-      `;
-      galleryContainer.appendChild(post);
+      const safePostImage = toSafeUrl(data.imageUrl);
+      if (safePostImage) {
+        const image = document.createElement("img");
+        image.src = safePostImage;
+        image.alt = String(data.message || "User photo");
+        post.appendChild(image);
+      }
 
-      const likeBtn = post.querySelector(".like-btn");
+      const commentSection = document.createElement("div");
+      commentSection.className = "comment-section";
+
+      const timestamp = document.createElement("p");
+      timestamp.className = "timestamp";
+      timestamp.textContent = new Date(data.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString();
+      commentSection.appendChild(timestamp);
+
+      const intro = document.createElement("p");
+      const strong = document.createElement("strong");
+      strong.textContent = String(data.name || "Anonymous");
+      intro.appendChild(strong);
+      intro.append(`: ${String(data.message || "")}`);
+      commentSection.appendChild(intro);
+
+      const linkedDataUrl = toSafeUrl(jsonld["schema:contentUrl"]);
+      if (linkedDataUrl) {
+        const linkedData = document.createElement("p");
+        linkedData.className = "linked-data";
+        linkedData.textContent = "📎 ";
+
+        const link = document.createElement("a");
+        link.href = linkedDataUrl;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "Open JSON-LD link";
+        linkedData.appendChild(link);
+        commentSection.appendChild(linkedData);
+      }
+
+      let likes = Number(data.likes) || 0;
+      const likeBtn = document.createElement("button");
+      likeBtn.className = "like-btn";
+      likeBtn.textContent = `❤️ ${likes}`;
       likeBtn.addEventListener("click", async () => {
-        const newLikes = (data.likes || 0) + 1;
-        await updateDoc(doc(db, "posts", id), { likes: newLikes });
-        likeBtn.textContent = `❤️ ${newLikes}`;
+        likeBtn.disabled = true;
+        try {
+          await updateDoc(postRef, { likes: increment(1) });
+          likes += 1;
+          likeBtn.textContent = `❤️ ${likes}`;
+        } catch (err) {
+          console.error("Like update failed:", err);
+        } finally {
+          likeBtn.disabled = false;
+        }
       });
+      commentSection.appendChild(likeBtn);
 
-      const commentBtn = post.querySelector(".comment-btn");
-      const commentInput = post.querySelector(".comment-input");
-      const commentList = post.querySelector(".comments");
+      const commentList = document.createElement("div");
+      commentList.className = "comments";
+      (Array.isArray(data.comments) ? data.comments : []).forEach((comment) => {
+        const commentEl = document.createElement("p");
+        commentEl.className = "comment";
+        commentEl.textContent = String(comment);
+        commentList.appendChild(commentEl);
+      });
+      commentSection.appendChild(commentList);
 
+      const commentInput = document.createElement("input");
+      commentInput.className = "comment-input";
+      commentInput.placeholder = "Write a comment...";
+      commentSection.appendChild(commentInput);
+
+      const commentBtn = document.createElement("button");
+      commentBtn.className = "comment-btn";
+      commentBtn.textContent = "Send";
       commentBtn.addEventListener("click", async () => {
         const text = commentInput.value.trim();
         if (!text) return;
-        const newComments = [...(data.comments || []), text];
-        await updateDoc(doc(db, "posts", id), { comments: newComments });
-        const newComment = document.createElement("p");
-        newComment.classList.add("comment");
-        newComment.textContent = text;
-        commentList.appendChild(newComment);
-        commentInput.value = "";
+        commentBtn.disabled = true;
+        try {
+          await updateDoc(postRef, { comments: arrayUnion(text) });
+          const commentEl = document.createElement("p");
+          commentEl.className = "comment";
+          commentEl.textContent = text;
+          commentList.appendChild(commentEl);
+          commentInput.value = "";
+        } catch (err) {
+          console.error("Comment update failed:", err);
+        } finally {
+          commentBtn.disabled = false;
+        }
       });
+      commentSection.appendChild(commentBtn);
 
-      (data.comments || []).forEach((c) => {
-        const p = document.createElement("p");
-        p.classList.add("comment");
-        p.textContent = c;
-        commentList.appendChild(p);
-      });
+      post.appendChild(commentSection);
+      galleryContainer.appendChild(post);
     });
   } catch (err) {
     console.error("Gallery load error:", err);
+    galleryContainer.textContent = "Failed to load gallery.";
   }
 }
 
-async function loadHistory() {
-  loadArticles("historyContainer", "history");
+function loadHistory() {
+  return loadArticles("historyContainer", "history");
 }
 
-// === 🏛 Load Heritage News (From Open CMS / Drupal) ===
+// === Heritage News from Drupal ===
 async function loadDrupalNews() {
   const container = document.getElementById("drupalNewsContainer");
   if (!container) return;
+
   try {
     const res = await fetch("https://dev-alex-photo-cms.pantheonsite.io/jsonapi/node/article?include=field_image");
+    if (!res.ok) throw new Error(`Drupal fetch failed: ${res.status}`);
+
     const json = await res.json();
-    container.innerHTML = "";
-    const { data, included = [] } = json;
-    data.forEach(item => {
-      const title = item.attributes.title || "Untitled";
-      const created = new Date(item.attributes.created).toDateString();
+    const list = Array.isArray(json.data) ? json.data : [];
+    const included = Array.isArray(json.included) ? json.included : [];
+    container.textContent = "";
+
+    list.forEach((item) => {
+      const title = String(item.attributes?.title || "Untitled");
+      const created = item.attributes?.created ? new Date(item.attributes.created).toDateString() : "";
+      const rel = item.relationships?.field_image?.data;
+
       let imageUrl = "";
-      const rel = item.relationships.field_image?.data;
       if (rel) {
-        const file = included.find(f => f.id === rel.id && f.type === "file--file");
-        if (file) imageUrl = file.attributes.uri.url;
+        const file = included.find((entry) => entry.id === rel.id && entry.type === "file--file");
+        imageUrl = file?.attributes?.uri?.url || "";
       }
       if (imageUrl.startsWith("/")) {
         imageUrl = `https://dev-alex-photo-cms.pantheonsite.io${imageUrl}`;
       }
-      const div = document.createElement("div");
-      div.classList.add("article-card");
-      div.innerHTML = `
-        ${imageUrl ? `<img src="${imageUrl}" alt="">` : ""}
-        <h3 class="cms-title" style="cursor:pointer;color:#007bff;text-decoration:underline;">${title}</h3>
-        <p class="timestamp">${created}</p>`;
-      div.querySelector(".cms-title").addEventListener("click", () => {
-        const articleId = item.id;
-        window.open(`article.html?id=${articleId}&type=drupal`, "_blank");
+      imageUrl = toSafeUrl(imageUrl);
+
+      const card = document.createElement("div");
+      card.classList.add("article-card");
+
+      if (imageUrl) {
+        const image = document.createElement("img");
+        image.src = imageUrl;
+        image.alt = title;
+        card.appendChild(image);
+      }
+
+      const heading = document.createElement("h3");
+      heading.className = "cms-title";
+      heading.style.cssText = "cursor:pointer;color:#007bff;text-decoration:underline;";
+      heading.textContent = title;
+      heading.addEventListener("click", () => {
+        openInNewTab(`article.html?id=${encodeURIComponent(item.id)}&type=drupal`);
       });
-      container.appendChild(div);
+      card.appendChild(heading);
+
+      const stamp = document.createElement("p");
+      stamp.className = "timestamp";
+      stamp.textContent = created;
+      card.appendChild(stamp);
+
+      container.appendChild(card);
     });
   } catch (err) {
     console.error("Error loading CMS:", err);
-    container.innerHTML = "<p>Failed to load CMS news.</p>";
+    container.textContent = "Failed to load CMS news.";
   }
 }
 

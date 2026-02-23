@@ -493,3 +493,56 @@ footer {
   padding-top: 0;
 }
 
+@media (max-width: 900px) {
+  header {
+    padding: 14px 10px;
+  }
+
+  .menu-bar {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0 10px;
+  }
+
+  .menu button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .hero {
+    height: 340px;
+  }
+
+  .hero-text h2 {
+    font-size: 30px;
+  }
+
+  .hero-text p {
+    font-size: 16px;
+    padding: 0 14px;
+  }
+
+  .hero-buttons button {
+    margin: 6px 5px;
+  }
+}
+
+@media (max-width: 600px) {
+  .article-container {
+    margin: 20px 12px;
+  }
+
+  .article-card,
+  .post {
+    width: min(100%, 340px);
+  }
+
+  .upload-section {
+    margin: 20px 12px;
+    padding: 20px 14px;
+  }
+
+  .hero-image-container img {
+    height: 34vh;
+  }
+}

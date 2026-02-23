@@ -1,5 +1,5 @@
 // === Import Firebase ===
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, getDocs, query, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -14,7 +14,7 @@ const firebaseConfig = {
   appId: "1:214395622099:web:44f99a181741caf3117a26"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // === Initialize Map ===
@@ -121,6 +121,12 @@ function buildPointPopupHtml({ name, desc, type, linkedArticle }) {
   return html;
 }
 
+function buildPolygonPopupHtml({ title, desc }) {
+  const safeTitle = escapeHTML(title || "Polygon");
+  const safeDesc = escapeHTML(desc || "");
+  return `<b>${safeTitle}</b><br>${safeDesc}`;
+}
+
 function buildPointFormHtml() {
   return `
     <form class="point-form" style="min-width:240px; display:grid; gap:8px;">
@@ -139,6 +145,25 @@ function buildPointFormHtml() {
       <div style="display:flex; justify-content:flex-end; gap:8px;">
         <button type="button" data-action="cancel">Cancel</button>
         <button type="submit" data-action="save">Save Point</button>
+      </div>
+    </form>
+  `;
+}
+
+function buildPolygonFormHtml() {
+  return `
+    <form class="polygon-form" style="min-width:240px; display:grid; gap:8px;">
+      <label style="display:grid; gap:4px;">
+        <span style="font-size:12px;">Title (optional)</span>
+        <input name="title" maxlength="100" placeholder="Area title" />
+      </label>
+      <label style="display:grid; gap:4px;">
+        <span style="font-size:12px;">Description (optional)</span>
+        <textarea name="desc" rows="3" maxlength="300" placeholder="Area description"></textarea>
+      </label>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" data-action="cancel">Cancel</button>
+        <button type="submit" data-action="save">Save Polygon</button>
       </div>
     </form>
   `;
@@ -254,58 +279,112 @@ map.on(L.Draw.Event.CREATED, async (event) => {
   if (layerType !== "polygon") return;
 
   drawnItems.addLayer(layer);
+  let isSaved = false;
 
-  const title = prompt("Enter a title for this polygon (optional):") || "";
-  const desc = prompt("Enter a description for this polygon (optional):") || "";
-  const latlngs = layer.getLatLngs()[0].map(({ lat, lng }) => ({ lat, lng }));
+  const onPopupOpen = () => {
+    const popupEl = layer.getPopup()?.getElement();
+    if (!popupEl) return;
 
-  if (title || desc) {
-    layer.bindPopup(`<b>${title || "Polygon"}</b><br>${desc}`).openPopup();
-  }
+    const form = popupEl.querySelector(".polygon-form");
+    const cancelBtn = popupEl.querySelector('[data-action="cancel"]');
+    const saveBtn = popupEl.querySelector('[data-action="save"]');
+    const titleInput = popupEl.querySelector('input[name="title"]');
+    if (titleInput) titleInput.focus();
 
-  try {
-    await addDoc(collection(db, "mapPolygons"), {
-      title,
-      desc,
-      points: latlngs,
-      type: "schema:Place",
-      createdAt: serverTimestamp()
-    });
-    console.log("✅ Polygon added");
-  } catch (err) {
-    console.error("❌ Error adding polygon:", err);
-  }
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", () => {
+        drawnItems.removeLayer(layer);
+        map.closePopup(layer.getPopup());
+      }, { once: true });
+    }
+
+    if (!form) return;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const title = String(formData.get("title") || "").trim();
+      const desc = String(formData.get("desc") || "").trim();
+      const latlngs = layer.getLatLngs()[0].map(({ lat, lng }) => ({ lat, lng }));
+
+      if (saveBtn) saveBtn.disabled = true;
+      try {
+        await addDoc(collection(db, "mapPolygons"), {
+          title,
+          desc,
+          points: latlngs,
+          type: "schema:Place",
+          createdAt: serverTimestamp(),
+          jsonld: {
+            "@context": "https://schema.org",
+            "@type": "Place",
+            name: title || "Polygon",
+            description: desc || "",
+            geo: {
+              "@type": "GeoShape",
+              polygon: latlngs.map((p) => `${p.lat},${p.lng}`).join(" ")
+            }
+          }
+        });
+        isSaved = true;
+        layer.bindPopup(buildPolygonPopupHtml({ title, desc })).openPopup();
+        console.log("✅ Polygon added");
+      } catch (err) {
+        if (saveBtn) saveBtn.disabled = false;
+        console.error("❌ Error adding polygon:", err);
+        alert("Could not save polygon. Please try again.");
+      }
+    }, { once: true });
+  };
+
+  const onPopupClose = () => {
+    if (!isSaved && drawnItems.hasLayer(layer)) {
+      drawnItems.removeLayer(layer);
+    }
+    layer.off("popupopen", onPopupOpen);
+    layer.off("popupclose", onPopupClose);
+  };
+
+  layer.on("popupopen", onPopupOpen);
+  layer.on("popupclose", onPopupClose);
+  layer.bindPopup(buildPolygonFormHtml(), {
+    closeButton: true,
+    autoClose: true,
+    closeOnClick: false
+  }).openPopup();
 });
 
 // === Load existing markers ===
 async function loadMarkers() {
-  const q = query(collection(db, "mapPoints"));
-  const snapshot = await getDocs(q);
+  try {
+    const q = query(collection(db, "mapPoints"));
+    const snapshot = await getDocs(q);
 
-  const markers = []; // 🌍 store all marker coordinates
+    const markers = [];
 
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const marker = L.marker([data.lat, data.lng]).addTo(map);
-    marker.bindPopup(buildPointPopupHtml({
-      name: data.name,
-      desc: data.desc,
-      type: data.type,
-      linkedArticle: data.linkedArticle
-    }));
-    markers.push([data.lat, data.lng]); // 🌍 collect coordinates
-  });
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (!Number.isFinite(data?.lat) || !Number.isFinite(data?.lng)) return;
 
-  // 🌍 Automatically adjust the map to fit all points
-  if (markers.length > 0) {
-    const bounds = L.latLngBounds(markers);
-    map.fitBounds(bounds, { padding: [50, 50] });
+      const marker = L.marker([data.lat, data.lng]).addTo(map);
+      marker.bindPopup(buildPointPopupHtml({
+        name: data.name,
+        desc: data.desc,
+        type: data.type,
+        linkedArticle: data.linkedArticle
+      }));
+      markers.push([data.lat, data.lng]);
+    });
 
-    // Optional: if there’s only one point, zoom in closer
-    if (markers.length === 1) {
-      map.setZoom(14);
-      map.panTo(bounds.getCenter());
+    if (markers.length > 0) {
+      const bounds = L.latLngBounds(markers);
+      map.fitBounds(bounds, { padding: [50, 50] });
+      if (markers.length === 1) {
+        map.setZoom(14);
+        map.panTo(bounds.getCenter());
+      }
     }
+  } catch (err) {
+    console.error("❌ Error loading map points:", err);
   }
 }
 
@@ -313,51 +392,65 @@ loadMarkers();
 
 // === Load existing polygons ===
 async function loadPolygons() {
-  const snapshot = await getDocs(query(collection(db, "mapPolygons")));
+  try {
+    const snapshot = await getDocs(query(collection(db, "mapPolygons")));
 
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    if (!Array.isArray(data.points) || data.points.length < 3) return;
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (!Array.isArray(data.points) || data.points.length < 3) return;
 
-    const polygonCoords = data.points
-      .filter((p) => Number.isFinite(p?.lat) && Number.isFinite(p?.lng))
-      .map((p) => [p.lat, p.lng]);
+      const polygonCoords = data.points
+        .filter((p) => Number.isFinite(p?.lat) && Number.isFinite(p?.lng))
+        .map((p) => [p.lat, p.lng]);
 
-    if (polygonCoords.length < 3) return;
+      if (polygonCoords.length < 3) return;
 
-    const polygon = L.polygon(polygonCoords, {
-      color: "#1f6feb",
-      fillOpacity: 0.25
+      const polygon = L.polygon(polygonCoords, {
+        color: "#1f6feb",
+        fillOpacity: 0.25
+      });
+
+      if (data.title || data.desc) {
+        polygon.bindPopup(buildPolygonPopupHtml({
+          title: data.title,
+          desc: data.desc
+        }));
+      }
+
+      drawnItems.addLayer(polygon);
     });
-
-    if (data.title || data.desc) {
-      polygon.bindPopup(`<b>${data.title || "Polygon"}</b><br>${data.desc || ""}`);
-    }
-
-    drawnItems.addLayer(polygon);
-  });
+  } catch (err) {
+    console.error("❌ Error loading polygons:", err);
+  }
 }
 
 loadPolygons();
 
-// === Export all mapPoints as JSON-LD in <head> ===
+// === Export map JSON-LD records into <head> ===
 async function exportJSONLD() {
-  const snapshot = await getDocs(collection(db, "mapPoints"));
-  const all = [];
-  snapshot.forEach(doc => {
-    const d = doc.data();
-    if (d.jsonld) all.push(d.jsonld);
-  });
+  try {
+    const collectionsToExport = ["mapPoints", "mapPolygons"];
+    const all = [];
 
-  // If the <script id="map-jsonld"> doesn't exist yet, create it
-  let el = document.getElementById("map-jsonld");
-  if (!el) {
-    el = document.createElement("script");
-    el.type = "application/ld+json";
-    el.id = "map-jsonld";
-    document.head.appendChild(el);
+    for (const name of collectionsToExport) {
+      const snapshot = await getDocs(collection(db, name));
+      snapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        if (d.jsonld) all.push(d.jsonld);
+      });
+    }
+
+    let el = document.getElementById("map-jsonld");
+    if (!el) {
+      el = document.createElement("script");
+      el.type = "application/ld+json";
+      el.id = "map-jsonld";
+      document.head.appendChild(el);
+    }
+
+    el.textContent = JSON.stringify(all, null, 2);
+  } catch (err) {
+    console.error("❌ Error exporting map JSON-LD:", err);
   }
-
-  el.textContent = JSON.stringify(all, null, 2);
 }
 exportJSONLD();

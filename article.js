@@ -1,5 +1,5 @@
 // === Firebase imports ===
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getFirestore,
   doc,
@@ -16,7 +16,7 @@ const firebaseConfig = {
   appId: "1:214395622099:web:44f99a181741caf3117a26"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // === Get params from URL ===
@@ -30,15 +30,95 @@ const articleImage = document.getElementById("articleImage");
 const articleDate = document.getElementById("articleDate");
 const articleContent = document.getElementById("articleContent");
 
+function toSafeUrl(value, allowRelative = false) {
+  if (!value) return "";
+  try {
+    const parsed = new URL(value, window.location.href);
+    const allowed = parsed.protocol === "http:" || parsed.protocol === "https:";
+    if (!allowed) return "";
+    if (!allowRelative && parsed.origin === window.location.origin && !value.startsWith("http")) {
+      return "";
+    }
+    return parsed.href;
+  } catch (err) {
+    console.warn("Invalid URL skipped:", value);
+    return "";
+  }
+}
+
+function sanitizeRichHtml(rawHtml) {
+  const template = document.createElement("template");
+  template.innerHTML = String(rawHtml || "");
+
+  const blockedTags = ["script", "iframe", "object", "embed", "link", "meta"];
+  blockedTags.forEach((tag) => {
+    template.content.querySelectorAll(tag).forEach((el) => el.remove());
+  });
+
+  template.content.querySelectorAll("*").forEach((el) => {
+    [...el.attributes].forEach((attr) => {
+      const attrName = attr.name.toLowerCase();
+      const attrValue = attr.value;
+      if (attrName.startsWith("on")) {
+        el.removeAttribute(attr.name);
+        return;
+      }
+      if (attrName === "href") {
+        const safeHref = toSafeUrl(attrValue, true);
+        if (!safeHref) {
+          el.removeAttribute(attr.name);
+        } else {
+          el.setAttribute("href", safeHref);
+          if (el.tagName.toLowerCase() === "a") {
+            el.setAttribute("rel", "noopener noreferrer");
+          }
+        }
+      }
+      if (attrName === "src") {
+        const safeSrc = toSafeUrl(attrValue, true);
+        if (!safeSrc) {
+          el.removeAttribute(attr.name);
+        } else {
+          el.setAttribute("src", safeSrc);
+        }
+      }
+    });
+  });
+
+  return template.innerHTML;
+}
+
+function setArticleImage(url) {
+  const safeUrl = toSafeUrl(url, true);
+  if (!safeUrl) {
+    articleImage.removeAttribute("src");
+    articleImage.style.display = "none";
+    return;
+  }
+  articleImage.src = safeUrl;
+  articleImage.style.display = "block";
+}
+
 // === Load article ===
 async function loadArticle() {
   try {
+    if (!id || !type) {
+      articleContent.textContent = "Missing article parameters.";
+      return;
+    }
+
     // === 🏛 If it's a Drupal CMS article ===
     if (type === "drupal") {
-      const res = await fetch(`https://dev-alex-photo-cms.pantheonsite.io/jsonapi/node/article/${id}?include=field_image`);
+      const res = await fetch(`https://dev-alex-photo-cms.pantheonsite.io/jsonapi/node/article/${encodeURIComponent(id)}?include=field_image`);
+      if (!res.ok) throw new Error(`Drupal fetch failed: ${res.status}`);
       const json = await res.json();
       const data = json.data;
       const included = json.included || [];
+
+      if (!data?.attributes) {
+        articleContent.textContent = "Article not found.";
+        return;
+      }
 
       const title = data.attributes.title || "Untitled";
       const created = new Date(data.attributes.created).toDateString();
@@ -58,9 +138,15 @@ async function loadArticle() {
       // === Render content ===
       articleTitle.textContent = title;
       articleDate.textContent = created;
-      articleImage.src = imageUrl || "";
-      articleContent.innerHTML = body;
+      setArticleImage(imageUrl);
+      articleContent.innerHTML = sanitizeRichHtml(body);
 
+      return;
+    }
+
+    const allowedTypes = new Set(["news", "history", "posts"]);
+    if (!allowedTypes.has(type)) {
+      articleContent.textContent = "Unsupported article type.";
       return;
     }
 
@@ -80,13 +166,15 @@ async function loadArticle() {
     articleDate.textContent = data.createdAt?.seconds
       ? new Date(data.createdAt.seconds * 1000).toDateString()
       : "";
-    articleImage.src = data.imageUrl || "";
+    setArticleImage(data.imageUrl || "");
 
     // === Render HTML directly from Firestore ===
     if (data.htmlContent) {
-      articleContent.innerHTML = data.htmlContent;
+      articleContent.innerHTML = sanitizeRichHtml(data.htmlContent);
+    } else if (data.content) {
+      articleContent.innerHTML = sanitizeRichHtml(data.content);
     } else {
-      articleContent.innerHTML = `<p>${data.content || ""}</p>`;
+      articleContent.textContent = "";
     }
 
     // === Inject JSON-LD ===

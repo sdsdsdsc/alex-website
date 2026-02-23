@@ -1,5 +1,5 @@
 // === Firebase imports ===
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getFirestore,
   collection,
@@ -16,42 +16,50 @@ const firebaseConfig = {
   appId: "1:214395622099:web:44f99a181741caf3117a26"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // === Collections we export ===
-const COLLECTIONS = ["posts", "news", "history", "mapPoints"];
+const COLLECTIONS = ["posts", "news", "history", "mapPoints", "mapPolygons"];
 
 // === Export function ===
 async function exportHeritageJSON() {
   const status = document.getElementById("status");
+  const button = document.getElementById("downloadBtn");
   status.textContent = "⏳ Gathering data…";
+  button.disabled = true;
 
-  const output = [];
+  try {
+    const output = [];
 
-  for (const col of COLLECTIONS) {
-    const snapshot = await getDocs(collection(db, col));
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      if (data.jsonld) {
-        output.push(data.jsonld);
-      }
+    for (const col of COLLECTIONS) {
+      const snapshot = await getDocs(collection(db, col));
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.jsonld) output.push(data.jsonld);
+      });
+    }
+
+    status.textContent = `✅ ${output.length} JSON-LD records collected`;
+
+    const blob = new Blob([JSON.stringify(output, null, 2)], {
+      type: "application/json"
     });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "heritage.json";
+    a.click();
+    URL.revokeObjectURL(url);
+
+    status.textContent += " — Downloaded!";
+  } catch (err) {
+    console.error("Export failed:", err);
+    status.textContent = "❌ Export failed. Please try again.";
+  } finally {
+    button.disabled = false;
   }
-
-  status.textContent = `✅ ${output.length} JSON-LD records collected`;
-
-  const blob = new Blob([JSON.stringify(output, null, 2)], {
-    type: "application/json"
-  });
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "heritage.json";
-  a.click();
-
-  status.textContent += " — Downloaded!";
 }
 
 // === Connect button ===
