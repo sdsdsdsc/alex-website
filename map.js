@@ -86,47 +86,166 @@ map.on(L.Draw.Event.DRAWSTOP, () => {
   isDrawing = false;
 });
 
+function escapeHTML(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function toSafeUrl(value) {
+  if (!value) return "";
+  try {
+    const parsed = new URL(value, window.location.href);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.href;
+    }
+  } catch (err) {
+    console.warn("Invalid URL skipped:", value);
+  }
+  return "";
+}
+
+function buildPointPopupHtml({ name, desc, type, linkedArticle }) {
+  const safeName = escapeHTML(name || "Untitled");
+  const safeDesc = escapeHTML(desc || "");
+  const safeType = escapeHTML(type || "schema:Place");
+  const safeLink = toSafeUrl(linkedArticle || "");
+
+  let html = `<b>${safeName}</b><br>${safeDesc}<br><small><i>Type:</i> ${safeType}</small>`;
+  if (safeLink) {
+    html += `<br><a href="${safeLink}" target="_blank" rel="noopener noreferrer" style="color:#007bff;">View Linked Article</a>`;
+  }
+  return html;
+}
+
+function buildPointFormHtml() {
+  return `
+    <form class="point-form" style="min-width:240px; display:grid; gap:8px;">
+      <label style="display:grid; gap:4px;">
+        <span style="font-size:12px;">Title</span>
+        <input name="name" required maxlength="100" placeholder="Location title" />
+      </label>
+      <label style="display:grid; gap:4px;">
+        <span style="font-size:12px;">Description</span>
+        <textarea name="desc" required rows="3" maxlength="300" placeholder="Short description"></textarea>
+      </label>
+      <label style="display:grid; gap:4px;">
+        <span style="font-size:12px;">Linked Article (optional)</span>
+        <input name="linkedArticle" type="url" placeholder="https://..." />
+      </label>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" data-action="cancel">Cancel</button>
+        <button type="submit" data-action="save">Save Point</button>
+      </div>
+    </form>
+  `;
+}
+
 // === Add new marker on click ===
 map.on('click', async (e) => {
   if (isDrawing) return;
 
-  const name = prompt("Enter a title for this location:");
-  const desc = prompt("Enter a short description:");
-  if (!name || !desc) return;
-
   const lat = e.latlng.lat;
   const lng = e.latlng.lng;
-
-  // Add to map immediately
   const marker = L.marker([lat, lng]).addTo(map);
-  marker.bindPopup(`<b>${name}</b><br>${desc}`).openPopup();
+  let isSaved = false;
 
-  // Save to Firebase (with semantic fields)
-try {
-  await addDoc(collection(db, "mapPoints"), {
-    name,
-    desc,
-    lat,
-    lng,
-    type: "schema:Place",
-    linkedArticle: "https://alexsphotoboard.web.app/article.html?id=abc", // optional
-    createdAt: serverTimestamp(),
-    jsonld: {
-      "@context": "https://schema.org",
-      "@type": "Place",
-      "name": name,
-      "description": desc,
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": lat,
-        "longitude": lng
-      }
+  const onPopupOpen = () => {
+    const popupEl = marker.getPopup()?.getElement();
+    if (!popupEl) return;
+
+    const form = popupEl.querySelector(".point-form");
+    const cancelBtn = popupEl.querySelector('[data-action="cancel"]');
+    const saveBtn = popupEl.querySelector('[data-action="save"]');
+    const titleInput = popupEl.querySelector('input[name="name"]');
+
+    if (titleInput) titleInput.focus();
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", () => {
+        map.removeLayer(marker);
+        map.closePopup(marker.getPopup());
+      }, { once: true });
     }
-  }); 
-  console.log("✅ Semantic point added:", name);
-} catch (err) {
-  console.error("❌ Error adding point:", err);
-} 
+
+    if (!form) return;
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const formData = new FormData(form);
+      const name = String(formData.get("name") || "").trim();
+      const desc = String(formData.get("desc") || "").trim();
+      const linkedArticleRaw = String(formData.get("linkedArticle") || "").trim();
+
+      if (!name || !desc) {
+        alert("Please provide both title and description.");
+        return;
+      }
+
+      const linkedArticle = toSafeUrl(linkedArticleRaw);
+      if (linkedArticleRaw && !linkedArticle) {
+        alert("Please enter a valid http(s) link or leave it blank.");
+        return;
+      }
+
+      if (saveBtn) saveBtn.disabled = true;
+
+      try {
+        await addDoc(collection(db, "mapPoints"), {
+          name,
+          desc,
+          lat,
+          lng,
+          type: "schema:Place",
+          linkedArticle,
+          createdAt: serverTimestamp(),
+          jsonld: {
+            "@context": "https://schema.org",
+            "@type": "Place",
+            "name": name,
+            "description": desc,
+            "geo": {
+              "@type": "GeoCoordinates",
+              "latitude": lat,
+              "longitude": lng
+            }
+          }
+        });
+
+        isSaved = true;
+        marker.bindPopup(buildPointPopupHtml({
+          name,
+          desc,
+          type: "schema:Place",
+          linkedArticle
+        })).openPopup();
+        console.log("✅ Semantic point added:", name);
+      } catch (err) {
+        if (saveBtn) saveBtn.disabled = false;
+        console.error("❌ Error adding point:", err);
+        alert("Could not save point. Please try again.");
+      }
+    }, { once: true });
+  };
+
+  const onPopupClose = () => {
+    if (!isSaved && map.hasLayer(marker)) {
+      map.removeLayer(marker);
+    }
+    marker.off("popupopen", onPopupOpen);
+    marker.off("popupclose", onPopupClose);
+  };
+
+  marker.on("popupopen", onPopupOpen);
+  marker.on("popupclose", onPopupClose);
+  marker.bindPopup(buildPointFormHtml(), {
+    closeButton: true,
+    autoClose: true,
+    closeOnClick: false
+  }).openPopup();
 });
 
 // === Save polygon drawn by user ===
@@ -168,18 +287,12 @@ async function loadMarkers() {
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
     const marker = L.marker([data.lat, data.lng]).addTo(map);
-
-    let popupContent = `
-      <b>${data.name}</b><br>${data.desc}<br>
-      <small><i>Type:</i> ${data.type || "schema:Place"}</small>
-    `;
-
-    // Only show link if one exists
-    if (data.linkedArticle && data.linkedArticle.trim() !== "") {
-      popupContent += `<br><a href="${data.linkedArticle}" target="_blank" style="color:#007bff;">View Linked Article</a>`;
-    }
-
-    marker.bindPopup(popupContent);
+    marker.bindPopup(buildPointPopupHtml({
+      name: data.name,
+      desc: data.desc,
+      type: data.type,
+      linkedArticle: data.linkedArticle
+    }));
     markers.push([data.lat, data.lng]); // 🌍 collect coordinates
   });
 
