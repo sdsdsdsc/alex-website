@@ -38,8 +38,13 @@
 
   <section class="upload-section">
     <h2>Upload Your Image</h2>
-    <input type="file" id="fileInput">
+    <label for="fileInput">Choose Image</label>
+    <input type="file" id="fileInput" accept="image/*">
+
+    <label for="nameInput">Your Name</label>
     <input type="text" id="nameInput" placeholder="Your name">
+
+    <label for="msgInput">Message</label>
     <input type="text" id="msgInput" placeholder="Leave a message">
     <button id="uploadBtn">Upload</button>
   </section>
