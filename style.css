@@ -57,8 +57,14 @@ header h1 a.home-link:hover {
   display: inline-block;
   text-decoration: none;
 }
+.menu > a:link,
+.menu > a:visited {
+  color: #fff;
+  text-decoration: none;
+}
 .menu > button:hover,
-.menu > a:hover {
+.menu > a:hover,
+.menu > a:focus-visible {
   background: #356389;
 }
 
@@ -95,8 +101,14 @@ header h1 a.home-link:hover {
   display: block;
   white-space: nowrap;
 }
+.menu div a:link,
+.menu div a:visited {
+  color: #000;
+  text-decoration: none;
+}
 .menu div button:hover,
-.menu div a:hover {
+.menu div a:hover,
+.menu div a:focus-visible {
   background: #ddd;
 }
 
@@ -152,8 +164,14 @@ header h1 a.home-link:hover {
   display: inline-block;
   text-decoration: none;
 }
+.hero-buttons a:link,
+.hero-buttons a:visited {
+  color: #000;
+  text-decoration: none;
+}
 .hero-buttons button:hover,
-.hero-buttons a:hover {
+.hero-buttons a:hover,
+.hero-buttons a:focus-visible {
   background: #ffcd66;
 }
 
@@ -517,7 +535,8 @@ footer {
     padding: 0 10px;
   }
 
-  .menu button {
+  .menu > button,
+  .menu > a {
     padding: 8px 12px;
     font-size: 14px;
   }
@@ -535,7 +554,8 @@ footer {
     padding: 0 14px;
   }
 
-  .hero-buttons button {
+  .hero-buttons button,
+  .hero-buttons a {
     margin: 6px 5px;
   }
 }
