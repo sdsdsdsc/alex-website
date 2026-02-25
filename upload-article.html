@@ -81,7 +81,7 @@
 const docRef = await addDoc(collection(db, type), articleData);
 
 // === Generate a public, referenceable page URL ===
-const publicArticleUrl = `https://alexsphotoboard.web.app/article.html?id=${docRef.id}`;
+const publicArticleUrl = `https://alexsphotoboard.web.app/article.html?id=${encodeURIComponent(docRef.id)}&type=${encodeURIComponent(type)}`;
 
 // === Update the JSON-LD inside the same document ===
 await updateDoc(docRef, {
