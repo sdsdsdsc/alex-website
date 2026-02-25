@@ -44,7 +44,8 @@ header h1 a.home-link:hover {
   position: relative;
 }
 
-.menu button {
+.menu > button,
+.menu > a {
   background: #457b9d;
   color: #fff;
   border: none;
@@ -53,8 +54,11 @@ header h1 a.home-link:hover {
   cursor: pointer;
   font-size: 16px;
   transition: background 0.3s ease;
+  display: inline-block;
+  text-decoration: none;
 }
-.menu button:hover {
+.menu > button:hover,
+.menu > a:hover {
   background: #356389;
 }
 
@@ -78,7 +82,8 @@ header h1 a.home-link:hover {
 }
 
 /* Dropdown buttons */
-.menu div button {
+.menu div button,
+.menu div a {
   color: #000;
   background: transparent;
   border: none;
@@ -86,8 +91,12 @@ header h1 a.home-link:hover {
   padding: 8px 16px;
   border-radius: 4px;
   font-size: 15px;
+  text-decoration: none;
+  display: block;
+  white-space: nowrap;
 }
-.menu div button:hover {
+.menu div button:hover,
+.menu div a:hover {
   background: #ddd;
 }
 
@@ -129,7 +138,8 @@ header h1 a.home-link:hover {
   font-size: 18px;
   margin-bottom: 20px;
 }
-.hero-buttons button {
+.hero-buttons button,
+.hero-buttons a {
   background: #fcbf49;
   border: none;
   color: #000;
@@ -139,8 +149,11 @@ header h1 a.home-link:hover {
   font-weight: bold;
   cursor: pointer;
   transition: background 0.3s ease;
+  display: inline-block;
+  text-decoration: none;
 }
-.hero-buttons button:hover {
+.hero-buttons button:hover,
+.hero-buttons a:hover {
   background: #ffcd66;
 }
 
