@@ -47,9 +47,20 @@ function toSafeUrl(value, allowRelative = false) {
 }
 
 function sanitizeRichHtml(rawHtml) {
-  const template = document.createElement("template");
-  template.innerHTML = String(rawHtml || "");
+  const dirty = String(rawHtml || "");
+  const domPurify = globalThis.DOMPurify;
 
+  let clean = dirty;
+  if (domPurify && typeof domPurify.sanitize === "function") {
+    clean = domPurify.sanitize(dirty, {
+      USE_PROFILES: { html: true },
+      FORBID_TAGS: ["script", "iframe", "object", "embed", "link", "meta"],
+      FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover"]
+    });
+  }
+
+  const template = document.createElement("template");
+  template.innerHTML = clean;
   const blockedTags = ["script", "iframe", "object", "embed", "link", "meta"];
   blockedTags.forEach((tag) => {
     template.content.querySelectorAll(tag).forEach((el) => el.remove());
