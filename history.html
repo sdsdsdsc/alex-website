@@ -5,41 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <title>History Stories | Alex's Photo Board</title>
+  <title>History | Alex's Photo Board</title>
   <link rel="stylesheet" href="style.css">
   <script type="module" src="script.js" defer></script>
 </head>
 <body>
   <header>
-    <h1>
-  <a href="index.html" class="home-link">📸 Alex's Photo Board</a>
-</h1>
-    <nav class="menu-bar">
-  <div class="menu">
-    <button id="communityBtn">Community ▼</button>
-    <div id="communityMenu" class="hidden">
-      <a href="gallery.html">🖼️ Gallery</a>
-      <a href="upload.html">📤 Image</a>
-    </div>
-  </div>
-
-  <div class="menu">
-    <button id="newsBtn">What's News ▼</button>
-    <div id="newsMenu" class="hidden">
-      <a href="news.html">🗞️ News</a>
-      <a href="history.html">📚 History Stories</a>
-    </div>
-  </div>
-
-  <!-- 🗺️ New top-level Map tab -->
-  <div class="menu">
-    <a href="map.html">🗺️ Map</a>
-  </div>
-</nav>
+    <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
+    <nav class="menu-bar" aria-label="Main navigation">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="gallery.html" class="nav-link">Gallery</a>
+      <a href="upload.html" class="nav-link">Upload Image</a>
+      <a href="news.html" class="nav-link">News</a>
+      <a href="history.html" class="nav-link active">History</a>
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="export.html" class="nav-link">Export</a>
+    </nav>
   </header>
 
-  <h2>History Stories</h2>
-  <div id="historyContainer" class="article-container"></div>
+  <main class="site-main">
+    <section class="page-heading">
+      <h2>History</h2>
+    </section>
+    <div id="historyContainer" class="article-container"></div>
+  </main>
 
   <footer>
     © 2025 Alex's Photo Board | All Rights Reserved

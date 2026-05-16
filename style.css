@@ -36,8 +36,39 @@ header h1 a.home-link:hover {
 .menu-bar {
   display: flex;
   justify-content: center;
-  gap: 30px;
+  gap: 12px;
   margin-top: 10px;
+  flex-wrap: wrap;
+  padding: 0 12px;
+}
+
+.nav-link {
+  background: #457b9d;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s ease, color 0.3s ease;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.nav-link:link,
+.nav-link:visited {
+  color: #fff;
+  text-decoration: none;
+}
+
+.nav-link:hover,
+.nav-link:focus-visible {
+  background: #356389;
+}
+
+.nav-link.active {
+  background: #fcbf49;
+  color: #111;
 }
 
 .menu {
@@ -173,6 +204,58 @@ header h1 a.home-link:hover {
 .hero-buttons a:hover,
 .hero-buttons a:focus-visible {
   background: #ffcd66;
+}
+
+.site-main {
+  max-width: 1200px;
+  margin: auto;
+  padding: 30px 20px;
+}
+
+.page-heading {
+  text-align: center;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+
+.page-heading h2 {
+  color: #1d3557;
+  margin-bottom: 8px;
+}
+
+.map-canvas {
+  height: 600px;
+  width: 90%;
+  margin: 20px auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.export-section {
+  text-align: center;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.export-button {
+  padding: 12px 22px;
+  font-size: 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #1d3557;
+  color: white;
+  border: none;
+}
+
+.export-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.export-status {
+  margin-top: 20px;
+  font-size: 16px;
+  color: #555;
 }
 
 /* ====== Upload Section ====== */
@@ -535,11 +618,12 @@ footer {
     padding: 0 10px;
   }
 
-  .menu > button,
-  .menu > a {
-    padding: 8px 12px;
-    font-size: 14px;
-  }
+	  .menu > button,
+	  .menu > a,
+	  .nav-link {
+	    padding: 8px 12px;
+	    font-size: 14px;
+	  }
 
   .hero {
     height: 340px;

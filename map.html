@@ -20,39 +20,26 @@
 </head>
 <body>
   <header>
-    <h1>
-  <a href="index.html" class="home-link">📸 Alex's Photo Board</a>
-</h1>
-    <nav class="menu-bar">
-  <div class="menu">
-    <button id="communityBtn">Community ▼</button>
-    <div id="communityMenu" class="hidden">
-      <a href="gallery.html">🖼️ Gallery</a>
-      <a href="upload.html">📤 Image</a>
-    </div>
-  </div>
-
-  <div class="menu">
-    <button id="newsBtn">What's News ▼</button>
-    <div id="newsMenu" class="hidden">
-      <a href="news.html">🗞️ News</a>
-      <a href="history.html">📚 History Stories</a>
-    </div>
-  </div>
-
-  <!-- 🗺️ New top-level Map tab -->
-  <div class="menu">
-    <a href="map.html">🗺️ Map</a>
-  </div>
-</nav>
+    <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
+    <nav class="menu-bar" aria-label="Main navigation">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="gallery.html" class="nav-link">Gallery</a>
+      <a href="upload.html" class="nav-link">Upload Image</a>
+      <a href="news.html" class="nav-link">News</a>
+      <a href="history.html" class="nav-link">History</a>
+      <a href="map.html" class="nav-link active">Map</a>
+      <a href="export.html" class="nav-link">Export</a>
+    </nav>
   </header>
 
-  <section>
-    <h2 style="text-align:center; margin-top:20px;">Explore & Contribute to the Map</h2>
-    <p style="text-align:center;">Click once on the map to place a point, then fill in the popup form to save all details at once.</p>
-    <p style="text-align:center;">Use the draw toolbar to add polygons, then fill one popup form to save it.</p>
-    <div id="map" style="height:600px; width:90%; margin:20px auto; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.2);"></div>
-  </section>
+  <main>
+    <section class="page-heading">
+      <h2>Explore & Contribute to the Map</h2>
+      <p>Click once on the map to place a point, then fill in the popup form to save all details at once.</p>
+      <p>Use the draw toolbar to add polygons, then fill one popup form to save it.</p>
+    </section>
+    <div id="map" class="map-canvas"></div>
+  </main>
 
   <footer>
     © 2025 Alex's Photo Board | All Rights Reserved

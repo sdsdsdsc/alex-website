@@ -6,6 +6,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>Upload a New Article</title>
+    <link rel="stylesheet" href="style.css" />
 
     <!-- Firebase -->
     <script type="module">
@@ -151,17 +152,17 @@ location.reload();
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js" integrity="sha384-AOnYUgW6MQR78EvTqtkbNavz7dVI7dtLm7QdcIMBoy06adLIzNT40hHPYl9Rr5m5" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin"></script>
 
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f9f9f9;
-        margin: 0;
-        padding: 40px 0;
-      }
-      .container {
-        width: 80%;
-        max-width: 800px;
-        margin: 0 auto;
-        background: white;
+	      body {
+	        font-family: Arial, sans-serif;
+	        background-color: #f9f9f9;
+	        margin: 0;
+	        padding: 0;
+	      }
+	      .container {
+	        width: 80%;
+	        max-width: 800px;
+	        margin: 40px auto;
+	        background: white;
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         padding: 25px;
@@ -203,8 +204,20 @@ location.reload();
     </style>
   </head>
 
-  <body>
-    <div class="container">
+	  <body>
+	    <header>
+	      <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
+	      <nav class="menu-bar" aria-label="Main navigation">
+	        <a href="index.html" class="nav-link">Home</a>
+	        <a href="gallery.html" class="nav-link">Gallery</a>
+	        <a href="upload.html" class="nav-link">Upload Image</a>
+	        <a href="news.html" class="nav-link">News</a>
+	        <a href="history.html" class="nav-link">History</a>
+	        <a href="map.html" class="nav-link">Map</a>
+	        <a href="export.html" class="nav-link">Export</a>
+	      </nav>
+	    </header>
+	    <div class="container">
       <h2>Upload a New Article</h2>
 
       <label for="articleTitle">Article Title</label>
