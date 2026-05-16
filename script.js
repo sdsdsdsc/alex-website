@@ -78,6 +78,17 @@ document.addEventListener("click", (e) => {
   }
 });
 
+// === Homepage image caption panel ===
+const imageCaption = document.querySelector(".image-caption");
+const imageCaptionToggle = imageCaption?.querySelector(".image-caption__toggle");
+const imageCaptionContent = imageCaption?.querySelector(".image-caption__content");
+
+imageCaptionToggle?.addEventListener("click", () => {
+  const isOpen = imageCaption.classList.toggle("is-open");
+  imageCaptionToggle.setAttribute("aria-expanded", String(isOpen));
+  imageCaptionContent?.setAttribute("aria-hidden", String(!isOpen));
+});
+
 // === Image Upload (Gallery) ===
 const uploadBtn = document.getElementById("uploadBtn");
 if (uploadBtn) {
