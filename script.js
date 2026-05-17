@@ -89,6 +89,52 @@ imageCaptionToggle?.addEventListener("click", () => {
   imageCaptionContent?.setAttribute("aria-hidden", String(!isOpen));
 });
 
+// === Connecting Communities modal ===
+const communityCards = document.querySelectorAll(".community-connect__card");
+const communityModal = document.querySelector(".community-modal");
+const communityModalImage = communityModal?.querySelector(".community-modal__image");
+const communityModalTitle = communityModal?.querySelector("#communityModalTitle");
+const communityModalDescription = communityModal?.querySelector("#communityModalDescription");
+const communityModalLink = communityModal?.querySelector(".community-modal__link");
+const communityModalCloseTriggers = communityModal?.querySelectorAll("[data-community-modal-close]");
+let lastCommunityTrigger = null;
+
+function closeCommunityModal() {
+  if (!communityModal) return;
+  communityModal.hidden = true;
+  document.body.classList.remove("community-modal-open");
+  lastCommunityTrigger?.focus();
+}
+
+function openCommunityModal(card) {
+  if (!communityModal || !communityModalImage || !communityModalTitle || !communityModalDescription || !communityModalLink) return;
+
+  const { title, description, image, link } = card.dataset;
+  lastCommunityTrigger = card;
+  communityModalImage.src = image || "";
+  communityModalImage.alt = title ? `${title} image` : "Community image";
+  communityModalTitle.textContent = title || "";
+  communityModalDescription.textContent = description || "";
+  communityModalLink.href = link || "#";
+  communityModal.hidden = false;
+  document.body.classList.add("community-modal-open");
+  communityModal.querySelector(".community-modal__close")?.focus();
+}
+
+communityCards.forEach((card) => {
+  card.addEventListener("click", () => openCommunityModal(card));
+});
+
+communityModalCloseTriggers?.forEach((trigger) => {
+  trigger.addEventListener("click", closeCommunityModal);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && communityModal && !communityModal.hidden) {
+    closeCommunityModal();
+  }
+});
+
 // === Image Upload (Gallery) ===
 const uploadBtn = document.getElementById("uploadBtn");
 if (uploadBtn) {
