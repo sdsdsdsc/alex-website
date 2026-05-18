@@ -206,6 +206,89 @@ header h1 a.home-link:hover {
   background: #ffcd66;
 }
 
+.home-intro-panel {
+  position: relative;
+  width: 100%;
+  background: #fff;
+  color: #111;
+}
+
+.home-intro-panel::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -22px;
+  width: 44px;
+  height: 44px;
+  background: #fff;
+  transform: translateX(-50%) rotate(45deg);
+  z-index: 2;
+}
+
+.home-intro-panel__inner {
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 70px 24px 80px;
+  text-align: center;
+}
+
+.home-intro-panel__title {
+  margin: 0 0 20px;
+  font-size: clamp(30px, 3.5vw, 46px);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.home-intro-panel__text {
+  margin: 0 auto 18px;
+  font-size: clamp(17px, 2vw, 21px);
+  line-height: 1.6;
+}
+
+.home-intro-panel__cta {
+  margin: 0 auto 28px;
+  font-size: clamp(15px, 1.7vw, 18px);
+  line-height: 1.55;
+  color: #444;
+}
+
+.home-intro-panel__actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.home-intro-panel__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+  min-height: 52px;
+  padding: 0 24px;
+  border: 1px solid #111;
+  border-radius: 6px;
+  color: #111;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.home-intro-panel__button--primary {
+  background: #fcbf49;
+  border-color: #fcbf49;
+}
+
+.home-intro-panel__button--secondary {
+  background: #fff;
+}
+
+.home-intro-panel__button:hover,
+.home-intro-panel__button:focus-visible {
+  background: #1d3557;
+  border-color: #1d3557;
+  color: #fff;
+}
+
 .home-feature-image {
   position: relative;
   width: 100%;
@@ -968,6 +1051,10 @@ footer {
     margin: 6px 5px;
   }
 
+  .home-intro-panel__inner {
+    padding: 56px 20px 64px;
+  }
+
   .community-connect__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1007,6 +1094,39 @@ footer {
     right: 16px;
     left: 16px;
     width: auto;
+  }
+
+  .home-intro-panel::after {
+    bottom: -18px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .home-intro-panel__inner {
+    padding: 42px 18px 52px;
+  }
+
+  .home-intro-panel__title {
+    font-size: 28px;
+  }
+
+  .home-intro-panel__text {
+    font-size: 16px;
+  }
+
+  .home-intro-panel__cta {
+    margin-bottom: 22px;
+    font-size: 15px;
+  }
+
+  .home-intro-panel__actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .home-intro-panel__button {
+    width: min(100%, 260px);
   }
 
   .community-connect__grid {
