@@ -19,6 +19,24 @@ const db = getFirestore(app);
 
 // === Initialize Map ===
 const map = L.map('map').setView([51.505, -0.09], 13);
+const mapPointLayer = L.layerGroup().addTo(map);
+const mapSearchForm = document.getElementById("mapSearchForm");
+const mapSearchInput = document.getElementById("mapSearchInput");
+const mapSearchClear = document.getElementById("mapSearchClear");
+const mapSearchStatus = document.getElementById("mapSearchStatus");
+const initialSearchTerm = new URLSearchParams(window.location.search).get("search") || "";
+let allMapPoints = [];
+
+if (mapSearchInput) {
+  mapSearchInput.value = initialSearchTerm;
+}
+
+const bluePinIcon = L.divIcon({
+  className: "community-map-pin",
+  iconSize: [30, 42],
+  iconAnchor: [15, 42],
+  popupAnchor: [0, -42]
+});
 
 // Base maps
 
@@ -114,10 +132,16 @@ function buildPointPopupHtml({ name, desc, type, linkedArticle }) {
   const safeType = escapeHTML(type || "schema:Place");
   const safeLink = toSafeUrl(linkedArticle || "");
 
-  let html = `<b>${safeName}</b><br>${safeDesc}<br><small><i>Type:</i> ${safeType}</small>`;
+  let html = `
+    <article class="map-point-card">
+      <h3>${safeName}</h3>
+      ${safeDesc ? `<p>${safeDesc}</p>` : ""}
+      <p class="map-point-card__meta"><span>Category/type:</span> ${safeType}</p>
+  `;
   if (safeLink) {
-    html += `<br><a href="${safeLink}" target="_blank" rel="noopener noreferrer" style="color:#007bff;">View Linked Article</a>`;
+    html += `<a class="map-point-card__link" href="${safeLink}" target="_blank" rel="noopener noreferrer">View linked article</a>`;
   }
+  html += `<button class="map-point-card__zoom" type="button" data-action="zoom-point">Zoom in</button></article>`;
   return html;
 }
 
@@ -169,6 +193,122 @@ function buildPolygonFormHtml() {
   `;
 }
 
+function normalizeSearchValue(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function pointMatchesSearch(point, term) {
+  if (!term) return true;
+
+  const tags = Array.isArray(point.tags) ? point.tags.join(" ") : point.tags;
+  const searchableText = [
+    point.name,
+    point.title,
+    point.desc,
+    point.description,
+    point.message,
+    point.articleTitle,
+    point.linkedArticleTitle,
+    point.linkedArticle,
+    point.type,
+    tags
+  ].filter(Boolean).join(" ").toLowerCase();
+
+  return searchableText.includes(term);
+}
+
+function updateSearchUrl(term) {
+  const url = new URL(window.location.href);
+  if (term) {
+    url.searchParams.set("search", term);
+  } else {
+    url.searchParams.delete("search");
+  }
+  window.history.replaceState({}, "", url);
+}
+
+function setSearchStatus(message) {
+  if (mapSearchStatus) {
+    mapSearchStatus.textContent = message;
+  }
+}
+
+function renderMapPoints(searchTerm = "") {
+  const normalizedTerm = normalizeSearchValue(searchTerm);
+  mapPointLayer.clearLayers();
+
+  const matchingPoints = allMapPoints.filter((point) => pointMatchesSearch(point, normalizedTerm));
+  const markerCoords = [];
+
+  matchingPoints.forEach((point) => {
+    const marker = L.marker([point.lat, point.lng], { icon: bluePinIcon }).addTo(mapPointLayer);
+    marker.bindPopup(buildPointPopupHtml({
+      name: point.name,
+      desc: point.desc,
+      type: point.type,
+      linkedArticle: point.linkedArticle
+    }), {
+      className: "community-map-popup",
+      closeButton: true,
+      autoClose: true
+    });
+    markerCoords.push([point.lat, point.lng]);
+  });
+
+  if (normalizedTerm && matchingPoints.length === 0) {
+    setSearchStatus("No matching map points found.");
+    return;
+  }
+
+  setSearchStatus(
+    normalizedTerm
+      ? `${matchingPoints.length} matching map point${matchingPoints.length === 1 ? "" : "s"} found.`
+      : `${matchingPoints.length} map point${matchingPoints.length === 1 ? "" : "s"} shown.`
+  );
+
+  if (markerCoords.length > 0) {
+    const bounds = L.latLngBounds(markerCoords);
+    map.fitBounds(bounds, { padding: [50, 50] });
+    if (markerCoords.length === 1) {
+      map.setZoom(14);
+      map.panTo(bounds.getCenter());
+    }
+  }
+}
+
+function runMapSearch(term) {
+  const searchTerm = String(term || "").trim();
+  if (mapSearchInput) {
+    mapSearchInput.value = searchTerm;
+  }
+  updateSearchUrl(searchTerm);
+  renderMapPoints(searchTerm);
+}
+
+mapSearchForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  runMapSearch(mapSearchInput?.value || "");
+});
+
+mapSearchClear?.addEventListener("click", () => {
+  runMapSearch("");
+  mapSearchInput?.focus();
+});
+
+map.on("popupopen", (event) => {
+  const popupEl = event.popup.getElement();
+  const zoomButton = popupEl?.querySelector('[data-action="zoom-point"]');
+  zoomButton?.addEventListener("click", () => {
+    map.setView(event.popup.getLatLng(), Math.max(map.getZoom() + 2, 16));
+  });
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    map.closePopup();
+  }
+});
+
 // === Add new marker on click ===
 map.on('click', async (e) => {
   if (isDrawing) return;
@@ -219,7 +359,7 @@ map.on('click', async (e) => {
       if (saveBtn) saveBtn.disabled = true;
 
       try {
-        await addDoc(collection(db, "mapPoints"), {
+        const docRef = await addDoc(collection(db, "mapPoints"), {
           name,
           desc,
           lat,
@@ -241,12 +381,25 @@ map.on('click', async (e) => {
         });
 
         isSaved = true;
+        allMapPoints.push({
+          id: docRef.id,
+          name,
+          desc,
+          lat,
+          lng,
+          type: "schema:Place",
+          linkedArticle
+        });
         marker.bindPopup(buildPointPopupHtml({
           name,
           desc,
           type: "schema:Place",
           linkedArticle
-        })).openPopup();
+        }), {
+          className: "community-map-popup",
+          closeButton: true,
+          autoClose: true
+        }).openPopup();
         console.log("✅ Semantic point added:", name);
       } catch (err) {
         if (saveBtn) saveBtn.disabled = false;
@@ -359,32 +512,21 @@ async function loadMarkers() {
     const q = query(collection(db, "mapPoints"));
     const snapshot = await getDocs(q);
 
-    const markers = [];
-
+    allMapPoints = [];
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       if (!Number.isFinite(data?.lat) || !Number.isFinite(data?.lng)) return;
 
-      const marker = L.marker([data.lat, data.lng]).addTo(map);
-      marker.bindPopup(buildPointPopupHtml({
-        name: data.name,
-        desc: data.desc,
-        type: data.type,
-        linkedArticle: data.linkedArticle
-      }));
-      markers.push([data.lat, data.lng]);
+      allMapPoints.push({
+        id: docSnap.id,
+        ...data
+      });
     });
 
-    if (markers.length > 0) {
-      const bounds = L.latLngBounds(markers);
-      map.fitBounds(bounds, { padding: [50, 50] });
-      if (markers.length === 1) {
-        map.setZoom(14);
-        map.panTo(bounds.getCenter());
-      }
-    }
+    renderMapPoints(mapSearchInput?.value || initialSearchTerm);
   } catch (err) {
     console.error("❌ Error loading map points:", err);
+    setSearchStatus("Could not load map points. Please try again later.");
   }
 }
 

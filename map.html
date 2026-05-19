@@ -32,13 +32,30 @@
     </nav>
   </header>
 
-  <main>
-    <section class="page-heading">
-      <h2>Explore & Contribute to the Map</h2>
-      <p>Click once on the map to place a point, then fill in the popup form to save all details at once.</p>
-      <p>Use the draw toolbar to add polygons, then fill one popup form to save it.</p>
+  <main class="map-search-page">
+    <section class="map-search-heading" aria-labelledby="mapSearchTitle">
+      <h2 id="mapSearchTitle">Search the Community Map</h2>
+      <p>Find community images, local stories, public spaces, and heritage points. You can still click the map to add a new point or use the draw toolbar to save an area.</p>
     </section>
-    <div id="map" class="map-canvas"></div>
+
+    <section class="map-search-panel" aria-label="Community map search">
+      <form class="map-search-form" id="mapSearchForm">
+        <label class="map-search-form__label" for="mapSearchInput">Search map points</label>
+        <div class="map-search-form__row">
+          <input
+            class="map-search-form__input"
+            id="mapSearchInput"
+            name="search"
+            type="search"
+            placeholder="Place / street / story / image"
+          >
+          <button class="map-search-form__button" type="submit">Search</button>
+          <button class="map-search-form__clear" id="mapSearchClear" type="button">Clear search</button>
+        </div>
+      </form>
+      <p class="map-search-status" id="mapSearchStatus" role="status" aria-live="polite"></p>
+      <div id="map" class="map-canvas map-search-canvas"></div>
+    </section>
   </main>
 
   <footer>
