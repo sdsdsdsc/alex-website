@@ -7,7 +7,7 @@ body {
 }
 
 /* ====== Header ====== */
-header {
+body > header {
   background: #1d3557;
   color: #fff;
   text-align: center;
@@ -15,20 +15,20 @@ header {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 2000;
 }
-header h1 {
+body > header h1 {
   margin: 0;
   font-size: 26px;
   letter-spacing: 0.5px;
 }
 /* Make site title clickable and styled */
-header h1 a.home-link {
+body > header h1 a.home-link {
   color: #fff;
   text-decoration: none;
   transition: opacity 0.3s;
 }
-header h1 a.home-link:hover {
+body > header h1 a.home-link:hover {
   opacity: 0.8;
 }
 
@@ -752,6 +752,8 @@ body.community-modal-open {
 
 .map-search-main {
   min-width: 0;
+  position: relative;
+  z-index: 0;
 }
 
 .map-search-heading {
@@ -852,6 +854,10 @@ body.community-modal-open {
 }
 
 .map-canvas.map-search-canvas {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  overflow: hidden;
   width: 100%;
   max-width: 1100px;
   height: 620px;
@@ -1382,7 +1388,7 @@ footer {
 }
 
 @media (max-width: 900px) {
-  header {
+  body > header {
     padding: 14px 10px;
   }
 
