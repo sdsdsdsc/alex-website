@@ -7,7 +7,10 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>📸 Alex's Photo Board</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin"></script>
   <script type="module" src="script.js" defer></script>
+  <script type="module" src="map.js" defer></script>
 </head>
 <body>
   <header>
@@ -190,8 +193,13 @@
           type="search"
           placeholder="Place / street / story / image"
         >
-        <button class="home-map-search__button" type="submit">Open Map Search</button>
+        <button class="home-map-search__button" type="submit">Search</button>
+        <a class="home-map-search__full-link" id="homeMapFullLink" href="map.html">Open full map</a>
       </form>
+      <p class="home-map-search__status" id="homeMapSearchStatus" role="status" aria-live="polite"></p>
+      <div class="home-map-search__map-wrap">
+        <div id="homeMapPreview" class="home-map-search__map" aria-label="Interactive community map preview"></div>
+      </div>
     </div>
   </section>
 
