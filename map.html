@@ -33,29 +33,46 @@
   </header>
 
   <main class="map-search-page">
-    <section class="map-search-heading" aria-labelledby="mapSearchTitle">
-      <h2 id="mapSearchTitle">Search the Community Map</h2>
-      <p>Find community images, local stories, public spaces, and heritage points. You can still click the map to add a new point or use the draw toolbar to save an area.</p>
-    </section>
+    <div class="map-search-layout">
+      <aside class="map-search-sidebar" aria-label="Map page navigation">
+        <h2 class="map-search-sidebar__title">Map Search</h2>
+        <nav class="map-search-sidebar__nav" aria-label="Map topics">
+          <a href="#" class="map-search-sidebar__link active" aria-current="page">Map Search</a>
+          <a href="#" class="map-search-sidebar__link">Updating the List</a>
+          <a href="#" class="map-search-sidebar__link">Open Data Hub</a>
+          <a href="#" class="map-search-sidebar__link">History of Listing</a>
+          <a href="#" class="map-search-sidebar__link">Understanding List Entries</a>
+          <a href="#" class="map-search-sidebar__link">Search Results</a>
+        </nav>
+      </aside>
 
-    <section class="map-search-panel" aria-label="Community map search">
-      <form class="map-search-form" id="mapSearchForm">
-        <label class="map-search-form__label" for="mapSearchInput">Search map points</label>
-        <div class="map-search-form__row">
-          <input
-            class="map-search-form__input"
-            id="mapSearchInput"
-            name="search"
-            type="search"
-            placeholder="Place / street / story / image"
-          >
-          <button class="map-search-form__button" type="submit">Search</button>
-          <button class="map-search-form__clear" id="mapSearchClear" type="button">Clear search</button>
-        </div>
-      </form>
-      <p class="map-search-status" id="mapSearchStatus" role="status" aria-live="polite"></p>
-      <div id="map" class="map-canvas map-search-canvas"></div>
-    </section>
+      <section class="map-search-main" aria-label="Community map search">
+        <header class="map-search-heading" aria-labelledby="mapSearchTitle">
+          <h2 id="mapSearchTitle">Search the Community Map</h2>
+          <p>
+            Find community images, local stories, public spaces, and heritage points.
+            You can still click the map to add a new point or use the draw toolbar to save an area.
+          </p>
+        </header>
+
+        <form class="map-search-form" id="mapSearchForm">
+          <label class="map-search-form__label" for="mapSearchInput">Search map points</label>
+          <div class="map-search-form__row">
+            <input
+              class="map-search-form__input"
+              id="mapSearchInput"
+              name="search"
+              type="search"
+              placeholder="Place / street / story / image"
+            >
+            <button class="map-search-form__button" type="submit">Search</button>
+            <button class="map-search-form__clear" id="mapSearchClear" type="button">Clear search</button>
+          </div>
+        </form>
+        <p class="map-search-status" id="mapSearchStatus" role="status" aria-live="polite"></p>
+        <div id="map" class="map-canvas map-search-canvas"></div>
+      </section>
+    </div>
   </main>
 
   <footer>
