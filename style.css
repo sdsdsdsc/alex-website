@@ -595,16 +595,14 @@ body.community-modal-open {
 .home-map-search {
   background: #eef5f6;
   color: #111;
-  padding: 64px 20px;
+  padding: 72px 20px;
 }
 
 .home-map-search__inner {
-  max-width: 1040px;
+  max-width: 1120px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
-  gap: 32px;
-  align-items: center;
+  gap: 24px;
 }
 
 .home-map-search__copy h2 {
@@ -614,6 +612,7 @@ body.community-modal-open {
 }
 
 .home-map-search__copy p {
+  max-width: 740px;
   margin: 0;
   font-size: 18px;
   line-height: 1.6;
@@ -621,11 +620,16 @@ body.community-modal-open {
 
 .home-map-search__form {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 12px;
+  align-items: end;
+  max-width: 920px;
+  margin: 4px 0 -38px;
   padding: 18px;
   background: #fff;
-  box-shadow: 0 12px 30px rgba(29, 53, 87, 0.14);
+  box-shadow: 0 12px 30px rgba(29, 53, 87, 0.18);
+  position: relative;
+  z-index: 2;
 }
 
 .home-map-search__label {
@@ -656,8 +660,22 @@ body.community-modal-open {
   cursor: pointer;
 }
 
+.home-map-search__full-link {
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid #111;
+  color: #111;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  text-decoration: none;
+}
+
 .home-map-search__button:hover,
 .home-map-search__button:focus-visible,
+.home-map-search__full-link:hover,
+.home-map-search__full-link:focus-visible,
 .map-search-form__button:hover,
 .map-search-form__button:focus-visible,
 .map-search-form__clear:hover,
@@ -667,30 +685,51 @@ body.community-modal-open {
   color: #fff;
 }
 
+.home-map-search__status {
+  min-height: 24px;
+  margin: 48px 0 8px;
+  color: #444;
+  font-weight: 600;
+}
+
+.home-map-search__map-wrap {
+  position: relative;
+  overflow: hidden;
+  background: #dfe6ec;
+  box-shadow: 0 18px 42px rgba(29, 53, 87, 0.18);
+}
+
+.home-map-search__map {
+  width: 100%;
+  height: 520px;
+}
+
 .map-search-page {
-  background: #f4f4f4;
-  padding: 48px 20px 64px;
+  background: #f7f7f5;
+  padding: clamp(36px, 5vw, 64px) 20px 64px;
 }
 
 .map-search-layout {
-  max-width: 1280px;
+  max-width: 1440px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
-  gap: 40px;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: clamp(28px, 4vw, 48px);
   align-items: start;
 }
 
 .map-search-sidebar {
   position: sticky;
-  top: 20px;
+  top: 150px;
 }
 
 .map-search-sidebar__title {
   margin: 0 0 14px;
   padding-left: 12px;
   border-left: 2px solid #111;
-  font-size: 34px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .map-search-sidebar__nav {
@@ -699,11 +738,12 @@ body.community-modal-open {
 
 .map-search-sidebar__link {
   display: block;
-  padding: 14px 0;
-  border-bottom: 1px solid #d1d1d1;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid #ddd;
   color: #2a2a2a;
   text-decoration: none;
-  font-size: 31px;
+  font-size: 1.05rem;
+  line-height: 1.35;
 }
 
 .map-search-sidebar__link.active {
@@ -717,21 +757,29 @@ body.community-modal-open {
 .map-search-heading {
   max-width: 980px;
   margin: 0;
-  padding: 0 0 28px;
+  padding: 0 0 30px;
+  background: transparent;
+  color: #111;
+  box-shadow: none;
+  position: static;
+  top: auto;
+  z-index: auto;
   text-align: left;
 }
 
 .map-search-heading h2 {
-  margin: 0 0 14px;
-  color: #111;
-  font-size: 46px;
-  line-height: 1.15;
+  margin: 0 0 1rem;
+  color: #1f1f1f;
+  font-size: clamp(2.2rem, 4vw, 4rem);
+  line-height: 1.05;
+  font-weight: 800;
 }
 
 .map-search-heading p {
-  max-width: 760px;
-  margin: 0 auto;
-  font-size: 18px;
+  max-width: 850px;
+  margin: 0;
+  color: #333;
+  font-size: 1.1rem;
   line-height: 1.6;
 }
 
@@ -742,8 +790,6 @@ body.community-modal-open {
 }
 
 .map-search-form {
-  position: relative;
-  z-index: 2;
   display: grid;
   gap: 10px;
   max-width: 1100px;
@@ -760,7 +806,7 @@ body.community-modal-open {
 .map-search-form__row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 10px;
+  gap: 0.75rem;
   align-items: center;
 }
 
@@ -770,19 +816,31 @@ body.community-modal-open {
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
 }
 
-.map-search-form__clear {
-  background: #fff;
-}
-
 .map-search-form__button,
 .map-search-form__clear {
-  width: 44px;
-  height: 44px;
-  padding: 0;
+  width: auto;
+  min-width: max-content;
+  min-height: 48px;
+  height: auto;
+  padding: 0 1.25rem;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
+  font-size: 1rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.map-search-form__button {
+  background: #fcbf49;
+  border-color: #111;
+}
+
+.map-search-form__clear {
+  background: #fff;
+  border-color: #333;
 }
 
 .map-search-status {
@@ -797,7 +855,7 @@ body.community-modal-open {
   width: 100%;
   max-width: 1100px;
   height: 620px;
-  margin: 0 auto;
+  margin: 0;
   border-radius: 0;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
 }
@@ -1376,8 +1434,13 @@ footer {
     grid-template-columns: 1fr;
   }
 
+  .home-map-search__form {
+    grid-template-columns: 1fr;
+    margin-bottom: 0;
+  }
+
   .map-search-heading h2 {
-    font-size: 36px;
+    font-size: clamp(2.2rem, 4vw, 4rem);
   }
 
   .map-search-layout {
@@ -1391,6 +1454,11 @@ footer {
 
   .map-search-form__row {
     grid-template-columns: 1fr;
+  }
+
+  .map-search-form__button,
+  .map-search-form__clear {
+    width: 100%;
   }
 
   .map-canvas.map-search-canvas {
@@ -1470,8 +1538,21 @@ footer {
     font-size: 28px;
   }
 
+  .home-map-search__copy p {
+    font-size: 16px;
+  }
+
   .home-map-search__form {
     grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .home-map-search__status {
+    margin-top: 0;
+  }
+
+  .home-map-search__map {
+    height: 360px;
   }
 
   .map-search-heading {
@@ -1479,7 +1560,7 @@ footer {
   }
 
   .map-search-heading h2 {
-    font-size: 30px;
+    font-size: clamp(2.2rem, 10vw, 4rem);
   }
 
   .map-search-heading p {
@@ -1487,11 +1568,11 @@ footer {
   }
 
   .map-search-sidebar__title {
-    font-size: 28px;
+    font-size: 1.5rem;
   }
 
   .map-search-sidebar__link {
-    font-size: 23px;
+    font-size: 1.05rem;
   }
 
   .map-search-status {
