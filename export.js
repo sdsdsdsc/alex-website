@@ -20,7 +20,57 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // === Collections we export ===
-const COLLECTIONS = ["posts", "news", "history", "mapPoints", "mapPolygons"];
+const COLLECTIONS = ["posts", "news", "history", "mapPoints", "mapPolygons", "communityPlaces"];
+
+function cleanText(value) {
+  return String(value || "").trim();
+}
+
+function toSafeUrl(value) {
+  if (!value) return "";
+  try {
+    const parsed = new URL(value, window.location.href);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.href;
+    }
+  } catch (err) {
+    console.warn("Invalid URL skipped:", value);
+  }
+  return "";
+}
+
+function hasCoordinates(data) {
+  return Number.isFinite(Number(data?.lat)) && Number.isFinite(Number(data?.lng));
+}
+
+function buildCommunityPlaceJsonLd(data) {
+  const jsonld = {
+    "@context": "https://schema.org",
+    "@type": "Place",
+    name: cleanText(data.title) || "Community place"
+  };
+
+  const description = cleanText(data.description);
+  const category = cleanText(data.category);
+  const location = cleanText(data.location);
+  const imageUrl = toSafeUrl(data.imageUrl);
+  const source = cleanText(data.source);
+
+  if (description) jsonld.description = description;
+  if (category) jsonld.additionalType = category;
+  if (location) jsonld.address = location;
+  if (imageUrl) jsonld.image = imageUrl;
+  if (source) jsonld.sourceOrganization = source;
+  if (hasCoordinates(data)) {
+    jsonld.geo = {
+      "@type": "GeoCoordinates",
+      latitude: Number(data.lat),
+      longitude: Number(data.lng)
+    };
+  }
+
+  return jsonld;
+}
 
 // === Export function ===
 async function exportHeritageJSON() {
@@ -36,7 +86,11 @@ async function exportHeritageJSON() {
       const snapshot = await getDocs(collection(db, col));
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
-        if (data.jsonld) output.push(data.jsonld);
+        if (data.jsonld) {
+          output.push(data.jsonld);
+        } else if (col === "communityPlaces") {
+          output.push(buildCommunityPlaceJsonLd(data));
+        }
       });
     }
 

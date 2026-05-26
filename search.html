@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Search Community Places | Alex's Photo Board</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="search.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#communitySearchMain">Skip to search results</a>
+  <header>
+    <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
+    <nav class="menu-bar" aria-label="Main navigation">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="gallery.html" class="nav-link">Gallery</a>
+      <a href="upload.html" class="nav-link">Upload Image</a>
+      <a href="news.html" class="nav-link">News</a>
+      <a href="history.html" class="nav-link">History</a>
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="search.html" class="nav-link active">Search</a>
+      <a href="export.html" class="nav-link">Export</a>
+    </nav>
+  </header>
+
+  <main id="communitySearchMain" class="community-search-page">
+    <section class="community-search-hero" aria-labelledby="communitySearchTitle">
+      <div class="community-search-hero__inner">
+        <h2 id="communitySearchTitle">Search Community Places</h2>
+        <p>Search sites, buildings, parks, public spaces, heritage places, and community stories.</p>
+        <form class="community-search-form" id="communitySearchForm">
+          <label class="visually-hidden" for="communitySearchInput">Search by name, type, location, tag, or story</label>
+          <input
+            id="communitySearchInput"
+            class="community-search-form__input"
+            name="q"
+            type="search"
+            placeholder="Search by name, type, location, tag, or story"
+          >
+          <button class="community-search-form__button" type="submit">Search</button>
+        </form>
+      </div>
+    </section>
+
+    <div class="community-search-shell">
+      <aside class="community-search-filters" aria-label="Search filters">
+        <div class="community-search-filters__heading">
+          <h3>Filters</h3>
+          <button id="communitySearchClearFilters" type="button">Clear filters</button>
+        </div>
+
+        <fieldset class="community-filter-group">
+          <legend>Category</legend>
+          <label><input type="checkbox" name="category" value="Site"> Site</label>
+          <label><input type="checkbox" name="category" value="Building"> Building</label>
+          <label><input type="checkbox" name="category" value="Park"> Park</label>
+          <label><input type="checkbox" name="category" value="Public Space"> Public Space</label>
+          <label><input type="checkbox" name="category" value="Heritage Place"> Heritage Place</label>
+          <label><input type="checkbox" name="category" value="Community Facility"> Community Facility</label>
+        </fieldset>
+
+        <fieldset class="community-filter-group">
+          <legend>Location</legend>
+          <div id="communityLocationFilters" class="community-filter-group__dynamic">
+            <p>No locations available yet.</p>
+          </div>
+        </fieldset>
+
+        <fieldset class="community-filter-group">
+          <legend>Period</legend>
+          <div id="communityPeriodFilters" class="community-filter-group__dynamic">
+            <p>No periods available yet.</p>
+          </div>
+        </fieldset>
+      </aside>
+
+      <section class="community-search-results" aria-label="Community place results">
+        <div class="community-results-toolbar">
+          <p id="communitySearchCount" class="community-results-count" aria-live="polite">Loading community place records...</p>
+          <div class="community-results-controls">
+            <label for="communitySearchSort">Sort by</label>
+            <select id="communitySearchSort">
+              <option value="relevance">Relevance</option>
+              <option value="title">Title A-Z</option>
+              <option value="newest">Newest</option>
+            </select>
+            <div class="community-view-toggle" role="group" aria-label="Result view">
+              <button class="active" id="communityListView" type="button" aria-pressed="true">List view</button>
+              <button id="communityGridView" type="button" aria-pressed="false">Grid view</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="communitySearchEmpty" class="community-search-empty" hidden></div>
+        <div id="communitySearchResults" class="community-result-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    © 2025 Alex's Photo Board | All Rights Reserved
+  </footer>
+</body>
+</html>

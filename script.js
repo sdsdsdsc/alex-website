@@ -89,18 +89,6 @@ imageCaptionToggle?.addEventListener("click", () => {
   imageCaptionContent?.setAttribute("aria-hidden", String(!isOpen));
 });
 
-// === Homepage map search ===
-const homeMapSearchForm = document.getElementById("homeMapSearchForm");
-const homeMapSearchInput = document.getElementById("homeMapSearchInput");
-
-homeMapSearchForm?.addEventListener("submit", (event) => {
-  const searchTerm = homeMapSearchInput?.value.trim() || "";
-  if (!searchTerm) {
-    event.preventDefault();
-    window.location.href = "map.html";
-  }
-});
-
 // === Connecting Communities modal ===
 const communityCards = document.querySelectorAll(".community-connect__card");
 const communityModal = document.querySelector(".community-modal");

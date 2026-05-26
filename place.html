@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Community Place Record | Alex's Photo Board</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="place.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#placeRecordMain">Skip to record</a>
+  <header>
+    <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
+    <nav class="menu-bar" aria-label="Main navigation">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="gallery.html" class="nav-link">Gallery</a>
+      <a href="upload.html" class="nav-link">Upload Image</a>
+      <a href="news.html" class="nav-link">News</a>
+      <a href="history.html" class="nav-link">History</a>
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="search.html" class="nav-link active">Search</a>
+      <a href="export.html" class="nav-link">Export</a>
+    </nav>
+  </header>
+
+  <main id="placeRecordMain" class="place-record-page">
+    <nav class="place-breadcrumb" aria-label="Breadcrumb">
+      <a href="index.html">Home</a>
+      <span aria-hidden="true">›</span>
+      <a href="search.html">Search</a>
+      <span aria-hidden="true">›</span>
+      <span id="placeBreadcrumbTitle">Record</span>
+    </nav>
+
+    <section class="place-record-hero" aria-labelledby="placeTitle">
+      <p id="placeRecordStatus" class="place-record-status" role="status" aria-live="polite">Loading community place record...</p>
+      <p id="placeCategoryKicker" class="place-record-kicker"></p>
+      <h2 id="placeTitle">Community place record</h2>
+    </section>
+
+    <section id="placeRecordContent" class="place-record-content" hidden>
+      <div class="place-record-main">
+        <h3>Overview</h3>
+        <p id="placeDescription"></p>
+        <div id="placeTags" class="place-tags"></div>
+        <div id="placeActions" class="place-actions"></div>
+      </div>
+
+      <aside class="place-record-aside" aria-label="Record details">
+        <div id="placeImageWrap" class="place-record-image"></div>
+        <dl id="placeMetadata" class="place-metadata"></dl>
+      </aside>
+    </section>
+  </main>
+
+  <footer>
+    © 2025 Alex's Photo Board | All Rights Reserved
+  </footer>
+</body>
+</html>
