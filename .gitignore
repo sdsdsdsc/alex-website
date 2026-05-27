@@ -3,5 +3,6 @@ node_modules/
 
 # Firebase Admin/service account credentials must stay local only.
 serviceAccountKey.json
+firebase-key.json
 *.service-account.json
 firebase-adminsdk*.json
