@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { applicationDefault, getApps, initializeApp } from "firebase-admin/app";
-import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { GoogleAuth } from "google-auth-library";
 
 const [, , inputPath] = process.argv;
 
@@ -58,7 +57,7 @@ function normalizeRecord(rawRecord) {
     grade: asOptionalString(rawRecord.grade),
     source: asOptionalString(rawRecord.source),
     relatedArticle: asOptionalString(rawRecord.relatedArticle),
-    createdAt: FieldValue.serverTimestamp()
+    createdAt: new Date()
   };
 
   const lat = asOptionalNumber(rawRecord.lat, "lat");
@@ -73,17 +72,73 @@ const rawJson = await readFile(inputPath, "utf8");
 const rawRecord = JSON.parse(rawJson);
 const { id, record } = normalizeRecord(rawRecord);
 
-if (getApps().length === 0) {
-  initializeApp({
-    credential: applicationDefault()
-  });
+function toFirestoreValue(value) {
+  if (value === undefined) return undefined;
+  if (value === null) return { nullValue: null };
+  if (Array.isArray(value)) {
+    return {
+      arrayValue: {
+        values: value.map(toFirestoreValue).filter(Boolean)
+      }
+    };
+  }
+  if (typeof value === "number") {
+    return { doubleValue: value };
+  }
+  if (typeof value === "boolean") {
+    return { booleanValue: value };
+  }
+  if (value instanceof Date) {
+    return { timestampValue: value.toISOString() };
+  }
+  return { stringValue: cleanText(value) };
 }
 
-const db = getFirestore();
-db.settings({ preferRest: true });
+function toFirestoreFields(recordData) {
+  return Object.fromEntries(
+    Object.entries(recordData)
+      .map(([key, value]) => [key, toFirestoreValue(value)])
+      .filter(([, value]) => value !== undefined)
+  );
+}
 
 try {
-  await db.collection("communityPlaces").doc(id).set(record, { merge: true });
+  const auth = new GoogleAuth({
+    scopes: ["https://www.googleapis.com/auth/datastore"]
+  });
+  const client = await auth.getClient();
+  const projectId = await auth.getProjectId();
+  const accessToken = await client.getAccessToken();
+  const token = typeof accessToken === "string" ? accessToken : accessToken?.token;
+
+  if (!projectId) {
+    fail("Could not determine the Firebase project ID from GOOGLE_APPLICATION_CREDENTIALS.");
+  }
+  if (!token) {
+    fail("Could not get an access token from GOOGLE_APPLICATION_CREDENTIALS.");
+  }
+
+  const documentPath = `projects/${projectId}/databases/(default)/documents/communityPlaces/${encodeURIComponent(id)}`;
+  const url = `https://firestore.googleapis.com/v1/${documentPath}`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ fields: toFirestoreFields(record) }),
+    signal: controller.signal
+  });
+  clearTimeout(timeout);
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Firestore REST request failed with HTTP ${response.status}: ${body}`);
+  }
+
   console.log(`Imported communityPlaces/${id}`);
 } catch (err) {
   console.error(`Failed to import communityPlaces/${id}.`);
