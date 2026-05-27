@@ -80,6 +80,14 @@ if (getApps().length === 0) {
 }
 
 const db = getFirestore();
-await db.collection("communityPlaces").doc(id).set(record, { merge: true });
+db.settings({ preferRest: true });
 
-console.log(`Imported communityPlaces/${id}`);
+try {
+  await db.collection("communityPlaces").doc(id).set(record, { merge: true });
+  console.log(`Imported communityPlaces/${id}`);
+} catch (err) {
+  console.error(`Failed to import communityPlaces/${id}.`);
+  console.error("Check that GOOGLE_APPLICATION_CREDENTIALS points to a local service account key and that this computer can reach firestore.googleapis.com.");
+  console.error(err?.message || err);
+  process.exit(1);
+}
