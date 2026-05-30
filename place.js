@@ -51,9 +51,22 @@ function hasCoordinates(place) {
   return Number.isFinite(place?.lat) && Number.isFinite(place?.lng);
 }
 
+function normalizeCoordinate(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : null;
+}
+
 function getTags(place) {
   if (Array.isArray(place?.tags)) return place.tags.map(cleanText).filter(Boolean);
   return cleanText(place?.tags).split(",").map(cleanText).filter(Boolean);
+}
+
+function hasUsableJsonLd(value) {
+  return value !== null
+    && typeof value === "object"
+    && !Array.isArray(value)
+    && Object.keys(value).length > 0;
 }
 
 function formatDate(createdAt) {
@@ -133,10 +146,12 @@ function renderActions(place) {
 }
 
 function generatePlaceJsonLd(place) {
+  const tags = getTags(place);
   const jsonld = {
     "@context": "https://schema.org",
     "@type": "Place",
-    name: cleanText(place.title) || "Community place"
+    name: cleanText(place.title) || "Community place",
+    url: window.location.href
   };
 
   const description = cleanText(place.description);
@@ -147,8 +162,12 @@ function generatePlaceJsonLd(place) {
 
   if (description) jsonld.description = description;
   if (category) jsonld.additionalType = category;
-  if (location) jsonld.address = location;
+  if (location) {
+    jsonld.address = location;
+    jsonld.location = location;
+  }
   if (imageUrl) jsonld.image = imageUrl;
+  if (tags.length > 0) jsonld.keywords = tags.join(", ");
   if (source) jsonld.sourceOrganization = source;
   if (hasCoordinates(place)) {
     jsonld.geo = {
@@ -162,7 +181,7 @@ function generatePlaceJsonLd(place) {
 }
 
 function injectJsonLd(place) {
-  const jsonld = place.jsonld && typeof place.jsonld === "object" ? place.jsonld : generatePlaceJsonLd(place);
+  const jsonld = hasUsableJsonLd(place.jsonld) ? place.jsonld : generatePlaceJsonLd(place);
   let script = document.getElementById("place-jsonld");
   if (!script) {
     script = document.createElement("script");
@@ -213,11 +232,12 @@ async function loadPlace() {
       if (els.status) els.status.textContent = "Community place record not found.";
       return;
     }
+    const data = snapshot.data();
     renderPlace({
       id: snapshot.id,
-      ...snapshot.data(),
-      lat: Number(snapshot.data().lat),
-      lng: Number(snapshot.data().lng)
+      ...data,
+      lat: normalizeCoordinate(data.lat),
+      lng: normalizeCoordinate(data.lng)
     });
   } catch (err) {
     console.error("Failed to load community place:", err);
