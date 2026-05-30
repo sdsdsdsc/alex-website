@@ -1,0 +1,6 @@
+serviceAccountKey.json
+*.service-account.json
+firebase-adminsdk*.json
+.DS_Store
+node_modules/
+data/communityPlaces.json
