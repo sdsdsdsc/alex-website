@@ -47,34 +47,67 @@
     </section>
 
     <div id="placeRecordContent" class="place-record-content" hidden>
-      <nav class="place-record-tabs" aria-label="Record sections">
-        <a class="place-record-tab active" href="#overview" aria-current="page">Overview</a>
-        <a class="place-record-tab" href="#comments-photos">Comments &amp; Photos</a>
+      <nav class="place-record-tabs" role="tablist" aria-label="Record sections">
+        <a
+          id="overviewTab"
+          class="place-record-tab active"
+          href="?section=overview#overview-panel"
+          role="tab"
+          aria-selected="true"
+          aria-controls="overview-panel"
+        >Overview</a>
+        <a
+          id="commentsPhotosTab"
+          class="place-record-tab"
+          href="?section=comments-photos#comments-photos-panel"
+          role="tab"
+          aria-selected="false"
+          aria-controls="comments-photos-panel"
+        >Comments and Photos</a>
       </nav>
 
-      <section id="overview" class="place-record-section place-overview" aria-labelledby="overviewTitle">
-        <div class="place-overview__text">
-          <h3 id="overviewTitle">Overview</h3>
-          <p id="placeDescription"></p>
-          <div id="placeTags" class="place-tags"></div>
-          <dl id="placeMetadata" class="place-metadata"></dl>
-          <div id="placeActions" class="place-actions"></div>
+      <div id="overview-panel" class="place-tab-panel" role="tabpanel" aria-labelledby="overviewTab">
+        <section id="overview" class="place-record-section place-overview" aria-labelledby="overviewTitle">
+          <div class="place-overview__text">
+            <h3 id="overviewTitle">Overview</h3>
+            <p id="placeDescription"></p>
+            <div id="placeTags" class="place-tags"></div>
+            <dl id="placeMetadata" class="place-metadata"></dl>
+            <div id="placeActions" class="place-actions"></div>
+          </div>
+
+          <figure class="place-overview__media">
+            <div id="placeImageWrap" class="place-record-image"></div>
+            <figcaption id="placeImageCredit" class="place-image-credit"></figcaption>
+          </figure>
+        </section>
+
+        <section id="location" class="place-record-section place-location" aria-labelledby="locationTitle">
+          <h3 id="locationTitle">Location</h3>
+          <div id="placeLocationContent" class="place-location__content"></div>
+        </section>
+      </div>
+
+      <section
+        id="comments-photos-panel"
+        class="place-tab-panel place-comments-panel"
+        role="tabpanel"
+        aria-labelledby="commentsPhotosTab"
+        hidden
+      >
+        <div class="place-comments-panel__main">
+          <h3 id="commentsPhotosTitle">Add Comments and Photos</h3>
+          <p>Share photographs, memories, and local knowledge connected to this community place.</p>
+          <div class="place-comments-empty" role="status">
+            No comments or photos have been added to this record yet.
+          </div>
         </div>
 
-        <figure class="place-overview__media">
-          <div id="placeImageWrap" class="place-record-image"></div>
-          <figcaption id="placeImageCredit" class="place-image-credit"></figcaption>
-        </figure>
-      </section>
-
-      <section id="location" class="place-record-section place-location" aria-labelledby="locationTitle">
-        <h3 id="locationTitle">Location</h3>
-        <div id="placeLocationContent" class="place-location__content"></div>
-      </section>
-
-      <section id="comments-photos" class="place-record-section place-comments" aria-labelledby="commentsPhotosTitle">
-        <h3 id="commentsPhotosTitle">Comments &amp; Photos</h3>
-        <p>Community comments and photo contributions will appear here in a future version.</p>
+        <aside class="place-comments-panel__notice" aria-labelledby="contributionsNoticeTitle">
+          <h4 id="contributionsNoticeTitle">User contributions</h4>
+          <p>These contributions are provided by community members and may not represent the official record for this place.</p>
+          <p>A record-specific contribution system will be added later.</p>
+        </aside>
       </section>
     </div>
   </main>

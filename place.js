@@ -30,10 +30,13 @@ const els = {
   imageWrap: document.getElementById("placeImageWrap"),
   imageCredit: document.getElementById("placeImageCredit"),
   locationContent: document.getElementById("placeLocationContent"),
-  metadata: document.getElementById("placeMetadata")
+  metadata: document.getElementById("placeMetadata"),
+  tabs: Array.from(document.querySelectorAll(".place-record-tab")),
+  panels: Array.from(document.querySelectorAll(".place-tab-panel"))
 };
 
 let placeMap = null;
+const validSections = new Set(["overview", "comments-photos"]);
 
 function cleanText(value) {
   return String(value || "").trim();
@@ -93,6 +96,73 @@ function buildMapUrl(place) {
     return `map.html?lat=${encodeURIComponent(place.lat)}&lng=${encodeURIComponent(place.lng)}`;
   }
   return `map.html?search=${encodeURIComponent(title)}`;
+}
+
+function getSectionFromUrl() {
+  const section = new URLSearchParams(window.location.search).get("section");
+  return validSections.has(section) ? section : "overview";
+}
+
+function buildSectionUrl(section) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("section", section);
+  url.hash = section === "comments-photos" ? "comments-photos-panel" : "overview-panel";
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+function setActiveSection(section, options = {}) {
+  const activeSection = validSections.has(section) ? section : "overview";
+
+  els.tabs.forEach((tab) => {
+    const tabSection = tab.dataset.section;
+    const isActive = tabSection === activeSection;
+    tab.classList.toggle("active", isActive);
+    tab.setAttribute("aria-selected", String(isActive));
+    tab.setAttribute("tabindex", isActive ? "0" : "-1");
+    if (isActive) {
+      tab.setAttribute("aria-current", "page");
+    } else {
+      tab.removeAttribute("aria-current");
+    }
+  });
+
+  els.panels.forEach((panel) => {
+    panel.hidden = panel.dataset.section !== activeSection;
+  });
+
+  if (activeSection === "overview" && placeMap) {
+    window.setTimeout(() => placeMap.invalidateSize(), 0);
+  }
+
+  if (!options.skipHistory) {
+    window.history.replaceState({}, "", buildSectionUrl(activeSection));
+  }
+}
+
+function setupTabs() {
+  els.tabs.forEach((tab) => {
+    const controls = tab.getAttribute("aria-controls");
+    const panel = controls ? document.getElementById(controls) : null;
+    const section = controls === "comments-photos-panel" ? "comments-photos" : "overview";
+    tab.dataset.section = section;
+    if (panel) panel.dataset.section = section;
+    tab.href = buildSectionUrl(section);
+
+    tab.addEventListener("click", (event) => {
+      event.preventDefault();
+      setActiveSection(section);
+    });
+
+    tab.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      event.preventDefault();
+      const currentIndex = els.tabs.indexOf(tab);
+      const offset = event.key === "ArrowRight" ? 1 : -1;
+      const nextTab = els.tabs[(currentIndex + offset + els.tabs.length) % els.tabs.length];
+      nextTab.focus();
+      setActiveSection(nextTab.dataset.section);
+    });
+  });
 }
 
 function appendMetadata(label, value) {
@@ -299,6 +369,7 @@ function renderPlace(place) {
   renderActions(place);
   renderLocation(place);
   injectJsonLd(place);
+  setActiveSection(getSectionFromUrl(), { skipHistory: true });
 
   if (els.status) els.status.textContent = "";
   if (els.content) els.content.hidden = false;
@@ -330,4 +401,5 @@ async function loadPlace() {
   }
 }
 
+setupTabs();
 loadPlace();
