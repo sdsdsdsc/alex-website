@@ -8,6 +8,8 @@
   <title>Community Place Record | Alex's Photo Board</title>
   <script id="place-jsonld" type="application/ld+json">{}</script>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin"></script>
   <script type="module" src="place.js" defer></script>
 </head>
 <body>
@@ -37,23 +39,44 @@
 
     <section class="place-record-hero" aria-labelledby="placeTitle">
       <p id="placeRecordStatus" class="place-record-status" role="status" aria-live="polite">Loading community place record...</p>
-      <p id="placeCategoryKicker" class="place-record-kicker"></p>
-      <h2 id="placeTitle">Community place record</h2>
-    </section>
-
-    <section id="placeRecordContent" class="place-record-content" hidden>
-      <div class="place-record-main">
-        <h3>Overview</h3>
-        <p id="placeDescription"></p>
-        <div id="placeTags" class="place-tags"></div>
-        <div id="placeActions" class="place-actions"></div>
+      <div class="place-record-hero__inner">
+        <p id="placeCategoryKicker" class="place-record-kicker"></p>
+        <h2 id="placeTitle">Community place record</h2>
+        <p id="placeHeroLocation" class="place-record-location"></p>
       </div>
-
-      <aside class="place-record-aside" aria-label="Record details">
-        <div id="placeImageWrap" class="place-record-image"></div>
-        <dl id="placeMetadata" class="place-metadata"></dl>
-      </aside>
     </section>
+
+    <div id="placeRecordContent" class="place-record-content" hidden>
+      <nav class="place-record-tabs" aria-label="Record sections">
+        <a class="place-record-tab active" href="#overview" aria-current="page">Overview</a>
+        <a class="place-record-tab" href="#comments-photos">Comments &amp; Photos</a>
+      </nav>
+
+      <section id="overview" class="place-record-section place-overview" aria-labelledby="overviewTitle">
+        <div class="place-overview__text">
+          <h3 id="overviewTitle">Overview</h3>
+          <p id="placeDescription"></p>
+          <div id="placeTags" class="place-tags"></div>
+          <dl id="placeMetadata" class="place-metadata"></dl>
+          <div id="placeActions" class="place-actions"></div>
+        </div>
+
+        <figure class="place-overview__media">
+          <div id="placeImageWrap" class="place-record-image"></div>
+          <figcaption id="placeImageCredit" class="place-image-credit"></figcaption>
+        </figure>
+      </section>
+
+      <section id="location" class="place-record-section place-location" aria-labelledby="locationTitle">
+        <h3 id="locationTitle">Location</h3>
+        <div id="placeLocationContent" class="place-location__content"></div>
+      </section>
+
+      <section id="comments-photos" class="place-record-section place-comments" aria-labelledby="commentsPhotosTitle">
+        <h3 id="commentsPhotosTitle">Comments &amp; Photos</h3>
+        <p>Community comments and photo contributions will appear here in a future version.</p>
+      </section>
+    </div>
   </main>
 
   <footer>

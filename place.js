@@ -22,13 +22,18 @@ const els = {
   content: document.getElementById("placeRecordContent"),
   title: document.getElementById("placeTitle"),
   kicker: document.getElementById("placeCategoryKicker"),
+  heroLocation: document.getElementById("placeHeroLocation"),
   breadcrumbTitle: document.getElementById("placeBreadcrumbTitle"),
   description: document.getElementById("placeDescription"),
   tags: document.getElementById("placeTags"),
   actions: document.getElementById("placeActions"),
   imageWrap: document.getElementById("placeImageWrap"),
+  imageCredit: document.getElementById("placeImageCredit"),
+  locationContent: document.getElementById("placeLocationContent"),
   metadata: document.getElementById("placeMetadata")
 };
+
+let placeMap = null;
 
 function cleanText(value) {
   return String(value || "").trim();
@@ -116,6 +121,28 @@ function renderImage(place) {
   els.imageWrap.appendChild(placeholder);
 }
 
+function renderImageCredit(place) {
+  if (!els.imageCredit) return;
+  const source = cleanText(place.source) || "Alex's Photo Board";
+  const contributor = cleanText(place.imageCredit) || "Not specified";
+  els.imageCredit.textContent = "";
+
+  [
+    ["Image source", source],
+    ["Contributor", contributor]
+  ].forEach(([label, value]) => {
+    const line = document.createElement("span");
+    const strong = document.createElement("strong");
+    strong.textContent = `${label}: `;
+    line.append(strong, value);
+    els.imageCredit.appendChild(line);
+  });
+
+  const note = document.createElement("span");
+  note.textContent = "This image is part of the community place record.";
+  els.imageCredit.appendChild(note);
+}
+
 function renderTags(place) {
   if (!els.tags) return;
   els.tags.textContent = "";
@@ -145,30 +172,82 @@ function renderActions(place) {
   }
 }
 
+function renderLocation(place) {
+  if (!els.locationContent) return;
+  els.locationContent.textContent = "";
+
+  if (!hasCoordinates(place)) {
+    const message = document.createElement("p");
+    message.className = "place-location__message";
+    message.textContent = "Location coordinates are not available yet.";
+
+    const fallbackLink = document.createElement("a");
+    fallbackLink.className = "place-location__button";
+    fallbackLink.href = buildMapUrl(place);
+    fallbackLink.textContent = "Search on full map";
+
+    els.locationContent.append(message, fallbackLink);
+    return;
+  }
+
+  const mapEl = document.createElement("div");
+  mapEl.id = "placeLocationMap";
+  mapEl.className = "place-location__map";
+
+  const coords = document.createElement("p");
+  coords.className = "place-location__coords";
+  coords.textContent = `Latitude ${place.lat}, Longitude ${place.lng}`;
+
+  const mapLink = document.createElement("a");
+  mapLink.className = "place-location__button";
+  mapLink.href = buildMapUrl(place);
+  mapLink.textContent = "View on full map";
+
+  els.locationContent.append(mapEl, coords, mapLink);
+
+  if (!window.L) {
+    mapEl.textContent = "Map library could not be loaded.";
+    return;
+  }
+
+  if (placeMap) {
+    placeMap.remove();
+    placeMap = null;
+  }
+
+  placeMap = L.map(mapEl).setView([place.lat, place.lng], 15);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: "&copy; OpenStreetMap contributors"
+  }).addTo(placeMap);
+  L.marker([place.lat, place.lng]).addTo(placeMap)
+    .bindPopup(cleanText(place.title) || "Community place");
+}
+
 function generatePlaceJsonLd(place) {
   const tags = getTags(place);
+  const title = cleanText(place.title) || "Community place";
+  const description = cleanText(place.description) || "Community place record from Alex's Photo Board.";
+  const category = cleanText(place.category) || "Community place";
+  const location = cleanText(place.location) || "Not specified";
+  const source = cleanText(place.source) || "Alex's Photo Board";
   const jsonld = {
     "@context": "https://schema.org",
     "@type": "Place",
-    name: cleanText(place.title) || "Community place",
-    url: window.location.href
+    name: title,
+    url: window.location.href,
+    description,
+    additionalType: category,
+    category,
+    address: location,
+    location,
+    keywords: tags.length > 0 ? tags.join(", ") : category,
+    sourceOrganization: source
   };
 
-  const description = cleanText(place.description);
-  const category = cleanText(place.category);
-  const location = cleanText(place.location);
   const imageUrl = toSafeUrl(place.imageUrl);
-  const source = cleanText(place.source);
 
-  if (description) jsonld.description = description;
-  if (category) jsonld.additionalType = category;
-  if (location) {
-    jsonld.address = location;
-    jsonld.location = location;
-  }
   if (imageUrl) jsonld.image = imageUrl;
-  if (tags.length > 0) jsonld.keywords = tags.join(", ");
-  if (source) jsonld.sourceOrganization = source;
   if (hasCoordinates(place)) {
     jsonld.geo = {
       "@type": "GeoCoordinates",
@@ -181,7 +260,10 @@ function generatePlaceJsonLd(place) {
 }
 
 function injectJsonLd(place) {
-  const jsonld = hasUsableJsonLd(place.jsonld) ? place.jsonld : generatePlaceJsonLd(place);
+  const generatedJsonLd = generatePlaceJsonLd(place);
+  const jsonld = hasUsableJsonLd(place.jsonld)
+    ? { ...generatedJsonLd, ...place.jsonld }
+    : generatedJsonLd;
   let script = document.getElementById("place-jsonld");
   if (!script) {
     script = document.createElement("script");
@@ -198,6 +280,7 @@ function renderPlace(place) {
   if (els.title) els.title.textContent = title;
   if (els.breadcrumbTitle) els.breadcrumbTitle.textContent = title;
   if (els.kicker) els.kicker.textContent = cleanText(place.category) || "Community place";
+  if (els.heroLocation) els.heroLocation.textContent = cleanText(place.location);
   if (els.description) els.description.textContent = cleanText(place.description) || "No overview has been added yet.";
 
   if (els.metadata) {
@@ -211,8 +294,10 @@ function renderPlace(place) {
   }
 
   renderImage(place);
+  renderImageCredit(place);
   renderTags(place);
   renderActions(place);
+  renderLocation(place);
   injectJsonLd(place);
 
   if (els.status) els.status.textContent = "";

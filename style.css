@@ -1984,8 +1984,8 @@ footer {
 }
 
 .place-breadcrumb,
-.place-record-hero,
-.place-record-content {
+.place-record-content,
+.place-record-hero__inner {
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
 }
@@ -2004,19 +2004,25 @@ footer {
 }
 
 .place-record-hero {
-  padding: clamp(34px, 5vw, 64px) 0 30px;
+  width: 100%;
+  margin-top: 22px;
+  padding: clamp(34px, 5vw, 66px) 0;
+  background: #17475b;
+  color: #fff;
 }
 
 .place-record-status {
-  margin: 0 0 12px;
-  color: #555;
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto 14px;
+  color: #eef6f7;
   font-weight: 700;
 }
 
 .place-record-kicker {
   margin: 0 0 12px;
-  color: #17475b;
+  color: #fcbf49;
   font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -2027,31 +2033,77 @@ footer {
   line-height: 1.04;
 }
 
+.place-record-location {
+  max-width: 760px;
+  margin: 18px 0 0;
+  color: #e6f0f2;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 700;
+}
+
 .place-record-content {
+  padding-top: 34px;
+}
+
+.place-record-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 44px;
+}
+
+.place-record-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 150px;
+  min-height: 58px;
+  padding: 0 18px;
+  border: 1px solid #2f7a54;
+  background: #fff;
+  color: #17475b;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+}
+
+.place-record-tab.active,
+.place-record-tab:hover,
+.place-record-tab:focus-visible {
+  background: #2f7a54;
+  color: #fff;
+}
+
+.place-record-section {
+  margin-bottom: clamp(44px, 6vw, 72px);
+}
+
+.place-overview {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
-  gap: clamp(28px, 4vw, 54px);
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 470px);
+  gap: clamp(30px, 5vw, 64px);
   align-items: start;
 }
 
-.place-record-main h3 {
+.place-record-section h3 {
   margin: 0 0 18px;
   font-size: clamp(1.7rem, 3vw, 2.5rem);
 }
 
-.place-record-main p {
+.place-overview__text p,
+.place-comments p,
+.place-location__message {
   margin: 0 0 22px;
   font-size: 1.1rem;
   line-height: 1.7;
 }
 
-.place-record-aside {
-  display: grid;
-  gap: 20px;
+.place-overview__media {
+  margin: 0;
 }
 
 .place-record-image {
-  min-height: 280px;
+  min-height: 320px;
   background: #dfe6ec;
   border: 8px solid #2f7a54;
 }
@@ -2060,12 +2112,25 @@ footer {
   display: block;
   width: 100%;
   height: 100%;
-  min-height: 280px;
+  min-height: 320px;
   object-fit: cover;
 }
 
+.place-image-credit {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  color: #333;
+  font-size: 0.96rem;
+  line-height: 1.5;
+}
+
+.place-image-credit span {
+  display: block;
+}
+
 .place-metadata {
-  margin: 0;
+  margin: 28px 0 0;
   display: grid;
   grid-template-columns: minmax(120px, auto) minmax(0, 1fr);
   background: #fff;
@@ -2087,19 +2152,79 @@ footer {
   color: #333;
 }
 
+.place-location__content {
+  display: grid;
+  gap: 14px;
+}
+
+.place-location__map {
+  width: 100%;
+  height: min(56vw, 520px);
+  min-height: 340px;
+  overflow: hidden;
+  background: #dfe6ec;
+  border-top: 5px solid #17475b;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
+}
+
+.place-location__coords {
+  margin: 0;
+  color: #333;
+  font-weight: 700;
+}
+
+.place-location__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #17475b;
+  background: #17475b;
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.place-location__button:hover,
+.place-location__button:focus-visible {
+  background: #fcbf49;
+  color: #111;
+}
+
+.place-comments {
+  max-width: 760px;
+}
+
 @media (max-width: 800px) {
   .community-search-hero__inner,
   .community-search-shell,
   .place-breadcrumb,
-  .place-record-hero,
+  .place-record-hero__inner,
   .place-record-content {
     width: min(100% - 32px, 1180px);
   }
 
   .community-search-form,
   .community-search-shell,
-  .place-record-content {
+  .place-overview {
     grid-template-columns: 1fr;
+  }
+
+  .place-record-status {
+    width: min(100% - 32px, 1180px);
+  }
+
+  .place-record-tabs {
+    gap: 8px;
+    margin-bottom: 34px;
+  }
+
+  .place-record-tab {
+    flex: 1 1 150px;
+    min-width: 0;
+    min-height: 52px;
   }
 
   .community-search-form__button {
@@ -2140,5 +2265,10 @@ footer {
 
   .place-metadata dd {
     padding-top: 0;
+  }
+
+  .place-location__map {
+    height: 360px;
+    min-height: 300px;
   }
 }
