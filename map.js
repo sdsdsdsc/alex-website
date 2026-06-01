@@ -15,7 +15,7 @@ import {
 
 // === Firebase Config ===
 const firebaseConfig = {
-  apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
+  apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
   authDomain: "alexs-community-efcd8.firebaseapp.com",
   projectId: "alexs-community-efcd8",
   storageBucket: "alexs-community-efcd8.firebasestorage.app",
