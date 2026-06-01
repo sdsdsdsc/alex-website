@@ -1,6 +1,10 @@
 // === Import Firebase ===
 import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
   getFirestore,
   collection,
   addDoc,
@@ -21,6 +25,26 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+function buildLoginUrl() {
+  const loginUrl = new URL("admin-login.html", window.location.href);
+  loginUrl.searchParams.set("next", `${window.location.pathname}${window.location.search}`);
+  return loginUrl.href;
+}
+
+function redirectToAdminLogin() {
+  window.location.href = buildLoginUrl();
+}
+
+function requireAdminUser() {
+  const user = auth.currentUser;
+  if (!user) {
+    redirectToAdminLogin();
+    throw new Error("Authentication required for map edits.");
+  }
+  return user;
+}
 
 function escapeHTML(value) {
   return String(value)
@@ -242,6 +266,7 @@ function initCommunityMap({
   const statusEl = statusId ? document.getElementById(statusId) : null;
   const fullMapLink = fullMapLinkId ? document.getElementById(fullMapLinkId) : null;
   const urlParams = new URLSearchParams(window.location.search);
+  const isAdminMode = urlParams.get("admin") === "true";
   const initialSearchTerm = urlParams.get("search") || "";
   const requestedLat = Number(urlParams.get("lat"));
   const requestedLng = Number(urlParams.get("lng"));
@@ -271,6 +296,12 @@ function initCommunityMap({
 
   if (searchInput && initialSearchTerm) {
     searchInput.value = initialSearchTerm;
+  }
+
+  if (mode === "full" && isAdminMode) {
+    setStatus(allowUpload && allowDrawing
+      ? "Admin editing mode enabled."
+      : "Admin sign-in is required to edit this map.");
   }
 
   if (allowDrawing && L.Control?.Draw) {
@@ -472,6 +503,7 @@ function initCommunityMap({
           if (saveButton) saveButton.disabled = true;
 
           try {
+            requireAdminUser();
             const docRef = await addDoc(collection(db, "mapPoints"), {
               name,
               desc,
@@ -571,6 +603,7 @@ function initCommunityMap({
           if (saveButton) saveButton.disabled = true;
 
           try {
+            requireAdminUser();
             const docRef = await addDoc(collection(db, "mapPolygons"), {
               title,
               desc,
@@ -692,16 +725,46 @@ async function exportJSONLD() {
   }
 }
 
-initCommunityMap({
-  containerId: "map",
-  mode: "full",
-  searchFormId: "mapSearchForm",
-  searchInputId: "mapSearchInput",
-  clearButtonId: "mapSearchClear",
-  statusId: "mapSearchStatus",
-  allowUpload: true,
-  allowDrawing: true
-});
+function initFullMap() {
+  if (!document.getElementById("map")) return;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const isAdminMode = urlParams.get("admin") === "true";
+
+  if (!isAdminMode) {
+    initCommunityMap({
+      containerId: "map",
+      mode: "full",
+      searchFormId: "mapSearchForm",
+      searchInputId: "mapSearchInput",
+      clearButtonId: "mapSearchClear",
+      statusId: "mapSearchStatus",
+      allowUpload: false,
+      allowDrawing: false
+    });
+    return;
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      redirectToAdminLogin();
+      return;
+    }
+
+    initCommunityMap({
+      containerId: "map",
+      mode: "full",
+      searchFormId: "mapSearchForm",
+      searchInputId: "mapSearchInput",
+      clearButtonId: "mapSearchClear",
+      statusId: "mapSearchStatus",
+      allowUpload: true,
+      allowDrawing: true
+    });
+  });
+}
+
+initFullMap();
 
 initCommunityMap({
   containerId: "homeMapPreview",

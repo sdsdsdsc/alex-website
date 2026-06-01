@@ -2259,6 +2259,120 @@ footer {
   font-size: 1rem;
 }
 
+.admin-page {
+  min-height: calc(100vh - 180px);
+  display: grid;
+  place-items: start center;
+  padding: 48px 20px;
+  background: #f5f7f8;
+}
+
+.admin-card {
+  width: min(100%, 520px);
+  padding: 28px;
+  background: #fff;
+  border-top: 5px solid #2f7a54;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
+}
+
+.admin-card h2 {
+  margin-top: 0;
+  color: #17475b;
+}
+
+.admin-form {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-form label {
+  font-weight: 800;
+}
+
+.admin-form input {
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid #b9c3c9;
+  border-radius: 4px;
+  font: inherit;
+}
+
+.admin-form button,
+.admin-actions button,
+.admin-actions a,
+.admin-link-button,
+.admin-toolbar button,
+.admin-toolbar a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid #17475b;
+  background: #17475b;
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.admin-form button:hover,
+.admin-form button:focus-visible,
+.admin-actions button:hover,
+.admin-actions button:focus-visible,
+.admin-actions a:hover,
+.admin-actions a:focus-visible,
+.admin-link-button:hover,
+.admin-link-button:focus-visible,
+.admin-toolbar button:hover,
+.admin-toolbar button:focus-visible,
+.admin-toolbar a:hover,
+.admin-toolbar a:focus-visible {
+  background: #fcbf49;
+  color: #111;
+}
+
+.admin-form button:disabled,
+.admin-actions button:disabled,
+.admin-toolbar button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.admin-error {
+  min-height: 1.4em;
+  margin: 0;
+  color: #a21b1b;
+  font-weight: 800;
+}
+
+.admin-status {
+  color: #333;
+  font-weight: 700;
+}
+
+.admin-actions,
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-toolbar {
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.admin-toolbar p {
+  flex: 1 1 220px;
+  margin: 0;
+  color: #333;
+  font-weight: 700;
+}
+
 @media (max-width: 800px) {
   .community-search-hero__inner,
   .community-search-shell,

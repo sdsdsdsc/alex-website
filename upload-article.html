@@ -12,6 +12,11 @@
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
       import {
+        getAuth,
+        onAuthStateChanged,
+        signOut
+      } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+      import {
         getFirestore,
         collection,
         addDoc,
@@ -37,8 +42,34 @@
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
       const storage = getStorage(app);
+      const auth = getAuth(app);
+
+      function buildLoginUrl() {
+        const loginUrl = new URL("admin-login.html", window.location.href);
+        loginUrl.searchParams.set("next", `${window.location.pathname}${window.location.search}`);
+        return loginUrl.href;
+      }
+
+      function redirectToLogin() {
+        window.location.href = buildLoginUrl();
+      }
+
+      function requireAdminUser() {
+        const user = auth.currentUser;
+        if (!user) {
+          redirectToLogin();
+          throw new Error("Authentication required for article publishing.");
+        }
+        return user;
+      }
 
       window.handleUpload = async function () {
+        try {
+          requireAdminUser();
+        } catch (err) {
+          return;
+        }
+
         const title = document.getElementById("articleTitle").value.trim();
         const coverUrlInput = document.getElementById("coverUrl").value.trim();
         const type = document.querySelector('input[name="type"]:checked')?.value;
@@ -50,12 +81,14 @@
         }
 
         try {
+          requireAdminUser();
           // Detect image from Quill or coverUrl
           let coverUrl = coverUrlInput;
 
           // === Upload HTML version for schema:contentUrl ===
           const htmlFile = new Blob([quillHtml], { type: "text/html" });
           const htmlRef = ref(storage, `articles/${Date.now()}_${title.replace(/\s+/g, "_")}.html`);
+          requireAdminUser();
           await uploadBytes(htmlRef, htmlFile);
           const htmlDownloadURL = await getDownloadURL(htmlRef);
 
@@ -81,12 +114,14 @@
           };
 
 // === Upload to Firestore and get the doc reference ===
+requireAdminUser();
 const docRef = await addDoc(collection(db, type), articleData);
 
 // === Generate a public, referenceable page URL ===
 const publicArticleUrl = `https://alexsphotoboard.web.app/article.html?id=${encodeURIComponent(docRef.id)}&type=${encodeURIComponent(type)}`;
 
 // === Update the JSON-LD inside the same document ===
+requireAdminUser();
 await updateDoc(docRef, {
   "jsonld.schema:contentUrl": publicArticleUrl,
   "jsonld.schema:source": "https://alexsphotoboard.web.app/",
@@ -104,6 +139,32 @@ location.reload();
 
       // Wait for DOM & Quill to load before defining toolbar
       window.addEventListener("DOMContentLoaded", () => {
+        const editorContainer = document.getElementById("adminEditor");
+        const authStatus = document.getElementById("authStatus");
+        const signOutButton = document.getElementById("signOutButton");
+        const dashboardLink = document.getElementById("dashboardLink");
+
+        dashboardLink?.setAttribute("href", "admin.html");
+        signOutButton?.addEventListener("click", async () => {
+          signOutButton.disabled = true;
+          try {
+            await signOut(auth);
+            window.location.href = "admin-login.html";
+          } catch (err) {
+            console.error("Sign out failed:", err);
+            signOutButton.disabled = false;
+          }
+        });
+
+        onAuthStateChanged(auth, (user) => {
+          if (!user) {
+            redirectToLogin();
+            return;
+          }
+          if (authStatus) authStatus.textContent = "Signed in for article publishing.";
+          if (editorContainer) editorContainer.hidden = false;
+        });
+
         window.quill = new Quill("#editor", {
           theme: "snow",
           modules: {
@@ -129,12 +190,18 @@ location.reload();
             const file = input.files[0];
             if (!file) return;
 
-            const storageRef = ref(storage, `article-images/${Date.now()}_${file.name}`);
-            await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(storageRef);
+            try {
+              requireAdminUser();
+              const storageRef = ref(storage, `article-images/${Date.now()}_${file.name}`);
+              await uploadBytes(storageRef, file);
+              const downloadURL = await getDownloadURL(storageRef);
 
-            const range = window.quill.getSelection(true);
-            window.quill.insertEmbed(range.index, "image", downloadURL);
+              const range = window.quill.getSelection(true);
+              window.quill.insertEmbed(range.index, "image", downloadURL);
+            } catch (err) {
+              console.error("Image upload failed:", err);
+              alert("Image upload requires an active admin sign-in.");
+            }
           };
           input.click();
         });
@@ -186,7 +253,7 @@ location.reload();
         height: 250px;
         margin-bottom: 25px;
       }
-      button {
+      .article-publish-button {
         display: block;
         width: 140px;
         margin: 10px auto;
@@ -198,7 +265,7 @@ location.reload();
         cursor: pointer;
         font-weight: bold;
       }
-      button:hover {
+      .article-publish-button:hover {
         background-color: #0056b3;
       }
     </style>
@@ -209,8 +276,6 @@ location.reload();
 	      <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
 	      <nav class="menu-bar" aria-label="Main navigation">
 	        <a href="index.html" class="nav-link">Home</a>
-	        <a href="gallery.html" class="nav-link">Gallery</a>
-	        <a href="upload.html" class="nav-link">Upload Image</a>
 	        <a href="news.html" class="nav-link">News</a>
 	        <a href="history.html" class="nav-link">History</a>
 	        <a href="map.html" class="nav-link">Map</a>
@@ -218,7 +283,12 @@ location.reload();
 	        <a href="export.html" class="nav-link">Export</a>
 	      </nav>
 	    </header>
-	    <div class="container">
+	    <div class="container" id="adminEditor" hidden>
+      <div class="admin-toolbar">
+        <p id="authStatus">Checking admin sign-in...</p>
+        <a id="dashboardLink" href="admin.html">Admin Dashboard</a>
+        <button id="signOutButton" type="button">Sign Out</button>
+      </div>
       <h2>Upload a New Article</h2>
 
       <label for="articleTitle">Article Title</label>
@@ -238,7 +308,7 @@ location.reload();
       <label>Article Content (Rich Editor)</label>
       <div id="editor"></div>
 
-      <button onclick="handleUpload()">Publish Article</button>
+      <button class="article-publish-button" onclick="handleUpload()">Publish Article</button>
     </div>
   </body>
 </html>

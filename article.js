@@ -155,7 +155,7 @@ async function loadArticle() {
       return;
     }
 
-    const allowedTypes = new Set(["news", "history", "posts"]);
+    const allowedTypes = new Set(["news", "history"]);
     if (!allowedTypes.has(type)) {
       articleContent.textContent = "Unsupported article type.";
       return;

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Admin Sign In | Alex's Photo Board</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module">
+    import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDr8hSsoad4Ut1v5J1r2f0eSau0msrB6V4",
+      authDomain: "alexs-community-efcd8.firebaseapp.com",
+      projectId: "alexs-community-efcd8",
+      storageBucket: "alexs-community-efcd8.firebasestorage.app",
+      messagingSenderId: "214395622099",
+      appId: "1:214395622099:web:44f99a181741caf3117a26"
+    };
+
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    function getNextPath() {
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get("next") || "admin.html";
+      try {
+        const target = new URL(next, window.location.href);
+        if (target.origin === window.location.origin) {
+          return `${target.pathname}${target.search}${target.hash}`;
+        }
+      } catch (err) {
+        console.warn("Invalid next URL ignored:", next);
+      }
+      return "admin.html";
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("adminLoginForm");
+      const emailInput = document.getElementById("adminEmail");
+      const passwordInput = document.getElementById("adminPassword");
+      const submitButton = document.getElementById("adminLoginButton");
+      const errorEl = document.getElementById("adminLoginError");
+
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          window.location.href = getNextPath();
+        }
+      });
+
+      form?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (errorEl) errorEl.textContent = "";
+        if (submitButton) submitButton.disabled = true;
+
+        try {
+          await signInWithEmailAndPassword(
+            auth,
+            emailInput.value.trim(),
+            passwordInput.value
+          );
+          window.location.href = getNextPath();
+        } catch (err) {
+          console.error("Admin sign-in failed:", err);
+          if (errorEl) errorEl.textContent = "Sign in failed. Check your email and password, then try again.";
+        } finally {
+          if (submitButton) submitButton.disabled = false;
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
+    <nav class="menu-bar" aria-label="Admin navigation">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="news.html" class="nav-link">News</a>
+      <a href="history.html" class="nav-link">History</a>
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="search.html" class="nav-link">Search</a>
+      <a href="export.html" class="nav-link">Export</a>
+    </nav>
+  </header>
+
+  <main class="admin-page">
+    <section class="admin-card" aria-labelledby="adminLoginTitle">
+      <h2 id="adminLoginTitle">Admin Sign In</h2>
+      <form id="adminLoginForm" class="admin-form">
+        <label for="adminEmail">Email</label>
+        <input id="adminEmail" name="email" type="email" autocomplete="username" required>
+
+        <label for="adminPassword">Password</label>
+        <input id="adminPassword" name="password" type="password" autocomplete="current-password" required>
+
+        <p id="adminLoginError" class="admin-error" role="alert" aria-live="polite"></p>
+        <button id="adminLoginButton" type="submit">Sign In</button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

@@ -20,7 +20,7 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // === Collections we export ===
-const COLLECTIONS = ["posts", "news", "history", "mapPoints", "mapPolygons", "communityPlaces"];
+const COLLECTIONS = ["news", "history", "mapPoints", "mapPolygons", "communityPlaces"];
 
 function cleanText(value) {
   return String(value || "").trim();
