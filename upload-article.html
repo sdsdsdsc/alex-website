@@ -20,6 +20,8 @@
         getFirestore,
         collection,
         addDoc,
+        doc,
+        getDoc,
         updateDoc,
         serverTimestamp
       } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -43,6 +45,11 @@
       const db = getFirestore(app);
       const storage = getStorage(app);
       const auth = getAuth(app);
+      const urlParams = new URLSearchParams(window.location.search);
+      const editType = urlParams.get("type");
+      const editId = urlParams.get("id");
+      const allowedArticleTypes = new Set(["news", "history"]);
+      const isEditMode = Boolean(editType && editId);
 
       function buildLoginUrl() {
         const loginUrl = new URL("admin-login.html", window.location.href);
@@ -63,6 +70,91 @@
         return user;
       }
 
+      function getSelectedType() {
+        if (isEditMode) return editType;
+        return document.querySelector('input[name="type"]:checked')?.value;
+      }
+
+      function buildArticleData({ title, coverUrl, quillHtml, htmlDownloadURL, type, includeCreatedAt }) {
+        const publicArticleUrl = isEditMode
+          ? `https://alexsphotoboard.web.app/article.html?id=${encodeURIComponent(editId)}&type=${encodeURIComponent(type)}`
+          : htmlDownloadURL;
+        const data = {
+          title,
+          htmlUrl: htmlDownloadURL,
+          imageUrl: coverUrl || "",
+          content: quillHtml,
+          updatedAt: serverTimestamp(),
+          jsonld: {
+            "@context": {
+              schema: "https://schema.org/",
+              dc: "http://purl.org/dc/elements/1.1/"
+            },
+            "@type": "schema:Article",
+            "schema:name": title,
+            "schema:contentUrl": publicArticleUrl,
+            "schema:image": coverUrl || "",
+            "dc:date": new Date().toISOString(),
+            "schema:source": "https://alexsphotoboard.web.app/",
+            "schema:author": "https://alexsphotoboard.web.app/about.html#alex"
+          }
+        };
+
+        if (includeCreatedAt) {
+          data.createdAt = serverTimestamp();
+        }
+
+        return data;
+      }
+
+      async function uploadArticleHtml(title, quillHtml) {
+        const safeTitle = title.replace(/[^\w.-]+/g, "_");
+        const htmlFile = new Blob([quillHtml], { type: "text/html" });
+        const htmlRef = ref(storage, `articles/${Date.now()}_${safeTitle}.html`);
+        requireAdminUser();
+        await uploadBytes(htmlRef, htmlFile);
+        return getDownloadURL(htmlRef);
+      }
+
+      async function loadArticleForEdit() {
+        if (!isEditMode) return;
+
+        if (!allowedArticleTypes.has(editType)) {
+          alert("Unsupported article type.");
+          window.location.href = "manage-articles.html";
+          return;
+        }
+
+        try {
+          requireAdminUser();
+          const snap = await getDoc(doc(db, editType, editId));
+          if (!snap.exists()) {
+            alert("Article not found.");
+            window.location.href = "manage-articles.html";
+            return;
+          }
+
+          const data = snap.data();
+          document.getElementById("articlePageTitle").textContent = "Edit Article";
+          document.getElementById("articleSubmitButton").textContent = "Save Changes";
+          document.getElementById("articleTitle").value = data.title || "";
+          document.getElementById("coverUrl").value = data.imageUrl || "";
+          window.quill.root.innerHTML = data.content || data.htmlContent || "";
+
+          document.querySelectorAll('input[name="type"]').forEach((input) => {
+            input.checked = input.value === editType;
+            input.disabled = true;
+          });
+
+          const managementLink = document.getElementById("managementLink");
+          if (managementLink) managementLink.hidden = false;
+        } catch (err) {
+          console.error("Article edit load failed:", err);
+          alert("Could not load article for editing.");
+          window.location.href = "manage-articles.html";
+        }
+      }
+
       window.handleUpload = async function () {
         try {
           requireAdminUser();
@@ -72,64 +164,55 @@
 
         const title = document.getElementById("articleTitle").value.trim();
         const coverUrlInput = document.getElementById("coverUrl").value.trim();
-        const type = document.querySelector('input[name="type"]:checked')?.value;
+        const type = getSelectedType();
         const quillHtml = window.quill.root.innerHTML.trim();
 
-        if (!title || !quillHtml || !type) {
+        if (!title || !quillHtml || !allowedArticleTypes.has(type)) {
           alert("⚠️ Please fill in all fields.");
           return;
         }
 
         try {
           requireAdminUser();
-          // Detect image from Quill or coverUrl
           let coverUrl = coverUrlInput;
+          const htmlDownloadURL = await uploadArticleHtml(title, quillHtml);
 
-          // === Upload HTML version for schema:contentUrl ===
-          const htmlFile = new Blob([quillHtml], { type: "text/html" });
-          const htmlRef = ref(storage, `articles/${Date.now()}_${title.replace(/\s+/g, "_")}.html`);
-          requireAdminUser();
-          await uploadBytes(htmlRef, htmlFile);
-          const htmlDownloadURL = await getDownloadURL(htmlRef);
+          if (isEditMode) {
+            const articleData = buildArticleData({
+              title,
+              coverUrl,
+              quillHtml,
+              htmlDownloadURL,
+              type,
+              includeCreatedAt: false
+            });
+            requireAdminUser();
+            await updateDoc(doc(db, type, editId), articleData);
+            alert("✅ Article updated successfully!");
+            window.location.href = "manage-articles.html";
+            return;
+          }
 
-          // === Prepare full article data ===
-          const articleData = {
+          const articleData = buildArticleData({
             title,
-            htmlUrl: htmlDownloadURL,
-            imageUrl: coverUrl || "",
-            content: quillHtml, // ✅ text stored directly in Firestore
-            createdAt: serverTimestamp(),
-            jsonld: {
-              "@context": {
-                schema: "https://schema.org/",
-                dc: "http://purl.org/dc/elements/1.1/"
-              },
-              "@type": "schema:Article",
-              "schema:name": title,
-              "schema:contentUrl": htmlDownloadURL,
-              "schema:image": coverUrl || "",
-              "dc:date": new Date().toISOString(),
-              "schema:source": "Alex's Photo Board (Firebase)"
-            }
-          };
+            coverUrl,
+            quillHtml,
+            htmlDownloadURL,
+            type,
+            includeCreatedAt: true
+          });
 
-// === Upload to Firestore and get the doc reference ===
-requireAdminUser();
-const docRef = await addDoc(collection(db, type), articleData);
+          requireAdminUser();
+          const docRef = await addDoc(collection(db, type), articleData);
+          const publicArticleUrl = `https://alexsphotoboard.web.app/article.html?id=${encodeURIComponent(docRef.id)}&type=${encodeURIComponent(type)}`;
 
-// === Generate a public, referenceable page URL ===
-const publicArticleUrl = `https://alexsphotoboard.web.app/article.html?id=${encodeURIComponent(docRef.id)}&type=${encodeURIComponent(type)}`;
+          requireAdminUser();
+          await updateDoc(docRef, {
+            "jsonld.schema:contentUrl": publicArticleUrl
+          });
 
-// === Update the JSON-LD inside the same document ===
-requireAdminUser();
-await updateDoc(docRef, {
-  "jsonld.schema:contentUrl": publicArticleUrl,
-  "jsonld.schema:source": "https://alexsphotoboard.web.app/",
-  "jsonld.schema:author": "https://alexsphotoboard.web.app/about.html#alex"
-});
-
-alert("✅ Article published successfully!");
-location.reload();
+          alert("✅ Article published successfully!");
+          location.reload();
 
         } catch (err) {
           console.error(err);
@@ -163,6 +246,7 @@ location.reload();
           }
           if (authStatus) authStatus.textContent = "Signed in for article publishing.";
           if (editorContainer) editorContainer.hidden = false;
+          loadArticleForEdit();
         });
 
         window.quill = new Quill("#editor", {
@@ -289,7 +373,7 @@ location.reload();
         <a id="dashboardLink" href="admin.html">Admin Dashboard</a>
         <button id="signOutButton" type="button">Sign Out</button>
       </div>
-      <h2>Upload a New Article</h2>
+      <h2 id="articlePageTitle">Publish a New Article</h2>
 
       <label for="articleTitle">Article Title</label>
       <input type="text" id="articleTitle" placeholder="Enter article title" />
@@ -308,7 +392,8 @@ location.reload();
       <label>Article Content (Rich Editor)</label>
       <div id="editor"></div>
 
-      <button class="article-publish-button" onclick="handleUpload()">Publish Article</button>
+      <button class="article-publish-button" id="articleSubmitButton" onclick="handleUpload()">Publish Article</button>
+      <a class="admin-link-button" id="managementLink" href="manage-articles.html" hidden>Back to Article Management</a>
     </div>
   </body>
 </html>

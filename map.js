@@ -8,9 +8,12 @@ import {
   getFirestore,
   collection,
   addDoc,
+  deleteDoc,
+  doc,
   getDocs,
   query,
-  serverTimestamp
+  serverTimestamp,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // === Firebase Config ===
@@ -117,12 +120,13 @@ function buildFullMapUrl(searchTerm) {
   return `${url.pathname}${url.search}`;
 }
 
-function buildCommunityPopupHtml(record, searchTerm = "") {
+function buildCommunityPopupHtml(record, searchTerm = "", options = {}) {
   const safeTitle = escapeHTML(getTitle(record));
   const safeDesc = escapeHTML(getDescription(record));
   const safeType = escapeHTML(getType(record));
   const safeArticleLink = toSafeUrl(record?.linkedArticle || "");
   const fullMapUrl = buildFullMapUrl(searchTerm);
+  const showAdminPointControls = Boolean(options.showAdminPointControls && record?.id);
 
   let html = `
     <article class="map-point-card">
@@ -138,30 +142,42 @@ function buildCommunityPopupHtml(record, searchTerm = "") {
   html += `
       <a class="map-point-card__link" href="${fullMapUrl}">Open in full map</a>
       <button class="map-point-card__zoom" type="button" data-action="zoom-point">Zoom in</button>
+  `;
+
+  if (showAdminPointControls) {
+    html += `
+      <div class="map-point-card__admin-actions">
+        <button type="button" data-action="edit-point" data-point-id="${escapeHTML(record.id)}">Edit Point</button>
+        <button type="button" data-action="delete-point" data-point-id="${escapeHTML(record.id)}">Delete Point</button>
+      </div>
+    `;
+  }
+
+  html += `
     </article>
   `;
 
   return html;
 }
 
-function buildPointFormHtml() {
+function buildPointFormHtml(point = {}, submitLabel = "Save Point") {
   return `
     <form class="point-form" style="min-width:240px; display:grid; gap:8px;">
       <label style="display:grid; gap:4px;">
         <span style="font-size:12px;">Title</span>
-        <input name="name" required maxlength="100" placeholder="Location title" />
+        <input name="name" required maxlength="100" placeholder="Location title" value="${escapeHTML(point.name || "")}" />
       </label>
       <label style="display:grid; gap:4px;">
         <span style="font-size:12px;">Description</span>
-        <textarea name="desc" required rows="3" maxlength="300" placeholder="Short description"></textarea>
+        <textarea name="desc" required rows="3" maxlength="300" placeholder="Short description">${escapeHTML(point.desc || "")}</textarea>
       </label>
       <label style="display:grid; gap:4px;">
         <span style="font-size:12px;">Linked Article (optional)</span>
-        <input name="linkedArticle" type="url" placeholder="https://..." />
+        <input name="linkedArticle" type="url" placeholder="https://..." value="${escapeHTML(point.linkedArticle || "")}" />
       </label>
       <div style="display:flex; justify-content:flex-end; gap:8px;">
         <button type="button" data-action="cancel">Cancel</button>
-        <button type="submit" data-action="save">Save Point</button>
+        <button type="submit" data-action="save">${escapeHTML(submitLabel)}</button>
       </div>
     </form>
   `;
@@ -353,7 +369,9 @@ function initCommunityMap({
 
     matchingPoints.forEach((point) => {
       const marker = L.marker([point.lat, point.lng], { icon: bluePinIcon }).addTo(pointLayer);
-      marker.bindPopup(buildCommunityPopupHtml(point, searchTerm), {
+      marker.bindPopup(buildCommunityPopupHtml(point, searchTerm, {
+        showAdminPointControls: allowUpload && isAdminMode
+      }), {
         className: "community-map-popup",
         closeButton: true,
         autoClose: true
@@ -536,7 +554,9 @@ function initCommunityMap({
               linkedArticle
             };
             allMapPoints.push(savedPoint);
-            marker.bindPopup(buildCommunityPopupHtml(savedPoint, searchInput?.value || ""), {
+            marker.bindPopup(buildCommunityPopupHtml(savedPoint, searchInput?.value || "", {
+              showAdminPointControls: allowUpload && isAdminMode
+            }), {
               className: "community-map-popup",
               closeButton: true,
               autoClose: true
@@ -674,10 +694,131 @@ function initCommunityMap({
 
   map.on("popupopen", (event) => {
     const popupEl = event.popup.getElement();
+    const sourceLayer = event.popup._source;
     const zoomButton = popupEl?.querySelector('[data-action="zoom-point"]');
     zoomButton?.addEventListener("click", () => {
       map.setView(event.popup.getLatLng(), Math.max(map.getZoom() + 2, 16));
     });
+
+    const editPointButton = popupEl?.querySelector('[data-action="edit-point"]');
+    editPointButton?.addEventListener("click", () => {
+      if (!allowUpload || !isAdminMode) return;
+
+      try {
+        requireAdminUser();
+      } catch (err) {
+        return;
+      }
+
+      const pointId = editPointButton.dataset.pointId;
+      const point = allMapPoints.find((item) => item.id === pointId);
+      if (!point || !sourceLayer) return;
+
+      sourceLayer.bindPopup(buildPointFormHtml(point, "Save Changes"), {
+        closeButton: true,
+        autoClose: true,
+        closeOnClick: false
+      }).openPopup();
+    });
+
+    const deletePointButton = popupEl?.querySelector('[data-action="delete-point"]');
+    deletePointButton?.addEventListener("click", async () => {
+      if (!allowUpload || !isAdminMode) return;
+
+      const pointId = deletePointButton.dataset.pointId;
+      const point = allMapPoints.find((item) => item.id === pointId);
+      if (!point) return;
+
+      const confirmed = window.confirm(`Delete map point "${getTitle(point)}"?`);
+      if (!confirmed) return;
+
+      deletePointButton.disabled = true;
+      try {
+        requireAdminUser();
+        await deleteDoc(doc(db, "mapPoints", point.id));
+        allMapPoints = allMapPoints.filter((item) => item.id !== point.id);
+        runSearch(searchInput?.value || "");
+        setStatus("Map point deleted.");
+      } catch (err) {
+        deletePointButton.disabled = false;
+        console.error("Error deleting point:", err);
+        alert("Could not delete point. Please try again.");
+      }
+    });
+
+    const editForm = popupEl?.querySelector(".point-form");
+    const sourceLatLng = sourceLayer?.getLatLng?.();
+    const point = sourceLatLng
+      ? allMapPoints.find((item) => item.lat === sourceLatLng.lat && item.lng === sourceLatLng.lng)
+      : null;
+
+    if (editForm && point && allowUpload && isAdminMode) {
+      const cancelButton = editForm.querySelector('[data-action="cancel"]');
+      const saveButton = editForm.querySelector('[data-action="save"]');
+
+      cancelButton?.addEventListener("click", () => {
+        sourceLayer.bindPopup(buildCommunityPopupHtml(point, searchInput?.value || "", {
+          showAdminPointControls: allowUpload && isAdminMode
+        }), {
+          className: "community-map-popup",
+          closeButton: true,
+          autoClose: true
+        }).openPopup();
+      }, { once: true });
+
+      editForm.addEventListener("submit", async (submitEvent) => {
+        submitEvent.preventDefault();
+
+        const formData = new FormData(editForm);
+        const name = String(formData.get("name") || "").trim();
+        const desc = String(formData.get("desc") || "").trim();
+        const linkedArticleRaw = String(formData.get("linkedArticle") || "").trim();
+
+        if (!name || !desc) {
+          alert("Please provide both title and description.");
+          return;
+        }
+
+        const linkedArticle = toSafeUrl(linkedArticleRaw);
+        if (linkedArticleRaw && !linkedArticle) {
+          alert("Please enter a valid http(s) link or leave it blank.");
+          return;
+        }
+
+        if (saveButton) saveButton.disabled = true;
+
+        try {
+          requireAdminUser();
+          const jsonld = {
+            "@context": "https://schema.org",
+            "@type": "Place",
+            "name": name,
+            "description": desc,
+            "geo": {
+              "@type": "GeoCoordinates",
+              "latitude": point.lat,
+              "longitude": point.lng
+            }
+          };
+          await updateDoc(doc(db, "mapPoints", point.id), {
+            name,
+            desc,
+            linkedArticle,
+            updatedAt: serverTimestamp(),
+            jsonld
+          });
+          allMapPoints = allMapPoints.map((item) => item.id === point.id
+            ? { ...item, name, desc, linkedArticle, jsonld }
+            : item);
+          runSearch(searchInput?.value || "");
+          setStatus("Map point updated.");
+        } catch (err) {
+          if (saveButton) saveButton.disabled = false;
+          console.error("Error updating point:", err);
+          alert("Could not update point. Please try again.");
+        }
+      }, { once: true });
+    }
   });
 
   document.addEventListener("keydown", (event) => {

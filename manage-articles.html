@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Manage Articles | Alex's Photo Board</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module">
+    import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      deleteDoc,
+      doc,
+      getDocs,
+      orderBy,
+      query
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
+      authDomain: "alexs-community-efcd8.firebaseapp.com",
+      projectId: "alexs-community-efcd8",
+      storageBucket: "alexs-community-efcd8.firebasestorage.app",
+      messagingSenderId: "214395622099",
+      appId: "1:214395622099:web:44f99a181741caf3117a26"
+    };
+
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const ARTICLE_TYPES = [
+      { collectionName: "news", label: "News", containerId: "newsArticleList" },
+      { collectionName: "history", label: "History Stories", containerId: "historyArticleList" }
+    ];
+
+    function buildLoginUrl() {
+      const loginUrl = new URL("admin-login.html", window.location.href);
+      loginUrl.searchParams.set("next", `${window.location.pathname}${window.location.search}`);
+      return loginUrl.href;
+    }
+
+    function formatDate(createdAt) {
+      return createdAt?.seconds
+        ? new Date(createdAt.seconds * 1000).toDateString()
+        : "No date";
+    }
+
+    function setStatus(message) {
+      const status = document.getElementById("manageArticlesStatus");
+      if (status) status.textContent = message;
+    }
+
+    function requireAdminUser() {
+      const user = auth.currentUser;
+      if (!user) {
+        window.location.href = buildLoginUrl();
+        throw new Error("Authentication required for article management.");
+      }
+      return user;
+    }
+
+    function createArticleCard(article, collectionName, label) {
+      const card = document.createElement("article");
+      card.className = "manage-article-card";
+      card.dataset.articleId = article.id;
+
+      if (article.imageUrl) {
+        const image = document.createElement("img");
+        image.src = article.imageUrl;
+        image.alt = article.title || "Article cover image";
+        card.appendChild(image);
+      }
+
+      const body = document.createElement("div");
+      body.className = "manage-article-card__body";
+
+      const title = document.createElement("h3");
+      title.textContent = article.title || "Untitled";
+      body.appendChild(title);
+
+      const meta = document.createElement("p");
+      meta.className = "manage-article-card__meta";
+      meta.textContent = `${label} • ${formatDate(article.createdAt)}`;
+      body.appendChild(meta);
+
+      const actions = document.createElement("div");
+      actions.className = "manage-article-card__actions";
+
+      const editLink = document.createElement("a");
+      editLink.href = `upload-article.html?type=${encodeURIComponent(collectionName)}&id=${encodeURIComponent(article.id)}`;
+      editLink.textContent = "Edit";
+      actions.appendChild(editLink);
+
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.textContent = "Delete";
+      deleteButton.addEventListener("click", async () => {
+        const confirmed = window.confirm(`Delete "${article.title || "Untitled"}" from ${label}? This deletes only the Firestore document.`);
+        if (!confirmed) return;
+
+        deleteButton.disabled = true;
+        try {
+          requireAdminUser();
+          await deleteDoc(doc(db, collectionName, article.id));
+          card.remove();
+          setStatus("Article deleted.");
+        } catch (err) {
+          console.error("Article delete failed:", err);
+          deleteButton.disabled = false;
+          setStatus("Could not delete article. Please try again.");
+        }
+      });
+      actions.appendChild(deleteButton);
+
+      body.appendChild(actions);
+      card.appendChild(body);
+      return card;
+    }
+
+    async function loadArticleGroup({ collectionName, label, containerId }) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.textContent = "Loading...";
+
+      try {
+        const snapshot = await getDocs(query(collection(db, collectionName), orderBy("createdAt", "desc")));
+        container.textContent = "";
+
+        if (snapshot.empty) {
+          container.textContent = `No ${label.toLowerCase()} found.`;
+          return;
+        }
+
+        snapshot.forEach((docSnap) => {
+          container.appendChild(createArticleCard({
+            id: docSnap.id,
+            ...docSnap.data()
+          }, collectionName, label));
+        });
+      } catch (err) {
+        console.error(`Failed to load ${collectionName}:`, err);
+        container.textContent = `Could not load ${label.toLowerCase()}.`;
+      }
+    }
+
+    async function loadArticles() {
+      setStatus("Loading articles...");
+      await Promise.all(ARTICLE_TYPES.map(loadArticleGroup));
+      setStatus("Articles loaded.");
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const page = document.getElementById("manageArticlesPage");
+      const signOutButton = document.getElementById("manageArticlesSignOut");
+
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          window.location.href = buildLoginUrl();
+          return;
+        }
+        if (page) page.hidden = false;
+        loadArticles();
+      });
+
+      signOutButton?.addEventListener("click", async () => {
+        signOutButton.disabled = true;
+        try {
+          await signOut(auth);
+          window.location.href = "admin-login.html";
+        } catch (err) {
+          console.error("Sign out failed:", err);
+          signOutButton.disabled = false;
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
+    <nav class="menu-bar" aria-label="Admin navigation">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="news.html" class="nav-link">News</a>
+      <a href="history.html" class="nav-link">History</a>
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="search.html" class="nav-link">Search</a>
+      <a href="export.html" class="nav-link">Export</a>
+    </nav>
+  </header>
+
+  <main class="admin-page admin-page--wide">
+    <section class="admin-card admin-card--wide" id="manageArticlesPage" aria-labelledby="manageArticlesTitle" hidden>
+      <div class="admin-toolbar">
+        <p id="manageArticlesStatus" role="status" aria-live="polite">Checking admin sign-in...</p>
+        <a href="admin.html">Admin Dashboard</a>
+        <a href="upload-article.html">Publish New Article</a>
+        <button id="manageArticlesSignOut" type="button">Sign Out</button>
+      </div>
+
+      <h2 id="manageArticlesTitle">Manage Articles</h2>
+
+      <section class="manage-articles-section" aria-labelledby="manageNewsTitle">
+        <h3 id="manageNewsTitle">News</h3>
+        <div class="manage-articles-list" id="newsArticleList"></div>
+      </section>
+
+      <section class="manage-articles-section" aria-labelledby="manageHistoryTitle">
+        <h3 id="manageHistoryTitle">History Stories</h3>
+        <div class="manage-articles-list" id="historyArticleList"></div>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
