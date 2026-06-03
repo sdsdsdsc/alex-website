@@ -269,7 +269,6 @@ function initCommunityMap({
   searchInputId,
   clearButtonId,
   statusId,
-  fullMapLinkId,
   allowUpload = false,
   allowDrawing = false
 }) {
@@ -280,13 +279,20 @@ function initCommunityMap({
   const searchInput = document.getElementById(searchInputId);
   const clearButton = clearButtonId ? document.getElementById(clearButtonId) : null;
   const statusEl = statusId ? document.getElementById(statusId) : null;
-  const fullMapLink = fullMapLinkId ? document.getElementById(fullMapLinkId) : null;
   const urlParams = new URLSearchParams(window.location.search);
   const isAdminMode = urlParams.get("admin") === "true";
   const initialSearchTerm = urlParams.get("search") || "";
-  const requestedLat = Number(urlParams.get("lat"));
-  const requestedLng = Number(urlParams.get("lng"));
-  const requestedLocation = Number.isFinite(requestedLat) && Number.isFinite(requestedLng)
+  const requestedLatParam = urlParams.get("lat");
+  const requestedLngParam = urlParams.get("lng");
+  const hasRequestedLatLng = requestedLatParam !== null
+    && requestedLngParam !== null
+    && requestedLatParam.trim() !== ""
+    && requestedLngParam.trim() !== "";
+  const requestedLat = hasRequestedLatLng ? Number(requestedLatParam) : NaN;
+  const requestedLng = hasRequestedLatLng ? Number(requestedLngParam) : NaN;
+  const requestedLocation = hasRequestedLatLng
+    && Number.isFinite(requestedLat)
+    && Number.isFinite(requestedLng)
     ? [requestedLat, requestedLng]
     : null;
   const fallbackCenter = [51.505, -0.09];
@@ -300,8 +306,16 @@ function initCommunityMap({
   let allMapPoints = [];
   let allMapPolygons = [];
   let isDrawing = false;
+  let hasFocusedRequestedLocation = false;
 
   baseLayers.osm.addTo(map);
+  map.whenReady(() => {
+    if (!map.hasLayer(baseLayers.osm)) {
+      baseLayers.osm.addTo(map);
+    }
+    setTimeout(() => map.invalidateSize(), 0);
+  });
+
   if (mode === "full") {
     L.control.layers({
       "OpenStreetMap": baseLayers.osm,
@@ -349,12 +363,6 @@ function initCommunityMap({
   function setStatus(message) {
     if (statusEl) {
       statusEl.textContent = message;
-    }
-  }
-
-  function updateFullMapLink(term) {
-    if (fullMapLink) {
-      fullMapLink.href = buildFullMapUrl(term);
     }
   }
 
@@ -409,9 +417,9 @@ function initCommunityMap({
       setStatus(normalizedTerm ? `${totalMatches} matching ${label} found.` : `${totalMatches} ${label} shown.`);
     }
 
-    updateFullMapLink(searchTerm);
     fitMapToLayers(map, boundsItems, fallbackCenter);
-    if (mode === "full" && requestedLocation) {
+    if (mode === "full" && requestedLocation && !hasFocusedRequestedLocation && !normalizedTerm && !isAdminMode) {
+      hasFocusedRequestedLocation = true;
       focusLayer.clearLayers();
       L.circleMarker(requestedLocation, {
         radius: 9,
@@ -421,6 +429,10 @@ function initCommunityMap({
         weight: 3
       }).addTo(focusLayer).bindPopup("Selected community place");
       map.setView(requestedLocation, Math.max(map.getZoom(), 15));
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete("lat");
+      cleanUrl.searchParams.delete("lng");
+      window.history.replaceState({}, "", cleanUrl);
     }
     setTimeout(() => map.invalidateSize(), 0);
   }
@@ -906,16 +918,5 @@ function initFullMap() {
 }
 
 initFullMap();
-
-initCommunityMap({
-  containerId: "homeMapPreview",
-  mode: "preview",
-  searchFormId: "homeMapSearchForm",
-  searchInputId: "homeMapSearchInput",
-  statusId: "homeMapSearchStatus",
-  fullMapLinkId: "homeMapFullLink",
-  allowUpload: false,
-  allowDrawing: false
-});
 
 exportJSONLD();
