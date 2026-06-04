@@ -67,53 +67,114 @@
               <span class="community-filter-field__label">Province</span>
               <p class="community-filter-fixed-value">Jiangxi</p>
             </div>
-            <label class="community-filter-field" for="communityCityFilter">
-              <span class="community-filter-field__label">City</span>
-              <select id="communityCityFilter">
-                <option value="">Show all</option>
-                <option value="Nanchang">Nanchang</option>
-                <option value="Jiujiang">Jiujiang</option>
-                <option value="Jingdezhen">Jingdezhen</option>
-                <option value="Pingxiang">Pingxiang</option>
-                <option value="Xinyu">Xinyu</option>
-                <option value="Yingtan">Yingtan</option>
-                <option value="Ganzhou">Ganzhou</option>
-                <option value="Yichun">Yichun</option>
-                <option value="Shangrao">Shangrao</option>
-                <option value="Ji'an">Ji'an</option>
-                <option value="Fuzhou">Fuzhou</option>
-              </select>
-            </label>
+            <div class="community-filter-field">
+              <span id="communityCityFilterLabel" class="community-filter-field__label">City</span>
+              <div class="community-custom-filter" data-filter-key="city">
+                <button
+                  id="communityCityFilterButton"
+                  class="community-custom-filter__trigger"
+                  type="button"
+                  aria-expanded="false"
+                  aria-haspopup="listbox"
+                  aria-controls="communityCityFilterOptions"
+                  aria-labelledby="communityCityFilterLabel communityCityFilterButton"
+                >
+                  <span class="community-custom-filter__value">Show all</span>
+                  <span class="community-custom-filter__chevron" aria-hidden="true"></span>
+                </button>
+                <div
+                  id="communityCityFilterOptions"
+                  class="community-custom-filter__panel"
+                  role="listbox"
+                  aria-labelledby="communityCityFilterLabel"
+                  hidden
+                ></div>
+              </div>
+            </div>
           </div>
         </fieldset>
 
         <fieldset class="community-filter-group">
           <legend>Associated Type / Contributor</legend>
           <div class="community-filter-fields">
-            <label class="community-filter-field" for="communityAssociatedTypeFilter">
-              <span class="community-filter-field__label">Associated type</span>
-              <select id="communityAssociatedTypeFilter">
-                <option value="">Show all</option>
-              </select>
-            </label>
-            <label class="community-filter-field" for="communityContributorFilter">
-              <span class="community-filter-field__label">Contributor</span>
-              <select id="communityContributorFilter">
-                <option value="">Show all</option>
-              </select>
-            </label>
+            <div class="community-filter-field">
+              <span id="communityAssociatedTypeFilterLabel" class="community-filter-field__label">Associated type</span>
+              <div class="community-custom-filter" data-filter-key="associatedType">
+                <button
+                  id="communityAssociatedTypeFilterButton"
+                  class="community-custom-filter__trigger"
+                  type="button"
+                  aria-expanded="false"
+                  aria-haspopup="listbox"
+                  aria-controls="communityAssociatedTypeFilterOptions"
+                  aria-labelledby="communityAssociatedTypeFilterLabel communityAssociatedTypeFilterButton"
+                >
+                  <span class="community-custom-filter__value">Show all</span>
+                  <span class="community-custom-filter__chevron" aria-hidden="true"></span>
+                </button>
+                <div
+                  id="communityAssociatedTypeFilterOptions"
+                  class="community-custom-filter__panel"
+                  role="listbox"
+                  aria-labelledby="communityAssociatedTypeFilterLabel"
+                  hidden
+                ></div>
+              </div>
+            </div>
+            <div class="community-filter-field">
+              <span id="communityContributorFilterLabel" class="community-filter-field__label">Contributor</span>
+              <div class="community-custom-filter" data-filter-key="contributor">
+                <button
+                  id="communityContributorFilterButton"
+                  class="community-custom-filter__trigger"
+                  type="button"
+                  aria-expanded="false"
+                  aria-haspopup="listbox"
+                  aria-controls="communityContributorFilterOptions"
+                  aria-labelledby="communityContributorFilterLabel communityContributorFilterButton"
+                >
+                  <span class="community-custom-filter__value">Show all</span>
+                  <span class="community-custom-filter__chevron" aria-hidden="true"></span>
+                </button>
+                <div
+                  id="communityContributorFilterOptions"
+                  class="community-custom-filter__panel"
+                  role="listbox"
+                  aria-labelledby="communityContributorFilterLabel"
+                  hidden
+                ></div>
+              </div>
+            </div>
           </div>
         </fieldset>
 
         <fieldset class="community-filter-group">
           <legend>Period</legend>
           <div class="community-filter-fields">
-            <label class="community-filter-field" for="communityPeriodFilter">
-              <span class="community-filter-field__label">Historic period</span>
-              <select id="communityPeriodFilter">
-                <option value="">Show all</option>
-              </select>
-            </label>
+            <div class="community-filter-field">
+              <span id="communityPeriodFilterLabel" class="community-filter-field__label">Historic period</span>
+              <div class="community-custom-filter" data-filter-key="period">
+                <button
+                  id="communityPeriodFilterButton"
+                  class="community-custom-filter__trigger"
+                  type="button"
+                  aria-expanded="false"
+                  aria-haspopup="listbox"
+                  aria-controls="communityPeriodFilterOptions"
+                  aria-labelledby="communityPeriodFilterLabel communityPeriodFilterButton"
+                >
+                  <span class="community-custom-filter__value">Show all</span>
+                  <span class="community-custom-filter__chevron" aria-hidden="true"></span>
+                </button>
+                <div
+                  id="communityPeriodFilterOptions"
+                  class="community-custom-filter__panel"
+                  role="listbox"
+                  aria-labelledby="communityPeriodFilterLabel"
+                  hidden
+                ></div>
+              </div>
+            </div>
           </div>
         </fieldset>
       </aside>
