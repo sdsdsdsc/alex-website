@@ -24,8 +24,10 @@ const els = {
   count: document.getElementById("communitySearchCount"),
   results: document.getElementById("communitySearchResults"),
   empty: document.getElementById("communitySearchEmpty"),
-  locationFilters: document.getElementById("communityLocationFilters"),
-  periodFilters: document.getElementById("communityPeriodFilters"),
+  cityFilter: document.getElementById("communityCityFilter"),
+  associatedTypeFilter: document.getElementById("communityAssociatedTypeFilter"),
+  contributorFilter: document.getElementById("communityContributorFilter"),
+  periodFilter: document.getElementById("communityPeriodFilter"),
   clearFilters: document.getElementById("communitySearchClearFilters"),
   listView: document.getElementById("communityListView"),
   gridView: document.getElementById("communityGridView")
@@ -59,6 +61,12 @@ function hasCoordinates(place) {
   return Number.isFinite(place?.lat) && Number.isFinite(place?.lng);
 }
 
+function normalizeCoordinate(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : null;
+}
+
 function getTags(place) {
   if (Array.isArray(place?.tags)) return place.tags.map(cleanText).filter(Boolean);
   return cleanText(place?.tags).split(",").map(cleanText).filter(Boolean);
@@ -75,6 +83,12 @@ function getSearchText(place) {
     place.description,
     place.category,
     place.location,
+    place.province,
+    place.city,
+    place.district,
+    place.address,
+    place.associatedType,
+    place.contributor,
     place.period,
     place.grade,
     place.source,
@@ -84,6 +98,13 @@ function getSearchText(place) {
 
 function getSelectedValues(name) {
   return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map((input) => input.value);
+}
+
+function getDisplayLocation(place) {
+  const city = cleanText(place.city);
+  const province = cleanText(place.province);
+  if (city && province) return `${city}, ${province}`;
+  return cleanText(place.location);
 }
 
 function updateUrl(query) {
@@ -148,7 +169,7 @@ function makeResultCard(place) {
 
   const meta = document.createElement("p");
   meta.className = "community-result-card__meta";
-  meta.textContent = [place.category, place.location, place.period].map(cleanText).filter(Boolean).join(" | ") || "Community place";
+  meta.textContent = [place.category, getDisplayLocation(place), place.period].map(cleanText).filter(Boolean).join(" | ") || "Community place";
 
   const title = document.createElement("h3");
   const titleLink = document.createElement("a");
@@ -187,12 +208,27 @@ function makeResultCard(place) {
   return card;
 }
 
-function matchesFilters(place, query, categories, locations, periods) {
+function matchesFilters(place, filters) {
+  const {
+    query,
+    categories,
+    city,
+    associatedType,
+    contributor,
+    period
+  } = filters;
   const searchMatches = !query || getSearchText(place).includes(query);
   const categoryMatches = categories.length === 0 || categories.includes(cleanText(place.category));
-  const locationMatches = locations.length === 0 || locations.includes(cleanText(place.location));
-  const periodMatches = periods.length === 0 || periods.includes(cleanText(place.period));
-  return searchMatches && categoryMatches && locationMatches && periodMatches;
+  const cityMatches = !city || cleanText(place.city) === city;
+  const associatedTypeMatches = !associatedType || cleanText(place.associatedType) === associatedType;
+  const contributorMatches = !contributor || cleanText(place.contributor) === contributor;
+  const periodMatches = !period || cleanText(place.period) === period;
+  return searchMatches
+    && categoryMatches
+    && cityMatches
+    && associatedTypeMatches
+    && contributorMatches
+    && periodMatches;
 }
 
 function sortPlaces(places, query) {
@@ -226,8 +262,14 @@ function renderResults() {
   const rawQuery = cleanText(els.input?.value || "");
   const query = normalize(rawQuery);
   const selectedCategories = getSelectedValues("category");
-  const selectedLocations = getSelectedValues("location");
-  const selectedPeriods = getSelectedValues("period");
+  const filters = {
+    query,
+    categories: selectedCategories,
+    city: cleanText(els.cityFilter?.value),
+    associatedType: cleanText(els.associatedTypeFilter?.value),
+    contributor: cleanText(els.contributorFilter?.value),
+    period: cleanText(els.periodFilter?.value)
+  };
 
   updateUrl(rawQuery);
   els.results.textContent = "";
@@ -238,7 +280,7 @@ function renderResults() {
     return;
   }
 
-  const filtered = allPlaces.filter((place) => matchesFilters(place, query, selectedCategories, selectedLocations, selectedPeriods));
+  const filtered = allPlaces.filter((place) => matchesFilters(place, filters));
   const sorted = sortPlaces(filtered, query);
 
   els.count.textContent = `${sorted.length} ${sorted.length === 1 ? "community place" : "community places"} found`;
@@ -247,34 +289,35 @@ function renderResults() {
   setView(currentView);
 }
 
-function makeCheckbox(name, value) {
-  const label = document.createElement("label");
-  const input = document.createElement("input");
-  input.type = "checkbox";
-  input.name = name;
-  input.value = value;
-  input.addEventListener("change", renderResults);
-  label.append(input, ` ${value}`);
-  return label;
+function getUniqueValues(field) {
+  return [...new Set(allPlaces.map((place) => cleanText(place[field])).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b));
 }
 
-function renderDynamicFilters(container, name, values, emptyText) {
-  if (!container) return;
-  container.textContent = "";
-  if (values.length === 0) {
-    const empty = document.createElement("p");
-    empty.textContent = emptyText;
-    container.appendChild(empty);
-    return;
-  }
-  values.forEach((value) => container.appendChild(makeCheckbox(name, value)));
+function populateSelect(select, values) {
+  if (!select) return;
+  const currentValue = select.value;
+  select.textContent = "";
+
+  const showAll = document.createElement("option");
+  showAll.value = "";
+  showAll.textContent = "Show all";
+  select.appendChild(showAll);
+
+  values.forEach((value) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    select.appendChild(option);
+  });
+
+  select.value = values.includes(currentValue) ? currentValue : "";
 }
 
 function renderFilterOptions() {
-  const locations = [...new Set(allPlaces.map((place) => cleanText(place.location)).filter(Boolean))].sort();
-  const periods = [...new Set(allPlaces.map((place) => cleanText(place.period)).filter(Boolean))].sort();
-  renderDynamicFilters(els.locationFilters, "location", locations, "No locations available yet.");
-  renderDynamicFilters(els.periodFilters, "period", periods, "No periods available yet.");
+  populateSelect(els.associatedTypeFilter, getUniqueValues("associatedType"));
+  populateSelect(els.contributorFilter, getUniqueValues("contributor"));
+  populateSelect(els.periodFilter, getUniqueValues("period"));
 }
 
 function bindEvents() {
@@ -287,10 +330,17 @@ function bindEvents() {
     input.addEventListener("change", renderResults);
   });
 
+  [els.cityFilter, els.associatedTypeFilter, els.contributorFilter, els.periodFilter].forEach((select) => {
+    select?.addEventListener("change", renderResults);
+  });
+
   els.sort?.addEventListener("change", renderResults);
   els.clearFilters?.addEventListener("click", () => {
-    document.querySelectorAll('.community-search-filters input[type="checkbox"]').forEach((input) => {
+    document.querySelectorAll('.community-search-filters input[name="category"]').forEach((input) => {
       input.checked = false;
+    });
+    [els.cityFilter, els.associatedTypeFilter, els.contributorFilter, els.periodFilter].forEach((select) => {
+      if (select) select.value = "";
     });
     renderResults();
   });
@@ -314,6 +364,12 @@ async function loadCommunityPlaces() {
         title: cleanText(data.title),
         category: cleanText(data.category),
         location: cleanText(data.location),
+        province: cleanText(data.province),
+        city: cleanText(data.city),
+        district: cleanText(data.district),
+        address: cleanText(data.address),
+        associatedType: cleanText(data.associatedType),
+        contributor: cleanText(data.contributor),
         period: cleanText(data.period),
         description: cleanText(data.description),
         imageUrl: cleanText(data.imageUrl),
@@ -321,8 +377,8 @@ async function loadCommunityPlaces() {
         source: cleanText(data.source),
         relatedArticle: cleanText(data.relatedArticle),
         tags: data.tags,
-        lat: Number(data.lat),
-        lng: Number(data.lng),
+        lat: normalizeCoordinate(data.lat),
+        lng: normalizeCoordinate(data.lng),
         createdAt: data.createdAt
       });
     });

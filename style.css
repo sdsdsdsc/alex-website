@@ -1553,6 +1553,7 @@ footer {
 .community-search-form__input:focus,
 .community-results-controls select:focus,
 .community-filter-group input:focus,
+.community-filter-group select:focus,
 .community-view-toggle button:focus,
 .community-search-filters__heading button:focus,
 .community-result-card a:focus,
@@ -1638,6 +1639,44 @@ footer {
 
 .community-filter-group input {
   margin-right: 8px;
+}
+
+.community-filter-fields {
+  display: grid;
+  gap: 18px;
+  margin-top: 16px;
+}
+
+.community-filter-group .community-filter-field {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+}
+
+.community-filter-field__label {
+  color: #333;
+  font-weight: 700;
+}
+
+.community-filter-fixed-value {
+  margin: 0;
+  padding: 11px 12px;
+  border-left: 4px solid #2f7a54;
+  background: #eef5f6;
+  color: #17475b;
+  font-weight: 800;
+}
+
+.community-filter-field select {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 0 34px 0 11px;
+  border: 1px solid #aeb8bd;
+  border-radius: 4px;
+  background: #fff;
+  color: #222;
+  font: inherit;
 }
 
 .community-results-toolbar {
