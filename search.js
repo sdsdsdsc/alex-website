@@ -17,6 +17,20 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const CITY_OPTIONS = [
+  "Nanchang",
+  "Jiujiang",
+  "Jingdezhen",
+  "Pingxiang",
+  "Xinyu",
+  "Yingtan",
+  "Ganzhou",
+  "Yichun",
+  "Shangrao",
+  "Ji'an",
+  "Fuzhou"
+];
+
 const els = {
   form: document.getElementById("communitySearchForm"),
   input: document.getElementById("communitySearchInput"),
@@ -24,10 +38,7 @@ const els = {
   count: document.getElementById("communitySearchCount"),
   results: document.getElementById("communitySearchResults"),
   empty: document.getElementById("communitySearchEmpty"),
-  cityFilter: document.getElementById("communityCityFilter"),
-  associatedTypeFilter: document.getElementById("communityAssociatedTypeFilter"),
-  contributorFilter: document.getElementById("communityContributorFilter"),
-  periodFilter: document.getElementById("communityPeriodFilter"),
+  customFilters: Array.from(document.querySelectorAll(".community-custom-filter")),
   clearFilters: document.getElementById("communitySearchClearFilters"),
   listView: document.getElementById("communityListView"),
   gridView: document.getElementById("communityGridView")
@@ -35,6 +46,12 @@ const els = {
 
 let allPlaces = [];
 let currentView = "list";
+const filterValues = {
+  city: "",
+  associatedType: "",
+  contributor: "",
+  period: ""
+};
 
 function cleanText(value) {
   return String(value || "").trim();
@@ -98,6 +115,93 @@ function getSearchText(place) {
 
 function getSelectedValues(name) {
   return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map((input) => input.value);
+}
+
+function getCustomFilter(key) {
+  return els.customFilters.find((filter) => filter.dataset.filterKey === key);
+}
+
+function getCustomFilterParts(filter) {
+  return {
+    trigger: filter?.querySelector(".community-custom-filter__trigger"),
+    valueLabel: filter?.querySelector(".community-custom-filter__value"),
+    panel: filter?.querySelector(".community-custom-filter__panel")
+  };
+}
+
+function closeCustomFilter(filter, restoreFocus = false) {
+  if (!filter) return;
+  const { trigger, panel } = getCustomFilterParts(filter);
+  if (!trigger || !panel) return;
+  panel.hidden = true;
+  filter.classList.remove("is-open");
+  trigger.setAttribute("aria-expanded", "false");
+  if (restoreFocus) trigger.focus();
+}
+
+function closeAllCustomFilters(exceptFilter = null) {
+  els.customFilters.forEach((filter) => {
+    if (filter !== exceptFilter) closeCustomFilter(filter);
+  });
+}
+
+function getOptionButtons(filter) {
+  return Array.from(filter?.querySelectorAll(".community-custom-filter__option") || []);
+}
+
+function openCustomFilter(filter, focusSelected = false) {
+  if (!filter) return;
+  const { trigger, panel } = getCustomFilterParts(filter);
+  if (!trigger || !panel) return;
+  closeAllCustomFilters(filter);
+  panel.hidden = false;
+  filter.classList.add("is-open");
+  trigger.setAttribute("aria-expanded", "true");
+
+  if (focusSelected) {
+    const options = getOptionButtons(filter);
+    const selected = options.find((option) => option.getAttribute("aria-selected") === "true");
+    (selected || options[0])?.focus();
+  }
+}
+
+function updateCustomFilterSelection(filter) {
+  if (!filter) return;
+  const key = filter.dataset.filterKey;
+  const selectedValue = filterValues[key] || "";
+  const { valueLabel } = getCustomFilterParts(filter);
+  if (valueLabel) valueLabel.textContent = selectedValue || "Show all";
+
+  getOptionButtons(filter).forEach((option) => {
+    const isSelected = option.dataset.value === selectedValue;
+    option.classList.toggle("is-selected", isSelected);
+    option.setAttribute("aria-selected", String(isSelected));
+  });
+}
+
+function selectCustomFilterOption(filter, value) {
+  const key = filter?.dataset.filterKey;
+  if (!key) return;
+  filterValues[key] = value;
+  updateCustomFilterSelection(filter);
+  closeCustomFilter(filter, true);
+  renderResults();
+}
+
+function handleOptionKeydown(event, filter, option) {
+  const options = getOptionButtons(filter);
+  const currentIndex = options.indexOf(option);
+  let nextIndex = null;
+
+  if (event.key === "ArrowDown") nextIndex = (currentIndex + 1) % options.length;
+  if (event.key === "ArrowUp") nextIndex = (currentIndex - 1 + options.length) % options.length;
+  if (event.key === "Home") nextIndex = 0;
+  if (event.key === "End") nextIndex = options.length - 1;
+
+  if (nextIndex !== null) {
+    event.preventDefault();
+    options[nextIndex]?.focus();
+  }
 }
 
 function getDisplayLocation(place) {
@@ -182,15 +286,6 @@ function makeResultCard(place) {
   const description = cleanText(place.description);
   summary.textContent = description || "No description has been added yet.";
 
-  const tags = getTags(place);
-  const tagWrap = document.createElement("div");
-  tagWrap.className = "community-result-card__tags";
-  tags.slice(0, 6).forEach((tag) => {
-    const tagEl = document.createElement("span");
-    tagEl.textContent = tag;
-    tagWrap.appendChild(tagEl);
-  });
-
   const actions = document.createElement("div");
   actions.className = "community-result-card__actions";
   const recordLink = document.createElement("a");
@@ -202,7 +297,6 @@ function makeResultCard(place) {
   actions.append(recordLink, mapLink);
 
   body.append(meta, title, summary);
-  if (tags.length > 0) body.appendChild(tagWrap);
   body.appendChild(actions);
   card.append(media, body);
   return card;
@@ -265,10 +359,10 @@ function renderResults() {
   const filters = {
     query,
     categories: selectedCategories,
-    city: cleanText(els.cityFilter?.value),
-    associatedType: cleanText(els.associatedTypeFilter?.value),
-    contributor: cleanText(els.contributorFilter?.value),
-    period: cleanText(els.periodFilter?.value)
+    city: filterValues.city,
+    associatedType: filterValues.associatedType,
+    contributor: filterValues.contributor,
+    period: filterValues.period
   };
 
   updateUrl(rawQuery);
@@ -294,30 +388,54 @@ function getUniqueValues(field) {
     .sort((a, b) => a.localeCompare(b));
 }
 
-function populateSelect(select, values) {
-  if (!select) return;
-  const currentValue = select.value;
-  select.textContent = "";
+function getOptionCount(field, value) {
+  if (!value) return allPlaces.length;
+  return allPlaces.filter((place) => cleanText(place[field]) === value).length;
+}
 
-  const showAll = document.createElement("option");
-  showAll.value = "";
-  showAll.textContent = "Show all";
-  select.appendChild(showAll);
+function populateCustomFilter(key, values) {
+  const filter = getCustomFilter(key);
+  const { panel } = getCustomFilterParts(filter);
+  if (!filter || !panel) return;
 
-  values.forEach((value) => {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = value;
-    select.appendChild(option);
+  if (filterValues[key] && !values.includes(filterValues[key])) {
+    filterValues[key] = "";
+  }
+
+  panel.textContent = "";
+  ["", ...values].forEach((value) => {
+    const option = document.createElement("button");
+    option.className = "community-custom-filter__option";
+    option.type = "button";
+    option.dataset.value = value;
+    option.setAttribute("role", "option");
+
+    const label = document.createElement("span");
+    label.className = "community-custom-filter__option-label";
+    label.textContent = value || "Show all";
+
+    const count = document.createElement("span");
+    count.className = "community-custom-filter__option-count";
+    count.textContent = String(getOptionCount(key, value));
+    count.setAttribute("aria-label", `${count.textContent} records`);
+
+    option.append(label, count);
+    option.addEventListener("click", (event) => {
+      event.stopPropagation();
+      selectCustomFilterOption(filter, value);
+    });
+    option.addEventListener("keydown", (event) => handleOptionKeydown(event, filter, option));
+    panel.appendChild(option);
   });
 
-  select.value = values.includes(currentValue) ? currentValue : "";
+  updateCustomFilterSelection(filter);
 }
 
 function renderFilterOptions() {
-  populateSelect(els.associatedTypeFilter, getUniqueValues("associatedType"));
-  populateSelect(els.contributorFilter, getUniqueValues("contributor"));
-  populateSelect(els.periodFilter, getUniqueValues("period"));
+  populateCustomFilter("city", CITY_OPTIONS);
+  populateCustomFilter("associatedType", getUniqueValues("associatedType"));
+  populateCustomFilter("contributor", getUniqueValues("contributor"));
+  populateCustomFilter("period", getUniqueValues("period"));
 }
 
 function bindEvents() {
@@ -330,8 +448,31 @@ function bindEvents() {
     input.addEventListener("change", renderResults);
   });
 
-  [els.cityFilter, els.associatedTypeFilter, els.contributorFilter, els.periodFilter].forEach((select) => {
-    select?.addEventListener("change", renderResults);
+  els.customFilters.forEach((filter) => {
+    const { trigger, panel } = getCustomFilterParts(filter);
+    trigger?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (panel?.hidden) {
+        openCustomFilter(filter);
+      } else {
+        closeCustomFilter(filter);
+      }
+    });
+    trigger?.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        openCustomFilter(filter, true);
+      }
+    });
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".community-custom-filter")) closeAllCustomFilters();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    const openFilter = els.customFilters.find((filter) => filter.classList.contains("is-open"));
+    if (openFilter) closeCustomFilter(openFilter, true);
   });
 
   els.sort?.addEventListener("change", renderResults);
@@ -339,9 +480,11 @@ function bindEvents() {
     document.querySelectorAll('.community-search-filters input[name="category"]').forEach((input) => {
       input.checked = false;
     });
-    [els.cityFilter, els.associatedTypeFilter, els.contributorFilter, els.periodFilter].forEach((select) => {
-      if (select) select.value = "";
+    Object.keys(filterValues).forEach((key) => {
+      filterValues[key] = "";
+      updateCustomFilterSelection(getCustomFilter(key));
     });
+    closeAllCustomFilters();
     renderResults();
   });
   els.listView?.addEventListener("click", () => setView("list"));
