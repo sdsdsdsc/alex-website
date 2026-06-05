@@ -53,22 +53,84 @@
           </p>
         </header>
 
-        <form class="map-search-form" id="mapSearchForm">
-          <label class="map-search-form__label" for="mapSearchInput">Search map points</label>
-          <div class="map-search-form__row">
-            <input
-              class="map-search-form__input"
-              id="mapSearchInput"
-              name="search"
-              type="search"
-              placeholder="Place / street / story / image"
-            >
-            <button class="map-search-form__button" type="submit">Search</button>
-            <button class="map-search-form__clear" id="mapSearchClear" type="button">Clear search</button>
-          </div>
-        </form>
-        <p class="map-search-status" id="mapSearchStatus" role="status" aria-live="polite"></p>
-        <div id="map" class="map-canvas map-search-canvas"></div>
+        <div class="map-stage">
+          <form class="map-search-form" id="mapSearchForm">
+            <label class="visually-hidden" for="mapSearchInput">Search map records</label>
+            <div class="map-search-form__row">
+              <input
+                class="map-search-form__input"
+                id="mapSearchInput"
+                name="search"
+                type="search"
+                placeholder="Place / street / story / image"
+              >
+              <button class="map-search-form__button" type="submit">Search</button>
+            </div>
+          </form>
+          <button class="map-search-form__filter" id="mapFilterToggle" type="button" aria-expanded="false" aria-controls="mapFilterPanel">Filter</button>
+
+          <p class="map-search-status" id="mapSearchStatus" role="status" aria-live="polite"></p>
+
+          <section class="map-filter-panel" id="mapFilterPanel" aria-labelledby="mapFilterTitle" hidden>
+            <div class="map-filter-panel__heading">
+              <h3 id="mapFilterTitle">Filter map records</h3>
+              <button class="map-filter-panel__close" id="mapFilterClose" type="button">Close</button>
+            </div>
+
+            <div class="map-filter-panel__body">
+              <fieldset class="map-filter-group">
+                <legend>Category</legend>
+                <label><input type="checkbox" name="mapCategory" value="Site"> Site</label>
+                <label><input type="checkbox" name="mapCategory" value="Building"> Building</label>
+                <label><input type="checkbox" name="mapCategory" value="Park"> Park</label>
+                <label><input type="checkbox" name="mapCategory" value="Public Space"> Public Space</label>
+                <label><input type="checkbox" name="mapCategory" value="Heritage Place"> Heritage Place</label>
+                <label><input type="checkbox" name="mapCategory" value="Community Facility"> Community Facility</label>
+                <label><input type="checkbox" name="mapCategory" value="Ruins / Relic"> Ruins / Relic</label>
+              </fieldset>
+
+              <fieldset class="map-filter-group">
+                <legend>City</legend>
+                <div class="map-filter-field">
+                  <span class="map-filter-field__label" id="mapCityFilterLabel">Jiangxi city</span>
+                  <div class="community-custom-filter map-custom-filter" data-filter-key="city">
+                    <button
+                      class="community-custom-filter__trigger"
+                      type="button"
+                      aria-haspopup="listbox"
+                      aria-expanded="false"
+                      aria-labelledby="mapCityFilterLabel"
+                      aria-controls="mapCityFilterPanel"
+                    >
+                      <span class="community-custom-filter__value">Show all</span>
+                      <span class="community-custom-filter__chevron" aria-hidden="true"></span>
+                    </button>
+                    <div class="community-custom-filter__panel" id="mapCityFilterPanel" role="listbox" aria-labelledby="mapCityFilterLabel" hidden></div>
+                  </div>
+                </div>
+              </fieldset>
+            </div>
+
+            <div class="map-filter-panel__actions">
+              <button class="map-filter-panel__apply" id="mapFilterApply" type="button">Apply filters</button>
+              <button class="map-filter-panel__reset" id="mapFilterReset" type="button">Reset filters</button>
+            </div>
+          </section>
+
+          <button class="map-draw-search__button" id="mapDrawSearchToggle" type="button" aria-expanded="false" aria-controls="mapDrawSearchPanel">Draw a search</button>
+          <section class="map-draw-search" id="mapDrawSearchPanel" aria-labelledby="mapDrawSearchTitle" hidden>
+            <div class="map-draw-search__heading">
+              <h3 id="mapDrawSearchTitle">Draw a Search</h3>
+              <button class="map-draw-search__x" id="mapDrawSearchX" type="button" aria-label="Close Draw a Search">×</button>
+            </div>
+            <button class="map-draw-search__option" type="button" data-draw-search-option="shape">Draw a shape</button>
+            <button class="map-draw-search__option" type="button" data-draw-search-option="line">Draw a line</button>
+            <p class="map-draw-search__message" id="mapDrawSearchMessage" role="status" aria-live="polite"></p>
+            <button class="map-draw-search__close" id="mapDrawSearchClose" type="button">Close</button>
+          </section>
+
+          <div id="map" class="map-canvas map-search-canvas"></div>
+        </div>
       </section>
     </div>
   </main>

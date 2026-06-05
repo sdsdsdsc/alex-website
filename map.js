@@ -30,6 +30,20 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+const CITY_OPTIONS = [
+  "Nanchang",
+  "Jiujiang",
+  "Jingdezhen",
+  "Pingxiang",
+  "Xinyu",
+  "Yingtan",
+  "Ganzhou",
+  "Yichun",
+  "Shangrao",
+  "Ji'an",
+  "Fuzhou"
+];
+
 function buildLoginUrl() {
   const loginUrl = new URL("admin-login.html", window.location.href);
   loginUrl.searchParams.set("next", `${window.location.pathname}${window.location.search}`);
@@ -71,6 +85,25 @@ function toSafeUrl(value) {
   return "";
 }
 
+function cleanText(value) {
+  return String(value || "").trim();
+}
+
+function normalizeCoordinate(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : null;
+}
+
+function hasValidCoordinates(record) {
+  return Number.isFinite(record?.lat)
+    && Number.isFinite(record?.lng)
+    && record.lat >= -90
+    && record.lat <= 90
+    && record.lng >= -180
+    && record.lng <= 180;
+}
+
 function normalizeSearchValue(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -91,6 +124,18 @@ function getTags(record) {
   return Array.isArray(record?.tags) ? record.tags.join(" ") : record?.tags || "";
 }
 
+function getCommunityTags(record) {
+  if (Array.isArray(record?.tags)) return record.tags.map(cleanText).filter(Boolean);
+  return cleanText(record?.tags).split(",").map(cleanText).filter(Boolean);
+}
+
+function getCommunityDisplayLocation(record) {
+  const city = cleanText(record.city);
+  const province = cleanText(record.province);
+  if (city && province) return `${city}, ${province}`;
+  return cleanText(record.location);
+}
+
 function recordMatchesSearch(record, term) {
   if (!term) return true;
 
@@ -105,6 +150,14 @@ function recordMatchesSearch(record, term) {
     record?.linkedArticle,
     record?.type,
     record?.category,
+    record?.location,
+    record?.province,
+    record?.city,
+    record?.district,
+    record?.address,
+    record?.associatedType,
+    record?.contributor,
+    record?.period,
     getTags(record)
   ].filter(Boolean).join(" ").toLowerCase();
 
@@ -158,6 +211,37 @@ function buildCommunityPopupHtml(record, searchTerm = "", options = {}) {
   `;
 
   return html;
+}
+
+function buildCommunityPlacePopupHtml(record) {
+  const safeTitle = escapeHTML(cleanText(record.title) || "Untitled community place");
+  const safeCategory = escapeHTML(cleanText(record.category) || "Not specified");
+  const safeLocation = escapeHTML(getCommunityDisplayLocation(record) || "Not specified");
+  const safePeriod = escapeHTML(cleanText(record.period) || "Not specified");
+  const safeDescription = escapeHTML(cleanText(record.description) || "No description has been added yet.");
+  const recordUrl = `place.html?id=${encodeURIComponent(record.id)}`;
+
+  return `
+    <article class="map-point-card map-point-card--record">
+      <h3>${safeTitle}</h3>
+      <dl class="map-point-card__facts">
+        <div>
+          <dt>Category</dt>
+          <dd>${safeCategory}</dd>
+        </div>
+        <div>
+          <dt>Location</dt>
+          <dd>${safeLocation}</dd>
+        </div>
+        <div>
+          <dt>Period</dt>
+          <dd>${safePeriod}</dd>
+        </div>
+      </dl>
+      <p>${safeDescription}</p>
+      <a class="map-point-card__link" href="${recordUrl}">View record</a>
+    </article>
+  `;
 }
 
 function buildPointFormHtml(point = {}, submitLabel = "Save Point") {
@@ -281,6 +365,19 @@ function initCommunityMap({
   const statusEl = statusId ? document.getElementById(statusId) : null;
   const urlParams = new URLSearchParams(window.location.search);
   const isAdminMode = urlParams.get("admin") === "true";
+  const isPublicCommunityMode = !isAdminMode && !allowUpload && !allowDrawing;
+  const filterPanel = document.getElementById("mapFilterPanel");
+  const filterToggle = document.getElementById("mapFilterToggle");
+  const filterClose = document.getElementById("mapFilterClose");
+  const filterApply = document.getElementById("mapFilterApply");
+  const filterReset = document.getElementById("mapFilterReset");
+  const drawSearchToggle = document.getElementById("mapDrawSearchToggle");
+  const drawSearchPanel = document.getElementById("mapDrawSearchPanel");
+  const drawSearchClose = document.getElementById("mapDrawSearchClose");
+  const drawSearchX = document.getElementById("mapDrawSearchX");
+  const drawSearchMessage = document.getElementById("mapDrawSearchMessage");
+  const customFilters = Array.from(document.querySelectorAll(".map-custom-filter"));
+  const categoryInputs = Array.from(document.querySelectorAll('input[name="mapCategory"]'));
   const initialSearchTerm = urlParams.get("search") || "";
   const requestedLatParam = urlParams.get("lat");
   const requestedLngParam = urlParams.get("lng");
@@ -295,7 +392,7 @@ function initCommunityMap({
     && Number.isFinite(requestedLng)
     ? [requestedLat, requestedLng]
     : null;
-  const fallbackCenter = [51.505, -0.09];
+  const fallbackCenter = isPublicCommunityMode ? [27.6202, 113.8825] : [51.505, -0.09];
   const map = L.map(containerId).setView(fallbackCenter, 13);
   const pointLayer = L.layerGroup().addTo(map);
   const polygonLayer = L.layerGroup().addTo(map);
@@ -307,6 +404,20 @@ function initCommunityMap({
   let allMapPolygons = [];
   let isDrawing = false;
   let hasFocusedRequestedLocation = false;
+  const pendingFilters = {
+    city: ""
+  };
+  const appliedFilters = {
+    categories: [],
+    city: ""
+  };
+
+  if (!isPublicCommunityMode) {
+    filterPanel?.setAttribute("hidden", "");
+    filterToggle?.setAttribute("hidden", "");
+    drawSearchPanel?.setAttribute("hidden", "");
+    drawSearchToggle?.setAttribute("hidden", "");
+  }
 
   baseLayers.osm.addTo(map);
   map.whenReady(() => {
@@ -366,20 +477,223 @@ function initCommunityMap({
     }
   }
 
+  function getSelectedMapCategories() {
+    return categoryInputs.filter((input) => input.checked).map((input) => input.value);
+  }
+
+  function getCustomFilter(key) {
+    return customFilters.find((filter) => filter.dataset.filterKey === key);
+  }
+
+  function getCustomFilterParts(filter) {
+    return {
+      trigger: filter?.querySelector(".community-custom-filter__trigger"),
+      valueLabel: filter?.querySelector(".community-custom-filter__value"),
+      panel: filter?.querySelector(".community-custom-filter__panel")
+    };
+  }
+
+  function closeCustomFilter(filter, restoreFocus = false) {
+    if (!filter) return;
+    const { trigger, panel } = getCustomFilterParts(filter);
+    if (!trigger || !panel) return;
+    panel.hidden = true;
+    filter.classList.remove("is-open");
+    trigger.setAttribute("aria-expanded", "false");
+    if (restoreFocus) trigger.focus();
+  }
+
+  function closeAllCustomFilters(exceptFilter = null) {
+    customFilters.forEach((filter) => {
+      if (filter !== exceptFilter) closeCustomFilter(filter);
+    });
+  }
+
+  function getOptionButtons(filter) {
+    return Array.from(filter?.querySelectorAll(".community-custom-filter__option") || []);
+  }
+
+  function openCustomFilter(filter, focusSelected = false) {
+    if (!filter) return;
+    const { trigger, panel } = getCustomFilterParts(filter);
+    if (!trigger || !panel) return;
+    closeAllCustomFilters(filter);
+    panel.hidden = false;
+    filter.classList.add("is-open");
+    trigger.setAttribute("aria-expanded", "true");
+
+    if (focusSelected) {
+      const options = getOptionButtons(filter);
+      const selected = options.find((option) => option.getAttribute("aria-selected") === "true");
+      (selected || options[0])?.focus();
+    }
+  }
+
+  function updateCustomFilterSelection(filter) {
+    if (!filter) return;
+    const key = filter.dataset.filterKey;
+    const selectedValue = pendingFilters[key] || "";
+    const { valueLabel } = getCustomFilterParts(filter);
+    if (valueLabel) valueLabel.textContent = selectedValue || "Show all";
+
+    getOptionButtons(filter).forEach((option) => {
+      const isSelected = option.dataset.value === selectedValue;
+      option.classList.toggle("is-selected", isSelected);
+      option.setAttribute("aria-selected", String(isSelected));
+    });
+  }
+
+  function selectCustomFilterOption(filter, value) {
+    const key = filter?.dataset.filterKey;
+    if (!key) return;
+    pendingFilters[key] = value;
+    updateCustomFilterSelection(filter);
+    closeCustomFilter(filter, true);
+  }
+
+  function handleOptionKeydown(event, filter, option) {
+    const options = getOptionButtons(filter);
+    const currentIndex = options.indexOf(option);
+    let nextIndex = null;
+
+    if (event.key === "ArrowDown") nextIndex = (currentIndex + 1) % options.length;
+    if (event.key === "ArrowUp") nextIndex = (currentIndex - 1 + options.length) % options.length;
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = options.length - 1;
+
+    if (nextIndex !== null) {
+      event.preventDefault();
+      options[nextIndex]?.focus();
+    }
+  }
+
+  function getOptionCount(field, value) {
+    if (!value) return allMapPoints.length;
+    return allMapPoints.filter((record) => cleanText(record[field]) === value).length;
+  }
+
+  function populateCustomFilter(key, values) {
+    const filter = getCustomFilter(key);
+    const { panel } = getCustomFilterParts(filter);
+    if (!filter || !panel) return;
+
+    if (pendingFilters[key] && !values.includes(pendingFilters[key])) {
+      pendingFilters[key] = "";
+    }
+
+    panel.textContent = "";
+    ["", ...values].forEach((value) => {
+      const option = document.createElement("button");
+      option.className = "community-custom-filter__option";
+      option.type = "button";
+      option.dataset.value = value;
+      option.setAttribute("role", "option");
+
+      const label = document.createElement("span");
+      label.className = "community-custom-filter__option-label";
+      label.textContent = value || "Show all";
+
+      const count = document.createElement("span");
+      count.className = "community-custom-filter__option-count";
+      count.textContent = String(getOptionCount(key, value));
+      count.setAttribute("aria-label", `${count.textContent} records`);
+
+      option.append(label, count);
+      option.addEventListener("click", (event) => {
+        event.stopPropagation();
+        selectCustomFilterOption(filter, value);
+      });
+      option.addEventListener("keydown", (event) => handleOptionKeydown(event, filter, option));
+      panel.appendChild(option);
+    });
+
+    updateCustomFilterSelection(filter);
+  }
+
+  function renderFilterOptions() {
+    if (!isPublicCommunityMode) return;
+    populateCustomFilter("city", CITY_OPTIONS);
+  }
+
+  function matchesAppliedFilters(record) {
+    const categoryMatches = appliedFilters.categories.length === 0
+      || appliedFilters.categories.includes(cleanText(record.category));
+    const cityMatches = !appliedFilters.city || cleanText(record.city) === appliedFilters.city;
+    return categoryMatches && cityMatches;
+  }
+
+  function applyMapFilters() {
+    appliedFilters.categories = getSelectedMapCategories();
+    appliedFilters.city = pendingFilters.city;
+    renderMapFeatures(searchInput?.value || "");
+  }
+
+  function resetMapFilters() {
+    categoryInputs.forEach((input) => {
+      input.checked = false;
+    });
+    Object.keys(pendingFilters).forEach((key) => {
+      pendingFilters[key] = "";
+      appliedFilters[key] = "";
+    });
+    appliedFilters.categories = [];
+    customFilters.forEach(updateCustomFilterSelection);
+    closeAllCustomFilters();
+    renderMapFeatures(searchInput?.value || "");
+  }
+
+  function closeDrawSearchPanel(restoreFocus = false) {
+    if (!drawSearchPanel || !drawSearchToggle) return;
+    drawSearchPanel.hidden = true;
+    drawSearchToggle.setAttribute("aria-expanded", "false");
+    if (drawSearchMessage) drawSearchMessage.textContent = "";
+    if (restoreFocus) drawSearchToggle.focus();
+  }
+
+  function openDrawSearchPanel() {
+    if (!drawSearchPanel || !drawSearchToggle) return;
+    closeFilterPanel();
+    drawSearchPanel.hidden = false;
+    drawSearchToggle.setAttribute("aria-expanded", "true");
+  }
+
+  function closeFilterPanel(restoreFocus = false) {
+    if (!filterPanel || !filterToggle) return;
+    filterPanel.hidden = true;
+    filterToggle.setAttribute("aria-expanded", "false");
+    closeAllCustomFilters();
+    if (restoreFocus) filterToggle.focus();
+  }
+
+  function openFilterPanel() {
+    if (!filterPanel || !filterToggle) return;
+    closeDrawSearchPanel();
+    filterPanel.hidden = false;
+    filterToggle.setAttribute("aria-expanded", "true");
+  }
+
   function renderMapFeatures(searchTerm = "") {
     const normalizedTerm = normalizeSearchValue(searchTerm);
     pointLayer.clearLayers();
     polygonLayer.clearLayers();
 
-    const matchingPoints = allMapPoints.filter((point) => recordMatchesSearch(point, normalizedTerm));
-    const matchingPolygons = allMapPolygons.filter((polygon) => recordMatchesSearch(polygon, normalizedTerm));
+    const matchingPoints = allMapPoints.filter((point) => {
+      const searchMatches = recordMatchesSearch(point, normalizedTerm);
+      return isPublicCommunityMode ? searchMatches && matchesAppliedFilters(point) : searchMatches;
+    });
+    const matchingPolygons = isPublicCommunityMode
+      ? []
+      : allMapPolygons.filter((polygon) => recordMatchesSearch(polygon, normalizedTerm));
     const boundsItems = [];
 
     matchingPoints.forEach((point) => {
       const marker = L.marker([point.lat, point.lng], { icon: bluePinIcon }).addTo(pointLayer);
-      marker.bindPopup(buildCommunityPopupHtml(point, searchTerm, {
-        showAdminPointControls: allowUpload && isAdminMode
-      }), {
+      const popupHtml = isPublicCommunityMode
+        ? buildCommunityPlacePopupHtml(point)
+        : buildCommunityPopupHtml(point, searchTerm, {
+          showAdminPointControls: allowUpload && isAdminMode
+        });
+      marker.bindPopup(popupHtml, {
         className: "community-map-popup",
         closeButton: true,
         autoClose: true
@@ -410,8 +724,10 @@ function initCommunityMap({
     });
 
     const totalMatches = matchingPoints.length + matchingPolygons.length;
-    if (normalizedTerm && totalMatches === 0) {
-      setStatus("No matching map points found.");
+    if (totalMatches === 0) {
+      setStatus(normalizedTerm || isPublicCommunityMode
+        ? "No matching map records found."
+        : "No matching map points found.");
     } else {
       const label = totalMatches === 1 ? "map result" : "map results";
       setStatus(normalizedTerm ? `${totalMatches} matching ${label} found.` : `${totalMatches} ${label} shown.`);
@@ -450,23 +766,58 @@ function initCommunityMap({
 
   async function loadMarkers() {
     try {
-      const snapshot = await getDocs(query(collection(db, "mapPoints")));
+      const collectionName = isPublicCommunityMode ? "communityPlaces" : "mapPoints";
+      const snapshot = await getDocs(query(collection(db, collectionName)));
       allMapPoints = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
-        if (!Number.isFinite(data?.lat) || !Number.isFinite(data?.lng)) return;
-        allMapPoints.push({
+        const lat = normalizeCoordinate(data.lat);
+        const lng = normalizeCoordinate(data.lng);
+
+        if (isPublicCommunityMode) {
+          const communityRecord = {
+            id: docSnap.id,
+            title: cleanText(data.title),
+            category: cleanText(data.category),
+            location: cleanText(data.location),
+            province: cleanText(data.province),
+            city: cleanText(data.city),
+            district: cleanText(data.district),
+            address: cleanText(data.address),
+            associatedType: cleanText(data.associatedType),
+            contributor: cleanText(data.contributor),
+            period: cleanText(data.period),
+            description: cleanText(data.description),
+            tags: data.tags,
+            lat,
+            lng
+          };
+          if (!hasValidCoordinates(communityRecord)) return;
+          allMapPoints.push(communityRecord);
+          return;
+        }
+
+        const mapPoint = {
           id: docSnap.id,
-          ...data
-        });
+          ...data,
+          lat,
+          lng
+        };
+        if (!hasValidCoordinates(mapPoint)) return;
+        allMapPoints.push(mapPoint);
       });
     } catch (err) {
-      console.error("Error loading map points:", err);
-      setStatus("Could not load map points. Please try again later.");
+      console.error("Error loading map records:", err);
+      setStatus("Could not load map records. Please try again later.");
     }
   }
 
   async function loadPolygons() {
+    if (isPublicCommunityMode) {
+      allMapPolygons = [];
+      return;
+    }
+
     try {
       const snapshot = await getDocs(query(collection(db, "mapPolygons")));
       allMapPolygons = [];
@@ -704,6 +1055,93 @@ function initCommunityMap({
     searchInput?.focus();
   });
 
+  if (isPublicCommunityMode) {
+    filterToggle?.addEventListener("click", () => {
+      const isOpen = filterToggle.getAttribute("aria-expanded") === "true";
+      if (isOpen) {
+        closeFilterPanel(true);
+      } else {
+        openFilterPanel();
+      }
+    });
+
+    filterClose?.addEventListener("click", () => closeFilterPanel(true));
+    filterApply?.addEventListener("click", () => {
+      applyMapFilters();
+      closeFilterPanel(true);
+    });
+    filterReset?.addEventListener("click", () => {
+      resetMapFilters();
+      closeFilterPanel(true);
+    });
+
+    drawSearchToggle?.addEventListener("click", () => {
+      const isOpen = drawSearchToggle.getAttribute("aria-expanded") === "true";
+      if (isOpen) {
+        closeDrawSearchPanel(true);
+      } else {
+        openDrawSearchPanel();
+      }
+    });
+
+    drawSearchClose?.addEventListener("click", () => closeDrawSearchPanel(true));
+    drawSearchX?.addEventListener("click", () => closeDrawSearchPanel(true));
+    drawSearchPanel?.querySelectorAll("[data-draw-search-option]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (drawSearchMessage) {
+          drawSearchMessage.textContent = "Draw search will be added in the next phase.";
+        }
+      });
+    });
+
+    customFilters.forEach((filter) => {
+      const { trigger } = getCustomFilterParts(filter);
+      trigger?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const isOpen = trigger.getAttribute("aria-expanded") === "true";
+        if (isOpen) {
+          closeCustomFilter(filter);
+        } else {
+          openCustomFilter(filter);
+        }
+      });
+
+      trigger?.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+          event.preventDefault();
+          openCustomFilter(filter, true);
+        }
+      });
+    });
+
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+      if (target instanceof Node && !customFilters.some((filter) => filter.contains(target))) {
+        closeAllCustomFilters();
+      }
+      if (
+        filterPanel
+        && filterToggle
+        && target instanceof Node
+        && !filterPanel.hidden
+        && !filterPanel.contains(target)
+        && !filterToggle.contains(target)
+      ) {
+        closeFilterPanel();
+      }
+      if (
+        drawSearchPanel
+        && drawSearchToggle
+        && target instanceof Node
+        && !drawSearchPanel.hidden
+        && !drawSearchPanel.contains(target)
+        && !drawSearchToggle.contains(target)
+      ) {
+        closeDrawSearchPanel();
+      }
+    });
+  }
+
   map.on("popupopen", (event) => {
     const popupEl = event.popup.getElement();
     const sourceLayer = event.popup._source;
@@ -835,6 +1273,15 @@ function initCommunityMap({
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      if (isPublicCommunityMode && filterPanel && !filterPanel.hidden) {
+        closeFilterPanel(true);
+        return;
+      }
+      if (isPublicCommunityMode && drawSearchPanel && !drawSearchPanel.hidden) {
+        closeDrawSearchPanel(true);
+        return;
+      }
+      closeAllCustomFilters();
       map.closePopup();
     }
   });
@@ -843,6 +1290,7 @@ function initCommunityMap({
   enablePolygonDrawing();
 
   Promise.all([loadMarkers(), loadPolygons()]).then(() => {
+    renderFilterOptions();
     runSearch(searchInput?.value || initialSearchTerm);
   });
 
