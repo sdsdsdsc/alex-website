@@ -2569,8 +2569,20 @@ footer {
   display: block;
 }
 
+.place-record-details {
+  margin-top: 34px;
+}
+
+.place-record-details h3 {
+  margin: 0 0 14px;
+  padding-left: 12px;
+  border-left: 4px solid #fcbf49;
+  color: #111;
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+}
+
 .place-metadata {
-  margin: 28px 0 0;
+  margin: 0;
   display: grid;
   grid-template-columns: minmax(120px, auto) minmax(0, 1fr);
   background: #fff;

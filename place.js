@@ -56,7 +56,12 @@ function toSafeUrl(value) {
 }
 
 function hasCoordinates(place) {
-  return Number.isFinite(place?.lat) && Number.isFinite(place?.lng);
+  return Number.isFinite(place?.lat)
+    && Number.isFinite(place?.lng)
+    && place.lat >= -90
+    && place.lat <= 90
+    && place.lng >= -180
+    && place.lng <= 180;
 }
 
 function normalizeCoordinate(value) {
@@ -75,19 +80,6 @@ function hasUsableJsonLd(value) {
     && typeof value === "object"
     && !Array.isArray(value)
     && Object.keys(value).length > 0;
-}
-
-function formatDate(createdAt) {
-  if (!Number.isFinite(createdAt?.seconds)) return "Not specified";
-  return new Date(createdAt.seconds * 1000).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric"
-  });
-}
-
-function metadataValue(value) {
-  return cleanText(value) || "Not specified";
 }
 
 function buildMapUrl(place) {
@@ -167,11 +159,36 @@ function setupTabs() {
 
 function appendMetadata(label, value) {
   if (!els.metadata) return;
+  const safeValue = cleanText(value);
+  if (!safeValue) return;
   const dt = document.createElement("dt");
   const dd = document.createElement("dd");
   dt.textContent = label;
-  dd.textContent = value;
+  dd.textContent = safeValue;
   els.metadata.append(dt, dd);
+}
+
+function formatLocation(place) {
+  const parts = [
+    cleanText(place.city),
+    cleanText(place.province)
+  ].filter(Boolean);
+
+  return parts.join(", ") || cleanText(place.location);
+}
+
+function formatCoordinate(value) {
+  if (!Number.isFinite(value)) return "";
+  return Number(value).toFixed(6).replace(/\.?0+$/, "");
+}
+
+function formatCoordinates(place) {
+  if (!hasCoordinates(place)) return "";
+  return `${formatCoordinate(place.lat)}, ${formatCoordinate(place.lng)}`;
+}
+
+function getRelatedArticleUrl(place) {
+  return toSafeUrl(place.relatedArticle || place.linkedArticle || "");
 }
 
 function renderImage(place) {
@@ -194,13 +211,13 @@ function renderImage(place) {
 function renderImageCredit(place) {
   if (!els.imageCredit) return;
   const source = cleanText(place.source) || "Alex's Photo Board";
-  const contributor = cleanText(place.imageCredit) || "Not specified";
+  const contributor = cleanText(place.imageCredit || place.contributor);
   els.imageCredit.textContent = "";
 
-  [
-    ["Image source", source],
-    ["Contributor", contributor]
-  ].forEach(([label, value]) => {
+  const creditLines = [["Image source", source]];
+  if (contributor) creditLines.push(["Contributor", contributor]);
+
+  creditLines.forEach(([label, value]) => {
     const line = document.createElement("span");
     const strong = document.createElement("strong");
     strong.textContent = `${label}: `;
@@ -233,11 +250,11 @@ function renderActions(place) {
   mapLink.textContent = "View on map";
   els.actions.appendChild(mapLink);
 
-  const relatedArticle = toSafeUrl(place.relatedArticle);
+  const relatedArticle = getRelatedArticleUrl(place);
   if (relatedArticle) {
     const articleLink = document.createElement("a");
     articleLink.href = relatedArticle;
-    articleLink.textContent = "Related article";
+    articleLink.textContent = "Read related article";
     els.actions.appendChild(articleLink);
   }
 }
@@ -266,7 +283,7 @@ function renderLocation(place) {
 
   const coords = document.createElement("p");
   coords.className = "place-location__coords";
-  coords.textContent = `Latitude ${place.lat}, Longitude ${place.lng}`;
+  coords.textContent = `Coordinates: ${formatCoordinates(place)}`;
 
   const mapLink = document.createElement("a");
   mapLink.className = "place-location__button";
@@ -301,6 +318,7 @@ function generatePlaceJsonLd(place) {
   const category = cleanText(place.category) || "Community place";
   const location = cleanText(place.location) || "Not specified";
   const source = cleanText(place.source) || "Alex's Photo Board";
+  const relatedArticle = getRelatedArticleUrl(place);
   const jsonld = {
     "@context": "https://schema.org",
     "@type": "Place",
@@ -318,6 +336,7 @@ function generatePlaceJsonLd(place) {
   const imageUrl = toSafeUrl(place.imageUrl);
 
   if (imageUrl) jsonld.image = imageUrl;
+  if (relatedArticle) jsonld.subjectOf = relatedArticle;
   if (hasCoordinates(place)) {
     jsonld.geo = {
       "@type": "GeoCoordinates",
@@ -346,21 +365,24 @@ function injectJsonLd(place) {
 
 function renderPlace(place) {
   const title = cleanText(place.title) || "Untitled community place";
+  const category = cleanText(place.category) || "Community place";
+  const heroLocation = formatLocation(place);
   document.title = `${title} | Alex's Photo Board`;
   if (els.title) els.title.textContent = title;
   if (els.breadcrumbTitle) els.breadcrumbTitle.textContent = title;
-  if (els.kicker) els.kicker.textContent = cleanText(place.category) || "Community place";
-  if (els.heroLocation) els.heroLocation.textContent = cleanText(place.location);
+  if (els.kicker) els.kicker.textContent = category;
+  if (els.heroLocation) els.heroLocation.textContent = heroLocation;
   if (els.description) els.description.textContent = cleanText(place.description) || "No overview has been added yet.";
 
   if (els.metadata) {
     els.metadata.textContent = "";
-    appendMetadata("Category", metadataValue(place.category));
-    appendMetadata("Location", metadataValue(place.location));
-    appendMetadata("Period", metadataValue(place.period));
-    appendMetadata("Grade", metadataValue(place.grade));
-    appendMetadata("Source", metadataValue(place.source));
-    appendMetadata("Created date", formatDate(place.createdAt));
+    appendMetadata("Title", title);
+    appendMetadata("Category", category);
+    appendMetadata("Address", place.address);
+    appendMetadata("Locality", place.location);
+    appendMetadata("Associated type", place.associatedType);
+    appendMetadata("Period", place.period);
+    appendMetadata("Grade", place.grade);
   }
 
   renderImage(place);
