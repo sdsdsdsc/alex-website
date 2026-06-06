@@ -731,8 +731,40 @@ body.community-modal-open {
   line-height: 1.35;
 }
 
+.map-search-sidebar__link:hover,
+.map-search-sidebar__link:focus-visible {
+  color: #17475b;
+  outline: 3px solid #fcbf49;
+  outline-offset: 3px;
+  padding-left: 10px;
+}
+
 .map-search-sidebar__link.active {
   font-weight: 700;
+}
+
+.map-reference-sections {
+  width: min(1100px, calc(100% - 40px));
+  margin: 36px auto 0;
+  display: grid;
+  gap: 14px;
+}
+
+.map-reference-section {
+  scroll-margin-top: 120px;
+  padding: 18px 0;
+  border-top: 1px solid #ddd;
+  color: #333;
+}
+
+.map-reference-section p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+#map-search {
+  scroll-margin-top: 120px;
 }
 
 .map-search-main {
