@@ -68,13 +68,32 @@
   </header>
 
   <main class="admin-page">
-    <section class="admin-card" id="adminDashboard" aria-labelledby="adminDashboardTitle" hidden>
+    <section class="admin-card admin-card--wide" id="adminDashboard" aria-labelledby="adminDashboardTitle" hidden>
       <h2 id="adminDashboardTitle">Admin Dashboard</h2>
       <p id="adminStatus" class="admin-status" role="status">Checking admin sign-in...</p>
-      <div class="admin-actions">
-        <a href="upload-article.html">Publish New Article</a>
-        <a href="manage-articles.html">Manage Articles</a>
-        <a href="map.html?admin=true">Manage Map Points</a>
+
+      <div class="admin-dashboard-groups" aria-label="Admin task groups">
+        <section class="admin-dashboard-section" aria-labelledby="communityPlacesAdminTitle">
+          <h3 id="communityPlacesAdminTitle">Community Places</h3>
+          <p>Public Search, Map, and Place pages read from communityPlaces.</p>
+          <p class="admin-help-note">Create, edit, review, and carefully delete communityPlaces records.</p>
+          <p class="admin-help-note">For bulk imports, use <code>scripts/import-community-places.js</code> with <code>--dry-run</code> first.</p>
+          <div class="admin-actions">
+            <a href="manage-community-places.html">Manage Community Places</a>
+          </div>
+        </section>
+
+        <section class="admin-dashboard-section" aria-labelledby="articlesAdminTitle">
+          <h3 id="articlesAdminTitle">Articles</h3>
+          <p>Create and manage News and History article records.</p>
+          <div class="admin-actions">
+            <a href="upload-article.html">Publish New Article</a>
+            <a href="manage-articles.html">Manage Articles</a>
+          </div>
+        </section>
+      </div>
+
+      <div class="admin-actions admin-actions--footer">
         <button id="adminSignOut" type="button">Sign Out</button>
       </div>
     </section>

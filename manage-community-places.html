@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Manage Community Places | Alex's Photo Board</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module">
+    import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      deleteDoc,
+      deleteField,
+      doc,
+      getDoc,
+      getDocs,
+      serverTimestamp,
+      setDoc,
+      updateDoc
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
+      authDomain: "alexs-community-efcd8.firebaseapp.com",
+      projectId: "alexs-community-efcd8",
+      storageBucket: "alexs-community-efcd8.firebasestorage.app",
+      messagingSenderId: "214395622099",
+      appId: "1:214395622099:web:44f99a181741caf3117a26"
+    };
+
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const COLLECTION_NAME = "communityPlaces";
+    const OPTIONAL_STRING_FIELDS = [
+      "location",
+      "province",
+      "city",
+      "district",
+      "address",
+      "associatedType",
+      "contributor",
+      "period",
+      "grade",
+      "source",
+      "description",
+      "imageUrl",
+      "relatedArticle"
+    ];
+    let activeMode = "create";
+    let activeRecordId = "";
+
+    function buildLoginUrl() {
+      const loginUrl = new URL("admin-login.html", window.location.href);
+      loginUrl.searchParams.set("next", `${window.location.pathname}${window.location.search}`);
+      return loginUrl.href;
+    }
+
+    function cleanText(value) {
+      return String(value || "").trim();
+    }
+
+    function isPlainObject(value) {
+      return value !== null && typeof value === "object" && !Array.isArray(value);
+    }
+
+    function normalizeCoordinate(value) {
+      if (value === undefined || value === null || value === "") return null;
+      const numericValue = Number(value);
+      return Number.isFinite(numericValue) ? numericValue : null;
+    }
+
+    function hasValidCoordinates(record) {
+      return Number.isFinite(record.lat)
+        && Number.isFinite(record.lng)
+        && record.lat >= -90
+        && record.lat <= 90
+        && record.lng >= -180
+        && record.lng <= 180;
+    }
+
+    function getLocality(record) {
+      return cleanText(record.location);
+    }
+
+    function setStatus(message) {
+      const status = document.getElementById("manageCommunityPlacesStatus");
+      if (status) status.textContent = message;
+    }
+
+    function setFormMessage(message, type = "error") {
+      const messageEl = document.getElementById("communityPlaceFormMessage");
+      if (!messageEl) return;
+      messageEl.textContent = message;
+      messageEl.className = type === "success" ? "admin-success" : "admin-error";
+    }
+
+    function setDeleteMessage(card, message, type = "error") {
+      const messageEl = card.querySelector(".manage-community-place-card__delete-message");
+      if (!messageEl) return;
+      messageEl.textContent = message;
+      messageEl.className = type === "success"
+        ? "manage-community-place-card__delete-message admin-success"
+        : "manage-community-place-card__delete-message admin-error";
+    }
+
+    function getInputValue(name) {
+      return cleanText(document.querySelector(`[name="${name}"]`)?.value);
+    }
+
+    function setInputValue(name, value) {
+      const input = document.querySelector(`[name="${name}"]`);
+      if (input) input.value = value === undefined || value === null ? "" : String(value);
+    }
+
+    function resetFormValues() {
+      document.getElementById("communityPlaceForm")?.reset();
+      setInputValue("jsonld", "");
+      setFormMessage("");
+    }
+
+    function showForm(mode, record = null) {
+      activeMode = mode;
+      activeRecordId = record?.id || "";
+      resetFormValues();
+
+      const formSection = document.getElementById("communityPlaceFormSection");
+      const formTitle = document.getElementById("communityPlaceFormTitle");
+      const idInput = document.querySelector('[name="recordId"]');
+      const saveButton = document.getElementById("communityPlaceSaveButton");
+
+      if (formSection) formSection.hidden = false;
+      if (formTitle) formTitle.textContent = mode === "edit" ? "Edit Community Place" : "New Community Place";
+      if (saveButton) saveButton.textContent = mode === "edit" ? "Save Changes" : "Create Record";
+      if (idInput) {
+        idInput.readOnly = mode === "edit";
+        idInput.classList.toggle("is-readonly", mode === "edit");
+      }
+
+      if (record) {
+        setInputValue("recordId", record.id);
+        setInputValue("title", record.title);
+        setInputValue("category", record.category);
+        setInputValue("location", record.location);
+        setInputValue("province", record.province);
+        setInputValue("city", record.city);
+        setInputValue("district", record.district);
+        setInputValue("address", record.address);
+        setInputValue("associatedType", record.associatedType);
+        setInputValue("contributor", record.contributor);
+        setInputValue("period", record.period);
+        setInputValue("grade", record.grade);
+        setInputValue("source", record.source);
+        setInputValue("description", record.description);
+        setInputValue("imageUrl", record.imageUrl);
+        setInputValue("lat", Number.isFinite(record.lat) ? record.lat : "");
+        setInputValue("lng", Number.isFinite(record.lng) ? record.lng : "");
+        setInputValue("tags", Array.isArray(record.tags) ? record.tags.join(", ") : record.tags);
+        setInputValue("relatedArticle", record.relatedArticle);
+        setInputValue("jsonld", isPlainObject(record.jsonld) ? JSON.stringify(record.jsonld, null, 2) : "");
+      }
+
+      formSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.querySelector('[name="recordId"]')?.focus();
+    }
+
+    function hideForm() {
+      const formSection = document.getElementById("communityPlaceFormSection");
+      if (formSection) formSection.hidden = true;
+      activeMode = "create";
+      activeRecordId = "";
+      resetFormValues();
+    }
+
+    function validateRecordId(value) {
+      const recordId = cleanText(value);
+      if (!recordId) return "Document ID is required.";
+      if (!/^[a-z0-9_-]+$/.test(recordId)) {
+        return "Document ID must use lowercase letters, numbers, hyphens, or underscores only.";
+      }
+      return "";
+    }
+
+    function parseCoordinates() {
+      const latRaw = getInputValue("lat");
+      const lngRaw = getInputValue("lng");
+      const hasLat = latRaw !== "";
+      const hasLng = lngRaw !== "";
+
+      if (hasLat !== hasLng) {
+        throw new Error("Latitude and longitude must both be provided, or both left blank.");
+      }
+      if (!hasLat && !hasLng) {
+        return {};
+      }
+
+      const lat = Number(latRaw);
+      const lng = Number(lngRaw);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        throw new Error("Latitude and longitude must be valid numbers.");
+      }
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        throw new Error("Latitude must be between -90 and 90, and longitude must be between -180 and 180.");
+      }
+      return { lat, lng };
+    }
+
+    function parseTags() {
+      return getInputValue("tags")
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+    }
+
+    function parseJsonLd() {
+      const rawJsonLd = getInputValue("jsonld");
+      if (!rawJsonLd) return { hasValue: false, value: null };
+
+      let parsed;
+      try {
+        parsed = JSON.parse(rawJsonLd);
+      } catch (err) {
+        throw new Error(`JSON-LD is not valid JSON: ${err.message}`);
+      }
+      if (!isPlainObject(parsed)) {
+        throw new Error("JSON-LD must be a JSON object.");
+      }
+      return { hasValue: true, value: parsed };
+    }
+
+    function buildPayload({ forUpdate = false } = {}) {
+      const recordId = getInputValue("recordId");
+      const idError = validateRecordId(recordId);
+      if (idError) throw new Error(idError);
+
+      const title = getInputValue("title");
+      const category = getInputValue("category");
+      if (!title) throw new Error("Title is required.");
+      if (!category) throw new Error("Category is required.");
+
+      const payload = {
+        id: recordId,
+        title,
+        category
+      };
+
+      OPTIONAL_STRING_FIELDS.forEach((field) => {
+        const value = getInputValue(field);
+        if (value) {
+          payload[field] = value;
+        } else if (forUpdate) {
+          payload[field] = deleteField();
+        }
+      });
+
+      const coordinates = parseCoordinates();
+      if (coordinates.lat !== undefined && coordinates.lng !== undefined) {
+        payload.lat = coordinates.lat;
+        payload.lng = coordinates.lng;
+      } else if (forUpdate) {
+        payload.lat = deleteField();
+        payload.lng = deleteField();
+      }
+
+      const tags = parseTags();
+      if (tags.length > 0) {
+        payload.tags = tags;
+      } else if (forUpdate) {
+        payload.tags = deleteField();
+      }
+
+      const jsonld = parseJsonLd();
+      if (jsonld.hasValue) {
+        payload.jsonld = jsonld.value;
+      } else if (forUpdate) {
+        payload.jsonld = deleteField();
+      }
+
+      return { recordId, payload };
+    }
+
+    function appendDetail(list, label, value) {
+      const safeValue = cleanText(value);
+      if (!safeValue) return;
+
+      const item = document.createElement("div");
+      item.className = "manage-community-place-card__detail";
+
+      const term = document.createElement("dt");
+      term.textContent = label;
+
+      const description = document.createElement("dd");
+      description.textContent = safeValue;
+
+      item.append(term, description);
+      list.appendChild(item);
+    }
+
+    function createRecordCard(record) {
+      const card = document.createElement("article");
+      card.className = "manage-community-place-card";
+      card.dataset.recordId = record.id;
+
+      const body = document.createElement("div");
+      body.className = "manage-community-place-card__body";
+
+      const title = document.createElement("h3");
+      title.textContent = cleanText(record.title) || "Untitled community place";
+      body.appendChild(title);
+
+      const idLine = document.createElement("p");
+      idLine.className = "manage-community-place-card__id";
+      idLine.textContent = `Document ID: ${record.id}`;
+      body.appendChild(idLine);
+
+      const details = document.createElement("dl");
+      details.className = "manage-community-place-card__details";
+      appendDetail(details, "Category", record.category);
+      appendDetail(details, "Locality", getLocality(record));
+      appendDetail(details, "Province", record.province);
+      appendDetail(details, "City", record.city);
+      appendDetail(details, "District", record.district);
+      appendDetail(details, "Period", record.period);
+      appendDetail(details, "Contributor", record.contributor);
+      body.appendChild(details);
+
+      const actions = document.createElement("div");
+      actions.className = "admin-record-actions";
+
+      const publicRecordLink = document.createElement("a");
+      publicRecordLink.href = `place.html?id=${encodeURIComponent(record.id)}`;
+      publicRecordLink.textContent = "Open public record";
+      actions.appendChild(publicRecordLink);
+
+      if (hasValidCoordinates(record)) {
+        const mapLink = document.createElement("a");
+        mapLink.href = `map.html?lat=${encodeURIComponent(record.lat)}&lng=${encodeURIComponent(record.lng)}`;
+        mapLink.textContent = "View on map";
+        actions.appendChild(mapLink);
+      }
+
+      const editButton = document.createElement("button");
+      editButton.type = "button";
+      editButton.textContent = "Edit";
+      editButton.addEventListener("click", () => showForm("edit", record));
+      actions.appendChild(editButton);
+
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "admin-danger-button";
+      deleteButton.textContent = "Delete";
+      deleteButton.addEventListener("click", () => {
+        const panel = card.querySelector(".manage-community-place-card__delete");
+        if (panel) {
+          panel.hidden = false;
+          panel.querySelector("input")?.focus();
+        }
+      });
+      actions.appendChild(deleteButton);
+
+      const deletePanel = document.createElement("div");
+      deletePanel.className = "manage-community-place-card__delete";
+      deletePanel.hidden = true;
+
+      const warning = document.createElement("p");
+      warning.className = "admin-warning-note";
+      warning.textContent = "This permanently deletes this communityPlaces record from Firestore. It does not delete related images or article records.";
+
+      const label = document.createElement("label");
+      label.textContent = `Type ${record.id} to confirm deletion`;
+
+      const confirmInput = document.createElement("input");
+      confirmInput.type = "text";
+      confirmInput.autocomplete = "off";
+
+      const deleteMessage = document.createElement("p");
+      deleteMessage.className = "manage-community-place-card__delete-message admin-error";
+      deleteMessage.setAttribute("role", "alert");
+      deleteMessage.setAttribute("aria-live", "polite");
+
+      const deleteActions = document.createElement("div");
+      deleteActions.className = "admin-record-actions";
+
+      const confirmButton = document.createElement("button");
+      confirmButton.type = "button";
+      confirmButton.className = "admin-danger-button";
+      confirmButton.textContent = "Permanently Delete";
+      confirmButton.disabled = true;
+
+      const cancelDeleteButton = document.createElement("button");
+      cancelDeleteButton.type = "button";
+      cancelDeleteButton.textContent = "Cancel";
+
+      confirmInput.addEventListener("input", () => {
+        confirmButton.disabled = confirmInput.value.trim() !== record.id;
+      });
+
+      cancelDeleteButton.addEventListener("click", () => {
+        confirmInput.value = "";
+        confirmButton.disabled = true;
+        deletePanel.hidden = true;
+        setDeleteMessage(card, "");
+      });
+
+      confirmButton.addEventListener("click", async () => {
+        if (confirmInput.value.trim() !== record.id) {
+          setDeleteMessage(card, "Type the exact document ID before deleting.");
+          return;
+        }
+
+        confirmButton.disabled = true;
+        try {
+          await deleteDoc(doc(db, COLLECTION_NAME, record.id));
+          setStatus(`Deleted community place record: ${record.id}`);
+          await loadCommunityPlaces();
+        } catch (err) {
+          console.error("Failed to delete communityPlaces record:", err);
+          confirmButton.disabled = false;
+          setDeleteMessage(card, "Could not delete this record. Please try again.");
+        }
+      });
+
+      deleteActions.append(confirmButton, cancelDeleteButton);
+      label.appendChild(confirmInput);
+      deletePanel.append(warning, label, deleteMessage, deleteActions);
+
+      body.appendChild(actions);
+      body.appendChild(deletePanel);
+      card.appendChild(body);
+      return card;
+    }
+
+    async function saveCommunityPlace(event) {
+      event.preventDefault();
+      const saveButton = document.getElementById("communityPlaceSaveButton");
+      if (saveButton) saveButton.disabled = true;
+      setFormMessage("");
+
+      try {
+        if (activeMode === "edit") {
+          const { recordId, payload } = buildPayload({ forUpdate: true });
+          if (recordId !== activeRecordId) {
+            throw new Error("Document ID cannot be changed while editing.");
+          }
+
+          await updateDoc(doc(db, COLLECTION_NAME, recordId), {
+            ...payload,
+            updatedAt: serverTimestamp()
+          });
+          setFormMessage("Community place updated.", "success");
+          setStatus(`Updated community place record: ${recordId}`);
+        } else {
+          const { recordId, payload } = buildPayload();
+          const recordRef = doc(db, COLLECTION_NAME, recordId);
+          const existing = await getDoc(recordRef);
+          if (existing.exists()) {
+            throw new Error("A community place with this document ID already exists.");
+          }
+
+          await setDoc(recordRef, {
+            ...payload,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+          setFormMessage("Community place created.", "success");
+          setStatus(`Created community place record: ${recordId}`);
+        }
+
+        await loadCommunityPlaces();
+        hideForm();
+      } catch (err) {
+        console.error("Failed to save communityPlaces record:", err);
+        setFormMessage(err.message || "Could not save this community place.");
+      } finally {
+        if (saveButton) saveButton.disabled = false;
+      }
+    }
+
+    async function loadCommunityPlaces() {
+      const list = document.getElementById("communityPlacesList");
+      if (!list) return;
+
+      setStatus("Loading community places...");
+      list.textContent = "Loading...";
+
+      try {
+        const snapshot = await getDocs(collection(db, "communityPlaces"));
+        list.textContent = "";
+
+        if (snapshot.empty) {
+          const emptyState = document.createElement("p");
+          emptyState.className = "admin-empty-state";
+          emptyState.textContent = "No community place records found.";
+          list.appendChild(emptyState);
+          setStatus("No community places found.");
+          return;
+        }
+
+        const records = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          records.push({
+            id: docSnap.id,
+            ...data,
+            lat: normalizeCoordinate(data.lat),
+            lng: normalizeCoordinate(data.lng)
+          });
+        });
+
+        records
+          .sort((a, b) => cleanText(a.title).localeCompare(cleanText(b.title)))
+          .forEach((record) => {
+            list.appendChild(createRecordCard(record));
+          });
+
+        setStatus(`${records.length} community place record${records.length === 1 ? "" : "s"} loaded.`);
+      } catch (err) {
+        console.error("Failed to load communityPlaces:", err);
+        list.textContent = "";
+        const errorState = document.createElement("p");
+        errorState.className = "admin-error";
+        errorState.textContent = "Could not load community place records. Please try again later.";
+        list.appendChild(errorState);
+        setStatus("Could not load community places.");
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const page = document.getElementById("manageCommunityPlacesPage");
+      const signOutButton = document.getElementById("manageCommunityPlacesSignOut");
+      const newButton = document.getElementById("newCommunityPlaceButton");
+      const cancelButton = document.getElementById("communityPlaceCancelButton");
+      const form = document.getElementById("communityPlaceForm");
+
+      newButton?.addEventListener("click", () => showForm("create"));
+      cancelButton?.addEventListener("click", hideForm);
+      form?.addEventListener("submit", saveCommunityPlace);
+
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          window.location.href = buildLoginUrl();
+          return;
+        }
+        if (page) page.hidden = false;
+        loadCommunityPlaces();
+      });
+
+      signOutButton?.addEventListener("click", async () => {
+        signOutButton.disabled = true;
+        try {
+          await signOut(auth);
+          window.location.href = "admin-login.html";
+        } catch (err) {
+          console.error("Sign out failed:", err);
+          signOutButton.disabled = false;
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
+    <nav class="menu-bar" aria-label="Admin navigation">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="news.html" class="nav-link">News</a>
+      <a href="history.html" class="nav-link">History</a>
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="search.html" class="nav-link">Search</a>
+      <a href="export.html" class="nav-link">Export</a>
+    </nav>
+  </header>
+
+  <main class="admin-page admin-page--wide">
+    <section class="admin-card admin-card--wide" id="manageCommunityPlacesPage" aria-labelledby="manageCommunityPlacesTitle" hidden>
+      <div class="admin-toolbar">
+        <p id="manageCommunityPlacesStatus" role="status" aria-live="polite">Checking admin sign-in...</p>
+        <a href="admin.html">Admin Dashboard</a>
+        <button id="newCommunityPlaceButton" type="button">New Community Place</button>
+        <button id="manageCommunityPlacesSignOut" type="button">Sign Out</button>
+      </div>
+
+      <h2 id="manageCommunityPlacesTitle">Manage Community Places</h2>
+      <p class="admin-readonly-note">Create, edit, and delete communityPlaces records. Use delete carefully.</p>
+
+      <section class="admin-community-place-form-section" id="communityPlaceFormSection" aria-labelledby="communityPlaceFormTitle" hidden>
+        <h3 id="communityPlaceFormTitle">New Community Place</h3>
+        <p id="communityPlaceFormMessage" class="admin-error" role="alert" aria-live="polite"></p>
+
+        <form id="communityPlaceForm" class="admin-community-place-form">
+          <fieldset>
+            <legend>Core identity</legend>
+
+            <label for="recordId">Document ID / slug</label>
+            <input id="recordId" name="recordId" type="text" autocomplete="off" required>
+
+            <label for="placeTitleInput">Title</label>
+            <input id="placeTitleInput" name="title" type="text" required>
+
+            <label for="placeCategoryInput">Category</label>
+            <input id="placeCategoryInput" name="category" type="text" list="communityPlaceCategoryOptions" required>
+            <datalist id="communityPlaceCategoryOptions">
+              <option value="Site"></option>
+              <option value="Building"></option>
+              <option value="Park"></option>
+              <option value="Public Space"></option>
+              <option value="Heritage Place"></option>
+              <option value="Community Facility"></option>
+              <option value="Ruins / Relic"></option>
+            </datalist>
+
+            <label for="placeDescriptionInput">Description</label>
+            <textarea id="placeDescriptionInput" name="description" rows="4"></textarea>
+          </fieldset>
+
+          <fieldset>
+            <legend>Location</legend>
+
+            <label for="placeLocationInput">Locality / location</label>
+            <input id="placeLocationInput" name="location" type="text">
+
+            <label for="placeProvinceInput">Province</label>
+            <input id="placeProvinceInput" name="province" type="text">
+
+            <label for="placeCityInput">City</label>
+            <input id="placeCityInput" name="city" type="text">
+
+            <label for="placeDistrictInput">District</label>
+            <input id="placeDistrictInput" name="district" type="text">
+
+            <label for="placeAddressInput">Address</label>
+            <input id="placeAddressInput" name="address" type="text">
+
+            <div class="admin-community-place-form__split">
+              <label for="placeLatInput">
+                <span>Latitude</span>
+                <input id="placeLatInput" name="lat" type="text" inputmode="decimal">
+              </label>
+
+              <label for="placeLngInput">
+                <span>Longitude</span>
+                <input id="placeLngInput" name="lng" type="text" inputmode="decimal">
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Classification</legend>
+
+            <label for="placeAssociatedTypeInput">Associated type</label>
+            <input id="placeAssociatedTypeInput" name="associatedType" type="text" placeholder="Community Public Space">
+
+            <label for="placeContributorInput">Contributor</label>
+            <input id="placeContributorInput" name="contributor" type="text">
+
+            <label for="placePeriodInput">Period</label>
+            <input id="placePeriodInput" name="period" type="text" placeholder="Contemporary">
+
+            <label for="placeGradeInput">Grade</label>
+            <input id="placeGradeInput" name="grade" type="text">
+
+            <label for="placeSourceInput">Source</label>
+            <input id="placeSourceInput" name="source" type="text">
+
+            <label for="placeTagsInput">Tags</label>
+            <input id="placeTagsInput" name="tags" type="text" placeholder="community park, public space">
+          </fieldset>
+
+          <fieldset>
+            <legend>Media and links</legend>
+
+            <label for="placeImageUrlInput">Image URL</label>
+            <input id="placeImageUrlInput" name="imageUrl" type="url">
+
+            <label for="placeRelatedArticleInput">Related article</label>
+            <input id="placeRelatedArticleInput" name="relatedArticle" type="text">
+          </fieldset>
+
+          <fieldset>
+            <legend>Structured data / advanced</legend>
+            <p class="admin-help-note">Optional advanced JSON-LD. Leave blank to omit it on new records.</p>
+
+            <label for="placeJsonldInput">JSON-LD</label>
+            <textarea id="placeJsonldInput" name="jsonld" rows="8" spellcheck="false"></textarea>
+          </fieldset>
+
+          <div class="admin-record-actions">
+            <button id="communityPlaceSaveButton" type="submit">Create Record</button>
+            <button id="communityPlaceCancelButton" type="button">Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <div class="manage-community-places-list" id="communityPlacesList"></div>
+    </section>
+  </main>
+</body>
+</html>

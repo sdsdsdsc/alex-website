@@ -2479,7 +2479,7 @@ footer {
   min-width: 150px;
   min-height: 58px;
   padding: 0 18px;
-  border: 1px solid #2f7a54;
+  border: 1px solid #17475b;
   background: #fff;
   color: #17475b;
   font-weight: 800;
@@ -2489,14 +2489,14 @@ footer {
 
 .place-record-tab:hover,
 .place-record-tab:focus-visible {
-  background: #eaf3ee;
+  background: #eef5f6;
   color: #17475b;
 }
 
 .place-record-tab.active {
-  background: #2f7a54;
+  background: #17475b;
   color: #fff;
-  box-shadow: 0 8px 18px rgba(47, 122, 84, 0.22);
+  box-shadow: 0 8px 18px rgba(23, 71, 91, 0.22);
 }
 
 .place-record-tab.active::after {
@@ -2506,7 +2506,7 @@ footer {
   bottom: -17px;
   width: 28px;
   height: 28px;
-  background: #2f7a54;
+  background: #17475b;
   transform: translateX(-50%) rotate(45deg);
 }
 
@@ -2782,9 +2782,72 @@ footer {
   font-weight: 800;
 }
 
+.admin-success {
+  min-height: 1.4em;
+  margin: 0;
+  color: #247048;
+  font-weight: 800;
+}
+
 .admin-status {
   color: #333;
   font-weight: 700;
+}
+
+.admin-dashboard-groups {
+  display: grid;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.admin-dashboard-section {
+  padding: 18px;
+  border: 1px solid #d7dde1;
+  background: #f8fafb;
+}
+
+.admin-dashboard-section h3 {
+  margin: 0 0 10px;
+  color: #17475b;
+  font-size: 1.25rem;
+}
+
+.admin-dashboard-section p {
+  margin: 0 0 12px;
+  line-height: 1.55;
+}
+
+.admin-dashboard-section p:last-child {
+  margin-bottom: 0;
+}
+
+.admin-disabled-note,
+.admin-help-note {
+  font-weight: 800;
+}
+
+.admin-disabled-note {
+  color: #555;
+}
+
+.admin-help-note code {
+  padding: 2px 5px;
+  background: #eef5f6;
+  color: #17475b;
+  font-size: 0.95em;
+}
+
+.admin-readonly-note,
+.admin-empty-state {
+  color: #333;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.admin-warning-note {
+  color: #7a1d1d;
+  font-weight: 800;
+  line-height: 1.55;
 }
 
 .admin-actions,
@@ -2793,6 +2856,76 @@ footer {
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
+}
+
+.admin-actions--footer {
+  margin-top: 22px;
+}
+
+.admin-community-place-form-section {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid #d7dde1;
+  background: #fff;
+}
+
+.admin-community-place-form-section h3 {
+  margin: 0 0 12px;
+  color: #17475b;
+}
+
+.admin-community-place-form {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-community-place-form fieldset {
+  margin: 0;
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+  border: 1px solid #d7dde1;
+  background: #f8fafb;
+}
+
+.admin-community-place-form legend {
+  padding: 0 8px;
+  color: #17475b;
+  font-weight: 800;
+}
+
+.admin-community-place-form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 800;
+}
+
+.admin-community-place-form input,
+.admin-community-place-form textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #b9c3c9;
+  border-radius: 4px;
+  background: #fff;
+  color: #111;
+  font: inherit;
+}
+
+.admin-community-place-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.admin-community-place-form input.is-readonly {
+  background: #eef2f4;
+  color: #4d5961;
+}
+
+.admin-community-place-form__split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .manage-articles-section {
@@ -2808,6 +2941,87 @@ footer {
 .manage-articles-list {
   display: grid;
   gap: 14px;
+}
+
+.manage-community-places-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.manage-community-place-card {
+  padding: 16px;
+  border: 1px solid #d7dde1;
+  background: #f8fafb;
+}
+
+.manage-community-place-card__body {
+  display: grid;
+  gap: 12px;
+}
+
+.manage-community-place-card__body h3 {
+  margin: 0;
+  color: #111;
+  font-size: 1.2rem;
+}
+
+.manage-community-place-card__id {
+  margin: 0;
+  color: #4d5961;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.manage-community-place-card__details {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+}
+
+.manage-community-place-card__detail {
+  display: grid;
+  gap: 2px;
+}
+
+.manage-community-place-card__detail dt,
+.manage-community-place-card__detail dd {
+  margin: 0;
+}
+
+.manage-community-place-card__detail dt {
+  color: #17475b;
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.manage-community-place-card__detail dd {
+  color: #222;
+  line-height: 1.45;
+}
+
+.manage-community-place-card__delete {
+  padding: 14px;
+  border: 1px solid #b43333;
+  background: #fff4f4;
+}
+
+.manage-community-place-card__delete label {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0;
+  color: #111;
+  font-weight: 800;
+}
+
+.manage-community-place-card__delete input {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #b43333;
+  border-radius: 4px;
+  font: inherit;
 }
 
 .manage-article-card {
@@ -2844,6 +3058,7 @@ footer {
   font-weight: 700;
 }
 
+.admin-record-actions,
 .manage-article-card__actions,
 .map-point-card__admin-actions {
   display: flex;
@@ -2851,6 +3066,8 @@ footer {
   gap: 8px;
 }
 
+.admin-record-actions a,
+.admin-record-actions button,
 .manage-article-card__actions a,
 .manage-article-card__actions button,
 .map-point-card__admin-actions button {
@@ -2867,6 +3084,10 @@ footer {
   cursor: pointer;
 }
 
+.admin-record-actions a:hover,
+.admin-record-actions a:focus-visible,
+.admin-record-actions button:hover,
+.admin-record-actions button:focus-visible,
 .manage-article-card__actions a:hover,
 .manage-article-card__actions a:focus-visible,
 .manage-article-card__actions button:hover,
@@ -2874,6 +3095,22 @@ footer {
 .map-point-card__admin-actions button:hover,
 .map-point-card__admin-actions button:focus-visible {
   background: #17475b;
+  color: #fff;
+}
+
+.admin-record-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.admin-record-actions .admin-danger-button {
+  border-color: #a21b1b;
+  color: #a21b1b;
+}
+
+.admin-record-actions .admin-danger-button:hover,
+.admin-record-actions .admin-danger-button:focus-visible {
+  background: #a21b1b;
   color: #fff;
 }
 
@@ -2904,6 +3141,8 @@ footer {
   .community-search-shell,
   .place-overview,
   .place-comments-panel,
+  .admin-community-place-form__split,
+  .manage-community-place-card__details,
   .manage-article-card {
     grid-template-columns: 1fr;
   }
