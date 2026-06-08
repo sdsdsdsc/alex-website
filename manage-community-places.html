@@ -40,6 +40,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
     const COLLECTION_NAME = "communityPlaces";
+    const ARTICLE_COLLECTIONS = new Set(["news", "history"]);
     const OPTIONAL_STRING_FIELDS = [
       "location",
       "province",
@@ -123,8 +124,91 @@
 
     function resetFormValues() {
       document.getElementById("communityPlaceForm")?.reset();
+      renderRelatedArticleRows([]);
       setInputValue("jsonld", "");
       setFormMessage("");
+    }
+
+    function getRelatedArticleRowsContainer() {
+      return document.getElementById("relatedArticlesRows");
+    }
+
+    function normalizeRelatedArticles(value) {
+      if (!Array.isArray(value)) return [];
+      return value
+        .map((item) => ({
+          collection: cleanText(item?.collection),
+          id: cleanText(item?.id),
+          title: cleanText(item?.title)
+        }))
+        .filter((item) => ARTICLE_COLLECTIONS.has(item.collection) && item.id);
+    }
+
+    function createRelatedArticleRow(reference = {}) {
+      const row = document.createElement("div");
+      row.className = "admin-related-article-row";
+
+      const collectionLabel = document.createElement("label");
+      collectionLabel.textContent = "Collection";
+      const collectionSelect = document.createElement("select");
+      collectionSelect.className = "related-article-collection";
+      collectionSelect.append(new Option("News", "news"), new Option("History", "history"));
+      collectionSelect.value = ARTICLE_COLLECTIONS.has(reference.collection) ? reference.collection : "news";
+      collectionLabel.appendChild(collectionSelect);
+
+      const idLabel = document.createElement("label");
+      idLabel.textContent = "Article document ID";
+      const idInput = document.createElement("input");
+      idInput.className = "related-article-id";
+      idInput.type = "text";
+      idInput.value = cleanText(reference.id);
+      idLabel.appendChild(idInput);
+
+      const titleLabel = document.createElement("label");
+      titleLabel.textContent = "Display title";
+      const titleInput = document.createElement("input");
+      titleInput.className = "related-article-title";
+      titleInput.type = "text";
+      titleInput.value = cleanText(reference.title);
+      titleLabel.appendChild(titleInput);
+
+      const removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.className = "admin-related-article-row__remove";
+      removeButton.textContent = "Remove row";
+      removeButton.addEventListener("click", () => row.remove());
+
+      row.append(collectionLabel, idLabel, titleLabel, removeButton);
+      return row;
+    }
+
+    function addRelatedArticleRow(reference = {}) {
+      getRelatedArticleRowsContainer()?.appendChild(createRelatedArticleRow(reference));
+    }
+
+    function renderRelatedArticleRows(relatedArticles) {
+      const container = getRelatedArticleRowsContainer();
+      if (!container) return;
+      container.textContent = "";
+      normalizeRelatedArticles(relatedArticles).forEach((reference) => {
+        container.appendChild(createRelatedArticleRow(reference));
+      });
+    }
+
+    function parseRelatedArticles() {
+      return Array.from(document.querySelectorAll(".admin-related-article-row"))
+        .map((row) => ({
+          collection: cleanText(row.querySelector(".related-article-collection")?.value),
+          id: cleanText(row.querySelector(".related-article-id")?.value),
+          title: cleanText(row.querySelector(".related-article-title")?.value)
+        }))
+        .filter((reference) => {
+          if (!reference.collection && !reference.id && !reference.title) return false;
+          if (!ARTICLE_COLLECTIONS.has(reference.collection)) {
+            throw new Error("Related article collection must be news or history.");
+          }
+          return Boolean(reference.id);
+        });
     }
 
     function showForm(mode, record = null) {
@@ -165,6 +249,7 @@
         setInputValue("lng", Number.isFinite(record.lng) ? record.lng : "");
         setInputValue("tags", Array.isArray(record.tags) ? record.tags.join(", ") : record.tags);
         setInputValue("relatedArticle", record.relatedArticle);
+        renderRelatedArticleRows(record.relatedArticles);
         setInputValue("jsonld", isPlainObject(record.jsonld) ? JSON.stringify(record.jsonld, null, 2) : "");
       }
 
@@ -277,6 +362,13 @@
         payload.tags = deleteField();
       }
 
+      const relatedArticles = parseRelatedArticles();
+      if (relatedArticles.length > 0) {
+        payload.relatedArticles = relatedArticles;
+      } else if (forUpdate) {
+        payload.relatedArticles = deleteField();
+      }
+
       const jsonld = parseJsonLd();
       if (jsonld.hasValue) {
         payload.jsonld = jsonld.value;
@@ -330,6 +422,10 @@
       appendDetail(details, "District", record.district);
       appendDetail(details, "Period", record.period);
       appendDetail(details, "Contributor", record.contributor);
+      const relatedArticleCount = normalizeRelatedArticles(record.relatedArticles).length;
+      if (relatedArticleCount > 0) {
+        appendDetail(details, "Related articles", String(relatedArticleCount));
+      }
       body.appendChild(details);
 
       const actions = document.createElement("div");
@@ -538,10 +634,12 @@
       const signOutButton = document.getElementById("manageCommunityPlacesSignOut");
       const newButton = document.getElementById("newCommunityPlaceButton");
       const cancelButton = document.getElementById("communityPlaceCancelButton");
+      const addRelatedArticleButton = document.getElementById("addRelatedArticleButton");
       const form = document.getElementById("communityPlaceForm");
 
       newButton?.addEventListener("click", () => showForm("create"));
       cancelButton?.addEventListener("click", hideForm);
+      addRelatedArticleButton?.addEventListener("click", () => addRelatedArticleRow());
       form?.addEventListener("submit", saveCommunityPlace);
 
       onAuthStateChanged(auth, (user) => {
@@ -680,8 +778,15 @@
             <label for="placeImageUrlInput">Image URL</label>
             <input id="placeImageUrlInput" name="imageUrl" type="url">
 
-            <label for="placeRelatedArticleInput">Related article</label>
+            <label for="placeRelatedArticleInput">Related article URL / legacy</label>
             <input id="placeRelatedArticleInput" name="relatedArticle" type="text">
+          </fieldset>
+
+          <fieldset>
+            <legend>Related articles</legend>
+            <p class="admin-help-note">Structured article references for future linked-data support.</p>
+            <div class="admin-related-article-rows" id="relatedArticlesRows"></div>
+            <button id="addRelatedArticleButton" class="admin-secondary-button" type="button">Add related article</button>
           </fieldset>
 
           <fieldset>

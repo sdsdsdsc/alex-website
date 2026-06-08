@@ -2901,6 +2901,7 @@ footer {
 }
 
 .admin-community-place-form input,
+.admin-community-place-form select,
 .admin-community-place-form textarea {
   width: 100%;
   min-height: 42px;
@@ -2926,6 +2927,43 @@ footer {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.admin-related-article-rows {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-related-article-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.75fr) minmax(180px, 1fr) minmax(180px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid #d7dde1;
+  background: #fff;
+}
+
+.admin-related-article-row__remove,
+.admin-secondary-button {
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #17475b;
+  border-radius: 4px;
+  background: #fff;
+  color: #17475b;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-related-article-row__remove:hover,
+.admin-related-article-row__remove:focus-visible,
+.admin-secondary-button:hover,
+.admin-secondary-button:focus-visible {
+  background: #17475b;
+  color: #fff;
+  outline: none;
 }
 
 .manage-articles-section {
@@ -3142,6 +3180,7 @@ footer {
   .place-overview,
   .place-comments-panel,
   .admin-community-place-form__split,
+  .admin-related-article-row,
   .manage-community-place-card__details,
   .manage-article-card {
     grid-template-columns: 1fr;
