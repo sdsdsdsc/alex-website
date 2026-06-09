@@ -50,6 +50,7 @@
       const editId = urlParams.get("id");
       const allowedArticleTypes = new Set(["news", "history"]);
       const isEditMode = Boolean(editType && editId);
+      let activeArticleHadRelatedPlaces = false;
       let editorLoadAlertShown = false;
 
       function buildLoginUrl() {
@@ -86,10 +87,99 @@
         return document.querySelector('input[name="type"]:checked')?.value;
       }
 
+      function cleanText(value) {
+        return String(value || "").trim();
+      }
+
+      function normalizeRelatedPlaces(value) {
+        if (!Array.isArray(value)) return [];
+        return value
+          .map((item) => ({
+            collection: cleanText(item?.collection),
+            id: cleanText(item?.id),
+            title: cleanText(item?.title)
+          }))
+          .filter((item) => item.collection === "communityPlaces" && item.id);
+      }
+
+      function getRelatedPlacesRowsContainer() {
+        return document.getElementById("relatedPlacesRows");
+      }
+
+      function createRelatedPlaceRow(reference = {}) {
+        const row = document.createElement("div");
+        row.className = "admin-related-place-row";
+
+        const collectionLabel = document.createElement("label");
+        collectionLabel.textContent = "Collection";
+        const collectionInput = document.createElement("input");
+        collectionInput.className = "related-place-collection";
+        collectionInput.type = "text";
+        collectionInput.value = "communityPlaces";
+        collectionInput.readOnly = true;
+        collectionInput.setAttribute("aria-readonly", "true");
+        collectionLabel.appendChild(collectionInput);
+
+        const idLabel = document.createElement("label");
+        idLabel.textContent = "Community place document ID";
+        const idInput = document.createElement("input");
+        idInput.className = "related-place-id";
+        idInput.type = "text";
+        idInput.value = cleanText(reference.id);
+        idLabel.appendChild(idInput);
+
+        const titleLabel = document.createElement("label");
+        titleLabel.textContent = "Display title";
+        const titleInput = document.createElement("input");
+        titleInput.className = "related-place-title";
+        titleInput.type = "text";
+        titleInput.value = cleanText(reference.title);
+        titleLabel.appendChild(titleInput);
+
+        const removeButton = document.createElement("button");
+        removeButton.type = "button";
+        removeButton.className = "admin-related-place-row__remove";
+        removeButton.textContent = "Remove row";
+        removeButton.addEventListener("click", () => row.remove());
+
+        row.append(collectionLabel, idLabel, titleLabel, removeButton);
+        return row;
+      }
+
+      function addRelatedPlaceRow(reference = {}) {
+        getRelatedPlacesRowsContainer()?.appendChild(createRelatedPlaceRow(reference));
+      }
+
+      function renderRelatedPlaceRows(relatedPlaces) {
+        const container = getRelatedPlacesRowsContainer();
+        if (!container) return;
+        container.textContent = "";
+        normalizeRelatedPlaces(relatedPlaces).forEach((reference) => {
+          container.appendChild(createRelatedPlaceRow(reference));
+        });
+      }
+
+      function parseRelatedPlaces() {
+        return Array.from(document.querySelectorAll(".admin-related-place-row"))
+          .map((row) => ({
+            collection: cleanText(row.querySelector(".related-place-collection")?.value),
+            id: cleanText(row.querySelector(".related-place-id")?.value),
+            title: cleanText(row.querySelector(".related-place-title")?.value)
+          }))
+          .filter((reference) => {
+            if (!reference.collection && !reference.id && !reference.title) return false;
+            if (reference.collection !== "communityPlaces") {
+              throw new Error("Related place collection must be communityPlaces.");
+            }
+            return Boolean(reference.id);
+          });
+      }
+
       function buildArticleData({ title, coverUrl, quillHtml, htmlDownloadURL, type, includeCreatedAt }) {
         const publicArticleUrl = isEditMode
           ? `https://alexsphotoboard.web.app/article.html?id=${encodeURIComponent(editId)}&type=${encodeURIComponent(type)}`
           : htmlDownloadURL;
+        const relatedPlaces = parseRelatedPlaces();
         const data = {
           title,
           htmlUrl: htmlDownloadURL,
@@ -113,6 +203,11 @@
 
         if (includeCreatedAt) {
           data.createdAt = serverTimestamp();
+        }
+        if (relatedPlaces.length > 0) {
+          data.relatedPlaces = relatedPlaces;
+        } else if (isEditMode && activeArticleHadRelatedPlaces) {
+          data.relatedPlaces = [];
         }
 
         return data;
@@ -156,6 +251,9 @@
           document.getElementById("articleTitle").value = data.title || "";
           document.getElementById("coverUrl").value = data.imageUrl || "";
           window.quill.root.innerHTML = data.content || data.htmlContent || "";
+          const relatedPlaces = normalizeRelatedPlaces(data.relatedPlaces);
+          activeArticleHadRelatedPlaces = relatedPlaces.length > 0;
+          renderRelatedPlaceRows(relatedPlaces);
 
           document.querySelectorAll('input[name="type"]').forEach((input) => {
             input.checked = input.value === editType;
@@ -297,8 +395,10 @@
         const authStatus = document.getElementById("authStatus");
         const signOutButton = document.getElementById("signOutButton");
         const dashboardLink = document.getElementById("dashboardLink");
+        const addRelatedPlaceButton = document.getElementById("addRelatedPlaceButton");
 
         dashboardLink?.setAttribute("href", "admin.html");
+        addRelatedPlaceButton?.addEventListener("click", () => addRelatedPlaceRow());
         signOutButton?.addEventListener("click", async () => {
           signOutButton.disabled = true;
           try {
@@ -420,6 +520,13 @@
       <label>Article Content (Rich Editor)</label>
       <p id="editorLoadError" class="admin-error" role="alert" aria-live="polite"></p>
       <div id="editor"></div>
+
+      <section class="admin-related-places-section" aria-labelledby="relatedPlacesTitle">
+        <h3 id="relatedPlacesTitle">Related places</h3>
+        <p class="admin-help-note">Structured community place references for future linked-data support.</p>
+        <div class="admin-related-place-rows" id="relatedPlacesRows"></div>
+        <button id="addRelatedPlaceButton" class="admin-secondary-button" type="button">Add related place</button>
+      </section>
 
       <button class="article-publish-button" id="articleSubmitButton" onclick="handleUpload()">Publish Article</button>
       <a class="admin-link-button" id="managementLink" href="manage-articles.html" hidden>Back to Article Management</a>

@@ -3010,6 +3010,78 @@ footer {
   outline: none;
 }
 
+.admin-related-places-section {
+  margin: 0 0 24px;
+  padding: 16px;
+  border: 1px solid #d7dde1;
+  background: #f8fafb;
+}
+
+.admin-related-places-section h3 {
+  margin: 0 0 10px;
+  color: #17475b;
+}
+
+.admin-related-place-rows {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.admin-related-place-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.8fr) minmax(180px, 1fr) minmax(180px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid #d7dde1;
+  background: #fff;
+}
+
+.admin-related-place-row label {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  color: #111;
+  font-weight: 800;
+}
+
+.admin-related-place-row input {
+  width: 100%;
+  min-height: 42px;
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px solid #b9c3c9;
+  border-radius: 4px;
+  background: #fff;
+  color: #111;
+  font: inherit;
+}
+
+.admin-related-place-row input[readonly] {
+  background: #eef2f4;
+  color: #4d5961;
+}
+
+.admin-related-place-row__remove {
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #17475b;
+  border-radius: 4px;
+  background: #fff;
+  color: #17475b;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-related-place-row__remove:hover,
+.admin-related-place-row__remove:focus-visible {
+  background: #17475b;
+  color: #fff;
+  outline: none;
+}
+
 .manage-articles-section {
   margin-top: 28px;
 }
@@ -3225,6 +3297,7 @@ footer {
   .place-comments-panel,
   .admin-community-place-form__split,
   .admin-related-article-row,
+  .admin-related-place-row,
   .manage-community-place-card__details,
   .manage-article-card {
     grid-template-columns: 1fr;

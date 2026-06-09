@@ -58,6 +58,11 @@
       if (status) status.textContent = message;
     }
 
+    function countRelatedPlaces(value) {
+      if (!Array.isArray(value)) return 0;
+      return value.filter((item) => item?.collection === "communityPlaces" && String(item?.id || "").trim()).length;
+    }
+
     function requireAdminUser() {
       const user = auth.currentUser;
       if (!user) {
@@ -90,6 +95,14 @@
       meta.className = "manage-article-card__meta";
       meta.textContent = `${label} • ${formatDate(article.createdAt)}`;
       body.appendChild(meta);
+
+      const relatedPlaceCount = countRelatedPlaces(article.relatedPlaces);
+      if (relatedPlaceCount > 0) {
+        const relatedMeta = document.createElement("p");
+        relatedMeta.className = "manage-article-card__meta";
+        relatedMeta.textContent = `Related places: ${relatedPlaceCount}`;
+        body.appendChild(relatedMeta);
+      }
 
       const actions = document.createElement("div");
       actions.className = "manage-article-card__actions";
