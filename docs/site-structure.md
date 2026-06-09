@@ -20,7 +20,7 @@ This document describes the current structure and the preferred direction for re
 | --- | --- | --- | --- |
 | `index.html` | Homepage and entry point for places, news, and history. | Reads `news` and `history` through `script.js`; also reads external Drupal JSON:API news. | `search.html`, `map.html`, `news.html`, `history.html`, `article.html` |
 | `search.html` | Public search and filtering for community place records. | Reads `communityPlaces`. | `place.html?id={id}`, `map.html?lat={lat}&lng={lng}`, `map.html?search={title}` |
-| `map.html` | Public map for community places. Legacy admin map mode still exists behind `map.html?admin=true`. | Public mode reads `communityPlaces`; legacy admin mode reads/writes `mapPoints` and `mapPolygons`. | `place.html?id={id}`, `search.html`, `export.html`, page anchors |
+| `map.html` | Public map for community places. Legacy map admin editing behind `map.html?admin=true` has been retired. | Reads `communityPlaces`; old `mapPoints` and `mapPolygons` records are no longer part of the active public/admin workflow. | `place.html?id={id}`, `search.html`, `export.html`, page anchors |
 | `place.html` | Official public detail page for one community place record. | Reads one `communityPlaces` document. | `map.html`, `search.html`, optional related article URL |
 | `news.html` | Public news listing. | Reads `news` through `script.js`; also reads external Drupal JSON:API news. | `article.html?id={id}&type=news`, `article.html?id={id}&type=drupal` |
 | `history.html` | Public history listing. | Reads `history` through `script.js`. | `article.html?id={id}&type=history` |
@@ -215,17 +215,19 @@ Current export behavior:
 - `news` and `history` records export as `schema:Article` nodes.
 - `communityPlaces.relatedArticles` exports as `schema:subjectOf` links to article nodes.
 - `news.relatedPlaces` and `history.relatedPlaces` export as `schema:about` links to place nodes.
-- Legacy `mapPoints` and `mapPolygons` are still preserved as legacy export nodes during the transition only.
-
-Legacy `mapPoints` and `mapPolygons` export should be removed or archived later, after the legacy map admin code is retired.
+- Legacy `mapPoints` and `mapPolygons` are no longer included in `heritage.json`.
 
 This is not yet a triplestore or SPARQL system. Later, JSON-LD may be converted into RDF and stored in Apache Jena Fuseki or GraphDB after the website relationship model is stable.
 
 ## Legacy Warning
 
-`map.html?admin=true` and the old `mapPoints` / `mapPolygons` code are legacy. They should not be promoted as the main workflow.
+The old `mapPoints` / `mapPolygons` map admin workflow has been retired. Opening `map.html?admin=true` should no longer enable legacy map editing.
 
 Public Search, Map, and Place pages should continue to use `communityPlaces`. Future admin and public relationship work should build on `communityPlaces`, `news`, and `history`, not on old map point records.
+
+Old `mapPoints` and `mapPolygons` records were manually cleaned before this phase. If any `mapPoints` record still exists, treat it only as legacy/test data, not active website data. The official Anyuan place record now lives at `communityPlaces / old-anyuan-company-community-park`, and the public map should show that Anyuan place from `communityPlaces`, not from `mapPoints`. Do not manually remove any remaining Anyuan `mapPoints` duplicate until the public map has been checked and confirmed to show the equivalent `communityPlaces` record correctly.
+
+Any later Firebase cleanup must be a separate manual data-retention step, not part of code or documentation cleanup phases.
 
 ## Phased Roadmap
 
@@ -247,7 +249,7 @@ Improve generated JSON-LD so public place and article pages describe their relat
 
 ### Phase 6: Improve Open Data / Export Page
 
-Continue refining the `heritage.json` export around `communityPlaces`, `news`, and `history`, and retire legacy map export records when the old map admin code is no longer needed.
+Continue refining the `heritage.json` export around `communityPlaces`, `news`, and `history`. Legacy map export records have been removed from `export.js`.
 
 ### Phase 7: Later RDF / Triplestore Experiment
 

@@ -1,19 +1,10 @@
 // === Import Firebase ===
 import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import {
   getFirestore,
   collection,
-  addDoc,
-  deleteDoc,
-  doc,
   getDocs,
-  query,
-  serverTimestamp,
-  updateDoc
+  query
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // === Firebase Config ===
@@ -28,7 +19,6 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
 
 const CITY_OPTIONS = [
   "Nanchang",
@@ -43,25 +33,6 @@ const CITY_OPTIONS = [
   "Ji'an",
   "Fuzhou"
 ];
-
-function buildLoginUrl() {
-  const loginUrl = new URL("admin-login.html", window.location.href);
-  loginUrl.searchParams.set("next", `${window.location.pathname}${window.location.search}`);
-  return loginUrl.href;
-}
-
-function redirectToAdminLogin() {
-  window.location.href = buildLoginUrl();
-}
-
-function requireAdminUser() {
-  const user = auth.currentUser;
-  if (!user) {
-    redirectToAdminLogin();
-    throw new Error("Authentication required for map edits.");
-  }
-  return user;
-}
 
 function escapeHTML(value) {
   return String(value)
@@ -244,48 +215,6 @@ function buildCommunityPlacePopupHtml(record) {
   `;
 }
 
-function buildPointFormHtml(point = {}, submitLabel = "Save Point") {
-  return `
-    <form class="point-form" style="min-width:240px; display:grid; gap:8px;">
-      <label style="display:grid; gap:4px;">
-        <span style="font-size:12px;">Title</span>
-        <input name="name" required maxlength="100" placeholder="Location title" value="${escapeHTML(point.name || "")}" />
-      </label>
-      <label style="display:grid; gap:4px;">
-        <span style="font-size:12px;">Description</span>
-        <textarea name="desc" required rows="3" maxlength="300" placeholder="Short description">${escapeHTML(point.desc || "")}</textarea>
-      </label>
-      <label style="display:grid; gap:4px;">
-        <span style="font-size:12px;">Linked Article (optional)</span>
-        <input name="linkedArticle" type="url" placeholder="https://..." value="${escapeHTML(point.linkedArticle || "")}" />
-      </label>
-      <div style="display:flex; justify-content:flex-end; gap:8px;">
-        <button type="button" data-action="cancel">Cancel</button>
-        <button type="submit" data-action="save">${escapeHTML(submitLabel)}</button>
-      </div>
-    </form>
-  `;
-}
-
-function buildPolygonFormHtml() {
-  return `
-    <form class="polygon-form" style="min-width:240px; display:grid; gap:8px;">
-      <label style="display:grid; gap:4px;">
-        <span style="font-size:12px;">Title (optional)</span>
-        <input name="title" maxlength="100" placeholder="Area title" />
-      </label>
-      <label style="display:grid; gap:4px;">
-        <span style="font-size:12px;">Description (optional)</span>
-        <textarea name="desc" rows="3" maxlength="300" placeholder="Area description"></textarea>
-      </label>
-      <div style="display:flex; justify-content:flex-end; gap:8px;">
-        <button type="button" data-action="cancel">Cancel</button>
-        <button type="submit" data-action="save">Save Polygon</button>
-      </div>
-    </form>
-  `;
-}
-
 function makeBluePinIcon() {
   return L.divIcon({
     className: "community-map-pin",
@@ -352,9 +281,7 @@ function initCommunityMap({
   searchFormId,
   searchInputId,
   clearButtonId,
-  statusId,
-  allowUpload = false,
-  allowDrawing = false
+  statusId
 }) {
   const container = document.getElementById(containerId);
   if (!container || typeof L === "undefined") return;
@@ -364,8 +291,8 @@ function initCommunityMap({
   const clearButton = clearButtonId ? document.getElementById(clearButtonId) : null;
   const statusEl = statusId ? document.getElementById(statusId) : null;
   const urlParams = new URLSearchParams(window.location.search);
-  const isAdminMode = urlParams.get("admin") === "true";
-  const isPublicCommunityMode = !isAdminMode && !allowUpload && !allowDrawing;
+  const isRetiredAdminRequest = urlParams.get("admin") === "true";
+  const isPublicCommunityMode = true;
   const filterPanel = document.getElementById("mapFilterPanel");
   const filterToggle = document.getElementById("mapFilterToggle");
   const filterClose = document.getElementById("mapFilterClose");
@@ -397,12 +324,10 @@ function initCommunityMap({
   const pointLayer = L.layerGroup().addTo(map);
   const polygonLayer = L.layerGroup().addTo(map);
   const focusLayer = L.layerGroup().addTo(map);
-  const drawnItems = new L.FeatureGroup();
   const bluePinIcon = makeBluePinIcon();
   const baseLayers = createBaseLayers();
   let allMapPoints = [];
   let allMapPolygons = [];
-  let isDrawing = false;
   let hasFocusedRequestedLocation = false;
   const pendingFilters = {
     city: ""
@@ -411,13 +336,6 @@ function initCommunityMap({
     categories: [],
     city: ""
   };
-
-  if (!isPublicCommunityMode) {
-    filterPanel?.setAttribute("hidden", "");
-    filterToggle?.setAttribute("hidden", "");
-    drawSearchPanel?.setAttribute("hidden", "");
-    drawSearchToggle?.setAttribute("hidden", "");
-  }
 
   baseLayers.osm.addTo(map);
   map.whenReady(() => {
@@ -437,38 +355,6 @@ function initCommunityMap({
 
   if (searchInput && initialSearchTerm) {
     searchInput.value = initialSearchTerm;
-  }
-
-  if (mode === "full" && isAdminMode) {
-    setStatus(allowUpload && allowDrawing
-      ? "Admin editing mode enabled."
-      : "Admin sign-in is required to edit this map.");
-  }
-
-  if (allowDrawing && L.Control?.Draw) {
-    map.addLayer(drawnItems);
-    const drawControl = new L.Control.Draw({
-      draw: {
-        polygon: true,
-        polyline: false,
-        rectangle: false,
-        circle: false,
-        marker: false,
-        circlemarker: false
-      },
-      edit: {
-        featureGroup: drawnItems,
-        edit: false,
-        remove: false
-      }
-    });
-    map.addControl(drawControl);
-    map.on(L.Draw.Event.DRAWSTART, () => {
-      isDrawing = true;
-    });
-    map.on(L.Draw.Event.DRAWSTOP, () => {
-      isDrawing = false;
-    });
   }
 
   function setStatus(message) {
@@ -688,11 +574,7 @@ function initCommunityMap({
 
     matchingPoints.forEach((point) => {
       const marker = L.marker([point.lat, point.lng], { icon: bluePinIcon }).addTo(pointLayer);
-      const popupHtml = isPublicCommunityMode
-        ? buildCommunityPlacePopupHtml(point)
-        : buildCommunityPopupHtml(point, searchTerm, {
-          showAdminPointControls: allowUpload && isAdminMode
-        });
+      const popupHtml = buildCommunityPlacePopupHtml(point);
       marker.bindPopup(popupHtml, {
         className: "community-map-popup",
         closeButton: true,
@@ -734,7 +616,7 @@ function initCommunityMap({
     }
 
     fitMapToLayers(map, boundsItems, fallbackCenter);
-    if (mode === "full" && requestedLocation && !hasFocusedRequestedLocation && !normalizedTerm && !isAdminMode) {
+    if (mode === "full" && requestedLocation && !hasFocusedRequestedLocation && !normalizedTerm) {
       hasFocusedRequestedLocation = true;
       focusLayer.clearLayers();
       L.circleMarker(requestedLocation, {
@@ -766,45 +648,32 @@ function initCommunityMap({
 
   async function loadMarkers() {
     try {
-      const collectionName = isPublicCommunityMode ? "communityPlaces" : "mapPoints";
-      const snapshot = await getDocs(query(collection(db, collectionName)));
+      const snapshot = await getDocs(query(collection(db, "communityPlaces")));
       allMapPoints = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
         const lat = normalizeCoordinate(data.lat);
         const lng = normalizeCoordinate(data.lng);
 
-        if (isPublicCommunityMode) {
-          const communityRecord = {
-            id: docSnap.id,
-            title: cleanText(data.title),
-            category: cleanText(data.category),
-            location: cleanText(data.location),
-            province: cleanText(data.province),
-            city: cleanText(data.city),
-            district: cleanText(data.district),
-            address: cleanText(data.address),
-            associatedType: cleanText(data.associatedType),
-            contributor: cleanText(data.contributor),
-            period: cleanText(data.period),
-            description: cleanText(data.description),
-            tags: data.tags,
-            lat,
-            lng
-          };
-          if (!hasValidCoordinates(communityRecord)) return;
-          allMapPoints.push(communityRecord);
-          return;
-        }
-
-        const mapPoint = {
+        const communityRecord = {
           id: docSnap.id,
-          ...data,
+          title: cleanText(data.title),
+          category: cleanText(data.category),
+          location: cleanText(data.location),
+          province: cleanText(data.province),
+          city: cleanText(data.city),
+          district: cleanText(data.district),
+          address: cleanText(data.address),
+          associatedType: cleanText(data.associatedType),
+          contributor: cleanText(data.contributor),
+          period: cleanText(data.period),
+          description: cleanText(data.description),
+          tags: data.tags,
           lat,
           lng
         };
-        if (!hasValidCoordinates(mapPoint)) return;
-        allMapPoints.push(mapPoint);
+        if (!hasValidCoordinates(communityRecord)) return;
+        allMapPoints.push(communityRecord);
       });
     } catch (err) {
       console.error("Error loading map records:", err);
@@ -813,236 +682,7 @@ function initCommunityMap({
   }
 
   async function loadPolygons() {
-    if (isPublicCommunityMode) {
-      allMapPolygons = [];
-      return;
-    }
-
-    try {
-      const snapshot = await getDocs(query(collection(db, "mapPolygons")));
-      allMapPolygons = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        if (!Array.isArray(data.points) || data.points.length < 3) return;
-        allMapPolygons.push({
-          id: docSnap.id,
-          type: data.type || "schema:Place",
-          ...data
-        });
-      });
-    } catch (err) {
-      console.error("Error loading polygons:", err);
-    }
-  }
-
-  function enablePointUpload() {
-    if (!allowUpload) return;
-
-    map.on("click", async (event) => {
-      if (isDrawing) return;
-
-      const lat = event.latlng.lat;
-      const lng = event.latlng.lng;
-      const marker = L.marker([lat, lng]).addTo(map);
-      let isSaved = false;
-
-      const onPopupOpen = () => {
-        const popupEl = marker.getPopup()?.getElement();
-        if (!popupEl) return;
-
-        const form = popupEl.querySelector(".point-form");
-        const cancelButton = popupEl.querySelector('[data-action="cancel"]');
-        const saveButton = popupEl.querySelector('[data-action="save"]');
-        const titleInput = popupEl.querySelector('input[name="name"]');
-
-        if (titleInput) titleInput.focus();
-
-        cancelButton?.addEventListener("click", () => {
-          map.removeLayer(marker);
-          map.closePopup(marker.getPopup());
-        }, { once: true });
-
-        form?.addEventListener("submit", async (submitEvent) => {
-          submitEvent.preventDefault();
-
-          const formData = new FormData(form);
-          const name = String(formData.get("name") || "").trim();
-          const desc = String(formData.get("desc") || "").trim();
-          const linkedArticleRaw = String(formData.get("linkedArticle") || "").trim();
-
-          if (!name || !desc) {
-            alert("Please provide both title and description.");
-            return;
-          }
-
-          const linkedArticle = toSafeUrl(linkedArticleRaw);
-          if (linkedArticleRaw && !linkedArticle) {
-            alert("Please enter a valid http(s) link or leave it blank.");
-            return;
-          }
-
-          if (saveButton) saveButton.disabled = true;
-
-          try {
-            requireAdminUser();
-            const docRef = await addDoc(collection(db, "mapPoints"), {
-              name,
-              desc,
-              lat,
-              lng,
-              type: "schema:Place",
-              linkedArticle,
-              createdAt: serverTimestamp(),
-              jsonld: {
-                "@context": "https://schema.org",
-                "@type": "Place",
-                "name": name,
-                "description": desc,
-                "geo": {
-                  "@type": "GeoCoordinates",
-                  "latitude": lat,
-                  "longitude": lng
-                }
-              }
-            });
-
-            isSaved = true;
-            const savedPoint = {
-              id: docRef.id,
-              name,
-              desc,
-              lat,
-              lng,
-              type: "schema:Place",
-              linkedArticle
-            };
-            allMapPoints.push(savedPoint);
-            marker.bindPopup(buildCommunityPopupHtml(savedPoint, searchInput?.value || "", {
-              showAdminPointControls: allowUpload && isAdminMode
-            }), {
-              className: "community-map-popup",
-              closeButton: true,
-              autoClose: true
-            }).openPopup();
-          } catch (err) {
-            if (saveButton) saveButton.disabled = false;
-            console.error("Error adding point:", err);
-            alert("Could not save point. Please try again.");
-          }
-        }, { once: true });
-      };
-
-      const onPopupClose = () => {
-        if (!isSaved && map.hasLayer(marker)) {
-          map.removeLayer(marker);
-        }
-        marker.off("popupopen", onPopupOpen);
-        marker.off("popupclose", onPopupClose);
-      };
-
-      marker.on("popupopen", onPopupOpen);
-      marker.on("popupclose", onPopupClose);
-      marker.bindPopup(buildPointFormHtml(), {
-        closeButton: true,
-        autoClose: true,
-        closeOnClick: false
-      }).openPopup();
-    });
-  }
-
-  function enablePolygonDrawing() {
-    if (!allowDrawing || !L.Draw) return;
-
-    map.on(L.Draw.Event.CREATED, async (event) => {
-      const { layer, layerType } = event;
-      if (layerType !== "polygon") return;
-
-      drawnItems.addLayer(layer);
-      let isSaved = false;
-
-      const onPopupOpen = () => {
-        const popupEl = layer.getPopup()?.getElement();
-        if (!popupEl) return;
-
-        const form = popupEl.querySelector(".polygon-form");
-        const cancelButton = popupEl.querySelector('[data-action="cancel"]');
-        const saveButton = popupEl.querySelector('[data-action="save"]');
-        const titleInput = popupEl.querySelector('input[name="title"]');
-
-        if (titleInput) titleInput.focus();
-
-        cancelButton?.addEventListener("click", () => {
-          drawnItems.removeLayer(layer);
-          map.closePopup(layer.getPopup());
-        }, { once: true });
-
-        form?.addEventListener("submit", async (submitEvent) => {
-          submitEvent.preventDefault();
-          const formData = new FormData(form);
-          const title = String(formData.get("title") || "").trim();
-          const desc = String(formData.get("desc") || "").trim();
-          const latlngs = layer.getLatLngs()[0].map(({ lat, lng }) => ({ lat, lng }));
-
-          if (saveButton) saveButton.disabled = true;
-
-          try {
-            requireAdminUser();
-            const docRef = await addDoc(collection(db, "mapPolygons"), {
-              title,
-              desc,
-              points: latlngs,
-              type: "schema:Place",
-              createdAt: serverTimestamp(),
-              jsonld: {
-                "@context": "https://schema.org",
-                "@type": "Place",
-                name: title || "Polygon",
-                description: desc || "",
-                geo: {
-                  "@type": "GeoShape",
-                  polygon: latlngs.map((point) => `${point.lat},${point.lng}`).join(" ")
-                }
-              }
-            });
-
-            isSaved = true;
-            const savedPolygon = {
-              id: docRef.id,
-              title,
-              desc,
-              points: latlngs,
-              type: "schema:Place"
-            };
-            allMapPolygons.push(savedPolygon);
-            layer.bindPopup(buildCommunityPopupHtml(savedPolygon, searchInput?.value || ""), {
-              className: "community-map-popup",
-              closeButton: true,
-              autoClose: true
-            }).openPopup();
-          } catch (err) {
-            if (saveButton) saveButton.disabled = false;
-            console.error("Error adding polygon:", err);
-            alert("Could not save polygon. Please try again.");
-          }
-        }, { once: true });
-      };
-
-      const onPopupClose = () => {
-        if (!isSaved && drawnItems.hasLayer(layer)) {
-          drawnItems.removeLayer(layer);
-        }
-        layer.off("popupopen", onPopupOpen);
-        layer.off("popupclose", onPopupClose);
-      };
-
-      layer.on("popupopen", onPopupOpen);
-      layer.on("popupclose", onPopupClose);
-      layer.bindPopup(buildPolygonFormHtml(), {
-        closeButton: true,
-        autoClose: true,
-        closeOnClick: false
-      }).openPopup();
-    });
+    allMapPolygons = [];
   }
 
   searchForm?.addEventListener("submit", (event) => {
@@ -1144,131 +784,10 @@ function initCommunityMap({
 
   map.on("popupopen", (event) => {
     const popupEl = event.popup.getElement();
-    const sourceLayer = event.popup._source;
     const zoomButton = popupEl?.querySelector('[data-action="zoom-point"]');
     zoomButton?.addEventListener("click", () => {
       map.setView(event.popup.getLatLng(), Math.max(map.getZoom() + 2, 16));
     });
-
-    const editPointButton = popupEl?.querySelector('[data-action="edit-point"]');
-    editPointButton?.addEventListener("click", () => {
-      if (!allowUpload || !isAdminMode) return;
-
-      try {
-        requireAdminUser();
-      } catch (err) {
-        return;
-      }
-
-      const pointId = editPointButton.dataset.pointId;
-      const point = allMapPoints.find((item) => item.id === pointId);
-      if (!point || !sourceLayer) return;
-
-      sourceLayer.bindPopup(buildPointFormHtml(point, "Save Changes"), {
-        closeButton: true,
-        autoClose: true,
-        closeOnClick: false
-      }).openPopup();
-    });
-
-    const deletePointButton = popupEl?.querySelector('[data-action="delete-point"]');
-    deletePointButton?.addEventListener("click", async () => {
-      if (!allowUpload || !isAdminMode) return;
-
-      const pointId = deletePointButton.dataset.pointId;
-      const point = allMapPoints.find((item) => item.id === pointId);
-      if (!point) return;
-
-      const confirmed = window.confirm(`Delete map point "${getTitle(point)}"?`);
-      if (!confirmed) return;
-
-      deletePointButton.disabled = true;
-      try {
-        requireAdminUser();
-        await deleteDoc(doc(db, "mapPoints", point.id));
-        allMapPoints = allMapPoints.filter((item) => item.id !== point.id);
-        runSearch(searchInput?.value || "");
-        setStatus("Map point deleted.");
-      } catch (err) {
-        deletePointButton.disabled = false;
-        console.error("Error deleting point:", err);
-        alert("Could not delete point. Please try again.");
-      }
-    });
-
-    const editForm = popupEl?.querySelector(".point-form");
-    const sourceLatLng = sourceLayer?.getLatLng?.();
-    const point = sourceLatLng
-      ? allMapPoints.find((item) => item.lat === sourceLatLng.lat && item.lng === sourceLatLng.lng)
-      : null;
-
-    if (editForm && point && allowUpload && isAdminMode) {
-      const cancelButton = editForm.querySelector('[data-action="cancel"]');
-      const saveButton = editForm.querySelector('[data-action="save"]');
-
-      cancelButton?.addEventListener("click", () => {
-        sourceLayer.bindPopup(buildCommunityPopupHtml(point, searchInput?.value || "", {
-          showAdminPointControls: allowUpload && isAdminMode
-        }), {
-          className: "community-map-popup",
-          closeButton: true,
-          autoClose: true
-        }).openPopup();
-      }, { once: true });
-
-      editForm.addEventListener("submit", async (submitEvent) => {
-        submitEvent.preventDefault();
-
-        const formData = new FormData(editForm);
-        const name = String(formData.get("name") || "").trim();
-        const desc = String(formData.get("desc") || "").trim();
-        const linkedArticleRaw = String(formData.get("linkedArticle") || "").trim();
-
-        if (!name || !desc) {
-          alert("Please provide both title and description.");
-          return;
-        }
-
-        const linkedArticle = toSafeUrl(linkedArticleRaw);
-        if (linkedArticleRaw && !linkedArticle) {
-          alert("Please enter a valid http(s) link or leave it blank.");
-          return;
-        }
-
-        if (saveButton) saveButton.disabled = true;
-
-        try {
-          requireAdminUser();
-          const jsonld = {
-            "@context": "https://schema.org",
-            "@type": "Place",
-            "name": name,
-            "description": desc,
-            "geo": {
-              "@type": "GeoCoordinates",
-              "latitude": point.lat,
-              "longitude": point.lng
-            }
-          };
-          await updateDoc(doc(db, "mapPoints", point.id), {
-            name,
-            desc,
-            linkedArticle,
-            updatedAt: serverTimestamp(),
-            jsonld
-          });
-          allMapPoints = allMapPoints.map((item) => item.id === point.id
-            ? { ...item, name, desc, linkedArticle, jsonld }
-            : item);
-          runSearch(searchInput?.value || "");
-          setStatus("Map point updated.");
-        } catch (err) {
-          if (saveButton) saveButton.disabled = false;
-          console.error("Error updating point:", err);
-          alert("Could not update point. Please try again.");
-        }
-      }, { once: true });
-    }
   });
 
   document.addEventListener("keydown", (event) => {
@@ -1286,85 +805,28 @@ function initCommunityMap({
     }
   });
 
-  enablePointUpload();
-  enablePolygonDrawing();
-
   Promise.all([loadMarkers(), loadPolygons()]).then(() => {
     renderFilterOptions();
     runSearch(searchInput?.value || initialSearchTerm);
+    if (isRetiredAdminRequest) {
+      setStatus("Legacy map editing has been retired. Manage community place records from the admin dashboard.");
+    }
   });
 
   return map;
 }
 
-async function exportJSONLD() {
-  if (!document.getElementById("map")) return;
-
-  try {
-    const collectionsToExport = ["mapPoints", "mapPolygons"];
-    const all = [];
-
-    for (const name of collectionsToExport) {
-      const snapshot = await getDocs(collection(db, name));
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        if (data.jsonld) all.push(data.jsonld);
-      });
-    }
-
-    let el = document.getElementById("map-jsonld");
-    if (!el) {
-      el = document.createElement("script");
-      el.type = "application/ld+json";
-      el.id = "map-jsonld";
-      document.head.appendChild(el);
-    }
-
-    el.textContent = JSON.stringify(all, null, 2);
-  } catch (err) {
-    console.error("Error exporting map JSON-LD:", err);
-  }
-}
-
 function initFullMap() {
   if (!document.getElementById("map")) return;
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const isAdminMode = urlParams.get("admin") === "true";
-
-  if (!isAdminMode) {
-    initCommunityMap({
-      containerId: "map",
-      mode: "full",
-      searchFormId: "mapSearchForm",
-      searchInputId: "mapSearchInput",
-      clearButtonId: "mapSearchClear",
-      statusId: "mapSearchStatus",
-      allowUpload: false,
-      allowDrawing: false
-    });
-    return;
-  }
-
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      redirectToAdminLogin();
-      return;
-    }
-
-    initCommunityMap({
-      containerId: "map",
-      mode: "full",
-      searchFormId: "mapSearchForm",
-      searchInputId: "mapSearchInput",
-      clearButtonId: "mapSearchClear",
-      statusId: "mapSearchStatus",
-      allowUpload: true,
-      allowDrawing: true
-    });
+  initCommunityMap({
+    containerId: "map",
+    mode: "full",
+    searchFormId: "mapSearchForm",
+    searchInputId: "mapSearchInput",
+    clearButtonId: "mapSearchClear",
+    statusId: "mapSearchStatus"
   });
 }
 
 initFullMap();
-
-exportJSONLD();

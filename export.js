@@ -20,7 +20,7 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // === Collections we export ===
-const COLLECTIONS = ["news", "history", "mapPoints", "mapPolygons", "communityPlaces"];
+const COLLECTIONS = ["news", "history", "communityPlaces"];
 const ARTICLE_COLLECTIONS = new Set(["news", "history"]);
 const RELATIONSHIP_FIELDS = new Set([
   "schema:subjectOf",
@@ -183,35 +183,12 @@ function buildArticleJsonLd(docId, collectionName, data) {
   return mergeStoredJsonLd(node, data.jsonld);
 }
 
-function buildLegacyMapJsonLd(docId, collectionName, data) {
-  const storedJsonLd = stripUnsafeStoredJsonLd(data.jsonld);
-  const node = {
-    ...storedJsonLd,
-    "@id": `legacy/${encodeURIComponent(collectionName)}/${encodeURIComponent(docId)}`,
-    "@type": storedJsonLd["@type"] || "schema:CreativeWork",
-    "schema:additionalType": `Legacy ${collectionName} export`
-  };
-
-  const title = cleanText(data.name || data.title);
-  const description = cleanText(data.desc || data.description);
-
-  if (title && !node["schema:name"] && !node.name) node["schema:name"] = title;
-  if (description && !node["schema:description"] && !node.description) {
-    node["schema:description"] = description;
-  }
-
-  return node;
-}
-
 function buildGraphNode(docId, collectionName, data) {
   if (collectionName === "communityPlaces") {
     return buildCommunityPlaceJsonLd(docId, data);
   }
   if (ARTICLE_COLLECTIONS.has(collectionName)) {
     return buildArticleJsonLd(docId, collectionName, data);
-  }
-  if (collectionName === "mapPoints" || collectionName === "mapPolygons") {
-    return buildLegacyMapJsonLd(docId, collectionName, data);
   }
   return null;
 }
