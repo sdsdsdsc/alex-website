@@ -21,6 +21,15 @@ const db = getFirestore(app);
 
 // === Collections we export ===
 const COLLECTIONS = ["news", "history", "mapPoints", "mapPolygons", "communityPlaces"];
+const ARTICLE_COLLECTIONS = new Set(["news", "history"]);
+const RELATIONSHIP_FIELDS = new Set([
+  "schema:subjectOf",
+  "subjectOf",
+  "schema:about",
+  "about",
+  "schema:mentions",
+  "mentions"
+]);
 
 function cleanText(value) {
   return String(value || "").trim();
@@ -43,11 +52,83 @@ function hasCoordinates(data) {
   return Number.isFinite(Number(data?.lat)) && Number.isFinite(Number(data?.lng));
 }
 
-function buildCommunityPlaceJsonLd(data) {
-  const jsonld = {
-    "@context": "https://schema.org",
-    "@type": "Place",
-    name: cleanText(data.title) || "Community place"
+function makePlaceId(docId) {
+  return `place.html?id=${encodeURIComponent(docId)}`;
+}
+
+function makeArticleId(docId, type) {
+  return `article.html?id=${encodeURIComponent(docId)}&type=${encodeURIComponent(type)}`;
+}
+
+function stripUnsafeStoredJsonLd(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const clean = {};
+
+  Object.entries(value).forEach(([key, entry]) => {
+    if (key === "@context" || key === "@id" || RELATIONSHIP_FIELDS.has(key)) return;
+    clean[key] = entry;
+  });
+
+  return clean;
+}
+
+function mergeStoredJsonLd(base, storedJsonLd) {
+  return {
+    ...stripUnsafeStoredJsonLd(storedJsonLd),
+    ...base
+  };
+}
+
+function normalizeRelatedArticles(relatedArticles) {
+  if (!Array.isArray(relatedArticles)) return [];
+  const seen = new Set();
+
+  return relatedArticles
+    .map((reference) => {
+      const collectionName = cleanText(reference?.collection);
+      const id = cleanText(reference?.id);
+      if (!ARTICLE_COLLECTIONS.has(collectionName) || !id) return null;
+
+      const key = `${collectionName}:${id}`;
+      if (seen.has(key)) return null;
+      seen.add(key);
+
+      return {
+        "@id": makeArticleId(id, collectionName),
+        "@type": "schema:Article",
+        "schema:name": cleanText(reference?.title) || id
+      };
+    })
+    .filter(Boolean);
+}
+
+function normalizeRelatedPlaces(relatedPlaces) {
+  if (!Array.isArray(relatedPlaces)) return [];
+  const seen = new Set();
+
+  return relatedPlaces
+    .map((reference) => {
+      const collectionName = cleanText(reference?.collection);
+      const id = cleanText(reference?.id);
+      if (collectionName !== "communityPlaces" || !id) return null;
+
+      if (seen.has(id)) return null;
+      seen.add(id);
+
+      return {
+        "@id": makePlaceId(id),
+        "@type": "schema:Place",
+        "schema:name": cleanText(reference?.title) || id
+      };
+    })
+    .filter(Boolean);
+}
+
+function buildCommunityPlaceJsonLd(docId, data) {
+  const node = {
+    "@id": makePlaceId(docId),
+    "@type": "schema:Place",
+    "schema:name": cleanText(data.title) || "Community place"
   };
 
   const description = cleanText(data.description);
@@ -55,21 +136,94 @@ function buildCommunityPlaceJsonLd(data) {
   const location = cleanText(data.location);
   const imageUrl = toSafeUrl(data.imageUrl);
   const source = cleanText(data.source);
+  const relatedArticles = normalizeRelatedArticles(data.relatedArticles);
 
-  if (description) jsonld.description = description;
-  if (category) jsonld.additionalType = category;
-  if (location) jsonld.address = location;
-  if (imageUrl) jsonld.image = imageUrl;
-  if (source) jsonld.sourceOrganization = source;
+  if (description) node["schema:description"] = description;
+  if (category) node["schema:additionalType"] = category;
+  if (location) node["schema:address"] = location;
+  if (imageUrl) node["schema:image"] = imageUrl;
+  if (source) node["schema:sourceOrganization"] = source;
+  if (relatedArticles.length === 1) node["schema:subjectOf"] = relatedArticles[0];
+  if (relatedArticles.length > 1) node["schema:subjectOf"] = relatedArticles;
   if (hasCoordinates(data)) {
-    jsonld.geo = {
-      "@type": "GeoCoordinates",
-      latitude: Number(data.lat),
-      longitude: Number(data.lng)
+    node["schema:geo"] = {
+      "@type": "schema:GeoCoordinates",
+      "schema:latitude": Number(data.lat),
+      "schema:longitude": Number(data.lng)
     };
   }
 
-  return jsonld;
+  return mergeStoredJsonLd(node, data.jsonld);
+}
+
+function buildArticleJsonLd(docId, collectionName, data) {
+  const node = {
+    "@id": makeArticleId(docId, collectionName),
+    "@type": "schema:Article",
+    "schema:name": cleanText(data.title || data.message) || "Untitled article",
+    "schema:isPartOf": collectionName
+  };
+
+  const imageUrl = toSafeUrl(data.imageUrl);
+  const author = cleanText(data.author);
+  const contentUrl = toSafeUrl(data.htmlUrl);
+  const relatedPlaces = normalizeRelatedPlaces(data.relatedPlaces);
+
+  if (imageUrl) node["schema:image"] = imageUrl;
+  if (author) {
+    node["schema:creator"] = {
+      "@type": "schema:Person",
+      "schema:name": author
+    };
+  }
+  if (contentUrl) node["schema:contentUrl"] = contentUrl;
+  if (relatedPlaces.length === 1) node["schema:about"] = relatedPlaces[0];
+  if (relatedPlaces.length > 1) node["schema:about"] = relatedPlaces;
+
+  return mergeStoredJsonLd(node, data.jsonld);
+}
+
+function buildLegacyMapJsonLd(docId, collectionName, data) {
+  const storedJsonLd = stripUnsafeStoredJsonLd(data.jsonld);
+  const node = {
+    ...storedJsonLd,
+    "@id": `legacy/${encodeURIComponent(collectionName)}/${encodeURIComponent(docId)}`,
+    "@type": storedJsonLd["@type"] || "schema:CreativeWork",
+    "schema:additionalType": `Legacy ${collectionName} export`
+  };
+
+  const title = cleanText(data.name || data.title);
+  const description = cleanText(data.desc || data.description);
+
+  if (title && !node["schema:name"] && !node.name) node["schema:name"] = title;
+  if (description && !node["schema:description"] && !node.description) {
+    node["schema:description"] = description;
+  }
+
+  return node;
+}
+
+function buildGraphNode(docId, collectionName, data) {
+  if (collectionName === "communityPlaces") {
+    return buildCommunityPlaceJsonLd(docId, data);
+  }
+  if (ARTICLE_COLLECTIONS.has(collectionName)) {
+    return buildArticleJsonLd(docId, collectionName, data);
+  }
+  if (collectionName === "mapPoints" || collectionName === "mapPolygons") {
+    return buildLegacyMapJsonLd(docId, collectionName, data);
+  }
+  return null;
+}
+
+function buildJsonLdGraph(nodes) {
+  return {
+    "@context": {
+      "schema": "https://schema.org/",
+      "dc": "http://purl.org/dc/terms/"
+    },
+    "@graph": nodes
+  };
 }
 
 // === Export function ===
@@ -80,21 +234,19 @@ async function exportHeritageJSON() {
   button.disabled = true;
 
   try {
-    const output = [];
+    const graphNodes = [];
 
     for (const col of COLLECTIONS) {
       const snapshot = await getDocs(collection(db, col));
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
-        if (data.jsonld) {
-          output.push(data.jsonld);
-        } else if (col === "communityPlaces") {
-          output.push(buildCommunityPlaceJsonLd(data));
-        }
+        const node = buildGraphNode(docSnap.id, col, data);
+        if (node) graphNodes.push(node);
       });
     }
 
-    status.textContent = `✅ ${output.length} JSON-LD records collected`;
+    const output = buildJsonLdGraph(graphNodes);
+    status.textContent = `✅ ${graphNodes.length} JSON-LD records collected`;
 
     const blob = new Blob([JSON.stringify(output, null, 2)], {
       type: "application/json"
