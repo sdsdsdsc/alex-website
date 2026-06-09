@@ -30,6 +30,8 @@ const els = {
   imageWrap: document.getElementById("placeImageWrap"),
   imageCredit: document.getElementById("placeImageCredit"),
   locationContent: document.getElementById("placeLocationContent"),
+  relatedArticlesSection: document.getElementById("relatedArticles"),
+  relatedArticles: document.getElementById("placeRelatedArticles"),
   metadata: document.getElementById("placeMetadata"),
   tabs: Array.from(document.querySelectorAll(".place-record-tab")),
   panels: Array.from(document.querySelectorAll(".place-tab-panel"))
@@ -37,6 +39,7 @@ const els = {
 
 let placeMap = null;
 const validSections = new Set(["overview", "comments-photos"]);
+const articleCollections = new Set(["news", "history"]);
 
 function cleanText(value) {
   return String(value || "").trim();
@@ -191,6 +194,53 @@ function getRelatedArticleUrl(place) {
   return toSafeUrl(place.relatedArticle || place.linkedArticle || "");
 }
 
+function buildArticleUrl(reference, options = {}) {
+  const collection = cleanText(reference?.collection);
+  const id = cleanText(reference?.id);
+  if (!articleCollections.has(collection) || !id) return "";
+
+  const path = `article.html?id=${encodeURIComponent(id)}&type=${encodeURIComponent(collection)}`;
+  if (options.absolute) {
+    return new URL(path, window.location.href).href;
+  }
+  return path;
+}
+
+function getRelatedArticleReferences(place) {
+  if (!Array.isArray(place?.relatedArticles)) return [];
+  const seen = new Set();
+
+  return place.relatedArticles
+    .map((reference) => {
+      const collection = cleanText(reference?.collection);
+      const id = cleanText(reference?.id);
+      if (!articleCollections.has(collection) || !id) return null;
+      const key = `${collection}:${id}`;
+      if (seen.has(key)) return null;
+      seen.add(key);
+      return {
+        collection,
+        id,
+        title: cleanText(reference?.title) || id,
+        url: buildArticleUrl({ collection, id })
+      };
+    })
+    .filter(Boolean);
+}
+
+function getRelatedArticleSubjectUrls(place) {
+  const urls = getRelatedArticleReferences(place)
+    .map((reference) => buildArticleUrl(reference, { absolute: true }))
+    .filter(Boolean);
+  const legacyArticle = getRelatedArticleUrl(place);
+
+  if (legacyArticle && !urls.includes(legacyArticle)) {
+    urls.push(legacyArticle);
+  }
+
+  return urls;
+}
+
 function renderImage(place) {
   if (!els.imageWrap) return;
   els.imageWrap.textContent = "";
@@ -245,18 +295,68 @@ function renderTags(place) {
 function renderActions(place) {
   if (!els.actions) return;
   els.actions.textContent = "";
+  const relatedArticles = getRelatedArticleReferences(place);
   const mapLink = document.createElement("a");
   mapLink.href = buildMapUrl(place);
   mapLink.textContent = "View on map";
   els.actions.appendChild(mapLink);
 
   const relatedArticle = getRelatedArticleUrl(place);
-  if (relatedArticle) {
+  if (relatedArticle && relatedArticles.length === 0) {
     const articleLink = document.createElement("a");
     articleLink.href = relatedArticle;
     articleLink.textContent = "Read related article";
     els.actions.appendChild(articleLink);
   }
+}
+
+function renderRelatedArticles(place) {
+  if (!els.relatedArticlesSection || !els.relatedArticles) return;
+  els.relatedArticles.textContent = "";
+
+  const relatedArticles = getRelatedArticleReferences(place);
+  if (relatedArticles.length > 0) {
+    relatedArticles.forEach((reference) => {
+      const link = document.createElement("a");
+      link.href = reference.url;
+      link.className = "place-related-articles__item";
+
+      const title = document.createElement("span");
+      title.className = "place-related-articles__title";
+      title.textContent = reference.title;
+
+      const meta = document.createElement("span");
+      meta.className = "place-related-articles__meta";
+      meta.textContent = reference.collection === "history" ? "History" : "News";
+
+      link.append(title, meta);
+      els.relatedArticles.appendChild(link);
+    });
+    els.relatedArticlesSection.hidden = false;
+    return;
+  }
+
+  const legacyArticle = getRelatedArticleUrl(place);
+  if (legacyArticle) {
+    const link = document.createElement("a");
+    link.href = legacyArticle;
+    link.className = "place-related-articles__item";
+
+    const title = document.createElement("span");
+    title.className = "place-related-articles__title";
+    title.textContent = "Read related article";
+
+    const meta = document.createElement("span");
+    meta.className = "place-related-articles__meta";
+    meta.textContent = "Legacy link";
+
+    link.append(title, meta);
+    els.relatedArticles.appendChild(link);
+    els.relatedArticlesSection.hidden = false;
+    return;
+  }
+
+  els.relatedArticlesSection.hidden = true;
 }
 
 function renderLocation(place) {
@@ -318,7 +418,7 @@ function generatePlaceJsonLd(place) {
   const category = cleanText(place.category) || "Community place";
   const location = cleanText(place.location) || "Not specified";
   const source = cleanText(place.source) || "Alex's Photo Board";
-  const relatedArticle = getRelatedArticleUrl(place);
+  const relatedArticleUrls = getRelatedArticleSubjectUrls(place);
   const jsonld = {
     "@context": "https://schema.org",
     "@type": "Place",
@@ -336,7 +436,11 @@ function generatePlaceJsonLd(place) {
   const imageUrl = toSafeUrl(place.imageUrl);
 
   if (imageUrl) jsonld.image = imageUrl;
-  if (relatedArticle) jsonld.subjectOf = relatedArticle;
+  if (relatedArticleUrls.length === 1) {
+    jsonld.subjectOf = relatedArticleUrls[0];
+  } else if (relatedArticleUrls.length > 1) {
+    jsonld.subjectOf = relatedArticleUrls;
+  }
   if (hasCoordinates(place)) {
     jsonld.geo = {
       "@type": "GeoCoordinates",
@@ -389,6 +493,7 @@ function renderPlace(place) {
   renderImageCredit(place);
   renderTags(place);
   renderActions(place);
+  renderRelatedArticles(place);
   renderLocation(place);
   injectJsonLd(place);
   setActiveSection(getSectionFromUrl(), { skipHistory: true });

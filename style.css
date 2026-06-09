@@ -2645,6 +2645,50 @@ footer {
   color: #111;
 }
 
+.place-related-articles {
+  border-top: 4px solid #17475b;
+  padding-top: 22px;
+}
+
+.place-related-articles__list {
+  display: grid;
+  gap: 12px;
+}
+
+.place-related-articles__item {
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid #d7dde1;
+  border-left: 5px solid #2f7a54;
+  background: #fff;
+  color: #17475b;
+  text-decoration: none;
+}
+
+.place-related-articles__item:hover,
+.place-related-articles__item:focus-visible {
+  border-color: #17475b;
+  background: #eef5f6;
+}
+
+.place-related-articles__item:focus-visible {
+  outline: 3px solid #fcbf49;
+  outline-offset: 2px;
+}
+
+.place-related-articles__title {
+  color: #17475b;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.place-related-articles__meta {
+  color: #555;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
 .place-comments-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 330px);
