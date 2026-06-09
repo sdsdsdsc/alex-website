@@ -29,6 +29,12 @@ const articleTitle = document.getElementById("articleTitle");
 const articleImage = document.getElementById("articleImage");
 const articleDate = document.getElementById("articleDate");
 const articleContent = document.getElementById("articleContent");
+const articleRelatedPlacesSection = document.getElementById("articleRelatedPlacesSection");
+const articleRelatedPlaces = document.getElementById("articleRelatedPlaces");
+
+function cleanText(value) {
+  return String(value || "").trim();
+}
 
 function toSafeUrl(value, allowRelative = false) {
   if (!value) return "";
@@ -110,6 +116,75 @@ function setArticleImage(url) {
   articleImage.style.display = "block";
 }
 
+function buildPlaceUrl(reference, options = {}) {
+  const collection = cleanText(reference?.collection);
+  const placeId = cleanText(reference?.id);
+  if (collection !== "communityPlaces" || !placeId) return "";
+
+  const path = `place.html?id=${encodeURIComponent(placeId)}`;
+  if (options.absolute) {
+    return new URL(path, window.location.href).href;
+  }
+  return path;
+}
+
+function getRelatedPlaceReferences(article) {
+  if (!Array.isArray(article?.relatedPlaces)) return [];
+  const seen = new Set();
+
+  return article.relatedPlaces
+    .map((reference) => {
+      const collection = cleanText(reference?.collection);
+      const placeId = cleanText(reference?.id);
+      if (collection !== "communityPlaces" || !placeId) return null;
+      if (seen.has(placeId)) return null;
+      seen.add(placeId);
+      return {
+        collection,
+        id: placeId,
+        title: cleanText(reference?.title) || placeId,
+        url: buildPlaceUrl({ collection, id: placeId })
+      };
+    })
+    .filter(Boolean);
+}
+
+function getRelatedPlaceUrls(article) {
+  return getRelatedPlaceReferences(article)
+    .map((reference) => buildPlaceUrl(reference, { absolute: true }))
+    .filter(Boolean);
+}
+
+function renderRelatedPlaces(article) {
+  if (!articleRelatedPlacesSection || !articleRelatedPlaces) return;
+  articleRelatedPlaces.textContent = "";
+
+  const relatedPlaces = getRelatedPlaceReferences(article);
+  if (relatedPlaces.length === 0) {
+    articleRelatedPlacesSection.hidden = true;
+    return;
+  }
+
+  relatedPlaces.forEach((reference) => {
+    const link = document.createElement("a");
+    link.href = reference.url;
+    link.className = "article-related-places__item";
+
+    const title = document.createElement("span");
+    title.className = "article-related-places__title";
+    title.textContent = reference.title;
+
+    const meta = document.createElement("span");
+    meta.className = "article-related-places__meta";
+    meta.textContent = "Community place";
+
+    link.append(title, meta);
+    articleRelatedPlaces.appendChild(link);
+  });
+
+  articleRelatedPlacesSection.hidden = false;
+}
+
 // === Load article ===
 async function loadArticle() {
   try {
@@ -151,6 +226,7 @@ async function loadArticle() {
       articleDate.textContent = created;
       setArticleImage(imageUrl);
       articleContent.innerHTML = sanitizeRichHtml(body);
+      renderRelatedPlaces(null);
 
       return;
     }
@@ -188,7 +264,10 @@ async function loadArticle() {
       articleContent.textContent = "";
     }
 
+    renderRelatedPlaces(data);
+
     // === Inject JSON-LD ===
+    const relatedPlaceUrls = getRelatedPlaceUrls(data);
     const jsonld = data.jsonld || {
       "@context": {
         "schema": "https://schema.org/",
@@ -205,6 +284,12 @@ async function loadArticle() {
       "schema:source": "Alex's Photo Board (Firestore)",
       "dc:date": new Date().toISOString()
     };
+
+    if (!data.jsonld && relatedPlaceUrls.length === 1) {
+      jsonld["schema:about"] = relatedPlaceUrls[0];
+    } else if (!data.jsonld && relatedPlaceUrls.length > 1) {
+      jsonld["schema:about"] = relatedPlaceUrls;
+    }
 
     const ldScript = document.createElement("script");
     ldScript.type = "application/ld+json";
