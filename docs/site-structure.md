@@ -12,7 +12,7 @@ This document describes the current structure and the preferred direction for re
 | Firebase content layer | Stores editable content records. | Firestore collections: `communityPlaces`, `news`, `history` | Keep Firebase as the practical content database. |
 | Admin editing layer | Lets signed-in admins create, review, update, and manage content. | `admin-login.html`, `admin.html`, `manage-community-places.html`, `upload-article.html`, `manage-articles.html` | Add relationship editing gradually and safely. |
 | Semantic metadata layer | Adds machine-readable meaning to public records. | JSON-LD on place and article pages; stored `jsonld` fields; export generation | Normalize place/article relationships using stable IDs and URLs. |
-| Future open-data / RDF export layer | Makes the dataset reusable outside the website. | `export.html` and `export.js` currently download `heritage.json` | Later export clean JSON-LD, then optionally convert to RDF for Fuseki or GraphDB. |
+| Future open-data / RDF export layer | Makes the dataset reusable outside the website. | `export.html` and `export.js` currently download `heritage.json` as JSON-LD with `@context` and `@graph`. | Continue refining clean JSON-LD, then optionally convert to RDF for Fuseki or GraphDB. |
 
 ## Current Page Roles
 
@@ -201,15 +201,25 @@ The current implementation already generates JSON-LD for places and articles, bu
 
 ## Open Data / Export Direction
 
-`export.html` and `export.js` should eventually focus on the active content model:
+`export.html` and `export.js` focus the intended open-data model on the active content collections:
 
 - `communityPlaces`
 - `news`
 - `history`
 
-Future export should produce clean JSON and JSON-LD that can be reused outside the website. Legacy `mapPoints` and `mapPolygons` export should be removed or archived later, after the legacy map admin code is retired.
+`heritage.json` now exports a top-level JSON-LD object with `@context` and `@graph`. Firebase remains the practical database, while this export is the semantic/open-data layer for reuse outside the website.
 
-Later, JSON-LD may be converted into RDF and stored in Apache Jena Fuseki or GraphDB. That is not part of the current phase. The near-term work is to make relationships explicit and stable inside Firebase records first.
+Current export behavior:
+
+- `communityPlaces` records export as `schema:Place` nodes.
+- `news` and `history` records export as `schema:Article` nodes.
+- `communityPlaces.relatedArticles` exports as `schema:subjectOf` links to article nodes.
+- `news.relatedPlaces` and `history.relatedPlaces` export as `schema:about` links to place nodes.
+- Legacy `mapPoints` and `mapPolygons` are still preserved as legacy export nodes during the transition only.
+
+Legacy `mapPoints` and `mapPolygons` export should be removed or archived later, after the legacy map admin code is retired.
+
+This is not yet a triplestore or SPARQL system. Later, JSON-LD may be converted into RDF and stored in Apache Jena Fuseki or GraphDB after the website relationship model is stable.
 
 ## Legacy Warning
 
@@ -237,7 +247,7 @@ Improve generated JSON-LD so public place and article pages describe their relat
 
 ### Phase 6: Improve Open Data / Export Page
 
-Update export logic to prioritize `communityPlaces`, `news`, and `history`, and produce a cleaner connected JSON-LD export.
+Continue refining the `heritage.json` export around `communityPlaces`, `news`, and `history`, and retire legacy map export records when the old map admin code is no longer needed.
 
 ### Phase 7: Later RDF / Triplestore Experiment
 
