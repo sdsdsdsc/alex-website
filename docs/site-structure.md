@@ -4,6 +4,14 @@ Alex's Photo Board is becoming a lightweight community heritage website with lin
 
 This document describes the current structure and the preferred direction for relationship-building work. It is not a rebuild plan.
 
+## Hybrid Heritage Model
+
+Alex's Photo Board is a small hybrid community heritage website. It combines a light Hebridean Connections-style approach to linked community heritage records with a Historic England-style approach to clear public news, history, and story presentation. The site should remain practical, focused, and easy to maintain rather than growing into either a national heritage database or a large multi-record archive.
+
+`communityPlaces` is the main structured heritage record layer and carries the deeper heritage metadata. News and history articles remain lighter narrative records that connect stories to places without requiring every article to become an equally complex heritage record. Map and Search support discovery, while the `heritage.json` JSON-LD export provides the lightweight open-data layer.
+
+New record types should be introduced only when there is a clear practical need. Future RDF or triplestore strength should grow from stable identifiers, good `communityPlaces` records, and clean place/article relationships, not from adding many record types or making every page equally complex too early.
+
 ## Layered Architecture
 
 | Layer | Role | Current implementation | Direction |
