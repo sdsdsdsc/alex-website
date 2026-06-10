@@ -136,6 +136,10 @@ function buildCommunityPlaceJsonLd(docId, data) {
   const location = cleanText(data.location);
   const imageUrl = toSafeUrl(data.imageUrl);
   const source = cleanText(data.source);
+  const heritageValue = cleanText(data.heritageValue);
+  const condition = cleanText(data.condition);
+  const communityUse = cleanText(data.communityUse);
+  const sourceReference = cleanText(data.sourceReference);
   const relatedArticles = normalizeRelatedArticles(data.relatedArticles);
 
   if (description) node["schema:description"] = description;
@@ -143,6 +147,17 @@ function buildCommunityPlaceJsonLd(docId, data) {
   if (location) node["schema:address"] = location;
   if (imageUrl) node["schema:image"] = imageUrl;
   if (source) node["schema:sourceOrganization"] = source;
+  const additionalProperties = [
+    ["Heritage value", heritageValue],
+    ["Condition", condition],
+    ["Community use", communityUse]
+  ].filter(([, value]) => value).map(([name, value]) => ({
+    "@type": "schema:PropertyValue",
+    "schema:name": name,
+    "schema:value": value
+  }));
+  if (additionalProperties.length > 0) node["schema:additionalProperty"] = additionalProperties;
+  if (sourceReference) node["dc:source"] = sourceReference;
   if (relatedArticles.length === 1) node["schema:subjectOf"] = relatedArticles[0];
   if (relatedArticles.length > 1) node["schema:subjectOf"] = relatedArticles;
   if (hasCoordinates(data)) {

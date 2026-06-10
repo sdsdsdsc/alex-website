@@ -56,6 +56,10 @@ Known fields:
 - `tags`
 - `grade`
 - `source`
+- `heritageValue`
+- `condition`
+- `communityUse`
+- `sourceReference`
 - `relatedArticle`
 - `jsonld`
 - `createdAt`
@@ -113,6 +117,10 @@ Preferred fields:
 - `tags`: descriptive tags as an array of strings.
 - `grade`: classification, grade, or local significance label when useful.
 - `source`: source label or organization.
+- `heritageValue`: optional statement explaining why the place has heritage or community value.
+- `condition`: optional current physical condition or preservation status.
+- `communityUse`: optional description of current community use or social function.
+- `sourceReference`: optional citation, source note, or reference supporting the record.
 - `relatedArticle`: legacy single related article URL.
 - `relatedArticles`: future array of structured article references.
 - `relatedPlaces`: future array of structured place references.
@@ -125,6 +133,8 @@ Preferred fields:
 - `updatedAt`: server timestamp for latest update.
 
 The current public system should continue to support `relatedArticle` while future work adds richer relationship arrays.
+
+`heritageValue`, `condition`, `communityUse`, and `sourceReference` are optional heritage/open-data fields. Existing records do not require migration and can adopt them gradually. Firebase remains the practical database, while public JSON-LD and `heritage.json` provide the semantic/open-data layer.
 
 ## Canonical Article Field Model
 

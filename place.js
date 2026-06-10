@@ -487,6 +487,10 @@ function renderPlace(place) {
     appendMetadata("Associated type", place.associatedType);
     appendMetadata("Period", place.period);
     appendMetadata("Grade", place.grade);
+    appendMetadata("Heritage value", place.heritageValue);
+    appendMetadata("Condition", place.condition);
+    appendMetadata("Community use", place.communityUse);
+    appendMetadata("Source reference", place.sourceReference);
   }
 
   renderImage(place);

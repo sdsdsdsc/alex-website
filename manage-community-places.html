@@ -52,6 +52,10 @@
       "period",
       "grade",
       "source",
+      "heritageValue",
+      "condition",
+      "communityUse",
+      "sourceReference",
       "description",
       "imageUrl",
       "relatedArticle"
@@ -243,6 +247,10 @@
         setInputValue("period", record.period);
         setInputValue("grade", record.grade);
         setInputValue("source", record.source);
+        setInputValue("heritageValue", record.heritageValue);
+        setInputValue("condition", record.condition);
+        setInputValue("communityUse", record.communityUse);
+        setInputValue("sourceReference", record.sourceReference);
         setInputValue("description", record.description);
         setInputValue("imageUrl", record.imageUrl);
         setInputValue("lat", Number.isFinite(record.lat) ? record.lat : "");
@@ -770,6 +778,22 @@
 
             <label for="placeTagsInput">Tags</label>
             <input id="placeTagsInput" name="tags" type="text" placeholder="community park, public space">
+          </fieldset>
+
+          <fieldset>
+            <legend>Heritage and open data</legend>
+
+            <label for="placeHeritageValueInput">Heritage value</label>
+            <textarea id="placeHeritageValueInput" name="heritageValue" rows="3"></textarea>
+
+            <label for="placeConditionInput">Condition</label>
+            <input id="placeConditionInput" name="condition" type="text">
+
+            <label for="placeCommunityUseInput">Community use</label>
+            <textarea id="placeCommunityUseInput" name="communityUse" rows="3"></textarea>
+
+            <label for="placeSourceReferenceInput">Source reference</label>
+            <textarea id="placeSourceReferenceInput" name="sourceReference" rows="3"></textarea>
           </fieldset>
 
           <fieldset>
