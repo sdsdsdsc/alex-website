@@ -483,6 +483,35 @@ body > header h1 a.home-link:hover {
   outline-offset: -4px;
 }
 
+.community-connect__card--future {
+  cursor: default;
+}
+
+.community-connect__card--future .community-connect__image {
+  filter: grayscale(35%);
+}
+
+.community-connect__card--future .community-connect__overlay {
+  align-items: flex-start;
+  background: rgba(29, 53, 87, 0.82);
+  color: #fff;
+  opacity: 1;
+}
+
+.community-connect__future-description {
+  position: absolute;
+  inset: auto clamp(18px, 2vw, 28px) clamp(18px, 2vw, 28px);
+  z-index: 1;
+  color: #fff;
+  font-size: clamp(14px, 1.4vw, 18px);
+  line-height: 1.45;
+  text-align: left;
+}
+
+.community-connect__card--future:hover .community-connect__image {
+  transform: none;
+}
+
 .community-modal[hidden] {
   display: none;
 }
