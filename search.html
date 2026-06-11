@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <title>Search Community Places | Alex's Photo Board</title>
+  <title>Community Places | Alex's Photo Board</title>
   <link rel="stylesheet" href="style.css">
   <script type="module" src="search.js" defer></script>
 </head>
@@ -18,24 +18,24 @@
       <a href="news.html" class="nav-link">News</a>
       <a href="history.html" class="nav-link">History</a>
       <a href="map.html" class="nav-link">Map</a>
-      <a href="search.html" class="nav-link active">Search</a>
-      <a href="export.html" class="nav-link">Export</a>
+      <a href="search.html" class="nav-link active">Places</a>
+      <a href="export.html" class="nav-link">Open Data</a>
     </nav>
   </header>
 
   <main id="communitySearchMain" class="community-search-page">
     <section class="community-search-hero" aria-labelledby="communitySearchTitle">
       <div class="community-search-hero__inner">
-        <h2 id="communitySearchTitle">Search Community Places</h2>
-        <p>Search sites, buildings, parks, public spaces, heritage places, and community stories.</p>
+        <h2 id="communitySearchTitle">Find Community Places</h2>
+        <p>Search structured place records for sites, buildings, parks, public spaces, and heritage places.</p>
         <form class="community-search-form" id="communitySearchForm">
-          <label class="visually-hidden" for="communitySearchInput">Search by name, type, location, tag, or story</label>
+          <label class="visually-hidden" for="communitySearchInput">Search place records by name, type, location, or tag</label>
           <input
             id="communitySearchInput"
             class="community-search-form__input"
             name="q"
             type="search"
-            placeholder="Search by name, type, location, tag, or story"
+            placeholder="Search place records by name, type, location, or tag"
           >
           <button class="community-search-form__button" type="submit">Search</button>
         </form>
