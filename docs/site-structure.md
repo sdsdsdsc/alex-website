@@ -12,6 +12,25 @@ Alex's Photo Board is a small hybrid community heritage website. It combines a l
 
 New record types should be introduced only when there is a clear practical need. Future RDF or triplestore strength should grow from stable identifiers, good `communityPlaces` records, and clean place/article relationships, not from adding many record types or making every page equally complex too early.
 
+## Local Heritage Listing Direction
+
+Alex's Photo Board is a community heritage record project inspired by Local Heritage Listing practice. It is not an official statutory Local Heritage List and must not claim planning authority or statutory status.
+
+The project should adapt useful Local Heritage Listing principles to its small community setting:
+
+- `communityPlaces` is the central community heritage record layer.
+- `place.html` is the public community heritage record page.
+- `search.html`, labelled Places in public navigation, is the main discovery page for community place records.
+- `map.html` provides spatial discovery of those records.
+- `news` and `history` are narrative layers connected to places through stories and articles.
+- `heritage.json` is the JSON-LD open-data export layer.
+- Stable IDs, reliable location data, source references, clear criteria, and clean relationships are more important than adding many new record types too early.
+- `relatedArticles` and `relatedPlaces` should remain core relationship links between records and narratives.
+
+Public nominations are a future workflow, but they must not write directly to `communityPlaces`. A later nomination form should create records in a separate collection such as `placeNominations`. Admin review should then approve, reject, or request more information and decide whether an approved nomination becomes a published `communityPlaces` record.
+
+Future public and admin wording should use terms such as "community heritage record" and "community-valued place". It should avoid describing the project as an official Local Heritage List, statutory list, or planning authority record.
+
 ## Layered Architecture
 
 | Layer | Role | Current implementation | Direction |
@@ -247,28 +266,32 @@ Old `mapPoints` and `mapPolygons` records were manually cleaned before this phas
 
 Any later Firebase cleanup must be a separate manual data-retention step, not part of code or documentation cleanup phases.
 
-## Phased Roadmap
+## Future Roadmap
 
-### Phase 2: Add Relationship Fields to Admin Data Model
+### Phase 7D: Homepage Cleanup for Community Heritage Direction
 
-Add future relationship fields to the community place and article data model carefully, starting with place-to-article and article-to-place references.
+Clarify the homepage's role as an entry point to community places, local stories, maps, and open heritage data.
 
-### Phase 3: Add Admin Relationship UI
+### Phase 8A: Local Heritage Criteria Fields
 
-Add relationship editing controls to admin pages. Prefer structured selectors or repeatable reference rows over raw text-only fields.
+Add a small, well-defined set of criteria and significance fields to the `communityPlaces` model without requiring immediate migration of existing records.
 
-### Phase 4: Show Related Records Publicly
+### Phase 8B: `place.html` Local Heritage List-Style Display
 
-Display related articles and related places on public record pages. Keep empty relationship sections hidden.
+Present significance, criteria, evidence, condition, community use, and review information clearly on the public community heritage record page.
 
-### Phase 5: Normalize JSON-LD Relationships
+### Phase 8C: `manage-community-places.html` Admin Form Upgrade
 
-Improve generated JSON-LD so public place and article pages describe their relationships consistently with stable URLs and `@id` values.
+Add careful admin editing support for the agreed Local Heritage Listing-inspired fields and validation rules.
 
-### Phase 6: Improve Open Data / Export Page
+### Phase 8D: `heritage.json` JSON-LD Field Upgrade
 
-Continue refining the `heritage.json` export around `communityPlaces`, `news`, and `history`. Legacy map export records have been removed from `export.js`.
+Map the agreed fields into useful, stable JSON-LD while preserving place/article relationships and existing identifiers.
 
-### Phase 7: Later RDF / Triplestore Experiment
+### Phase 8E: About Local Heritage Records Page
 
-Optionally convert exported JSON-LD into RDF and test it with Fuseki or GraphDB after the website relationship model is stable.
+Explain what community heritage records are, how the project uses them, and why the site is not an official statutory Local Heritage List.
+
+### Phase 9: Nomination Workflow
+
+Create a separate `placeNominations` submission and admin-review workflow. Public submissions must not directly create or overwrite published `communityPlaces` records.
