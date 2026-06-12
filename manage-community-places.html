@@ -47,11 +47,17 @@
       "city",
       "district",
       "address",
+      "assetType",
+      "area",
       "associatedType",
       "contributor",
       "period",
       "grade",
       "source",
+      "localSignificanceSummary",
+      "criteriaExplanation",
+      "dateAdded",
+      "lastReviewed",
       "heritageValue",
       "condition",
       "communityUse",
@@ -124,6 +130,38 @@
     function setInputValue(name, value) {
       const input = document.querySelector(`[name="${name}"]`);
       if (input) input.value = value === undefined || value === null ? "" : String(value);
+    }
+
+    function normalizeDateInputValue(value) {
+      if (!value) return "";
+      if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+        return value.slice(0, 10);
+      }
+
+      const date = typeof value?.toDate === "function"
+        ? value.toDate()
+        : value instanceof Date
+          ? value
+          : null;
+      return date && Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 10) : "";
+    }
+
+    function normalizeHeritageCriteria(value) {
+      if (!Array.isArray(value)) return [];
+      return value.map(cleanText).filter(Boolean);
+    }
+
+    function setHeritageCriteria(values) {
+      const selectedCriteria = new Set(normalizeHeritageCriteria(values));
+      document.querySelectorAll('[name="heritageCriteria"]').forEach((checkbox) => {
+        checkbox.checked = selectedCriteria.has(checkbox.value);
+      });
+    }
+
+    function parseHeritageCriteria() {
+      return Array.from(document.querySelectorAll('[name="heritageCriteria"]:checked'))
+        .map((checkbox) => cleanText(checkbox.value))
+        .filter(Boolean);
     }
 
     function resetFormValues() {
@@ -242,11 +280,19 @@
         setInputValue("city", record.city);
         setInputValue("district", record.district);
         setInputValue("address", record.address);
+        setInputValue("assetType", record.assetType);
+        setInputValue("area", record.area);
         setInputValue("associatedType", record.associatedType);
         setInputValue("contributor", record.contributor);
         setInputValue("period", record.period);
         setInputValue("grade", record.grade);
         setInputValue("source", record.source);
+        setInputValue("localSignificanceSummary", record.localSignificanceSummary);
+        setHeritageCriteria(record.heritageCriteria);
+        setInputValue("criteriaExplanation", record.criteriaExplanation);
+        setInputValue("recordStatus", cleanText(record.recordStatus) || "published");
+        setInputValue("dateAdded", normalizeDateInputValue(record.dateAdded));
+        setInputValue("lastReviewed", normalizeDateInputValue(record.lastReviewed));
         setInputValue("heritageValue", record.heritageValue);
         setInputValue("condition", record.condition);
         setInputValue("communityUse", record.communityUse);
@@ -353,6 +399,13 @@
           payload[field] = deleteField();
         }
       });
+
+      const recordStatus = getInputValue("recordStatus") || "published";
+      if (!["published", "draft", "under review"].includes(recordStatus)) {
+        throw new Error("Record status must be published, draft, or under review.");
+      }
+      payload.recordStatus = recordStatus;
+      payload.heritageCriteria = parseHeritageCriteria();
 
       const coordinates = parseCoordinates();
       if (coordinates.lat !== undefined && coordinates.lng !== undefined) {
@@ -794,6 +847,57 @@
 
             <label for="placeSourceReferenceInput">Source reference</label>
             <textarea id="placeSourceReferenceInput" name="sourceReference" rows="3"></textarea>
+          </fieldset>
+
+          <fieldset>
+            <legend>Local heritage assessment</legend>
+            <p class="admin-help-note">Optional community heritage fields inspired by Local Heritage Listing practice. These are not official designation criteria.</p>
+
+            <label for="placeAssetTypeInput">Asset type</label>
+            <input id="placeAssetTypeInput" name="assetType" type="text" placeholder="Building, landscape, public art, archaeological feature">
+
+            <label for="placeAreaInput">Area / neighbourhood</label>
+            <input id="placeAreaInput" name="area" type="text">
+
+            <label for="placeLocalSignificanceSummaryInput">Local significance summary</label>
+            <textarea id="placeLocalSignificanceSummaryInput" name="localSignificanceSummary" rows="3" placeholder="Short explanation of why this community-valued place matters locally"></textarea>
+
+            <fieldset class="admin-community-place-form__checkbox-group">
+              <legend>Community heritage criteria</legend>
+              <p class="admin-help-note">Select all that apply. Condition or vulnerability is included as a simple care and management criterion for this phase.</p>
+
+              <label><input name="heritageCriteria" type="checkbox" value="Historic interest"> Historic interest</label>
+              <label><input name="heritageCriteria" type="checkbox" value="Social or communal value"> Social or communal value</label>
+              <label><input name="heritageCriteria" type="checkbox" value="Landmark or streetscape value"> Landmark or streetscape value</label>
+              <label><input name="heritageCriteria" type="checkbox" value="Architectural, design or artistic interest"> Architectural, design or artistic interest</label>
+              <label><input name="heritageCriteria" type="checkbox" value="Archaeological or evidential interest"> Archaeological or evidential interest</label>
+              <label><input name="heritageCriteria" type="checkbox" value="Rarity"> Rarity</label>
+              <label><input name="heritageCriteria" type="checkbox" value="Group value"> Group value</label>
+              <label><input name="heritageCriteria" type="checkbox" value="Age"> Age</label>
+              <label><input name="heritageCriteria" type="checkbox" value="Condition or vulnerability"> Condition or vulnerability</label>
+            </fieldset>
+
+            <label for="placeCriteriaExplanationInput">Criteria explanation</label>
+            <textarea id="placeCriteriaExplanationInput" name="criteriaExplanation" rows="4" placeholder="Evidence explaining how the place meets the selected criteria"></textarea>
+
+            <label for="placeRecordStatusInput">Record status</label>
+            <select id="placeRecordStatusInput" name="recordStatus">
+              <option value="published" selected>Published</option>
+              <option value="draft">Draft</option>
+              <option value="under review">Under review</option>
+            </select>
+
+            <div class="admin-community-place-form__split">
+              <label for="placeDateAddedInput">
+                <span>Date added</span>
+                <input id="placeDateAddedInput" name="dateAdded" type="date">
+              </label>
+
+              <label for="placeLastReviewedInput">
+                <span>Last reviewed</span>
+                <input id="placeLastReviewedInput" name="lastReviewed" type="date">
+              </label>
+            </div>
           </fieldset>
 
           <fieldset>

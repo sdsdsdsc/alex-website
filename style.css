@@ -3054,6 +3054,33 @@ footer {
   gap: 12px;
 }
 
+.admin-community-place-form .admin-community-place-form__checkbox-group {
+  padding: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: #fff;
+}
+
+.admin-community-place-form__checkbox-group legend,
+.admin-community-place-form__checkbox-group .admin-help-note {
+  grid-column: 1 / -1;
+}
+
+.admin-community-place-form__checkbox-group label {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.admin-community-place-form__checkbox-group input[type="checkbox"] {
+  width: auto;
+  min-height: 0;
+  margin: 3px 0 0;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
 .admin-related-article-rows {
   display: grid;
   gap: 12px;
@@ -3377,6 +3404,7 @@ footer {
   .place-overview,
   .place-comments-panel,
   .admin-community-place-form__split,
+  .admin-community-place-form .admin-community-place-form__checkbox-group,
   .admin-related-article-row,
   .admin-related-place-row,
   .manage-community-place-card__details,
