@@ -7,6 +7,7 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Nominate a Community Place | Alex's Photo Board</title>
   <link rel="stylesheet" href="style.css">
+  <script type="module" src="nominate-place.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#nominatePlaceMain">Skip to nomination form</a>
@@ -47,7 +48,7 @@
           <li>Nominations will be reviewed before publication.</li>
           <li>Submitting a form will not automatically publish a place.</li>
           <li>A nomination does not create an official designation or planning status.</li>
-          <li>This Phase 9B form is a static preview and does not submit or save data yet.</li>
+          <li>Your email will be used only for admin follow-up about this nomination and will not be displayed publicly.</li>
         </ul>
       </aside>
 
@@ -57,24 +58,24 @@
         <p>Please explain the place clearly and provide evidence of its local significance where possible. Do not include private or sensitive personal information. Photo upload will be considered in a later phase.</p>
       </section>
 
-      <form class="nomination-form" aria-describedby="nominationFormStatus">
+      <form id="nominationForm" class="nomination-form" aria-describedby="nominationFormStatus">
         <fieldset class="nomination-step">
           <legend><span>Step 1</span> Place location</legend>
           <p class="nomination-step__intro">If exact coordinates are not known, a clear location description is acceptable. A later phase may allow nominations to begin from the map.</p>
 
           <div class="nomination-field">
             <label for="nominationTitle">Place / asset name</label>
-            <input id="nominationTitle" name="title" type="text" autocomplete="off" required>
+            <input id="nominationTitle" name="title" type="text" maxlength="160" autocomplete="off" required>
           </div>
 
           <div class="nomination-field">
             <label for="nominationArea">Area / neighbourhood</label>
-            <input id="nominationArea" name="area" type="text" autocomplete="address-level3">
+            <input id="nominationArea" name="area" type="text" maxlength="160" autocomplete="address-level3">
           </div>
 
           <div class="nomination-field nomination-field--full">
             <label for="nominationAddress">Address or location description</label>
-            <textarea id="nominationAddress" name="address" rows="3" aria-describedby="nominationAddressHelp" required></textarea>
+            <textarea id="nominationAddress" name="address" rows="3" maxlength="1000" aria-describedby="nominationAddressHelp" required></textarea>
             <p id="nominationAddressHelp" class="nomination-field__help">Include nearby streets, landmarks, or other details that would help an admin identify the place.</p>
           </div>
 
@@ -93,7 +94,7 @@
           <legend><span>Step 2</span> What type of place is it?</legend>
           <div class="nomination-field nomination-field--full">
             <label for="nominationAssetType">Asset type</label>
-            <select id="nominationAssetType" name="assetType" required>
+            <select id="nominationAssetType" name="assetType">
               <option value="">Select an asset type</option>
               <option>Public space</option>
               <option>Building</option>
@@ -113,13 +114,13 @@
           <legend><span>Step 3</span> Describe the place</legend>
           <div class="nomination-field nomination-field--full">
             <label for="nominationDescription">Description</label>
-            <textarea id="nominationDescription" name="description" rows="6" aria-describedby="nominationDescriptionHelp" required></textarea>
+            <textarea id="nominationDescription" name="description" rows="6" maxlength="5000" aria-describedby="nominationDescriptionHelp" required></textarea>
             <p id="nominationDescriptionHelp" class="nomination-field__help">Explain what the place is, what can be seen there, and any important physical features.</p>
           </div>
 
           <div class="nomination-field nomination-field--full">
             <label for="nominationSignificance">Local significance summary</label>
-            <textarea id="nominationSignificance" name="localSignificanceSummary" rows="5" aria-describedby="nominationSignificanceHelp" required></textarea>
+            <textarea id="nominationSignificance" name="localSignificanceSummary" rows="5" maxlength="2000" aria-describedby="nominationSignificanceHelp" required></textarea>
             <p id="nominationSignificanceHelp" class="nomination-field__help">Explain why the place matters to the community.</p>
           </div>
         </fieldset>
@@ -145,7 +146,7 @@
 
           <div class="nomination-field nomination-field--full">
             <label for="nominationCriteriaExplanation">Criteria explanation</label>
-            <textarea id="nominationCriteriaExplanation" name="criteriaExplanation" rows="6" aria-describedby="nominationCriteriaHelp" required></textarea>
+            <textarea id="nominationCriteriaExplanation" name="criteriaExplanation" rows="6" maxlength="5000" aria-describedby="nominationCriteriaHelp" required></textarea>
             <p id="nominationCriteriaHelp" class="nomination-field__help">Provide evidence, examples, dates, memories, or sources that support the selected criteria.</p>
           </div>
         </fieldset>
@@ -154,32 +155,32 @@
           <legend><span>Step 5</span> Current use and evidence</legend>
           <div class="nomination-field">
             <label for="nominationCondition">Condition</label>
-            <textarea id="nominationCondition" name="condition" rows="4"></textarea>
+            <textarea id="nominationCondition" name="condition" rows="4" maxlength="1500"></textarea>
           </div>
 
           <div class="nomination-field">
             <label for="nominationCommunityUse">Community use</label>
-            <textarea id="nominationCommunityUse" name="communityUse" rows="4"></textarea>
+            <textarea id="nominationCommunityUse" name="communityUse" rows="4" maxlength="1500"></textarea>
           </div>
 
           <div class="nomination-field nomination-field--full">
             <label for="nominationSource">Source / reference</label>
-            <textarea id="nominationSource" name="sourceReference" rows="4" aria-describedby="nominationSourceHelp"></textarea>
+            <textarea id="nominationSource" name="sourceReference" rows="4" maxlength="2000" aria-describedby="nominationSourceHelp"></textarea>
             <p id="nominationSourceHelp" class="nomination-field__help">Examples include archive references, books, websites, maps, oral histories, or community records.</p>
           </div>
 
           <div class="nomination-field nomination-field--full">
             <label for="nominationPhotoUrl">Photo evidence</label>
-            <input id="nominationPhotoUrl" name="photoUrl" type="url" placeholder="Photo upload is not active yet" disabled>
+            <input id="nominationPhotoUrl" name="photoUrl" type="url" maxlength="2048" placeholder="https://example.org/photo.jpg" aria-describedby="nominationPhotoUrlHelp">
             <div class="nomination-upload-placeholder" role="note">
               <strong>Photo upload will be added in a later phase.</strong>
-              <span>For now, this layout shows where image evidence may be added.</span>
+              <span id="nominationPhotoUrlHelp">For now, you may provide an optional public HTTP or HTTPS image URL. The site will not fetch or upload the image.</span>
             </div>
           </div>
 
           <div class="nomination-field nomination-field--full">
             <label for="nominationPhotoDescription">Photo description</label>
-            <textarea id="nominationPhotoDescription" name="photoDescription" rows="3" aria-describedby="nominationPhotoDescriptionHelp"></textarea>
+            <textarea id="nominationPhotoDescription" name="photoDescription" rows="3" maxlength="1000" aria-describedby="nominationPhotoDescriptionHelp"></textarea>
             <p id="nominationPhotoDescriptionHelp" class="nomination-field__help">Describe what the image shows and provide its source or creator when known.</p>
           </div>
         </fieldset>
@@ -190,17 +191,17 @@
 
           <div class="nomination-field">
             <label for="nominationDisplayName">Nominator display name</label>
-            <input id="nominationDisplayName" name="nominatorDisplayName" type="text" autocomplete="name" required>
+            <input id="nominationDisplayName" name="nominatorDisplayName" type="text" maxlength="120" autocomplete="name">
           </div>
 
           <div class="nomination-field">
             <label for="nominationEmail">Nominator email</label>
-            <input id="nominationEmail" name="nominatorEmail" type="email" autocomplete="email" required>
+            <input id="nominationEmail" name="nominatorEmail" type="email" maxlength="254" autocomplete="email" required>
           </div>
 
           <div class="nomination-field">
             <label for="nominationOrganisation">Organisation / group <span>(optional)</span></label>
-            <input id="nominationOrganisation" name="organisationName" type="text" autocomplete="organization">
+            <input id="nominationOrganisation" name="organisationName" type="text" maxlength="180" autocomplete="organization">
           </div>
 
           <div class="nomination-field">
@@ -223,9 +224,9 @@
           </div>
         </fieldset>
 
-        <div class="nomination-submit" id="nominationFormStatus" role="status">
-          <button type="button" disabled>Preview submit - not active yet</button>
-          <p>Submission will be enabled in a later phase. Nothing entered on this page is currently saved or sent.</p>
+        <div class="nomination-submit">
+          <button id="nominationSubmitButton" type="submit">Submit nomination for review</button>
+          <p id="nominationFormStatus" class="nomination-submit__status" role="status" aria-live="polite">Your nomination will be stored separately for admin review. It will not be published automatically.</p>
         </div>
       </form>
     </div>

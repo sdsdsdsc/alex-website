@@ -757,18 +757,42 @@ body > header h1 a.home-link:hover {
 .nomination-submit button {
   min-height: 50px;
   padding: 0 22px;
-  border: 1px solid #68777f;
-  background: #c9d1d5;
-  color: #3c464b;
+  border: 1px solid #17475b;
+  background: #17475b;
+  color: #fff;
   font: inherit;
   font-weight: 800;
-  cursor: not-allowed;
+  cursor: pointer;
 }
 
-.nomination-submit p {
+.nomination-submit button:hover,
+.nomination-submit button:focus-visible {
+  background: #fcbf49;
+  border-color: #fcbf49;
+  color: #111;
+}
+
+.nomination-submit button:disabled {
+  border-color: #68777f;
+  background: #c9d1d5;
+  color: #3c464b;
+  cursor: wait;
+}
+
+.nomination-submit__status {
   margin: 14px 0 0;
   color: #444;
   line-height: 1.55;
+}
+
+.nomination-submit__status--success {
+  color: #17633c;
+  font-weight: 800;
+}
+
+.nomination-submit__status--error {
+  color: #a21b1b;
+  font-weight: 800;
 }
 
 @media (max-width: 700px) {

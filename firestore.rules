@@ -1,0 +1,172 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Production-merge review draft only.
+    // This repo did not previously contain local Firestore rules, so this file must
+    // be reviewed before any Firebase Console update or deploy step. It does not
+    // represent a deployed change on its own.
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid == "VT3I9KMktMXsdJeyYBye54Sgnqu2";
+    }
+
+    function hasField(fieldName) {
+      return request.resource.data.keys().hasAny([fieldName]);
+    }
+
+    function isAllowedCriteria(criteria) {
+      return criteria is list
+        && criteria.size() > 0
+        && criteria.size() <= 9
+        && criteria.hasOnly([
+          'Historic interest',
+          'Social or communal value',
+          'Landmark or streetscape value',
+          'Architectural, design or artistic interest',
+          'Archaeological or evidential interest',
+          'Rarity',
+          'Group value',
+          'Age',
+          'Condition or vulnerability'
+        ]);
+    }
+
+    function isTrimmedString(value, maxLength) {
+      return value is string
+        && value.size() > 0
+        && value.size() <= maxLength;
+    }
+
+    function isOptionalString(fieldName, maxLength) {
+      return !hasField(fieldName)
+        || request.resource.data[fieldName] == null
+        || (
+          request.resource.data[fieldName] is string
+          && request.resource.data[fieldName].size() <= maxLength
+        );
+    }
+
+    function isOptionalNumber(fieldName) {
+      return !hasField(fieldName)
+        || request.resource.data[fieldName] == null
+        || request.resource.data[fieldName] is int
+        || request.resource.data[fieldName] is float;
+    }
+
+    function hasValidNominationFields() {
+      return request.resource.data.keys().hasOnly([
+          'title',
+          'assetType',
+          'area',
+          'address',
+          'lat',
+          'lng',
+          'description',
+          'localSignificanceSummary',
+          'heritageCriteria',
+          'criteriaExplanation',
+          'condition',
+          'communityUse',
+          'sourceReference',
+          'photoUrl',
+          'photoDescription',
+          'nominatorDisplayName',
+          'nominatorEmail',
+          'organisationName',
+          'submittedOnBehalfOf',
+          'termsAccepted',
+          'privacyAccepted',
+          'nominationStatus',
+          'createdAt',
+          'updatedAt',
+          'submittedAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'title',
+          'address',
+          'description',
+          'localSignificanceSummary',
+          'heritageCriteria',
+          'criteriaExplanation',
+          'nominatorEmail',
+          'termsAccepted',
+          'privacyAccepted',
+          'nominationStatus',
+          'createdAt',
+          'updatedAt',
+          'submittedAt'
+        ]);
+    }
+
+    function isValidNominationCreate() {
+      return hasValidNominationFields()
+        && isTrimmedString(request.resource.data.title, 160)
+        && isTrimmedString(request.resource.data.address, 1000)
+        && isTrimmedString(request.resource.data.description, 5000)
+        && isTrimmedString(request.resource.data.localSignificanceSummary, 2000)
+        && isAllowedCriteria(request.resource.data.heritageCriteria)
+        && isTrimmedString(request.resource.data.criteriaExplanation, 5000)
+        && isTrimmedString(request.resource.data.nominatorEmail, 254)
+        && request.resource.data.nominatorEmail.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+        && request.resource.data.termsAccepted == true
+        && request.resource.data.privacyAccepted == true
+        && request.resource.data.nominationStatus == 'submitted'
+        && isOptionalString('assetType', 100)
+        && isOptionalString('area', 160)
+        && isOptionalNumber('lat')
+        && isOptionalNumber('lng')
+        && isOptionalString('condition', 1500)
+        && isOptionalString('communityUse', 1500)
+        && isOptionalString('sourceReference', 2000)
+        && isOptionalString('photoUrl', 2048)
+        && isOptionalString('photoDescription', 1000)
+        && isOptionalString('nominatorDisplayName', 120)
+        && isOptionalString('organisationName', 180)
+        && (
+          !hasField('submittedOnBehalfOf')
+          || request.resource.data.submittedOnBehalfOf == null
+          || request.resource.data.submittedOnBehalfOf in [
+            'self',
+            'someone-else',
+            'organisation'
+          ]
+        );
+    }
+
+    match /news/{doc=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /history/{doc=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /mapPoints/{doc=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /mapPolygons/{doc=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /communityPlaces/{doc=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /placeNominations/{nominationId} {
+      allow create: if isValidNominationCreate();
+      allow read, update, delete: if false;
+    }
+
+    // Default deny for anything not explicitly allowed in this review draft.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
