@@ -30,6 +30,8 @@ const els = {
   imageWrap: document.getElementById("placeImageWrap"),
   imageCredit: document.getElementById("placeImageCredit"),
   locationContent: document.getElementById("placeLocationContent"),
+  localHeritageSection: document.getElementById("localHeritageRecord"),
+  localHeritageContent: document.getElementById("placeLocalHeritageRecord"),
   relatedArticlesSection: document.getElementById("relatedArticles"),
   relatedArticles: document.getElementById("placeRelatedArticles"),
   metadata: document.getElementById("placeMetadata"),
@@ -169,6 +171,107 @@ function appendMetadata(label, value) {
   dt.textContent = label;
   dd.textContent = safeValue;
   els.metadata.append(dt, dd);
+}
+
+function getHeritageCriteria(place) {
+  const criteria = Array.isArray(place?.heritageCriteria)
+    ? place.heritageCriteria
+    : cleanText(place?.heritageCriteria).split(/[\n,;]+/);
+
+  return [...new Set(criteria.map(cleanText).filter(Boolean))];
+}
+
+function formatRecordDate(value) {
+  if (!value) return "";
+
+  let date = null;
+  if (typeof value?.toDate === "function") {
+    date = value.toDate();
+  } else if (value instanceof Date) {
+    date = value;
+  } else {
+    const textValue = cleanText(value);
+    const dateOnlyMatch = textValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    date = dateOnlyMatch
+      ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
+      : new Date(textValue);
+  }
+
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat(undefined, {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  }).format(date);
+}
+
+function appendHeritageDetail(details, label, value, options = {}) {
+  const safeValue = cleanText(value);
+  if (!safeValue) return false;
+
+  const dt = document.createElement("dt");
+  const dd = document.createElement("dd");
+  dt.textContent = label;
+  dd.textContent = safeValue;
+  if (options.long) {
+    dt.className = "place-local-heritage__long-label";
+    dd.className = "place-local-heritage__long-value";
+  }
+  details.append(dt, dd);
+  return true;
+}
+
+function appendHeritageCriteria(details, criteria) {
+  if (criteria.length === 0) return false;
+
+  const dt = document.createElement("dt");
+  const dd = document.createElement("dd");
+  const list = document.createElement("div");
+  dt.textContent = "Community heritage criteria";
+  dt.className = "place-local-heritage__long-label";
+  dd.className = "place-local-heritage__long-value";
+  list.className = "place-local-heritage__criteria";
+
+  criteria.forEach((criterion) => {
+    const item = document.createElement("span");
+    item.className = "place-local-heritage__criterion";
+    item.textContent = criterion;
+    list.appendChild(item);
+  });
+
+  dd.appendChild(list);
+  details.append(dt, dd);
+  return true;
+}
+
+function renderLocalHeritageRecord(place) {
+  if (!els.localHeritageSection || !els.localHeritageContent) return;
+  els.localHeritageContent.textContent = "";
+
+  const details = document.createElement("dl");
+  details.className = "place-local-heritage__details";
+  let hasDetails = false;
+
+  hasDetails = appendHeritageDetail(details, "Local significance", place.localSignificanceSummary, { long: true }) || hasDetails;
+  hasDetails = appendHeritageDetail(details, "Asset type", place.assetType) || hasDetails;
+  hasDetails = appendHeritageDetail(details, "Area / neighbourhood", place.area) || hasDetails;
+  hasDetails = appendHeritageCriteria(details, getHeritageCriteria(place)) || hasDetails;
+  hasDetails = appendHeritageDetail(details, "Criteria explanation", place.criteriaExplanation, { long: true }) || hasDetails;
+  hasDetails = appendHeritageDetail(details, "Heritage value", place.heritageValue, { long: true }) || hasDetails;
+  hasDetails = appendHeritageDetail(details, "Condition", place.condition) || hasDetails;
+  hasDetails = appendHeritageDetail(details, "Community use", place.communityUse, { long: true }) || hasDetails;
+  hasDetails = appendHeritageDetail(details, "Source reference", place.sourceReference, { long: true }) || hasDetails;
+  hasDetails = appendHeritageDetail(details, "Date added", formatRecordDate(place.dateAdded)) || hasDetails;
+  hasDetails = appendHeritageDetail(details, "Last reviewed", formatRecordDate(place.lastReviewed)) || hasDetails;
+  hasDetails = appendHeritageDetail(details, "Record status", place.recordStatus) || hasDetails;
+
+  if (!hasDetails) {
+    els.localHeritageSection.hidden = true;
+    return;
+  }
+
+  els.localHeritageContent.appendChild(details);
+  els.localHeritageSection.hidden = false;
 }
 
 function formatLocation(place) {
@@ -487,16 +590,13 @@ function renderPlace(place) {
     appendMetadata("Associated type", place.associatedType);
     appendMetadata("Period", place.period);
     appendMetadata("Grade", place.grade);
-    appendMetadata("Heritage value", place.heritageValue);
-    appendMetadata("Condition", place.condition);
-    appendMetadata("Community use", place.communityUse);
-    appendMetadata("Source reference", place.sourceReference);
   }
 
   renderImage(place);
   renderImageCredit(place);
   renderTags(place);
   renderActions(place);
+  renderLocalHeritageRecord(place);
   renderRelatedArticles(place);
   renderLocation(place);
   injectJsonLd(place);
