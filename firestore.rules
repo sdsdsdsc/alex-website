@@ -161,7 +161,8 @@ service cloud.firestore {
 
     match /placeNominations/{nominationId} {
       allow create: if isValidNominationCreate();
-      allow read, update, delete: if false;
+      allow read: if isAdmin();
+      allow update, delete: if false;
     }
 
     // Default deny for anything not explicitly allowed in this review draft.

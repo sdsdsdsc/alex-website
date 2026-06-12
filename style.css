@@ -3804,6 +3804,140 @@ footer {
   margin-top: 22px;
 }
 
+.manage-nominations-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.manage-nominations-summary__card {
+  padding: 14px;
+  border: 1px solid #d7dde1;
+  background: #f8fafb;
+}
+
+.manage-nominations-summary__card h3,
+.manage-nominations-summary__card p {
+  margin: 0;
+}
+
+.manage-nominations-summary__card h3 {
+  color: #17475b;
+  font-size: 0.98rem;
+}
+
+.manage-nominations-summary__card p {
+  margin-top: 8px;
+  color: #111;
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.manage-nominations-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.manage-nominations-card {
+  padding: 16px;
+  border: 1px solid #d7dde1;
+  background: #f8fafb;
+}
+
+.manage-nominations-card__summary {
+  display: grid;
+  gap: 14px;
+}
+
+.manage-nominations-card__heading {
+  display: grid;
+  gap: 10px;
+}
+
+.manage-nominations-card__heading h3 {
+  margin: 0;
+  color: #111;
+  font-size: 1.2rem;
+}
+
+.manage-nominations-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.manage-nominations-card__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #e5edf0;
+  color: #17475b;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.manage-nominations-card__chip--status {
+  background: #17475b;
+  color: #fff;
+}
+
+.manage-nominations-card__meta,
+.manage-nominations-card__detail-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+
+.manage-nominations-card__detail {
+  display: grid;
+  gap: 4px;
+}
+
+.manage-nominations-card__detail dt,
+.manage-nominations-card__detail dd {
+  margin: 0;
+}
+
+.manage-nominations-card__detail dt {
+  color: #17475b;
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.manage-nominations-card__detail dd {
+  color: #222;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.manage-nominations-card__detail dd a {
+  color: #17475b;
+  font-weight: 700;
+}
+
+.manage-nominations-card__details {
+  margin-top: 16px;
+  border-top: 1px solid #d7dde1;
+  padding-top: 14px;
+}
+
+.manage-nominations-card__details summary {
+  cursor: pointer;
+  color: #17475b;
+  font-weight: 800;
+}
+
+.manage-nominations-card__details[open] summary {
+  margin-bottom: 14px;
+}
+
 .manage-community-place-card {
   padding: 16px;
   border: 1px solid #d7dde1;
@@ -4000,6 +4134,8 @@ footer {
   .admin-community-place-form .admin-community-place-form__checkbox-group,
   .admin-related-article-row,
   .admin-related-place-row,
+  .manage-nominations-card__meta,
+  .manage-nominations-card__detail-grid,
   .manage-community-place-card__details,
   .manage-article-card {
     grid-template-columns: 1fr;

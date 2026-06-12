@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Manage Nominations | Alex's Photo Board</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module">
+    import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import {
+      collection,
+      getDocs,
+      getFirestore,
+      orderBy,
+      query
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
+      authDomain: "alexs-community-efcd8.firebaseapp.com",
+      projectId: "alexs-community-efcd8",
+      storageBucket: "alexs-community-efcd8.firebasestorage.app",
+      messagingSenderId: "214395622099",
+      appId: "1:214395622099:web:44f99a181741caf3117a26"
+    };
+
+    const ADMIN_UID = "VT3I9KMktMXsdJeyYBye54Sgnqu2";
+    const STATUS_ORDER = [
+      ["submitted", "Submitted"],
+      ["under review", "Under review"],
+      ["needs more information", "Needs more information"],
+      ["approved", "Approved"],
+      ["rejected", "Rejected"],
+      ["promoted", "Promoted"]
+    ];
+
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    function buildLoginUrl() {
+      const loginUrl = new URL("admin-login.html", window.location.href);
+      loginUrl.searchParams.set("next", `${window.location.pathname}${window.location.search}`);
+      return loginUrl.href;
+    }
+
+    function cleanText(value) {
+      return String(value || "").trim();
+    }
+
+    function formatTimestamp(value) {
+      if (!value) return "Not available";
+
+      const date = typeof value?.toDate === "function"
+        ? value.toDate()
+        : value?.seconds
+          ? new Date(value.seconds * 1000)
+          : value instanceof Date
+            ? value
+            : null;
+
+      return date && Number.isFinite(date.getTime())
+        ? date.toLocaleString()
+        : "Pending server timestamp";
+    }
+
+    function getSortTimestamp(record) {
+      const source = record.submittedAt || record.createdAt || null;
+      if (!source) return 0;
+
+      if (typeof source?.toMillis === "function") return source.toMillis();
+      if (source?.seconds) return source.seconds * 1000;
+      if (source instanceof Date) return source.getTime();
+      return 0;
+    }
+
+    function statusLabel(statusValue) {
+      const normalized = cleanText(statusValue).toLowerCase();
+      const match = STATUS_ORDER.find(([value]) => value === normalized);
+      return match ? match[1] : (cleanText(statusValue) || "Unknown");
+    }
+
+    function setStatus(message, type = "") {
+      const status = document.getElementById("manageNominationsStatus");
+      if (!status) return;
+      status.textContent = message;
+      status.className = type === "error" ? "admin-error" : "admin-status";
+    }
+
+    function createDetailRow(label, value) {
+      if (value === null || value === undefined) return null;
+      const text = Array.isArray(value)
+        ? value.map(cleanText).filter(Boolean).join(", ")
+        : cleanText(value);
+      if (!text) return null;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "manage-nominations-card__detail";
+
+      const dt = document.createElement("dt");
+      dt.textContent = label;
+
+      const dd = document.createElement("dd");
+      dd.textContent = text;
+
+      wrapper.append(dt, dd);
+      return wrapper;
+    }
+
+    function createTimestampRow(label, value) {
+      if (!value) return null;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "manage-nominations-card__detail";
+
+      const dt = document.createElement("dt");
+      dt.textContent = label;
+
+      const dd = document.createElement("dd");
+      dd.textContent = formatTimestamp(value);
+
+      wrapper.append(dt, dd);
+      return wrapper;
+    }
+
+    function createPhotoLink(url) {
+      const value = cleanText(url);
+      if (!value) return null;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "manage-nominations-card__detail";
+
+      const dt = document.createElement("dt");
+      dt.textContent = "Photo URL";
+
+      const dd = document.createElement("dd");
+      const link = document.createElement("a");
+      link.href = value;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = value;
+      dd.appendChild(link);
+
+      wrapper.append(dt, dd);
+      return wrapper;
+    }
+
+    function createSummaryChip(text, className = "") {
+      const chip = document.createElement("span");
+      chip.className = `manage-nominations-card__chip${className ? ` ${className}` : ""}`;
+      chip.textContent = text;
+      return chip;
+    }
+
+    function createCriteriaList(criteria) {
+      if (!Array.isArray(criteria) || criteria.length === 0) return null;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "manage-nominations-card__detail";
+
+      const dt = document.createElement("dt");
+      dt.textContent = "Heritage criteria";
+
+      const dd = document.createElement("dd");
+      const list = document.createElement("div");
+      list.className = "manage-nominations-card__chips";
+      criteria.map(cleanText).filter(Boolean).forEach((item) => {
+        list.appendChild(createSummaryChip(item));
+      });
+      dd.appendChild(list);
+
+      wrapper.append(dt, dd);
+      return wrapper;
+    }
+
+    function createNominationCard(record) {
+      const card = document.createElement("article");
+      card.className = "manage-nominations-card";
+      card.dataset.nominationId = record.id;
+
+      const summary = document.createElement("div");
+      summary.className = "manage-nominations-card__summary";
+
+      const heading = document.createElement("div");
+      heading.className = "manage-nominations-card__heading";
+
+      const title = document.createElement("h3");
+      title.textContent = cleanText(record.title) || "Untitled nomination";
+      heading.appendChild(title);
+
+      const chips = document.createElement("div");
+      chips.className = "manage-nominations-card__chips";
+      chips.appendChild(createSummaryChip(statusLabel(record.nominationStatus), "manage-nominations-card__chip--status"));
+      if (cleanText(record.assetType)) chips.appendChild(createSummaryChip(cleanText(record.assetType)));
+      if (cleanText(record.area)) chips.appendChild(createSummaryChip(cleanText(record.area)));
+      heading.appendChild(chips);
+      summary.appendChild(heading);
+
+      const meta = document.createElement("dl");
+      meta.className = "manage-nominations-card__meta";
+      [
+        ["Address", record.address],
+        ["Submitted", formatTimestamp(record.submittedAt || record.createdAt)],
+        ["Display name", record.nominatorDisplayName],
+        ["Organisation", record.organisationName]
+      ].forEach(([label, value]) => {
+        const item = createDetailRow(label, value);
+        if (item) meta.appendChild(item);
+      });
+      summary.appendChild(meta);
+
+      const details = document.createElement("details");
+      details.className = "manage-nominations-card__details";
+
+      const detailsSummary = document.createElement("summary");
+      detailsSummary.textContent = "View full nomination";
+      details.appendChild(detailsSummary);
+
+      const body = document.createElement("dl");
+      body.className = "manage-nominations-card__detail-grid";
+
+      [
+        createDetailRow("Title", record.title),
+        createDetailRow("Asset type", record.assetType),
+        createDetailRow("Area", record.area),
+        createDetailRow("Address", record.address),
+        createDetailRow("Latitude", record.lat),
+        createDetailRow("Longitude", record.lng),
+        createDetailRow("Description", record.description),
+        createDetailRow("Local significance summary", record.localSignificanceSummary),
+        createCriteriaList(record.heritageCriteria),
+        createDetailRow("Criteria explanation", record.criteriaExplanation),
+        createDetailRow("Condition", record.condition),
+        createDetailRow("Community use", record.communityUse),
+        createDetailRow("Source reference", record.sourceReference),
+        createPhotoLink(record.photoUrl),
+        createDetailRow("Photo description", record.photoDescription),
+        createDetailRow("Nominator display name", record.nominatorDisplayName),
+        createDetailRow("Nominator email", record.nominatorEmail),
+        createDetailRow("Organisation name", record.organisationName),
+        createDetailRow("Submitted on behalf of", record.submittedOnBehalfOf),
+        createDetailRow("Nomination status", statusLabel(record.nominationStatus)),
+        createTimestampRow("Created at", record.createdAt),
+        createTimestampRow("Updated at", record.updatedAt),
+        createTimestampRow("Submitted at", record.submittedAt)
+      ].forEach((row) => {
+        if (row) body.appendChild(row);
+      });
+
+      details.appendChild(body);
+      card.append(summary, details);
+      return card;
+    }
+
+    function renderSummary(records) {
+      const container = document.getElementById("nominationSummary");
+      if (!container) return;
+      container.textContent = "";
+
+      const summaryItems = [["Total nominations loaded", records.length]];
+      STATUS_ORDER.forEach(([value, label]) => {
+        const count = records.filter((record) => cleanText(record.nominationStatus).toLowerCase() === value).length;
+        summaryItems.push([label, count]);
+      });
+
+      summaryItems.forEach(([label, count]) => {
+        const card = document.createElement("article");
+        card.className = "manage-nominations-summary__card";
+
+        const heading = document.createElement("h3");
+        heading.textContent = label;
+
+        const value = document.createElement("p");
+        value.textContent = String(count);
+
+        card.append(heading, value);
+        container.appendChild(card);
+      });
+    }
+
+    function renderNominations(records) {
+      const container = document.getElementById("nominationList");
+      if (!container) return;
+      container.textContent = "";
+
+      if (records.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "admin-empty-state";
+        empty.textContent = "No nominations have been submitted yet.";
+        container.appendChild(empty);
+        return;
+      }
+
+      records.forEach((record) => {
+        container.appendChild(createNominationCard(record));
+      });
+    }
+
+    async function loadNominations() {
+      setStatus("Loading nominations...");
+
+      try {
+        const snapshot = await getDocs(query(collection(db, "placeNominations"), orderBy("submittedAt", "desc")));
+        const records = snapshot.docs
+          .map((docSnap) => ({
+            id: docSnap.id,
+            ...docSnap.data()
+          }))
+          .sort((a, b) => getSortTimestamp(b) - getSortTimestamp(a));
+
+        renderSummary(records);
+        renderNominations(records);
+        setStatus(`Loaded ${records.length} nomination${records.length === 1 ? "" : "s"}.`);
+      } catch (err) {
+        console.error("Failed to load nominations:", err);
+        renderSummary([]);
+        const container = document.getElementById("nominationList");
+        if (container) {
+          container.textContent = "";
+          const errorMessage = document.createElement("p");
+          errorMessage.className = "admin-error";
+          errorMessage.textContent = "Could not load nominations. Check admin sign-in and Firestore rules.";
+          container.appendChild(errorMessage);
+        }
+        setStatus("Could not load nominations. Check admin sign-in and Firestore rules.", "error");
+      }
+    }
+
+    async function handleSignedInUser(user) {
+      if (!user) {
+        window.location.href = buildLoginUrl();
+        return;
+      }
+
+      if (user.uid !== ADMIN_UID) {
+        const page = document.getElementById("manageNominationsPage");
+        if (page) page.hidden = true;
+        setStatus("This page is restricted to the configured admin account.", "error");
+        await signOut(auth);
+        window.location.href = buildLoginUrl();
+        return;
+      }
+
+      const page = document.getElementById("manageNominationsPage");
+      if (page) page.hidden = false;
+      await loadNominations();
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const signOutButton = document.getElementById("manageNominationsSignOut");
+
+      onAuthStateChanged(auth, (user) => {
+        handleSignedInUser(user);
+      });
+
+      signOutButton?.addEventListener("click", async () => {
+        signOutButton.disabled = true;
+        try {
+          await signOut(auth);
+          window.location.href = "admin-login.html";
+        } catch (err) {
+          console.error("Sign out failed:", err);
+          signOutButton.disabled = false;
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
+    <nav class="menu-bar" aria-label="Admin navigation">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="news.html" class="nav-link">News</a>
+      <a href="history.html" class="nav-link">History</a>
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="search.html" class="nav-link">Places</a>
+      <a href="export.html" class="nav-link">Open Data</a>
+    </nav>
+  </header>
+
+  <main class="admin-page admin-page--wide">
+    <section class="admin-card admin-card--wide" id="manageNominationsPage" aria-labelledby="manageNominationsTitle" hidden>
+      <div class="admin-toolbar">
+        <p id="manageNominationsStatus" role="status" aria-live="polite">Checking admin sign-in...</p>
+        <a href="admin.html">Admin Dashboard</a>
+        <button id="manageNominationsSignOut" type="button">Sign Out</button>
+      </div>
+
+      <h2 id="manageNominationsTitle">Manage Nominations</h2>
+      <p class="admin-readonly-note">Review public nominations submitted for community-valued places. This page is read-only in Phase 9D.</p>
+      <p class="admin-warning-note">Private contact details are shown for review only. Do not copy nominator email into public place records or heritage.json.</p>
+
+      <section class="manage-nominations-summary" id="nominationSummary" aria-label="Nomination status summary"></section>
+      <section class="manage-nominations-list" id="nominationList" aria-label="Nomination review list"></section>
+    </section>
+  </main>
+</body>
+</html>
