@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Nominate a Community Place | Alex's Photo Board</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#nominatePlaceMain">Skip to nomination form</a>
+  <header>
+    <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
+    <nav class="menu-bar" aria-label="Main navigation">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="news.html" class="nav-link">News</a>
+      <a href="history.html" class="nav-link">History</a>
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="search.html" class="nav-link">Places</a>
+      <a href="export.html" class="nav-link">Open Data</a>
+    </nav>
+  </header>
+
+  <main id="nominatePlaceMain" class="nomination-page">
+    <nav class="nomination-breadcrumb" aria-label="Breadcrumb">
+      <a href="index.html">Home</a>
+      <span aria-hidden="true">›</span>
+      <a href="about-local-heritage.html">About Local Heritage Records</a>
+      <span aria-hidden="true">›</span>
+      <span>Nominate a Community Place</span>
+    </nav>
+
+    <header class="nomination-hero">
+      <div class="nomination-hero__inner">
+        <p class="nomination-hero__kicker">Static form preview</p>
+        <h2>Nominate a Community Place</h2>
+        <p>Use this form to suggest a community-valued place and explain why it matters locally.</p>
+      </div>
+    </header>
+
+    <div class="nomination-shell">
+      <aside class="nomination-status-note" aria-labelledby="nominationStatusTitle">
+        <h3 id="nominationStatusTitle">Before you begin</h3>
+        <p>Alex's Photo Board is a community heritage record project inspired by Local Heritage Listing practice. It is not an official statutory Local Heritage List and does not represent a planning authority.</p>
+        <ul>
+          <li>Nominations will be reviewed before publication.</li>
+          <li>Submitting a form will not automatically publish a place.</li>
+          <li>A nomination does not create an official designation or planning status.</li>
+          <li>This Phase 9B form is a static preview and does not submit or save data yet.</li>
+        </ul>
+      </aside>
+
+      <section class="nomination-intro" aria-labelledby="beforeNominateTitle">
+        <h3 id="beforeNominateTitle">What you can nominate</h3>
+        <p>This form is for suggesting community-valued places such as public spaces, buildings, parks, streets, routes, landmarks, public art, industrial heritage, archaeological features, landscapes, or places connected to local memory.</p>
+        <p>Please explain the place clearly and provide evidence of its local significance where possible. Do not include private or sensitive personal information. Photo upload will be considered in a later phase.</p>
+      </section>
+
+      <form class="nomination-form" aria-describedby="nominationFormStatus">
+        <fieldset class="nomination-step">
+          <legend><span>Step 1</span> Place location</legend>
+          <p class="nomination-step__intro">If exact coordinates are not known, a clear location description is acceptable. A later phase may allow nominations to begin from the map.</p>
+
+          <div class="nomination-field">
+            <label for="nominationTitle">Place / asset name</label>
+            <input id="nominationTitle" name="title" type="text" autocomplete="off" required>
+          </div>
+
+          <div class="nomination-field">
+            <label for="nominationArea">Area / neighbourhood</label>
+            <input id="nominationArea" name="area" type="text" autocomplete="address-level3">
+          </div>
+
+          <div class="nomination-field nomination-field--full">
+            <label for="nominationAddress">Address or location description</label>
+            <textarea id="nominationAddress" name="address" rows="3" aria-describedby="nominationAddressHelp" required></textarea>
+            <p id="nominationAddressHelp" class="nomination-field__help">Include nearby streets, landmarks, or other details that would help an admin identify the place.</p>
+          </div>
+
+          <div class="nomination-field">
+            <label for="nominationLat">Latitude <span>(optional)</span></label>
+            <input id="nominationLat" name="lat" type="number" min="-90" max="90" step="any" inputmode="decimal">
+          </div>
+
+          <div class="nomination-field">
+            <label for="nominationLng">Longitude <span>(optional)</span></label>
+            <input id="nominationLng" name="lng" type="number" min="-180" max="180" step="any" inputmode="decimal">
+          </div>
+        </fieldset>
+
+        <fieldset class="nomination-step">
+          <legend><span>Step 2</span> What type of place is it?</legend>
+          <div class="nomination-field nomination-field--full">
+            <label for="nominationAssetType">Asset type</label>
+            <select id="nominationAssetType" name="assetType" required>
+              <option value="">Select an asset type</option>
+              <option>Public space</option>
+              <option>Building</option>
+              <option>Park or garden</option>
+              <option>Street or route</option>
+              <option>Landmark</option>
+              <option>Public art</option>
+              <option>Industrial heritage</option>
+              <option>Archaeological feature</option>
+              <option>Natural or landscape feature</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <fieldset class="nomination-step">
+          <legend><span>Step 3</span> Describe the place</legend>
+          <div class="nomination-field nomination-field--full">
+            <label for="nominationDescription">Description</label>
+            <textarea id="nominationDescription" name="description" rows="6" aria-describedby="nominationDescriptionHelp" required></textarea>
+            <p id="nominationDescriptionHelp" class="nomination-field__help">Explain what the place is, what can be seen there, and any important physical features.</p>
+          </div>
+
+          <div class="nomination-field nomination-field--full">
+            <label for="nominationSignificance">Local significance summary</label>
+            <textarea id="nominationSignificance" name="localSignificanceSummary" rows="5" aria-describedby="nominationSignificanceHelp" required></textarea>
+            <p id="nominationSignificanceHelp" class="nomination-field__help">Explain why the place matters to the community.</p>
+          </div>
+        </fieldset>
+
+        <fieldset class="nomination-step">
+          <legend><span>Step 4</span> Why does it matter?</legend>
+          <p class="nomination-step__intro">These are community heritage criteria, not official statutory designation criteria. Select the criteria that best explain why the place matters locally.</p>
+
+          <fieldset class="nomination-choice-group nomination-field--full">
+            <legend>Community heritage criteria</legend>
+            <div class="nomination-choice-grid">
+              <label><input type="checkbox" name="heritageCriteria" value="Historic interest"> Historic interest</label>
+              <label><input type="checkbox" name="heritageCriteria" value="Social or communal value"> Social or communal value</label>
+              <label><input type="checkbox" name="heritageCriteria" value="Landmark or streetscape value"> Landmark or streetscape value</label>
+              <label><input type="checkbox" name="heritageCriteria" value="Architectural, design or artistic interest"> Architectural, design or artistic interest</label>
+              <label><input type="checkbox" name="heritageCriteria" value="Archaeological or evidential interest"> Archaeological or evidential interest</label>
+              <label><input type="checkbox" name="heritageCriteria" value="Rarity"> Rarity</label>
+              <label><input type="checkbox" name="heritageCriteria" value="Group value"> Group value</label>
+              <label><input type="checkbox" name="heritageCriteria" value="Age"> Age</label>
+              <label><input type="checkbox" name="heritageCriteria" value="Condition or vulnerability"> Condition or vulnerability</label>
+            </div>
+          </fieldset>
+
+          <div class="nomination-field nomination-field--full">
+            <label for="nominationCriteriaExplanation">Criteria explanation</label>
+            <textarea id="nominationCriteriaExplanation" name="criteriaExplanation" rows="6" aria-describedby="nominationCriteriaHelp" required></textarea>
+            <p id="nominationCriteriaHelp" class="nomination-field__help">Provide evidence, examples, dates, memories, or sources that support the selected criteria.</p>
+          </div>
+        </fieldset>
+
+        <fieldset class="nomination-step">
+          <legend><span>Step 5</span> Current use and evidence</legend>
+          <div class="nomination-field">
+            <label for="nominationCondition">Condition</label>
+            <textarea id="nominationCondition" name="condition" rows="4"></textarea>
+          </div>
+
+          <div class="nomination-field">
+            <label for="nominationCommunityUse">Community use</label>
+            <textarea id="nominationCommunityUse" name="communityUse" rows="4"></textarea>
+          </div>
+
+          <div class="nomination-field nomination-field--full">
+            <label for="nominationSource">Source / reference</label>
+            <textarea id="nominationSource" name="sourceReference" rows="4" aria-describedby="nominationSourceHelp"></textarea>
+            <p id="nominationSourceHelp" class="nomination-field__help">Examples include archive references, books, websites, maps, oral histories, or community records.</p>
+          </div>
+
+          <div class="nomination-field nomination-field--full">
+            <label for="nominationPhotoUrl">Photo evidence</label>
+            <input id="nominationPhotoUrl" name="photoUrl" type="url" placeholder="Photo upload is not active yet" disabled>
+            <div class="nomination-upload-placeholder" role="note">
+              <strong>Photo upload will be added in a later phase.</strong>
+              <span>For now, this layout shows where image evidence may be added.</span>
+            </div>
+          </div>
+
+          <div class="nomination-field nomination-field--full">
+            <label for="nominationPhotoDescription">Photo description</label>
+            <textarea id="nominationPhotoDescription" name="photoDescription" rows="3" aria-describedby="nominationPhotoDescriptionHelp"></textarea>
+            <p id="nominationPhotoDescriptionHelp" class="nomination-field__help">Describe what the image shows and provide its source or creator when known.</p>
+          </div>
+        </fieldset>
+
+        <fieldset class="nomination-step">
+          <legend><span>Step 6</span> About you</legend>
+          <p class="nomination-step__intro">Your email would be used only for admin follow-up about this nomination and must not be displayed publicly. A display name should be public only if you later agree.</p>
+
+          <div class="nomination-field">
+            <label for="nominationDisplayName">Nominator display name</label>
+            <input id="nominationDisplayName" name="nominatorDisplayName" type="text" autocomplete="name" required>
+          </div>
+
+          <div class="nomination-field">
+            <label for="nominationEmail">Nominator email</label>
+            <input id="nominationEmail" name="nominatorEmail" type="email" autocomplete="email" required>
+          </div>
+
+          <div class="nomination-field">
+            <label for="nominationOrganisation">Organisation / group <span>(optional)</span></label>
+            <input id="nominationOrganisation" name="organisationName" type="text" autocomplete="organization">
+          </div>
+
+          <div class="nomination-field">
+            <label for="nominationOnBehalfOf">Who are you nominating for?</label>
+            <select id="nominationOnBehalfOf" name="submittedOnBehalfOf">
+              <option value="self">Myself</option>
+              <option value="someone-else">Someone else</option>
+              <option value="organisation">An organisation or community group</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <fieldset class="nomination-step nomination-step--acknowledgements">
+          <legend><span>Step 7</span> Terms and privacy acknowledgement</legend>
+          <div class="nomination-acknowledgements">
+            <label><input type="checkbox" name="projectPositionAccepted" required> I understand this is a community heritage record project, not an official statutory Local Heritage List.</label>
+            <label><input type="checkbox" name="reviewAccepted" required> I understand nominations are reviewed before publication.</label>
+            <label><input type="checkbox" name="privacyAccepted" required> I understand my email will be used only for follow-up about this nomination.</label>
+            <label><input type="checkbox" name="termsAccepted" required> I confirm I have not included private or sensitive information that should not be reviewed by the site admin.</label>
+          </div>
+        </fieldset>
+
+        <div class="nomination-submit" id="nominationFormStatus" role="status">
+          <button type="button" disabled>Preview submit - not active yet</button>
+          <p>Submission will be enabled in a later phase. Nothing entered on this page is currently saved or sent.</p>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    © 2025 Alex's Photo Board | All Rights Reserved
+  </footer>
+</body>
+</html>
