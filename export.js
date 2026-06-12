@@ -35,6 +35,42 @@ function cleanText(value) {
   return String(value || "").trim();
 }
 
+function normalizeTextList(value) {
+  const values = Array.isArray(value)
+    ? value
+    : cleanText(value).split(/[\n,;]+/);
+
+  return [...new Set(values.map(cleanText).filter(Boolean))];
+}
+
+function singleOrArray(values) {
+  if (values.length === 0) return null;
+  return values.length === 1 ? values[0] : values;
+}
+
+function normalizeDate(value) {
+  if (!value) return "";
+
+  if (typeof value === "string") {
+    const textValue = cleanText(value);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(textValue)) return textValue;
+  }
+
+  let date = null;
+  if (typeof value?.toDate === "function") {
+    date = value.toDate();
+  } else if (value instanceof Date) {
+    date = value;
+  } else if (Number.isFinite(value?.seconds)) {
+    date = new Date(value.seconds * 1000);
+  } else {
+    date = new Date(value);
+  }
+
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
+  return date.toISOString();
+}
+
 function toSafeUrl(value) {
   if (!value) return "";
   try {
@@ -133,6 +169,13 @@ function buildCommunityPlaceJsonLd(docId, data) {
 
   const description = cleanText(data.description);
   const category = cleanText(data.category);
+  const assetType = cleanText(data.assetType);
+  const area = cleanText(data.area);
+  const localSignificanceSummary = cleanText(data.localSignificanceSummary);
+  const heritageCriteria = normalizeTextList(data.heritageCriteria);
+  const keywords = normalizeTextList(data.tags).concat(heritageCriteria);
+  const criteriaExplanation = cleanText(data.criteriaExplanation);
+  const recordStatus = cleanText(data.recordStatus);
   const location = cleanText(data.location);
   const imageUrl = toSafeUrl(data.imageUrl);
   const source = cleanText(data.source);
@@ -140,14 +183,28 @@ function buildCommunityPlaceJsonLd(docId, data) {
   const condition = cleanText(data.condition);
   const communityUse = cleanText(data.communityUse);
   const sourceReference = cleanText(data.sourceReference);
+  const dateCreated = normalizeDate(data.dateAdded || data.createdAt);
+  const dateModified = normalizeDate(data.lastReviewed || data.updatedAt);
   const relatedArticles = normalizeRelatedArticles(data.relatedArticles);
 
   if (description) node["schema:description"] = description;
-  if (category) node["schema:additionalType"] = category;
+  const additionalTypes = singleOrArray([...new Set([category, assetType].filter(Boolean))]);
+  if (additionalTypes) node["schema:additionalType"] = additionalTypes;
+  if (area) {
+    node["schema:containedInPlace"] = {
+      "@type": "schema:Place",
+      "schema:name": area
+    };
+  }
+  if (localSignificanceSummary) node["schema:abstract"] = localSignificanceSummary;
+  const normalizedKeywords = singleOrArray([...new Set(keywords)]);
+  if (normalizedKeywords) node["schema:keywords"] = normalizedKeywords;
   if (location) node["schema:address"] = location;
   if (imageUrl) node["schema:image"] = imageUrl;
   if (source) node["schema:sourceOrganization"] = source;
   const additionalProperties = [
+    ["Criteria explanation", criteriaExplanation],
+    ["Record status", recordStatus],
     ["Heritage value", heritageValue],
     ["Condition", condition],
     ["Community use", communityUse]
@@ -158,6 +215,8 @@ function buildCommunityPlaceJsonLd(docId, data) {
   }));
   if (additionalProperties.length > 0) node["schema:additionalProperty"] = additionalProperties;
   if (sourceReference) node["dc:source"] = sourceReference;
+  if (dateCreated) node["schema:dateCreated"] = dateCreated;
+  if (dateModified) node["schema:dateModified"] = dateModified;
   if (relatedArticles.length === 1) node["schema:subjectOf"] = relatedArticles[0];
   if (relatedArticles.length > 1) node["schema:subjectOf"] = relatedArticles;
   if (hasCoordinates(data)) {
