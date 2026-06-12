@@ -289,6 +289,227 @@ body > header h1 a.home-link:hover {
   color: #fff;
 }
 
+.home-intro-panel__guidance {
+  margin: 22px 0 0;
+}
+
+.home-intro-panel__guidance a {
+  color: #17475b;
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
+.home-intro-panel__guidance a:hover,
+.home-intro-panel__guidance a:focus-visible {
+  color: #2f7a54;
+}
+
+.heritage-about-page {
+  padding-bottom: 72px;
+}
+
+.heritage-about-breadcrumb,
+.heritage-about-hero__inner,
+.heritage-about-content {
+  width: min(980px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.heritage-about-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 22px 0;
+  color: #555;
+}
+
+.heritage-about-breadcrumb a {
+  color: #17475b;
+  font-weight: 700;
+}
+
+.heritage-about-hero {
+  padding: clamp(44px, 7vw, 78px) 0;
+  background: #17475b;
+  color: #fff;
+}
+
+.heritage-about-hero__kicker {
+  margin: 0 0 12px;
+  color: #fcbf49;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.heritage-about-hero h2 {
+  max-width: 800px;
+  margin: 0;
+  font-size: clamp(2.3rem, 6vw, 4.6rem);
+  line-height: 1.05;
+}
+
+.heritage-about-hero p:last-child {
+  max-width: 760px;
+  margin: 22px 0 0;
+  color: #eef6f7;
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
+  line-height: 1.65;
+}
+
+.heritage-about-content {
+  padding-top: clamp(42px, 6vw, 68px);
+}
+
+.heritage-about-content > section {
+  margin-bottom: clamp(42px, 6vw, 64px);
+}
+
+.heritage-about-content h3 {
+  margin: 0 0 18px;
+  padding-left: 14px;
+  border-left: 5px solid #fcbf49;
+  color: #173b32;
+  font-size: clamp(1.55rem, 3vw, 2.25rem);
+  line-height: 1.2;
+}
+
+.heritage-about-content p,
+.heritage-about-content li {
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+
+.heritage-about-content p {
+  margin: 0 0 16px;
+}
+
+.heritage-about-content a {
+  color: #17475b;
+  font-weight: 700;
+}
+
+.heritage-about-content code {
+  padding: 2px 5px;
+  background: #eaf0f2;
+  color: #173b32;
+  font-size: 0.95em;
+}
+
+.heritage-about-criteria {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 22px;
+  margin: 24px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.heritage-about-criteria li {
+  padding: 12px 14px 12px 38px;
+  background: #fff;
+  border-left: 4px solid #2f7a54;
+  position: relative;
+}
+
+.heritage-about-criteria li::before {
+  content: "";
+  position: absolute;
+  top: 21px;
+  left: 16px;
+  width: 8px;
+  height: 8px;
+  background: #2f7a54;
+}
+
+.heritage-about-pathways {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.heritage-about-pathways a {
+  display: grid;
+  gap: 6px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #d7dde1;
+  border-left: 5px solid #2f7a54;
+  color: #17475b;
+  text-decoration: none;
+}
+
+.heritage-about-pathways a:hover,
+.heritage-about-pathways a:focus-visible {
+  border-color: #17475b;
+  background: #eef5f6;
+}
+
+.heritage-about-pathways strong {
+  font-size: 1.12rem;
+}
+
+.heritage-about-pathways span {
+  color: #333;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.heritage-about-note {
+  margin: 0 0 40px;
+  padding: clamp(24px, 4vw, 34px);
+  background: #dff3ec;
+  border-top: 5px solid #2f7a54;
+  color: #173b32;
+}
+
+.heritage-about-note h3 {
+  border-left: 0;
+  padding-left: 0;
+  font-size: 1.55rem;
+}
+
+.heritage-about-note p:last-child {
+  margin-bottom: 0;
+  font-weight: 700;
+}
+
+.heritage-about-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.heritage-about-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 20px;
+  background: #17475b;
+  border: 1px solid #17475b;
+  color: #fff;
+  text-decoration: none;
+}
+
+.heritage-about-actions a:hover,
+.heritage-about-actions a:focus-visible {
+  background: #fcbf49;
+  border-color: #fcbf49;
+  color: #111;
+}
+
+@media (max-width: 700px) {
+  .heritage-about-criteria,
+  .heritage-about-pathways {
+    grid-template-columns: 1fr;
+  }
+
+  .heritage-about-actions {
+    display: grid;
+  }
+}
+
 .home-feature-image {
   position: relative;
   width: 100%;

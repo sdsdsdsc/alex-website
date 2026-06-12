@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>About Local Heritage Records | Alex's Photo Board</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#localHeritageAboutMain">Skip to guidance</a>
+  <header>
+    <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
+    <nav class="menu-bar" aria-label="Main navigation">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="news.html" class="nav-link">News</a>
+      <a href="history.html" class="nav-link">History</a>
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="search.html" class="nav-link">Places</a>
+      <a href="export.html" class="nav-link">Open Data</a>
+    </nav>
+  </header>
+
+  <main id="localHeritageAboutMain" class="heritage-about-page">
+    <nav class="heritage-about-breadcrumb" aria-label="Breadcrumb">
+      <a href="index.html">Home</a>
+      <span aria-hidden="true">›</span>
+      <span>About Local Heritage Records</span>
+    </nav>
+
+    <header class="heritage-about-hero">
+      <div class="heritage-about-hero__inner">
+        <p class="heritage-about-hero__kicker">Community heritage guidance</p>
+        <h2>About Local Heritage Records</h2>
+        <p>Alex's Photo Board documents community-valued places, local stories, and open heritage data so people can understand what matters locally and why.</p>
+      </div>
+    </header>
+
+    <div class="heritage-about-content">
+      <section aria-labelledby="whatWeRecordTitle">
+        <h3 id="whatWeRecordTitle">What this project records</h3>
+        <p>The site records community-valued places and local heritage assets. These may include public spaces, buildings, parks, streets, routes, landmarks, public art, industrial heritage, and places connected to local memory.</p>
+        <p>The central record layer is <strong>Community Places</strong>, stored in the site's <code>communityPlaces</code> collection.</p>
+      </section>
+
+      <section aria-labelledby="recordMeaningTitle">
+        <h3 id="recordMeaningTitle">What a community heritage record means</h3>
+        <p>A community heritage record describes a place and explains why it matters locally. A record may include its location, asset type, local significance, heritage criteria, condition, community use, source references, and related stories.</p>
+        <p>Bringing factual information together with local meaning helps visitors understand how a place contributes to community identity and memory.</p>
+      </section>
+
+      <section aria-labelledby="heritageCriteriaTitle">
+        <h3 id="heritageCriteriaTitle">Our community heritage criteria</h3>
+        <p>The project currently uses the following criteria to structure local significance and supporting evidence:</p>
+        <ul class="heritage-about-criteria">
+          <li>Historic interest</li>
+          <li>Social or communal value</li>
+          <li>Landmark or streetscape value</li>
+          <li>Architectural, design or artistic interest</li>
+          <li>Archaeological or evidential interest</li>
+          <li>Rarity</li>
+          <li>Group value</li>
+          <li>Age</li>
+          <li>Condition or vulnerability</li>
+        </ul>
+        <p>These are community heritage criteria, not official statutory designation criteria. They provide a consistent way to describe local significance and the evidence that supports it.</p>
+      </section>
+
+      <section aria-labelledby="websiteStructureTitle">
+        <h3 id="websiteStructureTitle">How the website is organised</h3>
+        <div class="heritage-about-pathways">
+          <a href="search.html"><strong>Places</strong><span>Browse and search community place records.</span></a>
+          <a href="map.html"><strong>Map</strong><span>Explore the same records by location.</span></a>
+          <a href="history.html"><strong>Local History Stories</strong><span>Read stories about local places, people, and memories.</span></a>
+          <a href="news.html"><strong>Community News</strong><span>Follow current community and heritage activity.</span></a>
+          <a href="export.html"><strong>Open Data</strong><span>Download reusable public heritage records.</span></a>
+        </div>
+      </section>
+
+      <section aria-labelledby="connectedStoriesTitle">
+        <h3 id="connectedStoriesTitle">How places and stories connect</h3>
+        <p>Place records can link to related news and history articles, while articles can link back to the places they discuss. These two-way links create a simple connected heritage graph that lets visitors move between structured records and local stories.</p>
+      </section>
+
+      <section aria-labelledby="openHeritageDataTitle">
+        <h3 id="openHeritageDataTitle">Open heritage data</h3>
+        <p>The <a href="export.html">Open Data page</a> generates <code>heritage.json</code>, which exports public records as JSON-LD. This structured format can help other websites and research tools reuse the data, and may support future RDF or triplestore work.</p>
+        <p>The export currently focuses on Community Places, Community News, and Local History Stories.</p>
+      </section>
+
+      <section aria-labelledby="futureNominationsTitle">
+        <h3 id="futureNominationsTitle">Future nominations</h3>
+        <p>A future phase may allow people to suggest or nominate community-valued places. Nominations would go through review before becoming published Community Places records.</p>
+        <p>Public submissions should remain separate from published records and must not directly overwrite them.</p>
+      </section>
+
+      <aside class="heritage-about-note" aria-labelledby="importantNoteTitle">
+        <h3 id="importantNoteTitle">Important note</h3>
+        <p>Alex's Photo Board is a community heritage record project inspired by Local Heritage Listing practice. It is not an official statutory Local Heritage List and does not represent a planning authority.</p>
+      </aside>
+
+      <nav class="heritage-about-actions" aria-label="Explore community heritage records">
+        <a href="search.html">Explore Places</a>
+        <a href="map.html">View Heritage Map</a>
+      </nav>
+    </div>
+  </main>
+
+  <footer>
+    © 2025 Alex's Photo Board | All Rights Reserved
+  </footer>
+</body>
+</html>
