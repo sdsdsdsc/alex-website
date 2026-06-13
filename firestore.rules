@@ -145,7 +145,8 @@ service cloud.firestore {
     }
 
     function isValidNominationReviewUpdate() {
-      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+      return resource.data.nominationStatus != 'promoted'
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'nominationStatus',
           'adminNotes',
           'reviewedAt',
@@ -154,6 +155,20 @@ service cloud.firestore {
         && isValidNominationReviewStatus(request.resource.data.nominationStatus)
         && request.resource.data.adminNotes is string
         && request.resource.data.adminNotes.size() <= 5000;
+    }
+
+    function isValidNominationPromotionUpdate() {
+      return resource.data.nominationStatus == 'approved'
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'nominationStatus',
+          'promotedPlaceId',
+          'promotedAt',
+          'updatedAt'
+        ])
+        && request.resource.data.nominationStatus == 'promoted'
+        && isTrimmedString(request.resource.data.promotedPlaceId, 120)
+        && request.resource.data.promotedAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
     }
 
     match /news/{doc=**} {
@@ -174,7 +189,10 @@ service cloud.firestore {
     match /placeNominations/{nominationId} {
       allow create: if isValidNominationCreate();
       allow read: if isAdmin();
-      allow update: if isAdmin() && isValidNominationReviewUpdate();
+      allow update: if isAdmin() && (
+        isValidNominationReviewUpdate()
+        || isValidNominationPromotionUpdate()
+      );
       allow delete: if false;
     }
 

@@ -21,6 +21,7 @@
       getFirestore,
       orderBy,
       query,
+      runTransaction,
       serverTimestamp,
       updateDoc
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -40,10 +41,18 @@
       ["under review", "Under review"],
       ["needs more information", "Needs more information"],
       ["approved", "Approved"],
-      ["rejected", "Rejected"]
+      ["rejected", "Rejected"],
+      ["promoted", "Promoted"]
     ];
-    const REVIEWABLE_STATUSES = STATUS_SUMMARY.map(([value]) => value);
+    const REVIEWABLE_STATUSES = [
+      "submitted",
+      "under review",
+      "needs more information",
+      "approved",
+      "rejected"
+    ];
     const REVIEW_NOTES_LIMIT = 5000;
+    const PROMOTION_ID_LIMIT = 80;
 
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -60,6 +69,37 @@
 
     function cleanText(value) {
       return String(value || "").trim();
+    }
+
+    function suggestPlaceId(title, nominationId) {
+      const base = cleanText(title)
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, PROMOTION_ID_LIMIT);
+      if (base) return base;
+
+      const shortId = cleanText(nominationId)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "")
+        .slice(0, 8);
+      return `nomination-${shortId || "record"}`;
+    }
+
+    function normalizePlaceId(value, nominationId) {
+      const normalized = cleanText(value)
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, PROMOTION_ID_LIMIT);
+      return normalized || suggestPlaceId("", nominationId);
+    }
+
+    function getPromotionDateString() {
+      return new Date().toISOString().slice(0, 10);
     }
 
     function formatTimestamp(value) {
@@ -203,10 +243,57 @@
       return wrapper;
     }
 
+    function buildCommunityPlacePayload(record, placeId) {
+      const payload = {
+        title: cleanText(record.title),
+        category: cleanText(record.assetType) || "Community Place",
+        recordStatus: "published",
+        dateAdded: getPromotionDateString(),
+        lastReviewed: getPromotionDateString(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      [
+        "assetType",
+        "area",
+        "address",
+        "description",
+        "localSignificanceSummary",
+        "criteriaExplanation",
+        "condition",
+        "communityUse",
+        "sourceReference"
+      ].forEach((field) => {
+        const value = cleanText(record[field]);
+        if (value) payload[field] = value;
+      });
+
+      if (Array.isArray(record.heritageCriteria) && record.heritageCriteria.length > 0) {
+        payload.heritageCriteria = record.heritageCriteria.map(cleanText).filter(Boolean);
+      }
+
+      const lat = Number(record.lat);
+      const lng = Number(record.lng);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        payload.lat = lat;
+        payload.lng = lng;
+      }
+
+      payload.id = placeId;
+      return payload;
+    }
+
+    function appendPreviewRow(container, label, value) {
+      const row = createDetailRow(label, value);
+      if (row) container.appendChild(row);
+    }
+
     function createNominationCard(record) {
       const card = document.createElement("article");
       card.className = "manage-nominations-card";
       card.dataset.nominationId = record.id;
+      const promoteStatus = cleanText(record.nominationStatus).toLowerCase();
 
       const summary = document.createElement("div");
       summary.className = "manage-nominations-card__summary";
@@ -289,85 +376,238 @@
       reviewHelp.textContent = "Private admin notes are for review only and must not be copied into public place records.";
       reviewSection.appendChild(reviewHelp);
 
-      const reviewForm = document.createElement("form");
-      reviewForm.className = "manage-nominations-card__review-form";
-
-      const statusLabelEl = document.createElement("label");
-      statusLabelEl.textContent = "Nomination status";
-      const statusSelect = document.createElement("select");
-      statusSelect.name = "nominationStatus";
-      REVIEWABLE_STATUSES.forEach((value) => {
-        const option = new Option(statusLabel(value), value);
-        if (cleanText(record.nominationStatus).toLowerCase() === value) option.selected = true;
-        statusSelect.appendChild(option);
-      });
-      statusLabelEl.appendChild(statusSelect);
-
-      const notesLabel = document.createElement("label");
-      notesLabel.textContent = "Private admin notes";
-      const notesInput = document.createElement("textarea");
-      notesInput.name = "adminNotes";
-      notesInput.rows = 5;
-      notesInput.maxLength = REVIEW_NOTES_LIMIT;
-      notesInput.value = cleanText(record.adminNotes);
-      notesLabel.appendChild(notesInput);
-
-      const reviewActions = document.createElement("div");
-      reviewActions.className = "admin-record-actions";
-
-      const saveButton = document.createElement("button");
-      saveButton.type = "submit";
-      saveButton.textContent = "Save review";
-      reviewActions.appendChild(saveButton);
-
-      const saveMessage = createCardMessage(
+      let saveMessage = createCardMessage(
         record.id === lastSavedNominationId ? lastSavedMessage : ""
       );
 
-      reviewForm.append(statusLabelEl, notesLabel, reviewActions, saveMessage);
-      reviewSection.appendChild(reviewForm);
+      if (promoteStatus === "promoted") {
+        const reviewLocked = document.createElement("p");
+        reviewLocked.className = "admin-help-note";
+        reviewLocked.textContent = "This nomination has already been promoted. Review fields are now locked for this phase.";
+        reviewSection.appendChild(reviewLocked);
+        reviewSection.appendChild(saveMessage);
+      } else {
+        const reviewForm = document.createElement("form");
+        reviewForm.className = "manage-nominations-card__review-form";
 
-      reviewForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        saveMessage.textContent = "";
-        saveMessage.className = "manage-nominations-card__save-message";
+        const statusLabelEl = document.createElement("label");
+        statusLabelEl.textContent = "Nomination status";
+        const statusSelect = document.createElement("select");
+        statusSelect.name = "nominationStatus";
+        REVIEWABLE_STATUSES.forEach((value) => {
+          const option = new Option(statusLabel(value), value);
+          if (cleanText(record.nominationStatus).toLowerCase() === value) option.selected = true;
+          statusSelect.appendChild(option);
+        });
+        statusLabelEl.appendChild(statusSelect);
 
-        const nextStatus = cleanText(statusSelect.value).toLowerCase();
-        const adminNotes = cleanText(notesInput.value);
+        const notesLabel = document.createElement("label");
+        notesLabel.textContent = "Private admin notes";
+        const notesInput = document.createElement("textarea");
+        notesInput.name = "adminNotes";
+        notesInput.rows = 5;
+        notesInput.maxLength = REVIEW_NOTES_LIMIT;
+        notesInput.value = cleanText(record.adminNotes);
+        notesLabel.appendChild(notesInput);
 
-        if (!REVIEWABLE_STATUSES.includes(nextStatus)) {
-          saveMessage.className = "manage-nominations-card__save-message admin-error";
-          saveMessage.textContent = "Could not save review update. Check admin sign-in and Firestore rules.";
-          return;
-        }
+        const reviewActions = document.createElement("div");
+        reviewActions.className = "admin-record-actions";
 
-        saveButton.disabled = true;
-        saveButton.textContent = "Saving...";
+        const saveButton = document.createElement("button");
+        saveButton.type = "submit";
+        saveButton.textContent = "Save review";
+        reviewActions.appendChild(saveButton);
 
-        try {
-          await updateDoc(doc(db, "placeNominations", record.id), {
-            nominationStatus: nextStatus,
-            adminNotes,
-            reviewedAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
+        reviewForm.append(statusLabelEl, notesLabel, reviewActions, saveMessage);
+        reviewSection.appendChild(reviewForm);
 
-          lastSavedNominationId = record.id;
-          lastSavedMessage = "Review update saved.";
-          setStatus("Review update saved.");
-          await loadNominations();
-        } catch (err) {
-          console.error("Nomination review update failed:", err);
-          saveMessage.className = "manage-nominations-card__save-message admin-error";
-          saveMessage.textContent = "Could not save review update. Check admin sign-in and Firestore rules.";
-        } finally {
-          saveButton.disabled = false;
-          saveButton.textContent = "Save review";
-        }
-      });
+        reviewForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          saveMessage.textContent = "";
+          saveMessage.className = "manage-nominations-card__save-message";
+
+          const nextStatus = cleanText(statusSelect.value).toLowerCase();
+          const adminNotes = cleanText(notesInput.value);
+
+          if (!REVIEWABLE_STATUSES.includes(nextStatus)) {
+            saveMessage.className = "manage-nominations-card__save-message admin-error";
+            saveMessage.textContent = "Could not save review update. Check admin sign-in and Firestore rules.";
+            return;
+          }
+
+          saveButton.disabled = true;
+          saveButton.textContent = "Saving...";
+
+          try {
+            await updateDoc(doc(db, "placeNominations", record.id), {
+              nominationStatus: nextStatus,
+              adminNotes,
+              reviewedAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            });
+
+            lastSavedNominationId = record.id;
+            lastSavedMessage = "Review update saved.";
+            setStatus("Review update saved.");
+            await loadNominations();
+          } catch (err) {
+            console.error("Nomination review update failed:", err);
+            saveMessage.className = "manage-nominations-card__save-message admin-error";
+            saveMessage.textContent = "Could not save review update. Check admin sign-in and Firestore rules.";
+          } finally {
+            saveButton.disabled = false;
+            saveButton.textContent = "Save review";
+          }
+        });
+      }
 
       details.appendChild(body);
       details.appendChild(reviewSection);
+
+      const promoteSection = document.createElement("section");
+      promoteSection.className = "manage-nominations-card__promotion";
+
+      const promoteTitle = document.createElement("h4");
+      promoteTitle.textContent = "Promote to Community Place";
+      promoteSection.appendChild(promoteTitle);
+
+      if (promoteStatus === "promoted" && cleanText(record.promotedPlaceId)) {
+        const promotedMessage = document.createElement("p");
+        promotedMessage.className = "admin-success";
+        promotedMessage.textContent = `Promoted to communityPlaces: ${cleanText(record.promotedPlaceId)}`;
+        promoteSection.appendChild(promotedMessage);
+      } else if (promoteStatus !== "approved") {
+        const helper = document.createElement("p");
+        helper.className = "admin-help-note";
+        helper.textContent = "Only approved nominations can be promoted.";
+        promoteSection.appendChild(helper);
+      } else {
+        const warning = document.createElement("p");
+        warning.className = "admin-warning-note";
+        warning.textContent = "Promotion creates a public communityPlaces record. Private contact details and admin notes must not be copied.";
+        promoteSection.appendChild(warning);
+
+        const promotionForm = document.createElement("form");
+        promotionForm.className = "manage-nominations-card__promotion-form";
+
+        const placeIdLabel = document.createElement("label");
+        placeIdLabel.textContent = "CommunityPlaces document ID";
+        const placeIdInput = document.createElement("input");
+        placeIdInput.type = "text";
+        placeIdInput.name = "promotedPlaceId";
+        placeIdInput.maxLength = PROMOTION_ID_LIMIT;
+        placeIdInput.value = normalizePlaceId(record.promotedPlaceId || record.title, record.id);
+        placeIdLabel.appendChild(placeIdInput);
+
+        const previewTitle = document.createElement("h5");
+        previewTitle.textContent = "Promotion preview";
+
+        const previewList = document.createElement("dl");
+        previewList.className = "manage-nominations-card__detail-grid";
+        appendPreviewRow(previewList, "Title", record.title);
+        appendPreviewRow(previewList, "Category", cleanText(record.assetType) || "Community Place");
+        appendPreviewRow(previewList, "Asset type", record.assetType);
+        appendPreviewRow(previewList, "Area", record.area);
+        appendPreviewRow(previewList, "Address", record.address);
+        appendPreviewRow(previewList, "Latitude", record.lat);
+        appendPreviewRow(previewList, "Longitude", record.lng);
+        appendPreviewRow(previewList, "Description", record.description);
+        appendPreviewRow(previewList, "Local significance summary", record.localSignificanceSummary);
+        appendPreviewRow(previewList, "Heritage criteria", Array.isArray(record.heritageCriteria) ? record.heritageCriteria.join(", ") : "");
+        appendPreviewRow(previewList, "Criteria explanation", record.criteriaExplanation);
+        appendPreviewRow(previewList, "Condition", record.condition);
+        appendPreviewRow(previewList, "Community use", record.communityUse);
+        appendPreviewRow(previewList, "Source reference", record.sourceReference);
+        appendPreviewRow(previewList, "Record status", "published");
+
+        const confirmLabel = document.createElement("label");
+        confirmLabel.className = "manage-nominations-card__promotion-confirm";
+        const confirmInput = document.createElement("input");
+        confirmInput.type = "checkbox";
+        confirmInput.name = "promotionConfirmed";
+        confirmLabel.append(confirmInput, document.createTextNode(" I confirm this nomination is approved and private contact details/admin notes will not be copied."));
+
+        const promotionActions = document.createElement("div");
+        promotionActions.className = "admin-record-actions";
+
+        const promoteButton = document.createElement("button");
+        promoteButton.type = "submit";
+        promoteButton.textContent = "Promote to Community Place";
+        promotionActions.appendChild(promoteButton);
+
+        const promoteMessage = createCardMessage("");
+
+        promotionForm.append(placeIdLabel, previewTitle, previewList, confirmLabel, promotionActions, promoteMessage);
+        promoteSection.appendChild(promotionForm);
+
+        promotionForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          promoteMessage.textContent = "";
+          promoteMessage.className = "manage-nominations-card__save-message";
+
+          const chosenId = normalizePlaceId(placeIdInput.value, record.id);
+          placeIdInput.value = chosenId;
+
+          if (!confirmInput.checked) {
+            promoteMessage.className = "manage-nominations-card__save-message admin-error";
+            promoteMessage.textContent = "Please confirm the promotion warning before writing.";
+            return;
+          }
+
+          const confirmed = window.confirm(`Create communityPlaces/${chosenId} from this approved nomination?`);
+          if (!confirmed) return;
+
+          promoteButton.disabled = true;
+          promoteButton.textContent = "Promoting...";
+
+          try {
+            const placePayload = buildCommunityPlacePayload(record, chosenId);
+            await runTransaction(db, async (transaction) => {
+              const nominationRef = doc(db, "placeNominations", record.id);
+              const placeRef = doc(db, "communityPlaces", chosenId);
+              const [nominationSnap, placeSnap] = await Promise.all([
+                transaction.get(nominationRef),
+                transaction.get(placeRef)
+              ]);
+
+              if (!nominationSnap.exists()) {
+                throw new Error("This nomination could not be found.");
+              }
+
+              const freshNomination = nominationSnap.data();
+              if (cleanText(freshNomination.nominationStatus).toLowerCase() !== "approved") {
+                throw new Error("Only approved nominations can be promoted.");
+              }
+
+              if (placeSnap.exists()) {
+                throw new Error("A communityPlaces record with this ID already exists. Choose a different ID.");
+              }
+
+              transaction.set(placeRef, placePayload);
+              transaction.update(nominationRef, {
+                nominationStatus: "promoted",
+                promotedPlaceId: chosenId,
+                promotedAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              });
+            });
+
+            lastSavedNominationId = record.id;
+            lastSavedMessage = "Promotion completed.";
+            setStatus("Promotion completed.");
+            await loadNominations();
+          } catch (err) {
+            console.error("Nomination promotion failed:", err);
+            promoteMessage.className = "manage-nominations-card__save-message admin-error";
+            promoteMessage.textContent = err.message || "Could not promote this nomination. Check admin sign-in and Firestore rules.";
+          } finally {
+            promoteButton.disabled = false;
+            promoteButton.textContent = "Promote to Community Place";
+          }
+        });
+      }
+
+      details.appendChild(promoteSection);
       if (record.id === lastSavedNominationId && lastSavedMessage) {
         details.open = true;
         saveMessage.className = "manage-nominations-card__save-message admin-success";
@@ -517,7 +757,7 @@
       </div>
 
       <h2 id="manageNominationsTitle">Manage Nominations</h2>
-      <p class="admin-readonly-note">Review public nominations submitted for community-valued places. Update nomination status and private admin notes here.</p>
+      <p class="admin-readonly-note">Review public nominations submitted for community-valued places. Update nomination status, keep private review notes, and promote approved nominations here.</p>
       <p class="admin-warning-note">Private contact details are shown for review only. Do not copy nominator email into public place records or heritage.json.</p>
 
       <section class="manage-nominations-summary" id="nominationSummary" aria-label="Nomination status summary"></section>
