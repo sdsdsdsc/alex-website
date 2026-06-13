@@ -3938,6 +3938,52 @@ footer {
   margin-bottom: 14px;
 }
 
+.manage-nominations-card__review {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #d7dde1;
+}
+
+.manage-nominations-card__review h4 {
+  margin: 0 0 10px;
+  color: #17475b;
+  font-size: 1rem;
+}
+
+.manage-nominations-card__review-form {
+  display: grid;
+  gap: 12px;
+}
+
+.manage-nominations-card__review-form label {
+  display: grid;
+  gap: 6px;
+  color: #111;
+  font-weight: 800;
+}
+
+.manage-nominations-card__review-form select,
+.manage-nominations-card__review-form textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #b9c3c9;
+  border-radius: 4px;
+  background: #fff;
+  color: #111;
+  font: inherit;
+}
+
+.manage-nominations-card__review-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.manage-nominations-card__save-message {
+  min-height: 1.4em;
+  margin: 0;
+}
+
 .manage-community-place-card {
   padding: 16px;
   border: 1px solid #d7dde1;

@@ -16,10 +16,13 @@
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import {
       collection,
+      doc,
       getDocs,
       getFirestore,
       orderBy,
-      query
+      query,
+      serverTimestamp,
+      updateDoc
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -32,18 +35,22 @@
     };
 
     const ADMIN_UID = "VT3I9KMktMXsdJeyYBye54Sgnqu2";
-    const STATUS_ORDER = [
+    const STATUS_SUMMARY = [
       ["submitted", "Submitted"],
       ["under review", "Under review"],
       ["needs more information", "Needs more information"],
       ["approved", "Approved"],
-      ["rejected", "Rejected"],
-      ["promoted", "Promoted"]
+      ["rejected", "Rejected"]
     ];
+    const REVIEWABLE_STATUSES = STATUS_SUMMARY.map(([value]) => value);
+    const REVIEW_NOTES_LIMIT = 5000;
 
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    let nominationRecords = [];
+    let lastSavedNominationId = "";
+    let lastSavedMessage = "";
 
     function buildLoginUrl() {
       const loginUrl = new URL("admin-login.html", window.location.href);
@@ -83,8 +90,13 @@
 
     function statusLabel(statusValue) {
       const normalized = cleanText(statusValue).toLowerCase();
-      const match = STATUS_ORDER.find(([value]) => value === normalized);
-      return match ? match[1] : (cleanText(statusValue) || "Unknown");
+      const match = STATUS_SUMMARY.find(([value]) => value === normalized);
+      if (match) return match[1];
+      return cleanText(statusValue)
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ") || "Unknown";
     }
 
     function setStatus(message, type = "") {
@@ -157,6 +169,17 @@
       chip.className = `manage-nominations-card__chip${className ? ` ${className}` : ""}`;
       chip.textContent = text;
       return chip;
+    }
+
+    function createCardMessage(message, type = "") {
+      const status = document.createElement("p");
+      status.className = type === "error"
+        ? "manage-nominations-card__save-message admin-error"
+        : type === "success"
+          ? "manage-nominations-card__save-message admin-success"
+          : "manage-nominations-card__save-message";
+      status.textContent = message;
+      return status;
     }
 
     function createCriteriaList(criteria) {
@@ -254,7 +277,101 @@
         if (row) body.appendChild(row);
       });
 
+      const reviewSection = document.createElement("section");
+      reviewSection.className = "manage-nominations-card__review";
+
+      const reviewTitle = document.createElement("h4");
+      reviewTitle.textContent = "Admin review";
+      reviewSection.appendChild(reviewTitle);
+
+      const reviewHelp = document.createElement("p");
+      reviewHelp.className = "admin-help-note";
+      reviewHelp.textContent = "Private admin notes are for review only and must not be copied into public place records.";
+      reviewSection.appendChild(reviewHelp);
+
+      const reviewForm = document.createElement("form");
+      reviewForm.className = "manage-nominations-card__review-form";
+
+      const statusLabelEl = document.createElement("label");
+      statusLabelEl.textContent = "Nomination status";
+      const statusSelect = document.createElement("select");
+      statusSelect.name = "nominationStatus";
+      REVIEWABLE_STATUSES.forEach((value) => {
+        const option = new Option(statusLabel(value), value);
+        if (cleanText(record.nominationStatus).toLowerCase() === value) option.selected = true;
+        statusSelect.appendChild(option);
+      });
+      statusLabelEl.appendChild(statusSelect);
+
+      const notesLabel = document.createElement("label");
+      notesLabel.textContent = "Private admin notes";
+      const notesInput = document.createElement("textarea");
+      notesInput.name = "adminNotes";
+      notesInput.rows = 5;
+      notesInput.maxLength = REVIEW_NOTES_LIMIT;
+      notesInput.value = cleanText(record.adminNotes);
+      notesLabel.appendChild(notesInput);
+
+      const reviewActions = document.createElement("div");
+      reviewActions.className = "admin-record-actions";
+
+      const saveButton = document.createElement("button");
+      saveButton.type = "submit";
+      saveButton.textContent = "Save review";
+      reviewActions.appendChild(saveButton);
+
+      const saveMessage = createCardMessage(
+        record.id === lastSavedNominationId ? lastSavedMessage : ""
+      );
+
+      reviewForm.append(statusLabelEl, notesLabel, reviewActions, saveMessage);
+      reviewSection.appendChild(reviewForm);
+
+      reviewForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        saveMessage.textContent = "";
+        saveMessage.className = "manage-nominations-card__save-message";
+
+        const nextStatus = cleanText(statusSelect.value).toLowerCase();
+        const adminNotes = cleanText(notesInput.value);
+
+        if (!REVIEWABLE_STATUSES.includes(nextStatus)) {
+          saveMessage.className = "manage-nominations-card__save-message admin-error";
+          saveMessage.textContent = "Could not save review update. Check admin sign-in and Firestore rules.";
+          return;
+        }
+
+        saveButton.disabled = true;
+        saveButton.textContent = "Saving...";
+
+        try {
+          await updateDoc(doc(db, "placeNominations", record.id), {
+            nominationStatus: nextStatus,
+            adminNotes,
+            reviewedAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+
+          lastSavedNominationId = record.id;
+          lastSavedMessage = "Review update saved.";
+          setStatus("Review update saved.");
+          await loadNominations();
+        } catch (err) {
+          console.error("Nomination review update failed:", err);
+          saveMessage.className = "manage-nominations-card__save-message admin-error";
+          saveMessage.textContent = "Could not save review update. Check admin sign-in and Firestore rules.";
+        } finally {
+          saveButton.disabled = false;
+          saveButton.textContent = "Save review";
+        }
+      });
+
       details.appendChild(body);
+      details.appendChild(reviewSection);
+      if (record.id === lastSavedNominationId && lastSavedMessage) {
+        details.open = true;
+        saveMessage.className = "manage-nominations-card__save-message admin-success";
+      }
       card.append(summary, details);
       return card;
     }
@@ -265,7 +382,7 @@
       container.textContent = "";
 
       const summaryItems = [["Total nominations loaded", records.length]];
-      STATUS_ORDER.forEach(([value, label]) => {
+      STATUS_SUMMARY.forEach(([value, label]) => {
         const count = records.filter((record) => cleanText(record.nominationStatus).toLowerCase() === value).length;
         summaryItems.push([label, count]);
       });
@@ -308,18 +425,23 @@
 
       try {
         const snapshot = await getDocs(query(collection(db, "placeNominations"), orderBy("submittedAt", "desc")));
-        const records = snapshot.docs
+        nominationRecords = snapshot.docs
           .map((docSnap) => ({
             id: docSnap.id,
             ...docSnap.data()
           }))
           .sort((a, b) => getSortTimestamp(b) - getSortTimestamp(a));
 
-        renderSummary(records);
-        renderNominations(records);
-        setStatus(`Loaded ${records.length} nomination${records.length === 1 ? "" : "s"}.`);
+        renderSummary(nominationRecords);
+        renderNominations(nominationRecords);
+        if (lastSavedMessage && lastSavedNominationId) {
+          setStatus(lastSavedMessage);
+        } else {
+          setStatus(`Loaded ${nominationRecords.length} nomination${nominationRecords.length === 1 ? "" : "s"}.`);
+        }
       } catch (err) {
         console.error("Failed to load nominations:", err);
+        nominationRecords = [];
         renderSummary([]);
         const container = document.getElementById("nominationList");
         if (container) {
@@ -395,7 +517,7 @@
       </div>
 
       <h2 id="manageNominationsTitle">Manage Nominations</h2>
-      <p class="admin-readonly-note">Review public nominations submitted for community-valued places. This page is read-only in Phase 9D.</p>
+      <p class="admin-readonly-note">Review public nominations submitted for community-valued places. Update nomination status and private admin notes here.</p>
       <p class="admin-warning-note">Private contact details are shown for review only. Do not copy nominator email into public place records or heritage.json.</p>
 
       <section class="manage-nominations-summary" id="nominationSummary" aria-label="Nomination status summary"></section>

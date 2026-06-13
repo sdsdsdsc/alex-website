@@ -134,6 +134,28 @@ service cloud.firestore {
         );
     }
 
+    function isValidNominationReviewStatus(value) {
+      return value in [
+        'submitted',
+        'under review',
+        'needs more information',
+        'approved',
+        'rejected'
+      ];
+    }
+
+    function isValidNominationReviewUpdate() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'nominationStatus',
+          'adminNotes',
+          'reviewedAt',
+          'updatedAt'
+        ])
+        && isValidNominationReviewStatus(request.resource.data.nominationStatus)
+        && request.resource.data.adminNotes is string
+        && request.resource.data.adminNotes.size() <= 5000;
+    }
+
     match /news/{doc=**} {
       allow read: if true;
       allow write: if isAdmin();
@@ -162,7 +184,8 @@ service cloud.firestore {
     match /placeNominations/{nominationId} {
       allow create: if isValidNominationCreate();
       allow read: if isAdmin();
-      allow update, delete: if false;
+      allow update: if isAdmin() && isValidNominationReviewUpdate();
+      allow delete: if false;
     }
 
     // Default deny for anything not explicitly allowed in this review draft.
