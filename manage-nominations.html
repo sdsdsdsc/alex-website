@@ -51,6 +51,14 @@
       "approved",
       "rejected"
     ];
+    const FILTERABLE_STATUSES = [
+      ["all", "All"],
+      ["submitted", "Submitted"],
+      ["under review", "Under review"],
+      ["approved", "Approved"],
+      ["rejected", "Rejected"],
+      ["promoted", "Promoted"]
+    ];
     const REVIEW_NOTES_LIMIT = 5000;
     const PROMOTION_ID_LIMIT = 80;
 
@@ -60,6 +68,11 @@
     let nominationRecords = [];
     let lastSavedNominationId = "";
     let lastSavedMessage = "";
+    const nominationViewState = {
+      status: "all",
+      search: "",
+      sort: "newest"
+    };
 
     function buildLoginUrl() {
       const loginUrl = new URL("admin-login.html", window.location.href);
@@ -137,6 +150,67 @@
         .filter(Boolean)
         .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
         .join(" ") || "Unknown";
+    }
+
+    function normalizeNominationStatus(statusValue) {
+      return cleanText(statusValue).toLowerCase();
+    }
+
+    function nominationMatchesStatus(record, selectedStatus) {
+      if (!selectedStatus || selectedStatus === "all") return true;
+      return normalizeNominationStatus(record.nominationStatus) === selectedStatus;
+    }
+
+    function nominationMatchesSearch(record, searchTerm) {
+      if (!searchTerm) return true;
+
+      const haystack = [
+        record.title,
+        record.area,
+        record.address,
+        record.assetType,
+        record.nominatorDisplayName,
+        record.nominatorEmail
+      ].map(cleanText).join(" ").toLowerCase();
+
+      return haystack.includes(searchTerm);
+    }
+
+    function sortNominations(records, sortValue) {
+      const sorted = [...records];
+
+      if (sortValue === "oldest") {
+        sorted.sort((a, b) => getSortTimestamp(a) - getSortTimestamp(b));
+        return sorted;
+      }
+
+      if (sortValue === "status") {
+        sorted.sort((a, b) => {
+          const aStatus = statusLabel(a.nominationStatus);
+          const bStatus = statusLabel(b.nominationStatus);
+          const statusCompare = aStatus.localeCompare(bStatus);
+          if (statusCompare !== 0) return statusCompare;
+          return cleanText(a.title).localeCompare(cleanText(b.title));
+        });
+        return sorted;
+      }
+
+      if (sortValue === "title") {
+        sorted.sort((a, b) => cleanText(a.title).localeCompare(cleanText(b.title)));
+        return sorted;
+      }
+
+      sorted.sort((a, b) => getSortTimestamp(b) - getSortTimestamp(a));
+      return sorted;
+    }
+
+    function getFilteredNominations() {
+      const normalizedSearch = cleanText(nominationViewState.search).toLowerCase();
+      const filtered = nominationRecords.filter((record) => (
+        nominationMatchesStatus(record, nominationViewState.status)
+        && nominationMatchesSearch(record, normalizedSearch)
+      ));
+      return sortNominations(filtered, nominationViewState.sort);
     }
 
     function setStatus(message, type = "") {
@@ -616,6 +690,12 @@
       return card;
     }
 
+    function renderNominationSummary(filteredRecords) {
+      const summary = document.getElementById("nominationResultSummary");
+      if (!summary) return;
+      summary.textContent = `Showing ${filteredRecords.length} of ${nominationRecords.length} nomination${nominationRecords.length === 1 ? "" : "s"}`;
+    }
+
     function renderSummary(records) {
       const container = document.getElementById("nominationSummary");
       if (!container) return;
@@ -650,7 +730,9 @@
       if (records.length === 0) {
         const empty = document.createElement("p");
         empty.className = "admin-empty-state";
-        empty.textContent = "No nominations have been submitted yet.";
+        empty.textContent = nominationRecords.length === 0
+          ? "No nominations have been submitted yet."
+          : "No nominations match the current filters.";
         container.appendChild(empty);
         return;
       }
@@ -658,6 +740,12 @@
       records.forEach((record) => {
         container.appendChild(createNominationCard(record));
       });
+    }
+
+    function renderFilteredNominations() {
+      const filteredRecords = getFilteredNominations();
+      renderNominationSummary(filteredRecords);
+      renderNominations(filteredRecords);
     }
 
     async function loadNominations() {
@@ -673,7 +761,7 @@
           .sort((a, b) => getSortTimestamp(b) - getSortTimestamp(a));
 
         renderSummary(nominationRecords);
-        renderNominations(nominationRecords);
+        renderFilteredNominations();
         if (lastSavedMessage && lastSavedNominationId) {
           setStatus(lastSavedMessage);
         } else {
@@ -717,6 +805,24 @@
 
     window.addEventListener("DOMContentLoaded", () => {
       const signOutButton = document.getElementById("manageNominationsSignOut");
+      const statusFilter = document.getElementById("nominationStatusFilter");
+      const searchInput = document.getElementById("nominationSearchInput");
+      const sortSelect = document.getElementById("nominationSortSelect");
+
+      statusFilter?.addEventListener("change", () => {
+        nominationViewState.status = statusFilter.value;
+        renderFilteredNominations();
+      });
+
+      searchInput?.addEventListener("input", () => {
+        nominationViewState.search = searchInput.value;
+        renderFilteredNominations();
+      });
+
+      sortSelect?.addEventListener("change", () => {
+        nominationViewState.sort = sortSelect.value;
+        renderFilteredNominations();
+      });
 
       onAuthStateChanged(auth, (user) => {
         handleSignedInUser(user);
@@ -759,6 +865,37 @@
       <h2 id="manageNominationsTitle">Manage Nominations</h2>
       <p class="admin-readonly-note">Review public nominations submitted for community-valued places. Update nomination status, keep private review notes, and promote approved nominations here.</p>
       <p class="admin-warning-note">Private contact details are shown for review only. Do not copy nominator email into public place records or heritage.json.</p>
+
+      <section class="manage-nominations-filters" aria-label="Nomination filters">
+        <label>
+          <span>Filter by status</span>
+          <select id="nominationStatusFilter" name="nominationStatusFilter">
+            <option value="all">All</option>
+            <option value="submitted">Submitted</option>
+            <option value="under review">Under review</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="promoted">Promoted</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Search nominations</span>
+          <input id="nominationSearchInput" name="nominationSearchInput" type="search" placeholder="Title, area, address, name, or email">
+        </label>
+
+        <label>
+          <span>Sort by</span>
+          <select id="nominationSortSelect" name="nominationSortSelect">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="status">Status</option>
+            <option value="title">Title A-Z</option>
+          </select>
+        </label>
+      </section>
+
+      <p class="manage-nominations-result-summary" id="nominationResultSummary" role="status" aria-live="polite"></p>
 
       <section class="manage-nominations-summary" id="nominationSummary" aria-label="Nomination status summary"></section>
       <section class="manage-nominations-list" id="nominationList" aria-label="Nomination review list"></section>
