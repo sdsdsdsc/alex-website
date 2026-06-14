@@ -275,6 +275,13 @@ function updateUrlSearch(term) {
   window.history.replaceState({}, "", url);
 }
 
+function buildNominationUrl(lat, lng) {
+  const url = new URL("nominate-place.html", window.location.href);
+  url.searchParams.set("lat", String(lat));
+  url.searchParams.set("lng", String(lng));
+  return `${url.pathname}${url.search}`;
+}
+
 function initCommunityMap({
   containerId,
   mode,
@@ -303,6 +310,8 @@ function initCommunityMap({
   const drawSearchClose = document.getElementById("mapDrawSearchClose");
   const drawSearchX = document.getElementById("mapDrawSearchX");
   const drawSearchMessage = document.getElementById("mapDrawSearchMessage");
+  const mapNominationToggle = document.getElementById("mapNominationToggle");
+  const mapNominationStatus = document.getElementById("mapNominationStatus");
   const customFilters = Array.from(document.querySelectorAll(".map-custom-filter"));
   const categoryInputs = Array.from(document.querySelectorAll('input[name="mapCategory"]'));
   const initialSearchTerm = urlParams.get("search") || "";
@@ -329,6 +338,7 @@ function initCommunityMap({
   let allMapPoints = [];
   let allMapPolygons = [];
   let hasFocusedRequestedLocation = false;
+  let isNominationPickMode = false;
   const pendingFilters = {
     city: ""
   };
@@ -361,6 +371,36 @@ function initCommunityMap({
     if (statusEl) {
       statusEl.textContent = message;
     }
+  }
+
+  function setNominationStatus(message = "") {
+    if (!mapNominationStatus) return;
+    mapNominationStatus.textContent = message;
+    mapNominationStatus.hidden = !message;
+  }
+
+  function stopMapNominationMode() {
+    isNominationPickMode = false;
+    container.classList.remove("is-nomination-pick-mode");
+    if (mapNominationToggle) {
+      mapNominationToggle.textContent = "Nominate a place from this map";
+      mapNominationToggle.setAttribute("aria-pressed", "false");
+    }
+    setNominationStatus("");
+  }
+
+  function startMapNominationMode() {
+    isNominationPickMode = true;
+    closeFilterPanel();
+    closeDrawSearchPanel();
+    closeAllCustomFilters();
+    map.closePopup();
+    container.classList.add("is-nomination-pick-mode");
+    if (mapNominationToggle) {
+      mapNominationToggle.textContent = "Cancel map nomination";
+      mapNominationToggle.setAttribute("aria-pressed", "true");
+    }
+    setNominationStatus("Click the map to choose the place you want to nominate.");
   }
 
   function getSelectedMapCategories() {
@@ -790,8 +830,19 @@ function initCommunityMap({
     });
   });
 
+  map.on("click", (event) => {
+    if (!isNominationPickMode) return;
+    const { lat, lng } = event.latlng;
+    stopMapNominationMode();
+    window.location.href = buildNominationUrl(lat, lng);
+  });
+
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      if (isNominationPickMode) {
+        stopMapNominationMode();
+        return;
+      }
       if (isPublicCommunityMode && filterPanel && !filterPanel.hidden) {
         closeFilterPanel(true);
         return;
@@ -803,6 +854,14 @@ function initCommunityMap({
       closeAllCustomFilters();
       map.closePopup();
     }
+  });
+
+  mapNominationToggle?.addEventListener("click", () => {
+    if (isNominationPickMode) {
+      stopMapNominationMode();
+      return;
+    }
+    startMapNominationMode();
   });
 
   Promise.all([loadMarkers(), loadPolygons()]).then(() => {

@@ -62,6 +62,34 @@ function cleanText(value) {
   return String(value || "").trim();
 }
 
+function getNominationCoordinatesFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const latParam = cleanText(params.get("lat"));
+  const lngParam = cleanText(params.get("lng"));
+  if (!latParam || !lngParam) return null;
+
+  const lat = Number(latParam);
+  const lng = Number(lngParam);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+
+  return { lat, lng };
+}
+
+function fillNominationCoordinates() {
+  const coordinates = getNominationCoordinatesFromUrl();
+  if (!coordinates) return;
+
+  const latInput = document.getElementById("nominationLat");
+  const lngInput = document.getElementById("nominationLng");
+  if (latInput && !cleanText(latInput.value)) {
+    latInput.value = String(coordinates.lat);
+  }
+  if (lngInput && !cleanText(lngInput.value)) {
+    lngInput.value = String(coordinates.lng);
+  }
+}
+
 function readText(formData, field) {
   const value = cleanText(formData.get(field));
   const limit = FIELD_LIMITS[field];
@@ -185,6 +213,8 @@ function showStatus(element, message, type = "") {
 const form = document.getElementById("nominationForm");
 const submitButton = document.getElementById("nominationSubmitButton");
 const status = document.getElementById("nominationFormStatus");
+
+fillNominationCoordinates();
 
 form?.addEventListener("submit", async (event) => {
   event.preventDefault();

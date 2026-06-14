@@ -1447,6 +1447,37 @@ body.community-modal-open {
   margin: 0;
 }
 
+.map-nomination-entry {
+  margin: 0 0 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.map-nomination-entry__button {
+  width: fit-content;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #17475b;
+  border-radius: 4px;
+  background: #fff;
+  color: #17475b;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.map-nomination-entry__button:hover,
+.map-nomination-entry__button:focus-visible {
+  background: #17475b;
+  color: #fff;
+}
+
+.map-nomination-entry__status {
+  margin: 0;
+  color: #17475b;
+  font-weight: 700;
+}
+
 .map-filter-panel {
   position: absolute;
   z-index: 600;
@@ -1595,6 +1626,10 @@ body.community-modal-open {
   margin: 0;
   border-radius: 0;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
+}
+
+.map-canvas.map-search-canvas.is-nomination-pick-mode {
+  cursor: crosshair;
 }
 
 .map-stage .leaflet-top.leaflet-left {
