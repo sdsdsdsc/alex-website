@@ -60,7 +60,14 @@
       ["promoted", "Promoted"]
     ];
     const REVIEW_NOTES_LIMIT = 5000;
+    const ADMIN_ASSESSMENT_SUMMARY_LIMIT = 5000;
     const PROMOTION_ID_LIMIT = 80;
+    const ADMIN_ASSESSMENT_FIELDS = [
+      ["adminHistoricInterest", "Historic interest"],
+      ["adminArchitecturalInterest", "Architectural / artistic interest"],
+      ["adminCommunityValue", "Social or community value"],
+      ["adminConditionRisk", "Condition / vulnerability"]
+    ];
 
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -363,6 +370,10 @@
       if (row) container.appendChild(row);
     }
 
+    function isCheckedAssessmentValue(value) {
+      return value === true;
+    }
+
     function createNominationCard(record) {
       const card = document.createElement("article");
       card.className = "manage-nominations-card";
@@ -484,6 +495,47 @@
         notesInput.value = cleanText(record.adminNotes);
         notesLabel.appendChild(notesInput);
 
+        const assessmentSection = document.createElement("fieldset");
+        assessmentSection.className = "manage-nominations-card__assessment";
+
+        const assessmentLegend = document.createElement("legend");
+        assessmentLegend.textContent = "Admin criteria assessment";
+        assessmentSection.appendChild(assessmentLegend);
+
+        const assessmentHelp = document.createElement("p");
+        assessmentHelp.className = "admin-help-note";
+        assessmentHelp.textContent = "These review fields are private admin assessment notes and are not copied into public communityPlaces records in this phase.";
+        assessmentSection.appendChild(assessmentHelp);
+
+        const assessmentOptions = document.createElement("div");
+        assessmentOptions.className = "manage-nominations-card__assessment-options";
+
+        const assessmentInputs = {};
+        ADMIN_ASSESSMENT_FIELDS.forEach(([fieldName, labelText]) => {
+          const optionLabel = document.createElement("label");
+          optionLabel.className = "manage-nominations-card__assessment-option";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.name = fieldName;
+          checkbox.checked = isCheckedAssessmentValue(record[fieldName]);
+          assessmentInputs[fieldName] = checkbox;
+
+          optionLabel.append(checkbox, document.createTextNode(` ${labelText}`));
+          assessmentOptions.appendChild(optionLabel);
+        });
+        assessmentSection.appendChild(assessmentOptions);
+
+        const assessmentSummaryLabel = document.createElement("label");
+        assessmentSummaryLabel.textContent = "Admin assessment summary";
+        const assessmentSummaryInput = document.createElement("textarea");
+        assessmentSummaryInput.name = "adminAssessmentSummary";
+        assessmentSummaryInput.rows = 4;
+        assessmentSummaryInput.maxLength = ADMIN_ASSESSMENT_SUMMARY_LIMIT;
+        assessmentSummaryInput.value = cleanText(record.adminAssessmentSummary);
+        assessmentSummaryLabel.appendChild(assessmentSummaryInput);
+        assessmentSection.appendChild(assessmentSummaryLabel);
+
         const reviewActions = document.createElement("div");
         reviewActions.className = "admin-record-actions";
 
@@ -492,7 +544,7 @@
         saveButton.textContent = "Save review";
         reviewActions.appendChild(saveButton);
 
-        reviewForm.append(statusLabelEl, notesLabel, reviewActions, saveMessage);
+        reviewForm.append(statusLabelEl, notesLabel, assessmentSection, reviewActions, saveMessage);
         reviewSection.appendChild(reviewForm);
 
         reviewForm.addEventListener("submit", async (event) => {
@@ -502,6 +554,10 @@
 
           const nextStatus = cleanText(statusSelect.value).toLowerCase();
           const adminNotes = cleanText(notesInput.value);
+          const adminAssessmentSummary = cleanText(assessmentSummaryInput.value);
+          const adminAssessmentValues = Object.fromEntries(
+            ADMIN_ASSESSMENT_FIELDS.map(([fieldName]) => [fieldName, assessmentInputs[fieldName].checked])
+          );
 
           if (!REVIEWABLE_STATUSES.includes(nextStatus)) {
             saveMessage.className = "manage-nominations-card__save-message admin-error";
@@ -516,6 +572,8 @@
             await updateDoc(doc(db, "placeNominations", record.id), {
               nominationStatus: nextStatus,
               adminNotes,
+              ...adminAssessmentValues,
+              adminAssessmentSummary,
               reviewedAt: serverTimestamp(),
               updatedAt: serverTimestamp()
             });

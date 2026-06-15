@@ -149,12 +149,23 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'nominationStatus',
           'adminNotes',
+          'adminHistoricInterest',
+          'adminArchitecturalInterest',
+          'adminCommunityValue',
+          'adminConditionRisk',
+          'adminAssessmentSummary',
           'reviewedAt',
           'updatedAt'
         ])
         && isValidNominationReviewStatus(request.resource.data.nominationStatus)
         && request.resource.data.adminNotes is string
-        && request.resource.data.adminNotes.size() <= 5000;
+        && request.resource.data.adminNotes.size() <= 5000
+        && request.resource.data.adminHistoricInterest is bool
+        && request.resource.data.adminArchitecturalInterest is bool
+        && request.resource.data.adminCommunityValue is bool
+        && request.resource.data.adminConditionRisk is bool
+        && request.resource.data.adminAssessmentSummary is string
+        && request.resource.data.adminAssessmentSummary.size() <= 5000;
     }
 
     function isValidNominationPromotionUpdate() {

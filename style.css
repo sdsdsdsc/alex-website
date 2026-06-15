@@ -4049,6 +4049,42 @@ footer {
   resize: vertical;
 }
 
+.manage-nominations-card__assessment {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid #d7dde1;
+  border-radius: 6px;
+  background: #f8fbfc;
+}
+
+.manage-nominations-card__assessment legend {
+  padding: 0 6px;
+  color: #17475b;
+  font-weight: 800;
+}
+
+.manage-nominations-card__assessment .admin-help-note {
+  margin: 0 0 10px;
+}
+
+.manage-nominations-card__assessment-options {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.manage-nominations-card__assessment-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.manage-nominations-card__assessment-option input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
 .manage-nominations-card__save-message {
   min-height: 1.4em;
   margin: 0;
