@@ -4008,6 +4008,29 @@ footer {
   margin-bottom: 14px;
 }
 
+.manage-nominations-card__evidence {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #d7dde1;
+}
+
+.manage-nominations-card__evidence h4 {
+  margin: 0 0 10px;
+  color: #17475b;
+  font-size: 1rem;
+}
+
+.manage-nominations-card__evidence-preview {
+  display: block;
+  max-width: min(100%, 420px);
+  max-height: 280px;
+  margin-top: 12px;
+  border: 1px solid #d7dde1;
+  border-radius: 6px;
+  background: #fff;
+  object-fit: cover;
+}
+
 .manage-nominations-card__review {
   margin-top: 18px;
   padding-top: 16px;

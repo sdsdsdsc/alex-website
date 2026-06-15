@@ -42,8 +42,9 @@ const FIELD_LIMITS = {
   condition: 1500,
   communityUse: 1500,
   sourceReference: 2000,
-  photoUrl: 2048,
-  photoDescription: 1000,
+  evidenceImageUrl: 1000,
+  evidenceImageCaption: 300,
+  evidenceSourceCredit: 300,
   nominatorDisplayName: 120,
   nominatorEmail: 254,
   organisationName: 180
@@ -113,14 +114,26 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-function isValidHttpUrl(value) {
+function isSafeHttpsUrl(value) {
   if (!value) return true;
   try {
     const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
+    return url.protocol === "https:";
   } catch (err) {
     return false;
   }
+}
+
+function readOptionalText(values, field) {
+  return cleanText(values[field]);
+}
+
+function readOptionalUrl(values, field) {
+  const value = cleanText(values[field]);
+  if (!isSafeHttpsUrl(value)) {
+    throw new Error("Evidence image URL must begin with https://.");
+  }
+  return value;
 }
 
 function addOptionalText(payload, field, value) {
@@ -140,9 +153,9 @@ function buildNominationPayload(formData) {
   if (!isValidEmail(values.nominatorEmail)) {
     throw new Error("Enter a valid email address.");
   }
-  if (!isValidHttpUrl(values.photoUrl)) {
-    throw new Error("Photo URL must begin with http:// or https://.");
-  }
+  const evidenceImageUrl = readOptionalUrl(values, "evidenceImageUrl");
+  const evidenceImageCaption = readOptionalText(values, "evidenceImageCaption");
+  const evidenceSourceCredit = readOptionalText(values, "evidenceSourceCredit");
 
   const submittedCriteria = formData.getAll("heritageCriteria").map(cleanText).filter(Boolean);
   if (submittedCriteria.some((value) => !APPROVED_CRITERIA.has(value))) {
@@ -190,8 +203,9 @@ function buildNominationPayload(formData) {
   addOptionalText(payload, "condition", values.condition);
   addOptionalText(payload, "communityUse", values.communityUse);
   addOptionalText(payload, "sourceReference", values.sourceReference);
-  addOptionalText(payload, "photoUrl", values.photoUrl);
-  addOptionalText(payload, "photoDescription", values.photoDescription);
+  addOptionalText(payload, "evidenceImageUrl", evidenceImageUrl);
+  addOptionalText(payload, "evidenceImageCaption", evidenceImageCaption);
+  addOptionalText(payload, "evidenceSourceCredit", evidenceSourceCredit);
   addOptionalText(payload, "nominatorDisplayName", values.nominatorDisplayName);
   addOptionalText(payload, "organisationName", values.organisationName);
 

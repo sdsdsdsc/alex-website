@@ -170,18 +170,22 @@
           </div>
 
           <div class="nomination-field nomination-field--full">
-            <label for="nominationPhotoUrl">Photo evidence</label>
-            <input id="nominationPhotoUrl" name="photoUrl" type="url" maxlength="2048" placeholder="https://example.org/photo.jpg" aria-describedby="nominationPhotoUrlHelp">
+            <label for="nominationEvidenceImageUrl">Photo / evidence URL</label>
+            <input id="nominationEvidenceImageUrl" name="evidenceImageUrl" type="url" maxlength="1000" placeholder="https://example.org/photo.jpg" aria-describedby="nominationEvidenceImageUrlHelp">
             <div class="nomination-upload-placeholder" role="note">
               <strong>Photo upload will be added in a later phase.</strong>
-              <span id="nominationPhotoUrlHelp">For now, you may provide an optional public HTTP or HTTPS image URL. The site will not fetch or upload the image.</span>
+              <span id="nominationEvidenceImageUrlHelp">For now, you may provide an optional public HTTPS image URL. The site stores the URL only and does not fetch or upload the image.</span>
             </div>
           </div>
 
-          <div class="nomination-field nomination-field--full">
-            <label for="nominationPhotoDescription">Photo description</label>
-            <textarea id="nominationPhotoDescription" name="photoDescription" rows="3" maxlength="1000" aria-describedby="nominationPhotoDescriptionHelp"></textarea>
-            <p id="nominationPhotoDescriptionHelp" class="nomination-field__help">Describe what the image shows and provide its source or creator when known.</p>
+          <div class="nomination-field">
+            <label for="nominationEvidenceCaption">Evidence caption</label>
+            <input id="nominationEvidenceCaption" name="evidenceImageCaption" type="text" maxlength="300" placeholder="Front view of the building">
+          </div>
+
+          <div class="nomination-field">
+            <label for="nominationEvidenceCredit">Evidence source / credit</label>
+            <input id="nominationEvidenceCredit" name="evidenceSourceCredit" type="text" maxlength="300" placeholder="Photo by nominator">
           </div>
         </fieldset>
 

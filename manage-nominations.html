@@ -263,7 +263,7 @@
       return wrapper;
     }
 
-    function createPhotoLink(url) {
+    function createPhotoLink(url, label = "Photo URL") {
       const value = cleanText(url);
       if (!value) return null;
 
@@ -271,7 +271,7 @@
       wrapper.className = "manage-nominations-card__detail";
 
       const dt = document.createElement("dt");
-      dt.textContent = "Photo URL";
+      dt.textContent = label;
 
       const dd = document.createElement("dd");
       const link = document.createElement("a");
@@ -283,6 +283,61 @@
 
       wrapper.append(dt, dd);
       return wrapper;
+    }
+
+    function isSafeHttpsUrl(value) {
+      const text = cleanText(value);
+      if (!text) return false;
+      try {
+        const url = new URL(text);
+        return url.protocol === "https:";
+      } catch (err) {
+        return false;
+      }
+    }
+
+    function renderEvidenceSection(record) {
+      const evidenceUrl = cleanText(record.evidenceImageUrl) || cleanText(record.photoUrl);
+      const evidenceCaption = cleanText(record.evidenceImageCaption) || cleanText(record.photoDescription);
+      const evidenceSourceCredit = cleanText(record.evidenceSourceCredit);
+
+      if (!evidenceUrl && !evidenceCaption && !evidenceSourceCredit) return null;
+
+      const section = document.createElement("section");
+      section.className = "manage-nominations-card__evidence";
+
+      const heading = document.createElement("h4");
+      heading.textContent = "Public-submitted evidence";
+      section.appendChild(heading);
+
+      const note = document.createElement("p");
+      note.className = "admin-help-note";
+      note.textContent = "This evidence was submitted by the nominator and has not been verified as official material in this phase.";
+      section.appendChild(note);
+
+      const grid = document.createElement("dl");
+      grid.className = "manage-nominations-card__detail-grid";
+
+      if (evidenceUrl) {
+        grid.appendChild(createPhotoLink(evidenceUrl, "Evidence image URL"));
+      }
+      const captionRow = createDetailRow("Evidence caption", evidenceCaption);
+      if (captionRow) grid.appendChild(captionRow);
+      const creditRow = createDetailRow("Evidence source / credit", evidenceSourceCredit);
+      if (creditRow) grid.appendChild(creditRow);
+
+      section.appendChild(grid);
+
+      if (isSafeHttpsUrl(evidenceUrl)) {
+        const preview = document.createElement("img");
+        preview.className = "manage-nominations-card__evidence-preview";
+        preview.src = evidenceUrl;
+        preview.alt = evidenceCaption || "Submitted evidence image preview";
+        preview.loading = "lazy";
+        section.appendChild(preview);
+      }
+
+      return section;
     }
 
     function createSummaryChip(text, className = "") {
@@ -435,8 +490,6 @@
         createDetailRow("Condition", record.condition),
         createDetailRow("Community use", record.communityUse),
         createDetailRow("Source reference", record.sourceReference),
-        createPhotoLink(record.photoUrl),
-        createDetailRow("Photo description", record.photoDescription),
         createDetailRow("Nominator display name", record.nominatorDisplayName),
         createDetailRow("Nominator email", record.nominatorEmail),
         createDetailRow("Organisation name", record.organisationName),
@@ -594,6 +647,8 @@
       }
 
       details.appendChild(body);
+      const evidenceSection = renderEvidenceSection(record);
+      if (evidenceSection) details.appendChild(evidenceSection);
       details.appendChild(reviewSection);
 
       const promoteSection = document.createElement("section");
