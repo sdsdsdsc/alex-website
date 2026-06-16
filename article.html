@@ -8,23 +8,14 @@
   <title>Article | Alex's Photo Board</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js" integrity="sha384-JEyTNhjM6R1ElGoJns4U2Ln4ofPcqzSsynQkmEc/KGy6336qAZl70tDLufbkla+3" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin"></script>
+  <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="article.js" defer></script>
   <script type="module" src="script.js" defer></script>
 </head>
 <body>
   <header>
     <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
-    <nav class="menu-bar" aria-label="Main navigation">
-      <a href="index.html" class="nav-link">Home</a>
-      <a href="news.html" class="nav-link">News</a>
-      <a href="history.html" class="nav-link">History</a>
-      <a href="get-involved.html" class="nav-link">Get involved</a>
-      <a href="criteria.html" class="nav-link">Criteria</a>
-      <a href="guidance.html" class="nav-link">Guidance</a>
-      <a href="map.html" class="nav-link">Map</a>
-      <a href="search.html" class="nav-link">Places</a>
-      <a href="export.html" class="nav-link">Open Data</a>
-    </nav>
+    <div id="public-nav"></div>
   </header>
 
 <main class="article-page">
