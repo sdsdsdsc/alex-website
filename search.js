@@ -17,20 +17,6 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const CITY_OPTIONS = [
-  "Nanchang",
-  "Jiujiang",
-  "Jingdezhen",
-  "Pingxiang",
-  "Xinyu",
-  "Yingtan",
-  "Ganzhou",
-  "Yichun",
-  "Shangrao",
-  "Ji'an",
-  "Fuzhou"
-];
-
 const els = {
   form: document.getElementById("communitySearchForm"),
   input: document.getElementById("communitySearchInput"),
@@ -48,16 +34,16 @@ let allPlaces = [];
 let currentView = "list";
 const filterValues = {
   city: "",
-  associatedType: "",
-  contributor: "",
-  period: ""
+  district: "",
+  assetType: "",
+  heritageCriteria: ""
 };
 
 function cleanText(value) {
   return String(value || "").trim();
 }
 
-function normalize(value) {
+function normalizeSearchText(value) {
   return cleanText(value).toLowerCase();
 }
 
@@ -84,9 +70,9 @@ function normalizeCoordinate(value) {
   return Number.isFinite(numericValue) ? numericValue : null;
 }
 
-function getTags(place) {
-  if (Array.isArray(place?.tags)) return place.tags.map(cleanText).filter(Boolean);
-  return cleanText(place?.tags).split(",").map(cleanText).filter(Boolean);
+function normalizeTextList(value) {
+  if (Array.isArray(value)) return value.map(cleanText).filter(Boolean);
+  return cleanText(value).split(/[\n,;]+/).map(cleanText).filter(Boolean);
 }
 
 function createdAtMillis(place) {
@@ -94,23 +80,27 @@ function createdAtMillis(place) {
   return Number.isFinite(seconds) ? seconds * 1000 : 0;
 }
 
+function getHeritageCriteria(place) {
+  return normalizeTextList(place?.heritageCriteria);
+}
+
 function getSearchText(place) {
   return [
     place.title,
-    place.description,
-    place.category,
-    place.location,
-    place.province,
+    place.area,
+    place.address,
     place.city,
     place.district,
-    place.address,
-    place.associatedType,
-    place.contributor,
-    place.period,
-    place.grade,
-    place.source,
-    ...getTags(place)
+    place.category,
+    place.assetType,
+    place.localSignificanceSummary,
+    place.description,
+    ...getHeritageCriteria(place)
   ].filter(Boolean).join(" ").toLowerCase();
+}
+
+function placeMatchesSearch(place, query) {
+  return !query || getSearchText(place).includes(query);
 }
 
 function getSelectedValues(name) {
@@ -205,10 +195,11 @@ function handleOptionKeydown(event, filter, option) {
 }
 
 function getDisplayLocation(place) {
-  const city = cleanText(place.city);
-  const province = cleanText(place.province);
-  if (city && province) return `${city}, ${province}`;
-  return cleanText(place.location);
+  return [
+    cleanText(place.district),
+    cleanText(place.city),
+    cleanText(place.province)
+  ].filter(Boolean).join(", ") || cleanText(place.address) || cleanText(place.area);
 }
 
 function updateUrl(query) {
@@ -273,7 +264,11 @@ function makeResultCard(place) {
 
   const meta = document.createElement("p");
   meta.className = "community-result-card__meta";
-  meta.textContent = [place.category, getDisplayLocation(place), place.period].map(cleanText).filter(Boolean).join(" | ") || "Community place";
+  meta.textContent = [
+    cleanText(place.category),
+    cleanText(place.assetType),
+    getDisplayLocation(place)
+  ].filter(Boolean).join(" | ") || "Community place";
 
   const title = document.createElement("h3");
   const titleLink = document.createElement("a");
@@ -283,8 +278,9 @@ function makeResultCard(place) {
 
   const summary = document.createElement("p");
   summary.className = "community-result-card__summary";
-  const description = cleanText(place.description);
-  summary.textContent = description || "No description has been added yet.";
+  summary.textContent = cleanText(place.localSignificanceSummary)
+    || cleanText(place.description)
+    || "No description has been added yet.";
 
   const actions = document.createElement("div");
   actions.className = "community-result-card__actions";
@@ -297,32 +293,38 @@ function makeResultCard(place) {
   actions.append(recordLink, mapLink);
 
   body.append(meta, title, summary);
-  body.appendChild(actions);
   card.append(media, body);
+  body.appendChild(actions);
   return card;
 }
 
-function matchesFilters(place, filters) {
+function isPublicRecord(place) {
+  const status = normalizeSearchText(place.recordStatus);
+  return !status || status === "published";
+}
+
+function placeMatchesFilters(place, filters) {
   const {
     query,
     categories,
     city,
-    associatedType,
-    contributor,
-    period
+    district,
+    assetType,
+    heritageCriteria
   } = filters;
-  const searchMatches = !query || getSearchText(place).includes(query);
+
   const categoryMatches = categories.length === 0 || categories.includes(cleanText(place.category));
   const cityMatches = !city || cleanText(place.city) === city;
-  const associatedTypeMatches = !associatedType || cleanText(place.associatedType) === associatedType;
-  const contributorMatches = !contributor || cleanText(place.contributor) === contributor;
-  const periodMatches = !period || cleanText(place.period) === period;
-  return searchMatches
+  const districtMatches = !district || cleanText(place.district) === district;
+  const assetTypeMatches = !assetType || cleanText(place.assetType) === assetType;
+  const heritageCriteriaMatches = !heritageCriteria || getHeritageCriteria(place).includes(heritageCriteria);
+
+  return placeMatchesSearch(place, query)
     && categoryMatches
     && cityMatches
-    && associatedTypeMatches
-    && contributorMatches
-    && periodMatches;
+    && districtMatches
+    && assetTypeMatches
+    && heritageCriteriaMatches;
 }
 
 function sortPlaces(places, query) {
@@ -340,8 +342,8 @@ function sortPlaces(places, query) {
   }
 
   cloned.sort((a, b) => {
-    const aTitle = normalize(a.title);
-    const bTitle = normalize(b.title);
+    const aTitle = normalizeSearchText(a.title);
+    const bTitle = normalizeSearchText(b.title);
     const aStarts = query && aTitle.startsWith(query) ? 1 : 0;
     const bStarts = query && bTitle.startsWith(query) ? 1 : 0;
     if (aStarts !== bStarts) return bStarts - aStarts;
@@ -350,47 +352,76 @@ function sortPlaces(places, query) {
   return cloned;
 }
 
+function renderPlaceCount(shownCount, totalCount) {
+  if (!els.count) return;
+  els.count.textContent = `Showing ${shownCount} of ${totalCount} community ${totalCount === 1 ? "place" : "places"}`;
+}
+
+function clearPlaceFilters() {
+  if (els.input) els.input.value = "";
+  if (els.sort) els.sort.value = "relevance";
+  document.querySelectorAll('.community-search-filters input[name="category"]').forEach((input) => {
+    input.checked = false;
+  });
+  Object.keys(filterValues).forEach((key) => {
+    filterValues[key] = "";
+    updateCustomFilterSelection(getCustomFilter(key));
+  });
+  closeAllCustomFilters();
+  renderResults();
+}
+
 function renderResults() {
   if (!els.results || !els.count) return;
 
   const rawQuery = cleanText(els.input?.value || "");
-  const query = normalize(rawQuery);
+  const query = normalizeSearchText(rawQuery);
   const selectedCategories = getSelectedValues("category");
+  const publicPlaces = allPlaces.filter(isPublicRecord);
   const filters = {
     query,
     categories: selectedCategories,
     city: filterValues.city,
-    associatedType: filterValues.associatedType,
-    contributor: filterValues.contributor,
-    period: filterValues.period
+    district: filterValues.district,
+    assetType: filterValues.assetType,
+    heritageCriteria: filterValues.heritageCriteria
   };
 
   updateUrl(rawQuery);
   els.results.textContent = "";
 
-  if (allPlaces.length === 0) {
-    els.count.textContent = "0 community place records";
+  if (publicPlaces.length === 0) {
+    renderPlaceCount(0, 0);
     setEmptyMessage("No community place records have been added yet. Records will appear here once communityPlaces data is added in Firestore.");
     return;
   }
 
-  const filtered = allPlaces.filter((place) => matchesFilters(place, filters));
+  const filtered = publicPlaces.filter((place) => placeMatchesFilters(place, filters));
   const sorted = sortPlaces(filtered, query);
 
-  els.count.textContent = `${sorted.length} ${sorted.length === 1 ? "community place" : "community places"} found`;
-  setEmptyMessage(sorted.length === 0 ? "No matching community places found." : "");
+  renderPlaceCount(sorted.length, publicPlaces.length);
+  setEmptyMessage(sorted.length === 0 ? "No community places match your filters." : "");
   sorted.forEach((place) => els.results.appendChild(makeResultCard(place)));
   setView(currentView);
 }
 
-function getUniqueValues(field) {
-  return [...new Set(allPlaces.map((place) => cleanText(place[field])).filter(Boolean))]
+function getUniqueValues(field, source = allPlaces) {
+  return [...new Set(source.map((place) => cleanText(place[field])).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b));
 }
 
-function getOptionCount(field, value) {
-  if (!value) return allPlaces.length;
-  return allPlaces.filter((place) => cleanText(place[field]) === value).length;
+function getUniqueCriteria(source = allPlaces) {
+  return [...new Set(source.flatMap((place) => getHeritageCriteria(place)).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b));
+}
+
+function getOptionCount(key, value) {
+  const publicPlaces = allPlaces.filter(isPublicRecord);
+  if (!value) return publicPlaces.length;
+  if (key === "heritageCriteria") {
+    return publicPlaces.filter((place) => getHeritageCriteria(place).includes(value)).length;
+  }
+  return publicPlaces.filter((place) => cleanText(place[key]) === value).length;
 }
 
 function populateCustomFilter(key, values) {
@@ -432,10 +463,11 @@ function populateCustomFilter(key, values) {
 }
 
 function renderFilterOptions() {
-  populateCustomFilter("city", CITY_OPTIONS);
-  populateCustomFilter("associatedType", getUniqueValues("associatedType"));
-  populateCustomFilter("contributor", getUniqueValues("contributor"));
-  populateCustomFilter("period", getUniqueValues("period"));
+  const publicPlaces = allPlaces.filter(isPublicRecord);
+  populateCustomFilter("city", getUniqueValues("city", publicPlaces));
+  populateCustomFilter("district", getUniqueValues("district", publicPlaces));
+  populateCustomFilter("assetType", getUniqueValues("assetType", publicPlaces));
+  populateCustomFilter("heritageCriteria", getUniqueCriteria(publicPlaces));
 }
 
 function bindEvents() {
@@ -476,17 +508,7 @@ function bindEvents() {
   });
 
   els.sort?.addEventListener("change", renderResults);
-  els.clearFilters?.addEventListener("click", () => {
-    document.querySelectorAll('.community-search-filters input[name="category"]').forEach((input) => {
-      input.checked = false;
-    });
-    Object.keys(filterValues).forEach((key) => {
-      filterValues[key] = "";
-      updateCustomFilterSelection(getCustomFilter(key));
-    });
-    closeAllCustomFilters();
-    renderResults();
-  });
+  els.clearFilters?.addEventListener("click", clearPlaceFilters);
   els.listView?.addEventListener("click", () => setView("list"));
   els.gridView?.addEventListener("click", () => setView("grid"));
 }
@@ -506,22 +528,19 @@ async function loadCommunityPlaces() {
         id: docSnap.id,
         title: cleanText(data.title),
         category: cleanText(data.category),
-        location: cleanText(data.location),
+        assetType: cleanText(data.assetType),
+        area: cleanText(data.area),
         province: cleanText(data.province),
         city: cleanText(data.city),
         district: cleanText(data.district),
         address: cleanText(data.address),
-        associatedType: cleanText(data.associatedType),
-        contributor: cleanText(data.contributor),
-        period: cleanText(data.period),
+        localSignificanceSummary: cleanText(data.localSignificanceSummary),
         description: cleanText(data.description),
+        heritageCriteria: data.heritageCriteria,
         imageUrl: cleanText(data.imageUrl),
-        grade: cleanText(data.grade),
-        source: cleanText(data.source),
-        relatedArticle: cleanText(data.relatedArticle),
-        tags: data.tags,
         lat: normalizeCoordinate(data.lat),
         lng: normalizeCoordinate(data.lng),
+        recordStatus: cleanText(data.recordStatus),
         createdAt: data.createdAt
       });
     });
