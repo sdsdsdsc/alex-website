@@ -3574,6 +3574,49 @@ footer {
   margin-bottom: 0;
 }
 
+.admin-backup-panel {
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px solid #d7dde1;
+  background: #f8fafb;
+}
+
+.admin-backup-panel h3 {
+  margin: 0 0 12px;
+  color: #17475b;
+}
+
+.admin-backup-actions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-bottom: 14px;
+}
+
+.admin-backup-actions button {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #17475b;
+  border-radius: 4px;
+  background: #17475b;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  text-align: left;
+}
+
+.admin-backup-actions button:hover,
+.admin-backup-actions button:focus-visible {
+  background: #fcbf49;
+  color: #111;
+}
+
+.admin-backup-actions button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 .admin-disabled-note,
 .admin-help-note {
   font-weight: 800;

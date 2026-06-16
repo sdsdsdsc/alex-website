@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Admin Export / Backup | Alex's Photo Board</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="admin-export.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
+    <nav class="menu-bar" aria-label="Admin navigation">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="news.html" class="nav-link">News</a>
+      <a href="history.html" class="nav-link">History</a>
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="search.html" class="nav-link">Places</a>
+      <a href="export.html" class="nav-link">Open Data</a>
+    </nav>
+  </header>
+
+  <main class="admin-page">
+    <section class="admin-card admin-card--wide" id="adminExportPage" aria-labelledby="adminExportTitle" hidden>
+      <div class="admin-toolbar">
+        <p id="adminExportStatus" class="admin-status" role="status" aria-live="polite">Checking admin sign-in...</p>
+        <a href="admin.html">Admin Dashboard</a>
+        <button id="adminExportSignOut" type="button">Sign Out</button>
+      </div>
+
+      <h2 id="adminExportTitle">Admin Export / Backup</h2>
+      <p class="admin-warning-note">These downloads may contain private review information. Do not publish admin backups publicly.</p>
+      <p class="admin-readonly-note">This page uses read-only Firestore requests and is separate from the public Open Data / heritage.json export.</p>
+
+      <section class="admin-backup-panel" aria-labelledby="adminBackupDownloadsTitle">
+        <h3 id="adminBackupDownloadsTitle">Private backup downloads</h3>
+        <div class="admin-backup-actions">
+          <button type="button" data-backup-collection="communityPlaces">Download communityPlaces backup</button>
+          <button type="button" data-backup-collection="placeNominations">Download placeNominations backup</button>
+          <button type="button" data-backup-collection="news">Download news backup</button>
+          <button type="button" data-backup-collection="history">Download history backup</button>
+          <button type="button" data-backup-all>Download all backup data</button>
+        </div>
+        <p class="admin-help-note">Nomination backups may include nominator email, admin notes, admin assessment fields, review history, and submitted evidence fields.</p>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
