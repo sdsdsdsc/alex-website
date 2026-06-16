@@ -15,23 +15,14 @@
   <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js" integrity="sha384-JP5UPxIO2Tm2o79Fb0tGYMa44jkWar53aBoCbd8ah0+LcCDoohTIYr+zIXyfGIJN" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin"></script>
  
   <!-- Firebase -->
+  <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="script.js" defer></script>
   <script type="module" src="map.js" defer></script>
 </head>
 <body>
   <header>
     <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
-    <nav class="menu-bar" aria-label="Main navigation">
-      <a href="index.html" class="nav-link">Home</a>
-      <a href="news.html" class="nav-link">News</a>
-      <a href="history.html" class="nav-link">History</a>
-      <a href="get-involved.html" class="nav-link">Get involved</a>
-      <a href="criteria.html" class="nav-link">Criteria</a>
-      <a href="guidance.html" class="nav-link">Guidance</a>
-      <a href="map.html" class="nav-link active">Map</a>
-      <a href="search.html" class="nav-link">Places</a>
-      <a href="export.html" class="nav-link">Open Data</a>
-    </nav>
+    <div id="public-nav"></div>
   </header>
 
   <main class="map-search-page">
