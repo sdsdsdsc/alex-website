@@ -155,6 +155,14 @@ service cloud.firestore {
       ];
     }
 
+    function isValidReviewHistory() {
+      return !hasField('reviewHistory')
+        || (
+          request.resource.data.reviewHistory is list
+          && request.resource.data.reviewHistory.size() <= 50
+        );
+    }
+
     function isValidNominationReviewUpdate() {
       return resource.data.nominationStatus != 'promoted'
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
@@ -165,6 +173,7 @@ service cloud.firestore {
           'adminCommunityValue',
           'adminConditionRisk',
           'adminAssessmentSummary',
+          'reviewHistory',
           'reviewedAt',
           'updatedAt'
         ])
@@ -176,7 +185,8 @@ service cloud.firestore {
         && request.resource.data.adminCommunityValue is bool
         && request.resource.data.adminConditionRisk is bool
         && request.resource.data.adminAssessmentSummary is string
-        && request.resource.data.adminAssessmentSummary.size() <= 5000;
+        && request.resource.data.adminAssessmentSummary.size() <= 5000
+        && isValidReviewHistory();
     }
 
     function isValidNominationPromotionUpdate() {
@@ -184,11 +194,13 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'nominationStatus',
           'promotedPlaceId',
+          'reviewHistory',
           'promotedAt',
           'updatedAt'
         ])
         && request.resource.data.nominationStatus == 'promoted'
         && isTrimmedString(request.resource.data.promotedPlaceId, 120)
+        && isValidReviewHistory()
         && request.resource.data.promotedAt is timestamp
         && request.resource.data.updatedAt is timestamp;
     }

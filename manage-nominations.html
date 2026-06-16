@@ -62,6 +62,7 @@
     const REVIEW_NOTES_LIMIT = 5000;
     const ADMIN_ASSESSMENT_SUMMARY_LIMIT = 5000;
     const PROMOTION_ID_LIMIT = 80;
+    const REVIEW_HISTORY_LIMIT = 50;
     const ADMIN_ASSESSMENT_FIELDS = [
       ["adminHistoricInterest", "Historic interest"],
       ["adminArchitecturalInterest", "Architectural / artistic interest"],
@@ -429,6 +430,92 @@
       return value === true;
     }
 
+    function getStatusChangeAction(fromStatus, toStatus) {
+      return normalizeNominationStatus(fromStatus) === normalizeNominationStatus(toStatus)
+        ? "review_saved"
+        : "status_changed";
+    }
+
+    function buildReviewHistoryEntry(action, fromStatus = "", toStatus = "", note = "") {
+      const entry = {
+        action,
+        at: new Date(),
+        by: "admin"
+      };
+
+      const cleanFromStatus = cleanText(fromStatus);
+      const cleanToStatus = cleanText(toStatus);
+      const cleanNote = cleanText(note).slice(0, 240);
+      if (cleanFromStatus) entry.fromStatus = cleanFromStatus;
+      if (cleanToStatus) entry.toStatus = cleanToStatus;
+      if (cleanNote) entry.note = cleanNote;
+      return entry;
+    }
+
+    function appendReviewHistory(history, entry) {
+      const existingHistory = Array.isArray(history) ? history : [];
+      return [...existingHistory, entry].slice(-REVIEW_HISTORY_LIMIT);
+    }
+
+    function actionLabel(action) {
+      if (action === "status_changed") return "Status changed";
+      if (action === "promoted") return "Promoted";
+      return "Review saved";
+    }
+
+    function renderReviewHistory(record) {
+      const history = Array.isArray(record.reviewHistory) ? record.reviewHistory : [];
+      if (history.length === 0) return null;
+
+      const section = document.createElement("section");
+      section.className = "manage-nominations-card__history";
+
+      const title = document.createElement("h4");
+      title.textContent = "Admin review history";
+      section.appendChild(title);
+
+      const list = document.createElement("ol");
+      list.className = "manage-nominations-card__history-list";
+
+      [...history].reverse().forEach((item) => {
+        const row = document.createElement("li");
+        row.className = "manage-nominations-card__history-item";
+
+        const heading = document.createElement("strong");
+        heading.textContent = actionLabel(cleanText(item?.action));
+        row.appendChild(heading);
+
+        const metaParts = [
+          formatTimestamp(item?.at),
+          cleanText(item?.by)
+        ].filter(Boolean);
+        const meta = document.createElement("span");
+        meta.className = "manage-nominations-card__history-meta";
+        meta.textContent = metaParts.join(" | ");
+        row.appendChild(meta);
+
+        const fromStatus = cleanText(item?.fromStatus);
+        const toStatus = cleanText(item?.toStatus);
+        if (fromStatus || toStatus) {
+          const statusChange = document.createElement("span");
+          statusChange.textContent = `${statusLabel(fromStatus) || "Unknown"} -> ${statusLabel(toStatus) || "Unknown"}`;
+          row.appendChild(statusChange);
+        }
+
+        const note = cleanText(item?.note);
+        if (note) {
+          const noteEl = document.createElement("span");
+          noteEl.textContent = note;
+          row.appendChild(noteEl);
+        }
+
+        list.appendChild(row);
+      });
+
+      section.appendChild(list);
+      return section;
+    }
+
     function createNominationCard(record) {
       const card = document.createElement("article");
       card.className = "manage-nominations-card";
@@ -622,11 +709,20 @@
           saveButton.textContent = "Saving...";
 
           try {
+            const previousStatus = normalizeNominationStatus(record.nominationStatus);
+            const reviewHistoryEntry = buildReviewHistoryEntry(
+              getStatusChangeAction(previousStatus, nextStatus),
+              previousStatus,
+              nextStatus,
+              previousStatus === nextStatus ? "Review details saved." : `Status changed to ${statusLabel(nextStatus)}.`
+            );
+
             await updateDoc(doc(db, "placeNominations", record.id), {
               nominationStatus: nextStatus,
               adminNotes,
               ...adminAssessmentValues,
               adminAssessmentSummary,
+              reviewHistory: appendReviewHistory(record.reviewHistory, reviewHistoryEntry),
               reviewedAt: serverTimestamp(),
               updatedAt: serverTimestamp()
             });
@@ -650,6 +746,8 @@
       const evidenceSection = renderEvidenceSection(record);
       if (evidenceSection) details.appendChild(evidenceSection);
       details.appendChild(reviewSection);
+      const reviewHistorySection = renderReviewHistory(record);
+      if (reviewHistorySection) details.appendChild(reviewHistorySection);
 
       const promoteSection = document.createElement("section");
       promoteSection.className = "manage-nominations-card__promotion";
@@ -770,10 +868,18 @@
                 throw new Error("A communityPlaces record with this ID already exists. Choose a different ID.");
               }
 
+              const promotionHistoryEntry = buildReviewHistoryEntry(
+                "promoted",
+                "approved",
+                "promoted",
+                `Promoted to communityPlaces/${chosenId}.`
+              );
+
               transaction.set(placeRef, placePayload);
               transaction.update(nominationRef, {
                 nominationStatus: "promoted",
                 promotedPlaceId: chosenId,
+                reviewHistory: appendReviewHistory(freshNomination.reviewHistory, promotionHistoryEntry),
                 promotedAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
               });

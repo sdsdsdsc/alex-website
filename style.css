@@ -4031,6 +4031,37 @@ footer {
   object-fit: cover;
 }
 
+.manage-nominations-card__history {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #d7dde1;
+}
+
+.manage-nominations-card__history h4 {
+  margin: 0 0 10px;
+  color: #17475b;
+  font-size: 1rem;
+}
+
+.manage-nominations-card__history-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 1.3rem;
+}
+
+.manage-nominations-card__history-item {
+  display: grid;
+  gap: 3px;
+  color: #222;
+  line-height: 1.45;
+}
+
+.manage-nominations-card__history-meta {
+  color: #555;
+  font-size: 0.92rem;
+}
+
 .manage-nominations-card__review {
   margin-top: 18px;
   padding-top: 16px;
