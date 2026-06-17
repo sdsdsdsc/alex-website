@@ -173,6 +173,27 @@ Safety boundary:
 - no admin authentication checks
 - no promotion or `communityPlaces` payloads
 
+### promotion.js
+
+`promotion.js` contains pure promotion helper logic, including:
+
+- safe mapping from approved nominations to public `communityPlaces` payloads
+- promoted place ID helpers
+- promotion validation helpers
+- private and admin field stripping
+- promotion update payload shaping
+- promotion history entry payload composition
+
+Safety boundary:
+
+- no Firebase imports
+- no Firebase reads or writes
+- no Firestore timestamp creation
+- no DOM rendering
+- no admin authentication checks
+- no public user write path
+- no private nomination or admin fields in promoted public place payloads
+
 ## What Should Stay Outside The Engine For Now
 
 These responsibilities should currently stay in page scripts:
@@ -232,6 +253,7 @@ Possible future modules, not yet implemented:
 - Phase 10O added `docs/phase-10o-admin-review-promotion-plan.md` before admin review and promotion helper extraction.
 - Phase 10P created `heritage-engine/audit.js` for pure review history and audit helper logic.
 - Phase 10Q created `heritage-engine/review.js` for pure admin review helper logic.
+- Phase 10R created `heritage-engine/promotion.js` for pure promotion payload helper logic.
 
 ## Roadmap
 
