@@ -17,6 +17,7 @@ Completed Phase 10 work:
 - 10L Shared validation constants and helpers extracted
 - 10M Nomination helper extraction plan
 - 10N Public nomination form helpers extracted
+- 10O Admin review and promotion extraction plan
 
 ## Current Engine Folder
 
@@ -37,6 +38,7 @@ Developer-only test page:
 Sensitive workflow planning:
 
 - `docs/phase-10m-nomination-extraction-plan.md`: documentation-first plan for future pure nomination helper extraction.
+- `docs/phase-10o-admin-review-promotion-plan.md`: documentation-first plan for future admin review, audit, and promotion helper extraction.
 
 ## What Has Been Extracted Safely
 
@@ -187,7 +189,11 @@ Critical boundary rules:
 
 ## Next Recommended Phases
 
-- Phase 10O - Plan admin review/promotion extraction, documentation first
+- Phase 10P - Extract audit/reviewHistory pure helpers
+- Phase 10Q - Extract admin review pure helpers
+- Phase 10R - Extract promotion payload pure helpers
+- Phase 10S - Add admin workflow helper tests
+- Phase 10T - Carefully wire admin helpers into `manage-nominations.html`
 
 Do not touch admin review or promotion extraction until after at least one checkpoint and test pass.
 

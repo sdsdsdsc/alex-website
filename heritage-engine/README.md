@@ -187,6 +187,7 @@ Possible future modules, not yet implemented:
 - Phase 10L created `heritage-engine/validation.js` for shared public-safe constants and validation helpers.
 - Phase 10M added `docs/phase-10m-nomination-extraction-plan.md` before nomination helper extraction.
 - Phase 10N created `heritage-engine/nominations.js` for pure public nomination form helpers.
+- Phase 10O added `docs/phase-10o-admin-review-promotion-plan.md` before admin review and promotion helper extraction.
 
 ## Roadmap
 
