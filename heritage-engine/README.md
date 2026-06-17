@@ -111,6 +111,26 @@ Safety boundary:
 - no `placeNominations` reads
 - no private or admin exposure
 
+### nominations.js
+
+`nominations.js` contains public nomination form helper logic, including:
+
+- public-safe payload shaping
+- required field validation
+- evidence URL validation
+- terms/privacy agreement validation
+- public disallowed field stripping
+- initial public nomination status helpers
+
+Safety boundary:
+
+- no Firebase imports
+- no Firebase reads or writes
+- no DOM rendering
+- no download behavior
+- no admin review or promotion logic
+- no `communityPlaces` writes
+
 ## What Should Stay Outside The Engine For Now
 
 These responsibilities should currently stay in page scripts:
@@ -166,6 +186,7 @@ Possible future modules, not yet implemented:
 - Phase 10J added `docs/phase-10-engine-checkpoint.md` as the safety checkpoint before sensitive workflow extraction.
 - Phase 10L created `heritage-engine/validation.js` for shared public-safe constants and validation helpers.
 - Phase 10M added `docs/phase-10m-nomination-extraction-plan.md` before nomination helper extraction.
+- Phase 10N created `heritage-engine/nominations.js` for pure public nomination form helpers.
 
 ## Roadmap
 

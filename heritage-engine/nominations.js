@@ -1,0 +1,269 @@
+import {
+  NOMINATION_STATUSES,
+  cleanText,
+  isHttpsUrl,
+  isValidEmail,
+  normalizeCoordinate,
+  normalizeCriteriaList
+} from "./validation.js";
+
+const SUBMISSION_ROLES = Object.freeze(["self", "someone-else", "organisation"]);
+const PUBLIC_NOMINATION_FIELDS = Object.freeze([
+  "title",
+  "assetType",
+  "area",
+  "address",
+  "lat",
+  "lng",
+  "description",
+  "localSignificanceSummary",
+  "heritageCriteria",
+  "criteriaExplanation",
+  "condition",
+  "communityUse",
+  "sourceReference",
+  "evidenceImageUrl",
+  "evidenceImageCaption",
+  "evidenceSourceCredit",
+  "nominatorDisplayName",
+  "nominatorEmail",
+  "organisationName",
+  "submittedOnBehalfOf",
+  "termsAccepted",
+  "privacyAccepted",
+  "nominationStatus",
+  "createdAt",
+  "updatedAt",
+  "submittedAt"
+]);
+const PUBLIC_DISALLOWED_NOMINATION_FIELDS = Object.freeze([
+  "adminNotes",
+  "adminHistoricInterest",
+  "adminArchitecturalInterest",
+  "adminCommunityValue",
+  "adminConditionRisk",
+  "adminAssessmentSummary",
+  "reviewHistory",
+  "promotedPlaceId",
+  "promotedAt",
+  "communityPlaces"
+]);
+const FIELD_LIMITS = Object.freeze({
+  title: 160,
+  assetType: 100,
+  area: 160,
+  address: 1000,
+  description: 5000,
+  localSignificanceSummary: 2000,
+  criteriaExplanation: 5000,
+  condition: 1500,
+  communityUse: 1500,
+  sourceReference: 2000,
+  evidenceImageUrl: 1000,
+  evidenceImageCaption: 300,
+  evidenceSourceCredit: 300,
+  nominatorDisplayName: 120,
+  nominatorEmail: 254,
+  organisationName: 180
+});
+const REQUIRED_TEXT_FIELDS = Object.freeze([
+  ["title", "Enter the place or asset name."],
+  ["address", "Enter an address or clear location description."],
+  ["description", "Describe the place."],
+  ["localSignificanceSummary", "Explain why the place matters locally."],
+  ["criteriaExplanation", "Explain the evidence for the selected criteria."],
+  ["nominatorEmail", "Enter an email address for admin follow-up."]
+]);
+
+function getInitialNominationStatus() {
+  return NOMINATION_STATUSES.includes("submitted") ? "submitted" : "submitted";
+}
+
+function normalizeNominationTextFields(values = {}) {
+  return Object.keys(FIELD_LIMITS).reduce((normalized, field) => {
+    const value = cleanText(values[field]);
+    const limit = FIELD_LIMITS[field];
+    if (limit && value.length > limit) {
+      throw new Error(`${field} is too long.`);
+    }
+    normalized[field] = value;
+    return normalized;
+  }, {});
+}
+
+function normalizeNominationCoordinates(values = {}) {
+  const lat = normalizeCoordinate(values.lat);
+  const lng = normalizeCoordinate(values.lng);
+
+  if (values.lat !== undefined && cleanText(values.lat) && (lat === null || lat < -90 || lat > 90)) {
+    throw new Error("Enter a valid latitude.");
+  }
+  if (values.lng !== undefined && cleanText(values.lng) && (lng === null || lng < -180 || lng > 180)) {
+    throw new Error("Enter a valid longitude.");
+  }
+
+  return { lat, lng };
+}
+
+function normalizeNominationCriteria(value) {
+  return normalizeCriteriaList(value);
+}
+
+function validateNominationRequiredFields(values = {}) {
+  const errors = [];
+
+  REQUIRED_TEXT_FIELDS.forEach(([field, message]) => {
+    if (!cleanText(values[field])) {
+      errors.push(message);
+    }
+  });
+
+  if (cleanText(values.nominatorEmail) && !isValidEmail(values.nominatorEmail)) {
+    errors.push("Enter a valid email address.");
+  }
+
+  const criteria = normalizeNominationCriteria(values.heritageCriteria);
+  if (criteria.length === 0) {
+    errors.push("Select at least one community heritage criterion.");
+  }
+
+  return errors;
+}
+
+function validateNominationEvidenceFields(values = {}) {
+  const errors = [];
+  const evidenceImageUrl = cleanText(values.evidenceImageUrl);
+  if (evidenceImageUrl && !isHttpsUrl(evidenceImageUrl)) {
+    errors.push("Evidence image URL must begin with https://.");
+  }
+  return errors;
+}
+
+function validateNominationAgreements(values = {}) {
+  const requiredAcknowledgements = [
+    "projectPositionAccepted",
+    "reviewAccepted",
+    "privacyAccepted",
+    "termsAccepted"
+  ];
+
+  return requiredAcknowledgements.every((field) => values[field] === true)
+    ? []
+    : ["Accept all required terms and privacy acknowledgements."];
+}
+
+function validateSubmissionRole(value) {
+  return SUBMISSION_ROLES.includes(cleanText(value))
+    ? []
+    : ["Select who the nomination is being submitted for."];
+}
+
+function getNominationValidationErrors(values = {}) {
+  return [
+    ...validateNominationRequiredFields(values),
+    ...validateNominationEvidenceFields(values),
+    ...validateNominationAgreements(values),
+    ...validateSubmissionRole(values.submittedOnBehalfOf)
+  ];
+}
+
+function stripPublicDisallowedNominationFields(value) {
+  if (Array.isArray(value)) {
+    return value.map(stripPublicDisallowedNominationFields);
+  }
+
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+
+  return Object.entries(value).reduce((clean, [key, entry]) => {
+    if (PUBLIC_DISALLOWED_NOMINATION_FIELDS.includes(key)) {
+      return clean;
+    }
+    clean[key] = stripPublicDisallowedNominationFields(entry);
+    return clean;
+  }, {});
+}
+
+function addOptionalText(payload, field, value) {
+  const cleanValue = cleanText(value);
+  if (cleanValue) payload[field] = cleanValue;
+}
+
+function buildSubmittedNominationPayload(values = {}, timestamps = {}) {
+  const cleanValues = stripPublicDisallowedNominationFields(values);
+  const textValues = normalizeNominationTextFields(cleanValues);
+  const heritageCriteria = normalizeNominationCriteria(cleanValues.heritageCriteria);
+  const errors = getNominationValidationErrors({ ...cleanValues, ...textValues, heritageCriteria });
+
+  if (errors.length > 0) {
+    throw new Error(errors[0]);
+  }
+
+  const payload = {
+    title: textValues.title,
+    address: textValues.address,
+    description: textValues.description,
+    localSignificanceSummary: textValues.localSignificanceSummary,
+    heritageCriteria,
+    criteriaExplanation: textValues.criteriaExplanation,
+    nominatorEmail: textValues.nominatorEmail,
+    submittedOnBehalfOf: cleanText(cleanValues.submittedOnBehalfOf),
+    termsAccepted: true,
+    privacyAccepted: true,
+    nominationStatus: getInitialNominationStatus()
+  };
+
+  addOptionalText(payload, "assetType", textValues.assetType);
+  addOptionalText(payload, "area", textValues.area);
+  addOptionalText(payload, "condition", textValues.condition);
+  addOptionalText(payload, "communityUse", textValues.communityUse);
+  addOptionalText(payload, "sourceReference", textValues.sourceReference);
+  addOptionalText(payload, "evidenceImageUrl", textValues.evidenceImageUrl);
+  addOptionalText(payload, "evidenceImageCaption", textValues.evidenceImageCaption);
+  addOptionalText(payload, "evidenceSourceCredit", textValues.evidenceSourceCredit);
+  addOptionalText(payload, "nominatorDisplayName", textValues.nominatorDisplayName);
+  addOptionalText(payload, "organisationName", textValues.organisationName);
+
+  const { lat, lng } = normalizeNominationCoordinates(cleanValues);
+  if (lat !== null) payload.lat = lat;
+  if (lng !== null) payload.lng = lng;
+
+  ["createdAt", "updatedAt", "submittedAt"].forEach((field) => {
+    if (timestamps[field]) payload[field] = timestamps[field];
+  });
+
+  return Object.entries(payload).reduce((clean, [key, entry]) => {
+    if (PUBLIC_NOMINATION_FIELDS.includes(key)) {
+      clean[key] = entry;
+    }
+    return clean;
+  }, {});
+}
+
+function buildNominationDraftFromFormValues(values = {}) {
+  return stripPublicDisallowedNominationFields({
+    ...values,
+    heritageCriteria: normalizeNominationCriteria(values.heritageCriteria),
+    ...normalizeNominationCoordinates(values)
+  });
+}
+
+export {
+  FIELD_LIMITS,
+  PUBLIC_DISALLOWED_NOMINATION_FIELDS,
+  PUBLIC_NOMINATION_FIELDS,
+  REQUIRED_TEXT_FIELDS,
+  SUBMISSION_ROLES,
+  buildNominationDraftFromFormValues,
+  buildSubmittedNominationPayload,
+  getInitialNominationStatus,
+  getNominationValidationErrors,
+  normalizeNominationCoordinates,
+  normalizeNominationCriteria,
+  normalizeNominationTextFields,
+  stripPublicDisallowedNominationFields,
+  validateNominationAgreements,
+  validateNominationEvidenceFields,
+  validateNominationRequiredFields
+};
