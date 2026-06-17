@@ -73,6 +73,25 @@ Safety boundary:
 - no `placeNominations` access
 - no private or admin fields
 
+### export.js
+
+`export.js` contains public-safe JSON-LD export helpers, including:
+
+- public graph nodes for `communityPlaces`, `news`, and `history`
+- public-safe relationship mapping between places and articles
+- stable public record IDs
+- public JSON-LD graph assembly
+- stored JSON-LD merging that keeps unsafe fields out of the public export
+
+Safety boundary:
+
+- no Firebase imports
+- no Firebase reads or writes
+- no DOM rendering
+- no download behavior
+- no `placeNominations` access
+- no private or admin fields
+
 ## What Should Stay Outside The Engine For Now
 
 These responsibilities should currently stay in page scripts:
@@ -118,6 +137,7 @@ Possible future modules, not yet implemented:
 - Phase 10F created `heritage-engine/maps.js`.
 - Phase 10G documents the engine folder.
 - Phase 10H created `heritage-engine/places.js`.
+- Phase 10I created `heritage-engine/export.js`.
 
 ## Roadmap
 
