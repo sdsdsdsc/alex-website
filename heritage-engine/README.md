@@ -165,6 +165,7 @@ Possible future modules, not yet implemented:
 - Phase 10I created `heritage-engine/export.js`.
 - Phase 10J added `docs/phase-10-engine-checkpoint.md` as the safety checkpoint before sensitive workflow extraction.
 - Phase 10L created `heritage-engine/validation.js` for shared public-safe constants and validation helpers.
+- Phase 10M added `docs/phase-10m-nomination-extraction-plan.md` before nomination helper extraction.
 
 ## Roadmap
 

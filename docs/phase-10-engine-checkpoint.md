@@ -15,6 +15,7 @@ Completed Phase 10 work:
 - 10I Public export JSON-LD helpers extracted
 - 10K Lightweight engine test page / manual test harness
 - 10L Shared validation constants and helpers extracted
+- 10M Nomination helper extraction plan
 
 ## Current Engine Folder
 
@@ -30,6 +31,10 @@ Completed Phase 10 work:
 Developer-only test page:
 
 - `engine-test.html`: manual browser test harness for pure engine helpers. It is not linked from public navigation and does not use Firebase.
+
+Sensitive workflow planning:
+
+- `docs/phase-10m-nomination-extraction-plan.md`: documentation-first plan for future pure nomination helper extraction.
 
 ## What Has Been Extracted Safely
 
@@ -179,7 +184,6 @@ Critical boundary rules:
 
 ## Next Recommended Phases
 
-- Phase 10M - Plan nomination helper extraction, documentation first
 - Phase 10N - Extract nomination form pure helpers
 - Phase 10O - Plan admin review/promotion extraction, documentation first
 
