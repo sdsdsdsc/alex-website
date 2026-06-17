@@ -138,6 +138,7 @@ Possible future modules, not yet implemented:
 - Phase 10G documents the engine folder.
 - Phase 10H created `heritage-engine/places.js`.
 - Phase 10I created `heritage-engine/export.js`.
+- Phase 10J added `docs/phase-10-engine-checkpoint.md` as the safety checkpoint before sensitive workflow extraction.
 
 ## Roadmap
 
