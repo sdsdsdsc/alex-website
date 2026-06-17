@@ -6,6 +6,22 @@ import {
   getDocs,
   query
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import {
+  buildFullMapUrl,
+  buildMapStatusText,
+  buildNominationUrlFromCoordinates,
+  buildPlaceRecordUrl,
+  cleanText,
+  escapeHTML,
+  getCommunityDisplayLocation,
+  getDescription,
+  getTitle,
+  getType,
+  hasValidCoordinates,
+  normalizeCoordinate,
+  normalizeSearchValue,
+  recordMatchesSearch
+} from "./heritage-engine/maps.js";
 
 // === Firebase Config ===
 const firebaseConfig = {
@@ -34,15 +50,6 @@ const CITY_OPTIONS = [
   "Fuzhou"
 ];
 
-function escapeHTML(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
 function toSafeUrl(value) {
   if (!value) return "";
   try {
@@ -54,94 +61,6 @@ function toSafeUrl(value) {
     console.warn("Invalid URL skipped:", value);
   }
   return "";
-}
-
-function cleanText(value) {
-  return String(value || "").trim();
-}
-
-function normalizeCoordinate(value) {
-  if (value === undefined || value === null || value === "") return null;
-  const numericValue = Number(value);
-  return Number.isFinite(numericValue) ? numericValue : null;
-}
-
-function hasValidCoordinates(record) {
-  return Number.isFinite(record?.lat)
-    && Number.isFinite(record?.lng)
-    && record.lat >= -90
-    && record.lat <= 90
-    && record.lng >= -180
-    && record.lng <= 180;
-}
-
-function normalizeSearchValue(value) {
-  return String(value || "").trim().toLowerCase();
-}
-
-function getTitle(record) {
-  return record?.name || record?.title || "Untitled";
-}
-
-function getDescription(record) {
-  return record?.desc || record?.description || "";
-}
-
-function getType(record) {
-  return record?.type || record?.category || "schema:Place";
-}
-
-function getTags(record) {
-  return Array.isArray(record?.tags) ? record.tags.join(" ") : record?.tags || "";
-}
-
-function getCommunityTags(record) {
-  if (Array.isArray(record?.tags)) return record.tags.map(cleanText).filter(Boolean);
-  return cleanText(record?.tags).split(",").map(cleanText).filter(Boolean);
-}
-
-function getCommunityDisplayLocation(record) {
-  const city = cleanText(record.city);
-  const province = cleanText(record.province);
-  if (city && province) return `${city}, ${province}`;
-  return cleanText(record.location);
-}
-
-function recordMatchesSearch(record, term) {
-  if (!term) return true;
-
-  const searchableText = [
-    record?.name,
-    record?.title,
-    record?.desc,
-    record?.description,
-    record?.message,
-    record?.articleTitle,
-    record?.linkedArticleTitle,
-    record?.linkedArticle,
-    record?.type,
-    record?.category,
-    record?.location,
-    record?.province,
-    record?.city,
-    record?.district,
-    record?.address,
-    record?.associatedType,
-    record?.contributor,
-    record?.period,
-    getTags(record)
-  ].filter(Boolean).join(" ").toLowerCase();
-
-  return searchableText.includes(term);
-}
-
-function buildFullMapUrl(searchTerm) {
-  const url = new URL("map.html", window.location.href);
-  const cleanTerm = String(searchTerm || "").trim();
-  if (cleanTerm) {
-    url.searchParams.set("search", cleanTerm);
-  }
-  return `${url.pathname}${url.search}`;
 }
 
 function buildCommunityPopupHtml(record, searchTerm = "", options = {}) {
@@ -190,7 +109,7 @@ function buildCommunityPlacePopupHtml(record) {
   const safeLocation = escapeHTML(getCommunityDisplayLocation(record) || "Not specified");
   const safePeriod = escapeHTML(cleanText(record.period) || "Not specified");
   const safeDescription = escapeHTML(cleanText(record.description) || "No description has been added yet.");
-  const recordUrl = `place.html?id=${encodeURIComponent(record.id)}`;
+  const recordUrl = buildPlaceRecordUrl(record.id);
 
   return `
     <article class="map-point-card map-point-card--record">
@@ -273,13 +192,6 @@ function updateUrlSearch(term) {
     url.searchParams.delete("search");
   }
   window.history.replaceState({}, "", url);
-}
-
-function buildNominationUrl(lat, lng) {
-  const url = new URL("nominate-place.html", window.location.href);
-  url.searchParams.set("lat", String(lat));
-  url.searchParams.set("lng", String(lng));
-  return `${url.pathname}${url.search}`;
 }
 
 function initCommunityMap({
@@ -646,14 +558,7 @@ function initCommunityMap({
     });
 
     const totalMatches = matchingPoints.length + matchingPolygons.length;
-    if (totalMatches === 0) {
-      setStatus(normalizedTerm || isPublicCommunityMode
-        ? "No matching map records found."
-        : "No matching map points found.");
-    } else {
-      const label = totalMatches === 1 ? "map result" : "map results";
-      setStatus(normalizedTerm ? `${totalMatches} matching ${label} found.` : `${totalMatches} ${label} shown.`);
-    }
+    setStatus(buildMapStatusText(totalMatches, Boolean(normalizedTerm), isPublicCommunityMode));
 
     fitMapToLayers(map, boundsItems, fallbackCenter);
     if (mode === "full" && requestedLocation && !hasFocusedRequestedLocation && !normalizedTerm) {
@@ -834,7 +739,7 @@ function initCommunityMap({
     if (!isNominationPickMode) return;
     const { lat, lng } = event.latlng;
     stopMapNominationMode();
-    window.location.href = buildNominationUrl(lat, lng);
+    window.location.href = buildNominationUrlFromCoordinates(lat, lng);
   });
 
   document.addEventListener("keydown", (event) => {
