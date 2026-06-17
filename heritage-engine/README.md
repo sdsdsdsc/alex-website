@@ -92,6 +92,25 @@ Safety boundary:
 - no `placeNominations` access
 - no private or admin fields
 
+### validation.js
+
+`validation.js` contains shared constants and public-safe validation helpers, including:
+
+- Local Heritage Listing-inspired criteria constants
+- nomination and public record status constants
+- unsafe public field name constants
+- text, email, URL, criteria, and coordinate validation helpers
+- public-safe unsafe field stripping and detection helpers
+
+Safety boundary:
+
+- no Firebase imports
+- no Firebase reads or writes
+- no DOM rendering
+- no download behavior
+- no `placeNominations` reads
+- no private or admin exposure
+
 ## What Should Stay Outside The Engine For Now
 
 These responsibilities should currently stay in page scripts:
@@ -145,6 +164,7 @@ Possible future modules, not yet implemented:
 - Phase 10H created `heritage-engine/places.js`.
 - Phase 10I created `heritage-engine/export.js`.
 - Phase 10J added `docs/phase-10-engine-checkpoint.md` as the safety checkpoint before sensitive workflow extraction.
+- Phase 10L created `heritage-engine/validation.js` for shared public-safe constants and validation helpers.
 
 ## Roadmap
 

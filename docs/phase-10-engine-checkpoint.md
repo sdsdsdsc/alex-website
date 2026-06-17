@@ -14,6 +14,7 @@ Completed Phase 10 work:
 - 10H Public place display helpers extracted
 - 10I Public export JSON-LD helpers extracted
 - 10K Lightweight engine test page / manual test harness
+- 10L Shared validation constants and helpers extracted
 
 ## Current Engine Folder
 
@@ -24,6 +25,7 @@ Completed Phase 10 work:
 - `maps.js`: public map and coordinate helpers for map links, coordinate validation, marker search matching, and nomination coordinate URLs.
 - `places.js`: public place record display and formatting helpers for location, criteria, dates, related articles, summaries, and page-level JSON-LD.
 - `export.js`: public-safe JSON-LD shaping helpers for community places, news, history, relationships, and export graph assembly.
+- `validation.js`: shared public-safe constants and pure validation helpers for criteria, statuses, text, email, URLs, coordinates, and unsafe public fields.
 
 Developer-only test page:
 
@@ -171,13 +173,12 @@ Critical boundary rules:
 - map helper tests pass
 - place helper tests pass
 - export helper tests pass
+- validation helper tests pass
 - no Firebase network calls are made by the test page
 - no public navigation link points to the test page
 
 ## Next Recommended Phases
 
-- Phase 10K - Add lightweight engine test page or manual test harness for pure helpers
-- Phase 10L - Extract shared validation constants carefully
 - Phase 10M - Plan nomination helper extraction, documentation first
 - Phase 10N - Extract nomination form pure helpers
 - Phase 10O - Plan admin review/promotion extraction, documentation first
