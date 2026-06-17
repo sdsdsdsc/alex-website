@@ -22,6 +22,7 @@ Completed Phase 10 work:
 - 10Q Admin review pure helpers extracted
 - 10R Promotion payload pure helpers extracted
 - 10S Combined admin workflow helper tests added
+- 10T-A Audit/review helper wiring started in `manage-nominations.html`; promotion wiring remains deferred
 
 ## Current Engine Folder
 
@@ -200,7 +201,7 @@ Critical boundary rules:
 
 ## Next Recommended Phases
 
-- Phase 10T - Carefully wire admin helpers into `manage-nominations.html`
+- Phase 10T-B - Carefully wire promotion helpers into `manage-nominations.html`
 
 Do not touch admin review or promotion extraction until after at least one checkpoint and test pass.
 
