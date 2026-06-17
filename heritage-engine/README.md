@@ -152,6 +152,27 @@ Safety boundary:
 - no admin authentication checks
 - no public exposure of private nomination or admin fields
 
+### review.js
+
+`review.js` contains pure admin review helper logic, including:
+
+- review status labels and normalization
+- allowed review status checks
+- admin notes normalization
+- admin criteria assessment field preparation
+- review validation helpers
+- review update payload shaping
+- status-change helper flags
+
+Safety boundary:
+
+- no Firebase imports
+- no Firebase reads or writes
+- no Firestore timestamp creation
+- no DOM rendering
+- no admin authentication checks
+- no promotion or `communityPlaces` payloads
+
 ## What Should Stay Outside The Engine For Now
 
 These responsibilities should currently stay in page scripts:
@@ -210,6 +231,7 @@ Possible future modules, not yet implemented:
 - Phase 10N created `heritage-engine/nominations.js` for pure public nomination form helpers.
 - Phase 10O added `docs/phase-10o-admin-review-promotion-plan.md` before admin review and promotion helper extraction.
 - Phase 10P created `heritage-engine/audit.js` for pure review history and audit helper logic.
+- Phase 10Q created `heritage-engine/review.js` for pure admin review helper logic.
 
 ## Roadmap
 
