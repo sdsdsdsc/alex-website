@@ -4,6 +4,23 @@ import {
   doc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import {
+  buildMapUrl,
+  buildPlaceJsonLd,
+  buildPublicPlaceSummary,
+  cleanText,
+  formatRecordDate,
+  getCoordinateDisplay,
+  getDisplayTitle,
+  getHeritageCriteria,
+  getRelatedArticleReferences,
+  getRelatedArticleUrl,
+  getTags,
+  hasUsableJsonLd,
+  hasValidCoordinates,
+  normalizeCoordinate,
+  toSafeUrl
+} from "./heritage-engine/places.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -41,59 +58,6 @@ const els = {
 
 let placeMap = null;
 const validSections = new Set(["overview", "comments-photos"]);
-const articleCollections = new Set(["news", "history"]);
-
-function cleanText(value) {
-  return String(value || "").trim();
-}
-
-function toSafeUrl(value) {
-  if (!value) return "";
-  try {
-    const parsed = new URL(value, window.location.href);
-    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-      return parsed.href;
-    }
-  } catch (err) {
-    console.warn("Invalid URL skipped:", value);
-  }
-  return "";
-}
-
-function hasCoordinates(place) {
-  return Number.isFinite(place?.lat)
-    && Number.isFinite(place?.lng)
-    && place.lat >= -90
-    && place.lat <= 90
-    && place.lng >= -180
-    && place.lng <= 180;
-}
-
-function normalizeCoordinate(value) {
-  if (value === undefined || value === null || value === "") return null;
-  const numericValue = Number(value);
-  return Number.isFinite(numericValue) ? numericValue : null;
-}
-
-function getTags(place) {
-  if (Array.isArray(place?.tags)) return place.tags.map(cleanText).filter(Boolean);
-  return cleanText(place?.tags).split(",").map(cleanText).filter(Boolean);
-}
-
-function hasUsableJsonLd(value) {
-  return value !== null
-    && typeof value === "object"
-    && !Array.isArray(value)
-    && Object.keys(value).length > 0;
-}
-
-function buildMapUrl(place) {
-  const title = cleanText(place.title);
-  if (hasCoordinates(place)) {
-    return `map.html?lat=${encodeURIComponent(place.lat)}&lng=${encodeURIComponent(place.lng)}`;
-  }
-  return `map.html?search=${encodeURIComponent(title)}`;
-}
 
 function getSectionFromUrl() {
   const section = new URLSearchParams(window.location.search).get("section");
@@ -173,38 +137,6 @@ function appendMetadata(label, value) {
   els.metadata.append(dt, dd);
 }
 
-function getHeritageCriteria(place) {
-  const criteria = Array.isArray(place?.heritageCriteria)
-    ? place.heritageCriteria
-    : cleanText(place?.heritageCriteria).split(/[\n,;]+/);
-
-  return [...new Set(criteria.map(cleanText).filter(Boolean))];
-}
-
-function formatRecordDate(value) {
-  if (!value) return "";
-
-  let date = null;
-  if (typeof value?.toDate === "function") {
-    date = value.toDate();
-  } else if (value instanceof Date) {
-    date = value;
-  } else {
-    const textValue = cleanText(value);
-    const dateOnlyMatch = textValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    date = dateOnlyMatch
-      ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
-      : new Date(textValue);
-  }
-
-  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat(undefined, {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  }).format(date);
-}
-
 function appendHeritageDetail(details, label, value, options = {}) {
   const safeValue = cleanText(value);
   if (!safeValue) return false;
@@ -272,76 +204,6 @@ function renderLocalHeritageRecord(place) {
 
   els.localHeritageContent.appendChild(details);
   els.localHeritageSection.hidden = false;
-}
-
-function formatLocation(place) {
-  const parts = [
-    cleanText(place.city),
-    cleanText(place.province)
-  ].filter(Boolean);
-
-  return parts.join(", ") || cleanText(place.location);
-}
-
-function formatCoordinate(value) {
-  if (!Number.isFinite(value)) return "";
-  return Number(value).toFixed(6).replace(/\.?0+$/, "");
-}
-
-function formatCoordinates(place) {
-  if (!hasCoordinates(place)) return "";
-  return `${formatCoordinate(place.lat)}, ${formatCoordinate(place.lng)}`;
-}
-
-function getRelatedArticleUrl(place) {
-  return toSafeUrl(place.relatedArticle || place.linkedArticle || "");
-}
-
-function buildArticleUrl(reference, options = {}) {
-  const collection = cleanText(reference?.collection);
-  const id = cleanText(reference?.id);
-  if (!articleCollections.has(collection) || !id) return "";
-
-  const path = `article.html?id=${encodeURIComponent(id)}&type=${encodeURIComponent(collection)}`;
-  if (options.absolute) {
-    return new URL(path, window.location.href).href;
-  }
-  return path;
-}
-
-function getRelatedArticleReferences(place) {
-  if (!Array.isArray(place?.relatedArticles)) return [];
-  const seen = new Set();
-
-  return place.relatedArticles
-    .map((reference) => {
-      const collection = cleanText(reference?.collection);
-      const id = cleanText(reference?.id);
-      if (!articleCollections.has(collection) || !id) return null;
-      const key = `${collection}:${id}`;
-      if (seen.has(key)) return null;
-      seen.add(key);
-      return {
-        collection,
-        id,
-        title: cleanText(reference?.title) || id,
-        url: buildArticleUrl({ collection, id })
-      };
-    })
-    .filter(Boolean);
-}
-
-function getRelatedArticleSubjectUrls(place) {
-  const urls = getRelatedArticleReferences(place)
-    .map((reference) => buildArticleUrl(reference, { absolute: true }))
-    .filter(Boolean);
-  const legacyArticle = getRelatedArticleUrl(place);
-
-  if (legacyArticle && !urls.includes(legacyArticle)) {
-    urls.push(legacyArticle);
-  }
-
-  return urls;
 }
 
 function renderImage(place) {
@@ -466,7 +328,7 @@ function renderLocation(place) {
   if (!els.locationContent) return;
   els.locationContent.textContent = "";
 
-  if (!hasCoordinates(place)) {
+  if (!hasValidCoordinates(place)) {
     const message = document.createElement("p");
     message.className = "place-location__message";
     message.textContent = "Location coordinates are not available yet.";
@@ -486,7 +348,7 @@ function renderLocation(place) {
 
   const coords = document.createElement("p");
   coords.className = "place-location__coords";
-  coords.textContent = `Coordinates: ${formatCoordinates(place)}`;
+  coords.textContent = `Coordinates: ${getCoordinateDisplay(place)}`;
 
   const mapLink = document.createElement("a");
   mapLink.className = "place-location__button";
@@ -514,49 +376,8 @@ function renderLocation(place) {
     .bindPopup(cleanText(place.title) || "Community place");
 }
 
-function generatePlaceJsonLd(place) {
-  const tags = getTags(place);
-  const title = cleanText(place.title) || "Community place";
-  const description = cleanText(place.description) || "Community place record from Alex's Photo Board.";
-  const category = cleanText(place.category) || "Community place";
-  const location = cleanText(place.location) || "Not specified";
-  const source = cleanText(place.source) || "Alex's Photo Board";
-  const relatedArticleUrls = getRelatedArticleSubjectUrls(place);
-  const jsonld = {
-    "@context": "https://schema.org",
-    "@type": "Place",
-    name: title,
-    url: window.location.href,
-    description,
-    additionalType: category,
-    category,
-    address: location,
-    location,
-    keywords: tags.length > 0 ? tags.join(", ") : category,
-    sourceOrganization: source
-  };
-
-  const imageUrl = toSafeUrl(place.imageUrl);
-
-  if (imageUrl) jsonld.image = imageUrl;
-  if (relatedArticleUrls.length === 1) {
-    jsonld.subjectOf = relatedArticleUrls[0];
-  } else if (relatedArticleUrls.length > 1) {
-    jsonld.subjectOf = relatedArticleUrls;
-  }
-  if (hasCoordinates(place)) {
-    jsonld.geo = {
-      "@type": "GeoCoordinates",
-      latitude: place.lat,
-      longitude: place.lng
-    };
-  }
-
-  return jsonld;
-}
-
 function injectJsonLd(place) {
-  const generatedJsonLd = generatePlaceJsonLd(place);
+  const generatedJsonLd = buildPlaceJsonLd(place, window.location.href);
   const jsonld = hasUsableJsonLd(place.jsonld)
     ? { ...generatedJsonLd, ...place.jsonld }
     : generatedJsonLd;
@@ -571,15 +392,16 @@ function injectJsonLd(place) {
 }
 
 function renderPlace(place) {
-  const title = cleanText(place.title) || "Untitled community place";
-  const category = cleanText(place.category) || "Community place";
-  const heroLocation = formatLocation(place);
+  const summary = buildPublicPlaceSummary(place);
+  const title = getDisplayTitle(place);
+  const category = summary.category;
+  const heroLocation = summary.location;
   document.title = `${title} | Alex's Photo Board`;
   if (els.title) els.title.textContent = title;
   if (els.breadcrumbTitle) els.breadcrumbTitle.textContent = title;
   if (els.kicker) els.kicker.textContent = category;
   if (els.heroLocation) els.heroLocation.textContent = heroLocation;
-  if (els.description) els.description.textContent = cleanText(place.description) || "No overview has been added yet.";
+  if (els.description) els.description.textContent = summary.description;
 
   if (els.metadata) {
     els.metadata.textContent = "";

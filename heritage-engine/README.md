@@ -54,6 +54,25 @@ Safety boundary:
 - no `mapPoints` or `mapPolygons`
 - no private or admin fields
 
+### places.js
+
+`places.js` contains public place record display helpers, including:
+
+- public-safe formatting
+- location, criteria, and status formatting
+- coordinate display helpers
+- related article URL helpers
+- public place summary helpers
+- public JSON-LD shaping helpers
+
+Safety boundary:
+
+- no Firebase imports
+- no Firebase reads or writes
+- no DOM rendering
+- no `placeNominations` access
+- no private or admin fields
+
 ## What Should Stay Outside The Engine For Now
 
 These responsibilities should currently stay in page scripts:
@@ -98,6 +117,7 @@ Possible future modules, not yet implemented:
 - Phase 10E created `heritage-engine/search.js`.
 - Phase 10F created `heritage-engine/maps.js`.
 - Phase 10G documents the engine folder.
+- Phase 10H created `heritage-engine/places.js`.
 
 ## Roadmap
 
