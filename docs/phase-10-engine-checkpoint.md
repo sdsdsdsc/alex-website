@@ -18,6 +18,7 @@ Completed Phase 10 work:
 - 10M Nomination helper extraction plan
 - 10N Public nomination form helpers extracted
 - 10O Admin review and promotion extraction plan
+- 10P Audit / reviewHistory pure helpers extracted
 
 ## Current Engine Folder
 
@@ -30,6 +31,7 @@ Completed Phase 10 work:
 - `export.js`: public-safe JSON-LD shaping helpers for community places, news, history, relationships, and export graph assembly.
 - `validation.js`: shared public-safe constants and pure validation helpers for criteria, statuses, text, email, URLs, coordinates, and unsafe public fields.
 - `nominations.js`: pure public nomination form helpers for validation, safe payload shaping, and initial submitted status.
+- `audit.js`: pure admin review history helpers for audit entries, status-change notes, promotion notes, trimming, formatting, and summaries.
 
 Developer-only test page:
 
@@ -184,12 +186,12 @@ Critical boundary rules:
 - export helper tests pass
 - validation helper tests pass
 - nomination helper tests pass
+- audit helper tests pass
 - no Firebase network calls are made by the test page
 - no public navigation link points to the test page
 
 ## Next Recommended Phases
 
-- Phase 10P - Extract audit/reviewHistory pure helpers
 - Phase 10Q - Extract admin review pure helpers
 - Phase 10R - Extract promotion payload pure helpers
 - Phase 10S - Add admin workflow helper tests

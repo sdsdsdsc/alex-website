@@ -131,6 +131,27 @@ Safety boundary:
 - no admin review or promotion logic
 - no `communityPlaces` writes
 
+### audit.js
+
+`audit.js` contains pure admin review history helper logic, including:
+
+- review saved history entry building
+- status changed history entry building
+- promotion history entry building
+- review history trimming and appending
+- readable audit action labels
+- review history display text helpers
+- review history summary helpers
+
+Safety boundary:
+
+- no Firebase imports
+- no Firebase reads or writes
+- no Firestore timestamp creation
+- no DOM rendering
+- no admin authentication checks
+- no public exposure of private nomination or admin fields
+
 ## What Should Stay Outside The Engine For Now
 
 These responsibilities should currently stay in page scripts:
@@ -188,6 +209,7 @@ Possible future modules, not yet implemented:
 - Phase 10M added `docs/phase-10m-nomination-extraction-plan.md` before nomination helper extraction.
 - Phase 10N created `heritage-engine/nominations.js` for pure public nomination form helpers.
 - Phase 10O added `docs/phase-10o-admin-review-promotion-plan.md` before admin review and promotion helper extraction.
+- Phase 10P created `heritage-engine/audit.js` for pure review history and audit helper logic.
 
 ## Roadmap
 
