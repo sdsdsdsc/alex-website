@@ -215,6 +215,8 @@ These responsibilities should currently stay in page scripts:
 
 It tests engine modules without Firebase, is not linked from public navigation, and should be used before sensitive refactors.
 
+It also includes combined admin workflow helper tests for the `audit.js`, `review.js`, `promotion.js`, and `validation.js` modules. These checks use sample nomination objects only; they do not touch Firebase and do not replace live admin workflow testing.
+
 ## Future Modules
 
 Possible future modules, not yet implemented:
@@ -254,6 +256,7 @@ Possible future modules, not yet implemented:
 - Phase 10P created `heritage-engine/audit.js` for pure review history and audit helper logic.
 - Phase 10Q created `heritage-engine/review.js` for pure admin review helper logic.
 - Phase 10R created `heritage-engine/promotion.js` for pure promotion payload helper logic.
+- Phase 10S added combined admin workflow helper-chain tests to `engine-test.html`.
 
 ## Roadmap
 
