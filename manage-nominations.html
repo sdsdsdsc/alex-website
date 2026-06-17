@@ -25,6 +25,16 @@
       serverTimestamp,
       updateDoc
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import {
+      appendReviewHistory as appendAuditReviewHistory,
+      buildReviewSavedHistoryEntry,
+      buildStatusChangedHistoryEntry
+    } from "./heritage-engine/audit.js";
+    import {
+      buildReviewUpdatePayload,
+      normalizeReviewStatus as normalizeEngineReviewStatus,
+      shouldRecordStatusChanged
+    } from "./heritage-engine/review.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -709,23 +719,31 @@
           saveButton.textContent = "Saving...";
 
           try {
-            const previousStatus = normalizeNominationStatus(record.nominationStatus);
-            const reviewHistoryEntry = buildReviewHistoryEntry(
-              getStatusChangeAction(previousStatus, nextStatus),
-              previousStatus,
-              nextStatus,
-              previousStatus === nextStatus ? "Review details saved." : `Status changed to ${statusLabel(nextStatus)}.`
-            );
-
-            await updateDoc(doc(db, "placeNominations", record.id), {
+            const previousStatus = normalizeEngineReviewStatus(record.nominationStatus);
+            const statusChanged = shouldRecordStatusChanged(previousStatus, nextStatus);
+            const reviewHistoryEntry = statusChanged
+              ? buildStatusChangedHistoryEntry(previousStatus, nextStatus, {
+                at: new Date(),
+                note: `Status changed to ${statusLabel(nextStatus)}.`
+              })
+              : buildReviewSavedHistoryEntry({
+                at: new Date(),
+                fromStatus: previousStatus,
+                toStatus: nextStatus,
+                note: "Review details saved."
+              });
+            const reviewUpdatePayload = buildReviewUpdatePayload({
               nominationStatus: nextStatus,
               adminNotes,
               ...adminAssessmentValues,
               adminAssessmentSummary,
-              reviewHistory: appendReviewHistory(record.reviewHistory, reviewHistoryEntry),
+              reviewHistory: appendAuditReviewHistory(record.reviewHistory, reviewHistoryEntry, REVIEW_HISTORY_LIMIT)
+            }, {
               reviewedAt: serverTimestamp(),
               updatedAt: serverTimestamp()
             });
+
+            await updateDoc(doc(db, "placeNominations", record.id), reviewUpdatePayload);
 
             lastSavedNominationId = record.id;
             lastSavedMessage = "Review update saved.";
