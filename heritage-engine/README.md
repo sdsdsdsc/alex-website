@@ -107,6 +107,12 @@ These responsibilities should currently stay in page scripts:
 - promotion writes
 - backup downloads
 
+## Manual Test Harness
+
+`engine-test.html` can be opened through localhost to run lightweight checks against the pure engine helpers.
+
+It tests engine modules without Firebase, is not linked from public navigation, and should be used before sensitive refactors.
+
 ## Future Modules
 
 Possible future modules, not yet implemented:

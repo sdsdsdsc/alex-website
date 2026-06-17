@@ -13,6 +13,7 @@ Completed Phase 10 work:
 - 10G Heritage engine README
 - 10H Public place display helpers extracted
 - 10I Public export JSON-LD helpers extracted
+- 10K Lightweight engine test page / manual test harness
 
 ## Current Engine Folder
 
@@ -23,6 +24,10 @@ Completed Phase 10 work:
 - `maps.js`: public map and coordinate helpers for map links, coordinate validation, marker search matching, and nomination coordinate URLs.
 - `places.js`: public place record display and formatting helpers for location, criteria, dates, related articles, summaries, and page-level JSON-LD.
 - `export.js`: public-safe JSON-LD shaping helpers for community places, news, history, relationships, and export graph assembly.
+
+Developer-only test page:
+
+- `engine-test.html`: manual browser test harness for pure engine helpers. It is not linked from public navigation and does not use Firebase.
 
 ## What Has Been Extracted Safely
 
@@ -157,6 +162,17 @@ Critical boundary rules:
 - no private fields on public pages
 - no Firebase writes added to engine modules
 - no browser module import errors
+
+### Engine Test Harness
+
+- `engine-test.html` opens through localhost
+- developer-only warning displays
+- search helper tests pass
+- map helper tests pass
+- place helper tests pass
+- export helper tests pass
+- no Firebase network calls are made by the test page
+- no public navigation link points to the test page
 
 ## Next Recommended Phases
 
