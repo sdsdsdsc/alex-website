@@ -21,6 +21,7 @@ Completed Phase 10 work:
 - 10P Audit / reviewHistory pure helpers extracted
 - 10Q Admin review pure helpers extracted
 - 10R Promotion payload pure helpers extracted
+- 10S Combined admin workflow helper tests added
 
 ## Current Engine Folder
 
@@ -193,12 +194,12 @@ Critical boundary rules:
 - audit helper tests pass
 - review helper tests pass
 - promotion helper tests pass
+- combined admin workflow helper-chain tests pass
 - no Firebase network calls are made by the test page
 - no public navigation link points to the test page
 
 ## Next Recommended Phases
 
-- Phase 10S - Add admin workflow helper tests
 - Phase 10T - Carefully wire admin helpers into `manage-nominations.html`
 
 Do not touch admin review or promotion extraction until after at least one checkpoint and test pass.
