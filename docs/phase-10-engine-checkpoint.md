@@ -20,6 +20,7 @@ Completed Phase 10 work:
 - 10O Admin review and promotion extraction plan
 - 10P Audit / reviewHistory pure helpers extracted
 - 10Q Admin review pure helpers extracted
+- 10R Promotion payload pure helpers extracted
 
 ## Current Engine Folder
 
@@ -34,6 +35,7 @@ Completed Phase 10 work:
 - `nominations.js`: pure public nomination form helpers for validation, safe payload shaping, and initial submitted status.
 - `audit.js`: pure admin review history helpers for audit entries, status-change notes, promotion notes, trimming, formatting, and summaries.
 - `review.js`: pure admin review helpers for status labels, admin notes, assessment fields, review validation, and review update payload shaping.
+- `promotion.js`: pure promotion helpers for safe public place payloads, promoted place IDs, promotion validation, private field stripping, and promotion update payload shaping.
 
 Developer-only test page:
 
@@ -190,12 +192,12 @@ Critical boundary rules:
 - nomination helper tests pass
 - audit helper tests pass
 - review helper tests pass
+- promotion helper tests pass
 - no Firebase network calls are made by the test page
 - no public navigation link points to the test page
 
 ## Next Recommended Phases
 
-- Phase 10R - Extract promotion payload pure helpers
 - Phase 10S - Add admin workflow helper tests
 - Phase 10T - Carefully wire admin helpers into `manage-nominations.html`
 
