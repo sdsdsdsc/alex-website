@@ -35,6 +35,12 @@
       normalizeReviewStatus as normalizeEngineReviewStatus,
       shouldRecordStatusChanged
     } from "./heritage-engine/review.js";
+    import {
+      buildPromotionHistoryEntryPayload,
+      buildPromotionUpdatePayload,
+      buildPublicPlacePayloadFromNomination,
+      shouldAllowPromotion
+    } from "./heritage-engine/promotion.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -391,44 +397,24 @@
     }
 
     function buildCommunityPlacePayload(record, placeId) {
-      const payload = {
-        title: cleanText(record.title),
-        category: cleanText(record.assetType) || "Community Place",
-        recordStatus: "published",
-        dateAdded: getPromotionDateString(),
-        lastReviewed: getPromotionDateString(),
+      const promotionDate = getPromotionDateString();
+      const {
+        category,
+        city,
+        district,
+        province,
+        ...promotionRecord
+      } = record;
+      return buildPublicPlacePayloadFromNomination({
+        ...promotionRecord,
+        category: ""
+      }, {
+        placeId,
+        dateAdded: promotionDate,
+        lastReviewed: promotionDate,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
-      };
-
-      [
-        "assetType",
-        "area",
-        "address",
-        "description",
-        "localSignificanceSummary",
-        "criteriaExplanation",
-        "condition",
-        "communityUse",
-        "sourceReference"
-      ].forEach((field) => {
-        const value = cleanText(record[field]);
-        if (value) payload[field] = value;
       });
-
-      if (Array.isArray(record.heritageCriteria) && record.heritageCriteria.length > 0) {
-        payload.heritageCriteria = record.heritageCriteria.map(cleanText).filter(Boolean);
-      }
-
-      const lat = Number(record.lat);
-      const lng = Number(record.lng);
-      if (Number.isFinite(lat) && Number.isFinite(lng)) {
-        payload.lat = lat;
-        payload.lng = lng;
-      }
-
-      payload.id = placeId;
-      return payload;
     }
 
     function appendPreviewRow(container, label, value) {
@@ -878,7 +864,7 @@
               }
 
               const freshNomination = nominationSnap.data();
-              if (cleanText(freshNomination.nominationStatus).toLowerCase() !== "approved") {
+              if (!shouldAllowPromotion(freshNomination)) {
                 throw new Error("Only approved nominations can be promoted.");
               }
 
@@ -886,21 +872,18 @@
                 throw new Error("A communityPlaces record with this ID already exists. Choose a different ID.");
               }
 
-              const promotionHistoryEntry = buildReviewHistoryEntry(
-                "promoted",
-                "approved",
-                "promoted",
-                `Promoted to communityPlaces/${chosenId}.`
-              );
-
-              transaction.set(placeRef, placePayload);
-              transaction.update(nominationRef, {
-                nominationStatus: "promoted",
-                promotedPlaceId: chosenId,
-                reviewHistory: appendReviewHistory(freshNomination.reviewHistory, promotionHistoryEntry),
+              const promotionHistoryEntry = buildPromotionHistoryEntryPayload(chosenId, {
+                at: new Date(),
+                note: `Promoted to communityPlaces/${chosenId}.`
+              });
+              const promotionUpdatePayload = buildPromotionUpdatePayload(chosenId, {
+                reviewHistory: appendAuditReviewHistory(freshNomination.reviewHistory, promotionHistoryEntry, REVIEW_HISTORY_LIMIT),
                 promotedAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
               });
+
+              transaction.set(placeRef, placePayload);
+              transaction.update(nominationRef, promotionUpdatePayload);
             });
 
             lastSavedNominationId = record.id;
