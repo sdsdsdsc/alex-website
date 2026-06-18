@@ -4,3 +4,10 @@ firebase-adminsdk*.json
 .DS_Store
 node_modules/
 data/communityPlaces.json
+
+# Private admin backup downloads
+communityPlaces-backup-*.json
+placeNominations-backup-*.json
+news-backup-*.json
+history-backup-*.json
+alex-photo-board-backup-*.json
