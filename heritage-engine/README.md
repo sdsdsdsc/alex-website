@@ -258,6 +258,9 @@ Possible future modules, not yet implemented:
 - Phase 10R created `heritage-engine/promotion.js` for pure promotion payload helper logic.
 - Phase 10S added combined admin workflow helper-chain tests to `engine-test.html`.
 - Phase 10T-A began careful wiring of audit/review helpers into `manage-nominations.html` while keeping Firestore writes in the page script.
+- Phase 10T-B carefully wired promotion helpers into `manage-nominations.html` while keeping Firestore writes in the page script.
+- Phase 10U added `docs/phase-10-engine-closeout.md` as the final Phase 10 engine closeout checklist.
+- Phase 10T-B carefully wired promotion payload helpers into `manage-nominations.html` while keeping Firestore writes in the page script.
 
 ## Roadmap
 

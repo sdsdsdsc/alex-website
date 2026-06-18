@@ -23,6 +23,10 @@ Completed Phase 10 work:
 - 10R Promotion payload pure helpers extracted
 - 10S Combined admin workflow helper tests added
 - 10T-A Audit/review helper wiring started in `manage-nominations.html`; promotion wiring remains deferred
+- 10T-B Promotion helper wiring started in `manage-nominations.html`; Firestore writes remain in the page script
+- 10U Final engine regression checklist and Phase 10 closeout documented in `docs/phase-10-engine-closeout.md`
+
+Phase 10 is now documented as complete. Use the [Phase 10 Engine Closeout](phase-10-engine-closeout.md) for the final regression checklist, safety boundaries, test-data notes, and next-phase guidance.
 
 ## Current Engine Folder
 
@@ -199,16 +203,16 @@ Critical boundary rules:
 - no Firebase network calls are made by the test page
 - no public navigation link points to the test page
 
-## Next Recommended Phases
+## Next Recommended Phase
 
-- Phase 10T-B - Carefully wire promotion helpers into `manage-nominations.html`
+- Phase 11A - Data cleanup and content-quality pass
 
-Do not touch admin review or promotion extraction until after at least one checkpoint and test pass.
+Before adding user accounts, GIS features, or a forum, clean test data carefully, standardize public place records, verify titles, criteria, and coordinates, and improve public data quality.
 
 ## Commit Guidance
 
 Suggested commit message:
 
 ```text
-Phase 10J: Add engine extraction checkpoint
+Phase 10U: Add engine closeout checklist
 ```
