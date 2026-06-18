@@ -1,3 +1,5 @@
+import { stripUnsafePublicFields } from "./validation.js";
+
 const ARTICLE_COLLECTIONS = new Set(["news", "history"]);
 const RELATIONSHIP_FIELDS = new Set([
   "schema:subjectOf",
@@ -109,7 +111,7 @@ function removeUnsafeJsonLdFields(value) {
     ) {
       return;
     }
-    clean[key] = entry;
+    clean[key] = stripUnsafePublicFields(entry);
   });
 
   return clean;
@@ -281,13 +283,13 @@ function buildPublicGraph(records) {
 }
 
 function buildPublicHeritageJsonLd(nodes) {
-  return {
+  return stripUnsafePublicFields({
     "@context": {
       "schema": "https://schema.org/",
       "dc": "http://purl.org/dc/terms/"
     },
     "@graph": nodes
-  };
+  });
 }
 
 export {
