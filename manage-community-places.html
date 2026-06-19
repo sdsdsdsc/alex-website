@@ -26,6 +26,15 @@
       setDoc,
       updateDoc
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import {
+      ARTICLE_RELATIONSHIP_COLLECTIONS,
+      PLACE_RELATIONSHIP_COLLECTIONS,
+      auditRelationshipReferences,
+      buildRelationshipRecordLookup,
+      buildStoredRelationshipReferences,
+      cleanText as cleanRelationshipText,
+      normalizeRelationshipReferences
+    } from "./heritage-engine/relationships.js?v=2026-06-19-12b";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -40,7 +49,6 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
     const COLLECTION_NAME = "communityPlaces";
-    const ARTICLE_COLLECTIONS = new Set(["news", "history"]);
     const OPTIONAL_STRING_FIELDS = [
       "location",
       "province",
@@ -68,6 +76,10 @@
     ];
     let activeMode = "create";
     let activeRecordId = "";
+    let availableArticleRelationships = [];
+    let activeRelatedArticleWarnings = [];
+    let articleRelationshipLookup = {};
+    let loadedRelatedArticleTitleByKey = {};
 
     function buildLoginUrl() {
       const loginUrl = new URL("admin-login.html", window.location.href);
@@ -77,6 +89,14 @@
 
     function cleanText(value) {
       return String(value || "").trim();
+    }
+
+    function sortRelationshipOptions(options) {
+      return [...options].sort((a, b) => {
+        const collectionCompare = cleanText(a.collection).localeCompare(cleanText(b.collection));
+        if (collectionCompare !== 0) return collectionCompare;
+        return cleanText(a.title).localeCompare(cleanText(b.title));
+      });
     }
 
     function isPlainObject(value) {
@@ -166,91 +186,215 @@
 
     function resetFormValues() {
       document.getElementById("communityPlaceForm")?.reset();
-      renderRelatedArticleRows([]);
+      loadedRelatedArticleTitleByKey = {};
+      renderAvailableRelatedArticles([]);
       setInputValue("jsonld", "");
       setFormMessage("");
     }
 
-    function getRelatedArticleRowsContainer() {
-      return document.getElementById("relatedArticlesRows");
+    function getRelatedArticlesPicker() {
+      return document.getElementById("relatedArticlesPicker");
     }
 
-    function normalizeRelatedArticles(value) {
-      if (!Array.isArray(value)) return [];
-      return value
-        .map((item) => ({
-          collection: cleanText(item?.collection),
-          id: cleanText(item?.id),
-          title: cleanText(item?.title)
-        }))
-        .filter((item) => ARTICLE_COLLECTIONS.has(item.collection) && item.id);
+    function getRelatedArticlesWarningList() {
+      return document.getElementById("relatedArticlesWarnings");
     }
 
-    function createRelatedArticleRow(reference = {}) {
-      const row = document.createElement("div");
-      row.className = "admin-related-article-row";
-
-      const collectionLabel = document.createElement("label");
-      collectionLabel.textContent = "Collection";
-      const collectionSelect = document.createElement("select");
-      collectionSelect.className = "related-article-collection";
-      collectionSelect.append(new Option("News", "news"), new Option("History", "history"));
-      collectionSelect.value = ARTICLE_COLLECTIONS.has(reference.collection) ? reference.collection : "news";
-      collectionLabel.appendChild(collectionSelect);
-
-      const idLabel = document.createElement("label");
-      idLabel.textContent = "Article document ID";
-      const idInput = document.createElement("input");
-      idInput.className = "related-article-id";
-      idInput.type = "text";
-      idInput.value = cleanText(reference.id);
-      idLabel.appendChild(idInput);
-
-      const titleLabel = document.createElement("label");
-      titleLabel.textContent = "Display title";
-      const titleInput = document.createElement("input");
-      titleInput.className = "related-article-title";
-      titleInput.type = "text";
-      titleInput.value = cleanText(reference.title);
-      titleLabel.appendChild(titleInput);
-
-      const removeButton = document.createElement("button");
-      removeButton.type = "button";
-      removeButton.className = "admin-related-article-row__remove";
-      removeButton.textContent = "Remove row";
-      removeButton.addEventListener("click", () => row.remove());
-
-      row.append(collectionLabel, idLabel, titleLabel, removeButton);
-      return row;
+    function getRelationshipReferenceKey(reference) {
+      return `${cleanRelationshipText(reference?.collection)}:${cleanRelationshipText(reference?.id)}`;
     }
 
-    function addRelatedArticleRow(reference = {}) {
-      getRelatedArticleRowsContainer()?.appendChild(createRelatedArticleRow(reference));
+    function getCurrentPlaceSourceReference() {
+      const id = cleanText(getInputValue("recordId") || activeRecordId);
+      if (!id) return null;
+      return {
+        collection: "communityPlaces",
+        id,
+        title: getInputValue("title")
+      };
     }
 
-    function renderRelatedArticleRows(relatedArticles) {
-      const container = getRelatedArticleRowsContainer();
-      if (!container) return;
-      container.textContent = "";
-      normalizeRelatedArticles(relatedArticles).forEach((reference) => {
-        container.appendChild(createRelatedArticleRow(reference));
+    function formatRelationshipWarning(warning) {
+      if (warning.code === "missing_title") {
+        return `${warning.collection || "Record"} / ${warning.id || "missing-id"} is missing a title and will use a fallback label until it is resaved.`;
+      }
+      if (warning.code === "duplicate_reference") {
+        return `${warning.collection || "Record"} / ${warning.id || "missing-id"} appears more than once and duplicate entries are ignored.`;
+      }
+      if (warning.code === "unsupported_collection") {
+        return `${warning.collection || "Unknown collection"} is not allowed here. Only news and history can be related to a community place.`;
+      }
+      if (warning.code === "missing_collection_or_id") {
+        return "A saved related article entry is missing its collection or document ID and cannot be used.";
+      }
+      if (warning.code === "invalid_shape") {
+        return "A saved related article entry is malformed and cannot be used.";
+      }
+      if (warning.code === "missing_target") {
+        return `${warning.collection || "Record"} / ${warning.id || "missing-id"} could not be found.`;
+      }
+      if (warning.code === "missing_reciprocal") {
+        return "This relationship is one-way. The linked story/article does not link back to this place.";
+      }
+      if (warning.code === "stale_title") {
+        return `${warning.collection || "Record"} / ${warning.id || "missing-id"} has a saved relationship title that differs from the linked record title.`;
+      }
+      return warning.detail || "A related article entry could not be used safely.";
+    }
+
+    function renderRelationshipWarnings(warnings) {
+      const list = getRelatedArticlesWarningList();
+      if (!list) return;
+      list.textContent = "";
+      if (!Array.isArray(warnings) || warnings.length === 0) {
+        list.hidden = true;
+        return;
+      }
+      warnings.forEach((warning) => {
+        const item = document.createElement("li");
+        item.textContent = formatRelationshipWarning(warning);
+        list.appendChild(item);
+      });
+      list.hidden = false;
+    }
+
+    function buildRelatedArticleAudit(relatedArticles) {
+      return auditRelationshipReferences(relatedArticles, {
+        allowedCollections: ARTICLE_RELATIONSHIP_COLLECTIONS,
+        targetLookup: articleRelationshipLookup,
+        sourceReference: getCurrentPlaceSourceReference(),
+        reciprocalField: "relatedPlaces",
+        reciprocalAllowedCollections: PLACE_RELATIONSHIP_COLLECTIONS
+      });
+    }
+
+    function getSelectedRelatedArticleReferences() {
+      return Array.from(document.querySelectorAll(".admin-related-article-checkbox:checked"))
+        .map((checkbox) => {
+          const fallbackTitle = cleanRelationshipText(checkbox.dataset.title);
+          const savedTitle = cleanRelationshipText(checkbox.dataset.savedTitle);
+          return {
+            collection: cleanRelationshipText(checkbox.dataset.collection),
+            id: cleanRelationshipText(checkbox.dataset.id),
+            title: savedTitle || fallbackTitle
+          };
+        });
+    }
+
+    function refreshSelectedRelatedArticleWarnings() {
+      const audit = buildRelatedArticleAudit(getSelectedRelatedArticleReferences());
+      activeRelatedArticleWarnings = audit.warnings;
+      renderRelationshipWarnings(activeRelatedArticleWarnings);
+    }
+
+    function renderAvailableRelatedArticles(relatedArticles) {
+      const picker = getRelatedArticlesPicker();
+      if (!picker) return;
+      picker.textContent = "";
+
+      const normalized = buildRelatedArticleAudit(relatedArticles);
+      loadedRelatedArticleTitleByKey = {};
+      normalized.references.forEach((reference) => {
+        loadedRelatedArticleTitleByKey[getRelationshipReferenceKey(reference)] = reference.title;
+      });
+      activeRelatedArticleWarnings = normalized.warnings;
+      renderRelationshipWarnings(activeRelatedArticleWarnings);
+
+      const selectedKeys = new Set(normalized.references.map((reference) => `${reference.collection}:${reference.id}`));
+
+      if (availableArticleRelationships.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "admin-empty-state";
+        empty.textContent = "No news or history records are available to relate yet.";
+        picker.appendChild(empty);
+        return;
+      }
+
+      const groups = new Map();
+      availableArticleRelationships.forEach((reference) => {
+        const collection = cleanRelationshipText(reference.collection);
+        if (!groups.has(collection)) {
+          groups.set(collection, []);
+        }
+        groups.get(collection).push(reference);
+      });
+
+      groups.forEach((references, collection) => {
+        const group = document.createElement("section");
+        group.className = "admin-relationship-group";
+
+        const heading = document.createElement("h4");
+        heading.textContent = collection === "history" ? "History stories" : "News articles";
+        group.appendChild(heading);
+
+        references.forEach((reference) => {
+          const checkboxLabel = document.createElement("label");
+          checkboxLabel.className = "admin-relationship-option";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.className = "admin-related-article-checkbox";
+          checkbox.dataset.collection = reference.collection;
+          checkbox.dataset.id = reference.id;
+          checkbox.dataset.title = reference.title;
+          checkbox.dataset.savedTitle = loadedRelatedArticleTitleByKey[`${reference.collection}:${reference.id}`] || "";
+          checkbox.checked = selectedKeys.has(`${reference.collection}:${reference.id}`);
+
+          const content = document.createElement("span");
+          content.className = "admin-relationship-option__content";
+
+          const title = document.createElement("span");
+          title.className = "admin-relationship-option__title";
+          title.textContent = reference.title;
+
+          const meta = document.createElement("span");
+          meta.className = "admin-relationship-option__meta";
+          meta.textContent = reference.id;
+
+          content.append(title, meta);
+          checkboxLabel.append(checkbox, content);
+          group.appendChild(checkboxLabel);
+        });
+
+        picker.appendChild(group);
       });
     }
 
     function parseRelatedArticles() {
-      return Array.from(document.querySelectorAll(".admin-related-article-row"))
-        .map((row) => ({
-          collection: cleanText(row.querySelector(".related-article-collection")?.value),
-          id: cleanText(row.querySelector(".related-article-id")?.value),
-          title: cleanText(row.querySelector(".related-article-title")?.value)
-        }))
-        .filter((reference) => {
-          if (!reference.collection && !reference.id && !reference.title) return false;
-          if (!ARTICLE_COLLECTIONS.has(reference.collection)) {
-            throw new Error("Related article collection must be news or history.");
-          }
-          return Boolean(reference.id);
+      const selectedReferences = getSelectedRelatedArticleReferences();
+      const normalized = buildRelatedArticleAudit(selectedReferences);
+      activeRelatedArticleWarnings = normalized.warnings;
+      renderRelationshipWarnings(activeRelatedArticleWarnings);
+      return buildStoredRelationshipReferences(selectedReferences, {
+        allowedCollections: ARTICLE_RELATIONSHIP_COLLECTIONS
+      });
+    }
+
+    async function loadAvailableArticleRelationships() {
+      const options = [];
+      const recordsByCollection = {
+        news: [],
+        history: []
+      };
+      for (const collectionName of ["news", "history"]) {
+        const snapshot = await getDocs(collection(db, collectionName));
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const record = {
+            id: docSnap.id,
+            title: cleanText(data.title || data.message) || `${collectionName} / ${docSnap.id}`,
+            relatedPlaces: data.relatedPlaces
+          };
+          recordsByCollection[collectionName].push(record);
+          options.push({
+            collection: collectionName,
+            id: docSnap.id,
+            title: record.title
+          });
         });
+      }
+      availableArticleRelationships = sortRelationshipOptions(options);
+      articleRelationshipLookup = buildRelationshipRecordLookup(recordsByCollection);
     }
 
     function showForm(mode, record = null) {
@@ -303,7 +447,7 @@
         setInputValue("lng", Number.isFinite(record.lng) ? record.lng : "");
         setInputValue("tags", Array.isArray(record.tags) ? record.tags.join(", ") : record.tags);
         setInputValue("relatedArticle", record.relatedArticle);
-        renderRelatedArticleRows(record.relatedArticles);
+        renderAvailableRelatedArticles(record.relatedArticles);
         setInputValue("jsonld", isPlainObject(record.jsonld) ? JSON.stringify(record.jsonld, null, 2) : "");
       }
 
@@ -483,7 +627,9 @@
       appendDetail(details, "District", record.district);
       appendDetail(details, "Period", record.period);
       appendDetail(details, "Contributor", record.contributor);
-      const relatedArticleCount = normalizeRelatedArticles(record.relatedArticles).length;
+      const relatedArticleCount = normalizeRelationshipReferences(record.relatedArticles, {
+        allowedCollections: ARTICLE_RELATIONSHIP_COLLECTIONS
+      }).references.length;
       if (relatedArticleCount > 0) {
         appendDetail(details, "Related articles", String(relatedArticleCount));
       }
@@ -695,13 +841,13 @@
       const signOutButton = document.getElementById("manageCommunityPlacesSignOut");
       const newButton = document.getElementById("newCommunityPlaceButton");
       const cancelButton = document.getElementById("communityPlaceCancelButton");
-      const addRelatedArticleButton = document.getElementById("addRelatedArticleButton");
       const form = document.getElementById("communityPlaceForm");
 
       newButton?.addEventListener("click", () => showForm("create"));
       cancelButton?.addEventListener("click", hideForm);
-      addRelatedArticleButton?.addEventListener("click", () => addRelatedArticleRow());
       form?.addEventListener("submit", saveCommunityPlace);
+      document.getElementById("relatedArticlesPicker")?.addEventListener("change", refreshSelectedRelatedArticleWarnings);
+      document.querySelector('[name="recordId"]')?.addEventListener("input", refreshSelectedRelatedArticleWarnings);
 
       onAuthStateChanged(auth, (user) => {
         if (!user) {
@@ -709,7 +855,15 @@
           return;
         }
         if (page) page.hidden = false;
-        loadCommunityPlaces();
+        Promise.all([
+          loadAvailableArticleRelationships(),
+          loadCommunityPlaces()
+        ]).then(() => {
+          renderAvailableRelatedArticles([]);
+        }).catch((err) => {
+          console.error("Failed to load community place admin data:", err);
+          setStatus("Could not load community place admin data.");
+        });
       });
 
       signOutButton?.addEventListener("click", async () => {
@@ -912,9 +1066,9 @@
 
           <fieldset>
             <legend>Related articles</legend>
-            <p class="admin-help-note">Structured article references for future linked-data support.</p>
-            <div class="admin-related-article-rows" id="relatedArticlesRows"></div>
-            <button id="addRelatedArticleButton" class="admin-secondary-button" type="button">Add related article</button>
+            <p class="admin-help-note">Select linked news or history records. Only safe public relationships to news and history are saved here.</p>
+            <ul id="relatedArticlesWarnings" class="admin-warning-list" hidden></ul>
+            <div class="admin-relationship-picker" id="relatedArticlesPicker"></div>
           </fieldset>
 
           <fieldset>

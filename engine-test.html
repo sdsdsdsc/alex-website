@@ -181,7 +181,10 @@
     import {
       ARTICLE_RELATIONSHIP_COLLECTIONS,
       PLACE_RELATIONSHIP_COLLECTIONS,
+      auditRelationshipReferences,
       buildPublicRelationshipUrl,
+      buildRelationshipRecordLookup,
+      buildStoredRelationshipReferences,
       getRelationshipWarningSummary,
       normalizeRelationshipReferences
     } from "./heritage-engine/relationships.js";
@@ -581,11 +584,68 @@
       ], {
         allowedCollections: PLACE_RELATIONSHIP_COLLECTIONS
       });
+      const storedArticleReferences = buildStoredRelationshipReferences([
+        { collection: "history", id: "history-1", title: "" },
+        { collection: "placeNominations", id: "private-1", title: "Private nomination" }
+      ], {
+        allowedCollections: ARTICLE_RELATIONSHIP_COLLECTIONS
+      });
+      const relationshipLookup = buildRelationshipRecordLookup({
+        news: [
+          {
+            id: "news-1",
+            title: "Updated Community News",
+            relatedPlaces: [{ collection: "communityPlaces", id: "alpha-square", title: "Alpha Community Square" }]
+          }
+        ],
+        history: [
+          {
+            id: "history-1",
+            title: "Linked History Story",
+            relatedPlaces: [{ collection: "communityPlaces", id: "alpha-square", title: "Alpha Community Square" }]
+          },
+          {
+            id: "history-one-way",
+            title: "One-way Story",
+            relatedPlaces: []
+          }
+        ],
+        communityPlaces: [
+          {
+            id: "alpha-square",
+            title: "Alpha Community Square",
+            relatedArticles: []
+          }
+        ]
+      });
+      const integrityAudit = auditRelationshipReferences([
+        { collection: "news", id: "news-1", title: "Old Community News" },
+        { collection: "history", id: "history-one-way", title: "One-way Story" },
+        { collection: "history", id: "history-missing", title: "Missing Story" }
+      ], {
+        allowedCollections: ARTICLE_RELATIONSHIP_COLLECTIONS,
+        targetLookup: relationshipLookup,
+        sourceReference: { collection: "communityPlaces", id: "alpha-square", title: "Alpha Community Square" },
+        reciprocalField: "relatedPlaces",
+        reciprocalAllowedCollections: PLACE_RELATIONSHIP_COLLECTIONS
+      });
+      const reverseAudit = auditRelationshipReferences([
+        { collection: "communityPlaces", id: "alpha-square", title: "Alpha Community Square" }
+      ], {
+        allowedCollections: PLACE_RELATIONSHIP_COLLECTIONS,
+        targetLookup: relationshipLookup,
+        sourceReference: { collection: "news", id: "news-2", title: "New Article" },
+        reciprocalField: "relatedArticles",
+        reciprocalAllowedCollections: ARTICLE_RELATIONSHIP_COLLECTIONS
+      });
       const warningSummary = getRelationshipWarningSummary(articleReport.warnings);
+      const integrityCodes = integrityAudit.warnings.map((warning) => warning.code);
+      const reverseCodes = reverseAudit.warnings.map((warning) => warning.code);
 
       assertEqual(articleReport.references.length, 2, "Relationship Helpers", "relationship normalization keeps only safe unique article references");
       assertEqual(articleReport.references[1].title, "History story: history-1", "Relationship Helpers", "missing titles fall back to a safe label");
       assert(articleReport.warnings.length >= 3, "Relationship Helpers", "malformed or unsupported references create warnings");
+      assertContains(warningSummary, "missing_title", "Relationship Helpers", "warning summary includes missing title warnings");
       assertContains(warningSummary, "unsupported_collection", "Relationship Helpers", "warning summary includes unsupported collections");
       assertEqual(
         buildPublicRelationshipUrl({ collection: "communityPlaces", id: "alpha-square" }),
@@ -601,6 +661,12 @@
       );
       assertEqual(buildPublicRelationshipUrl({ collection: "placeNominations", id: "private-1" }), "", "Relationship Helpers", "private collections do not get public URLs");
       assertEqual(placeReport.references.length, 1, "Relationship Helpers", "place-only normalization keeps valid communityPlaces references");
+      assertEqual(storedArticleReferences.length, 1, "Relationship Helpers", "stored relationship builder keeps only allowed references");
+      assertEqual(storedArticleReferences[0].title, "History story: history-1", "Relationship Helpers", "stored relationship builder applies fallback titles");
+      assert(integrityCodes.includes("stale_title"), "Relationship Helpers", "relationship audit warns about stale saved titles");
+      assert(integrityCodes.includes("missing_reciprocal"), "Relationship Helpers", "relationship audit warns about one-way links");
+      assert(integrityCodes.includes("missing_target"), "Relationship Helpers", "relationship audit warns about missing linked targets");
+      assert(reverseCodes.includes("missing_reciprocal"), "Relationship Helpers", "relationship audit also checks article-to-place reciprocity");
     }
 
     function buildValidNominationValues(overrides = {}) {
