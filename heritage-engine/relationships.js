@@ -74,6 +74,13 @@ function buildRelationshipWarning(reference, code, detail, allowedCollections) {
   };
 }
 
+function buildExtendedRelationshipWarning(reference, code, detail, allowedCollections, extra = {}) {
+  return {
+    ...buildRelationshipWarning(reference, code, detail, allowedCollections),
+    ...extra
+  };
+}
+
 function normalizeRelationshipReferences(value, options = {}) {
   if (!Array.isArray(value)) {
     return {
@@ -95,6 +102,7 @@ function normalizeRelationshipReferences(value, options = {}) {
 
     const collection = cleanText(reference.collection);
     const id = cleanText(reference.id);
+    const title = cleanText(reference.title);
 
     if (!collection || !id) {
       warnings.push(buildRelationshipWarning(reference, "missing_collection_or_id", "Relationship item must include both collection and id.", allowedCollections));
@@ -119,10 +127,14 @@ function normalizeRelationshipReferences(value, options = {}) {
       return;
     }
 
+    if (!title) {
+      warnings.push(buildRelationshipWarning(reference, "missing_title", "Relationship title is missing and a fallback label will be used.", allowedCollections));
+    }
+
     references.push({
       collection,
       id,
-      title: cleanText(reference.title) || getFallbackRelationshipTitle(collection, id),
+      title: title || getFallbackRelationshipTitle(collection, id),
       label: getRelationshipCollectionLabel(collection),
       url
     });
@@ -139,14 +151,134 @@ function getRelationshipWarningSummary(warnings) {
   }).join(" | ");
 }
 
+function buildStoredRelationshipReferences(value, options = {}) {
+  return normalizeRelationshipReferences(value, options).references.map((reference) => ({
+    collection: reference.collection,
+    id: reference.id,
+    title: reference.title
+  }));
+}
+
+function getRelationshipRecordTitle(record, collection) {
+  const title = cleanText(record?.title || record?.message);
+  return title || getFallbackRelationshipTitle(collection, record?.id);
+}
+
+function buildRelationshipRecordLookup(recordsByCollection = {}) {
+  const lookup = {};
+
+  Object.entries(recordsByCollection || {}).forEach(([collection, records]) => {
+    const safeCollection = cleanText(collection);
+    if (!safeCollection || !Array.isArray(records)) return;
+
+    lookup[safeCollection] = {};
+    records.forEach((record) => {
+      const id = cleanText(record?.id);
+      if (!id) return;
+      lookup[safeCollection][id] = {
+        ...record,
+        id
+      };
+    });
+  });
+
+  return lookup;
+}
+
+function hasReciprocalRelationship(targetRecord, sourceReference, reciprocalField, reciprocalAllowedCollections) {
+  if (!targetRecord || !sourceReference || !reciprocalField) return false;
+
+  const reciprocalReport = normalizeRelationshipReferences(targetRecord?.[reciprocalField], {
+    allowedCollections: reciprocalAllowedCollections
+  });
+
+  return reciprocalReport.references.some((reference) => (
+    reference.collection === sourceReference.collection
+      && reference.id === sourceReference.id
+  ));
+}
+
+function auditRelationshipReferences(value, options = {}) {
+  const allowedCollections = normalizeAllowedCollections(options.allowedCollections);
+  const normalized = normalizeRelationshipReferences(value, {
+    ...options,
+    allowedCollections
+  });
+  const warnings = [...normalized.warnings];
+  const targetLookup = options.targetLookup || buildRelationshipRecordLookup(options.targetRecordsByCollection);
+  const sourceReference = options.sourceReference && cleanText(options.sourceReference.collection) && cleanText(options.sourceReference.id)
+    ? {
+        collection: cleanText(options.sourceReference.collection),
+        id: cleanText(options.sourceReference.id),
+        title: cleanText(options.sourceReference.title)
+      }
+    : null;
+  const reciprocalField = cleanText(options.reciprocalField);
+  const reciprocalAllowedCollections = normalizeAllowedCollections(
+    options.reciprocalAllowedCollections || PUBLIC_RELATIONSHIP_COLLECTIONS
+  );
+
+  normalized.references.forEach((reference) => {
+    const targetRecord = targetLookup?.[reference.collection]?.[reference.id];
+
+    if (!targetRecord) {
+      warnings.push(buildExtendedRelationshipWarning(
+        reference,
+        "missing_target",
+        "Linked record could not be found.",
+        allowedCollections
+      ));
+      return;
+    }
+
+    const currentTitle = getRelationshipRecordTitle(targetRecord, reference.collection);
+    if (currentTitle && cleanText(reference.title) !== currentTitle) {
+      warnings.push(buildExtendedRelationshipWarning(
+        reference,
+        "stale_title",
+        "Saved relationship title differs from the linked record title.",
+        allowedCollections,
+        { currentTitle }
+      ));
+    }
+
+    if (
+      sourceReference
+      && reciprocalField
+      && !hasReciprocalRelationship(targetRecord, sourceReference, reciprocalField, reciprocalAllowedCollections)
+    ) {
+      warnings.push(buildExtendedRelationshipWarning(
+        reference,
+        "missing_reciprocal",
+        "Linked record does not currently link back.",
+        allowedCollections,
+        {
+          reciprocalField,
+          sourceCollection: sourceReference.collection,
+          sourceId: sourceReference.id
+        }
+      ));
+    }
+  });
+
+  return {
+    references: normalized.references,
+    warnings
+  };
+}
+
 export {
   ARTICLE_RELATIONSHIP_COLLECTIONS,
   PLACE_RELATIONSHIP_COLLECTIONS,
   PUBLIC_RELATIONSHIP_COLLECTIONS,
+  auditRelationshipReferences,
+  buildRelationshipRecordLookup,
   buildPublicRelationshipUrl,
+  buildStoredRelationshipReferences,
   cleanText,
   getFallbackRelationshipTitle,
   getRelationshipCollectionLabel,
+  getRelationshipRecordTitle,
   getRelationshipWarningSummary,
   normalizeRelationshipReferences
 };
