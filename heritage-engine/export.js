@@ -1,4 +1,9 @@
 import { stripUnsafePublicFields } from "./validation.js";
+import {
+  ARTICLE_RELATIONSHIP_COLLECTIONS,
+  PLACE_RELATIONSHIP_COLLECTIONS,
+  normalizeRelationshipReferences
+} from "./relationships.js";
 
 const ARTICLE_COLLECTIONS = new Set(["news", "history"]);
 const RELATIONSHIP_FIELDS = new Set([
@@ -125,48 +130,23 @@ function mergeSafeJsonLd(base, storedJsonLd) {
 }
 
 function normalizeRelatedArticles(relatedArticles) {
-  if (!Array.isArray(relatedArticles)) return [];
-  const seen = new Set();
-
-  return relatedArticles
-    .map((reference) => {
-      const collectionName = cleanText(reference?.collection);
-      const id = cleanText(reference?.id);
-      if (!ARTICLE_COLLECTIONS.has(collectionName) || !id) return null;
-
-      const key = `${collectionName}:${id}`;
-      if (seen.has(key)) return null;
-      seen.add(key);
-
-      return {
-        "@id": buildStableArticleId(id, collectionName),
-        "@type": "schema:Article",
-        "schema:name": cleanText(reference?.title) || id
-      };
-    })
-    .filter(Boolean);
+  return normalizeRelationshipReferences(relatedArticles, {
+    allowedCollections: ARTICLE_RELATIONSHIP_COLLECTIONS
+  }).references.map((reference) => ({
+    "@id": buildStableArticleId(reference.id, reference.collection),
+    "@type": "schema:Article",
+    "schema:name": reference.title
+  }));
 }
 
 function normalizeRelatedPlaces(relatedPlaces) {
-  if (!Array.isArray(relatedPlaces)) return [];
-  const seen = new Set();
-
-  return relatedPlaces
-    .map((reference) => {
-      const collectionName = cleanText(reference?.collection);
-      const id = cleanText(reference?.id);
-      if (collectionName !== "communityPlaces" || !id) return null;
-
-      if (seen.has(id)) return null;
-      seen.add(id);
-
-      return {
-        "@id": buildStablePlaceId(id),
-        "@type": "schema:Place",
-        "schema:name": cleanText(reference?.title) || id
-      };
-    })
-    .filter(Boolean);
+  return normalizeRelationshipReferences(relatedPlaces, {
+    allowedCollections: PLACE_RELATIONSHIP_COLLECTIONS
+  }).references.map((reference) => ({
+    "@id": buildStablePlaceId(reference.id),
+    "@type": "schema:Place",
+    "schema:name": reference.title
+  }));
 }
 
 function buildPlaceJsonLdNode(docId, data) {

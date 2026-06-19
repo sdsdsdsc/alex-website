@@ -1,3 +1,9 @@
+import {
+  ARTICLE_RELATIONSHIP_COLLECTIONS,
+  buildPublicRelationshipUrl,
+  normalizeRelationshipReferences
+} from "./relationships.js";
+
 const ARTICLE_COLLECTIONS = new Set(["news", "history"]);
 
 function cleanText(value) {
@@ -182,14 +188,8 @@ function getCoordinateDisplay(place) {
 
 function buildRelatedArticleUrl(reference, options = {}) {
   const collection = cleanText(reference?.collection);
-  const id = cleanText(reference?.id);
-  if (!ARTICLE_COLLECTIONS.has(collection) || !id) return "";
-
-  const path = `article.html?id=${encodeURIComponent(id)}&type=${encodeURIComponent(collection)}`;
-  if (options.absolute) {
-    return new URL(path, options.baseHref || getDefaultBaseHref()).href;
-  }
-  return path;
+  if (!ARTICLE_COLLECTIONS.has(collection)) return "";
+  return buildPublicRelationshipUrl(reference, options);
 }
 
 function getRelatedArticleUrl(place) {
@@ -197,25 +197,9 @@ function getRelatedArticleUrl(place) {
 }
 
 function getRelatedArticleReferences(place) {
-  if (!Array.isArray(place?.relatedArticles)) return [];
-  const seen = new Set();
-
-  return place.relatedArticles
-    .map((reference) => {
-      const collection = cleanText(reference?.collection);
-      const id = cleanText(reference?.id);
-      if (!ARTICLE_COLLECTIONS.has(collection) || !id) return null;
-      const key = `${collection}:${id}`;
-      if (seen.has(key)) return null;
-      seen.add(key);
-      return {
-        collection,
-        id,
-        title: cleanText(reference?.title) || id,
-        url: buildRelatedArticleUrl({ collection, id })
-      };
-    })
-    .filter(Boolean);
+  return normalizeRelationshipReferences(place?.relatedArticles, {
+    allowedCollections: ARTICLE_RELATIONSHIP_COLLECTIONS
+  }).references;
 }
 
 function getRelatedArticleSubjectUrls(place, baseHref = getDefaultBaseHref()) {
