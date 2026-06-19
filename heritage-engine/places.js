@@ -71,6 +71,61 @@ function getDisplayLocation(place) {
   return parts.join(", ") || cleanText(place?.location);
 }
 
+function getPublicDescription(place) {
+  return cleanText(place?.description) || "No public description has been added yet.";
+}
+
+function getAreaAddress(place) {
+  const parts = [
+    cleanText(place?.area),
+    cleanText(place?.address)
+  ].filter(Boolean);
+
+  return parts.join(" | ");
+}
+
+function normalizePlacePartForComparison(value) {
+  return cleanText(value)
+    .toLowerCase()
+    .replace(/[|,/()-]+/g, " ")
+    .replace(/\b(province|city|district|neighbourhood|neighborhood|area)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function pushUniquePlacePart(parts, rawValue) {
+  const value = cleanText(rawValue);
+  if (!value) return;
+
+  const normalizedValue = normalizePlacePartForComparison(value);
+  if (!normalizedValue) return;
+
+  const existingIndex = parts.findIndex((part) => {
+    const normalizedPart = normalizePlacePartForComparison(part);
+    return normalizedPart === normalizedValue
+      || normalizedPart.includes(normalizedValue)
+      || normalizedValue.includes(normalizedPart);
+  });
+
+  if (existingIndex === -1) {
+    parts.push(value);
+    return;
+  }
+
+  if (normalizedValue.length > parts[existingIndex].length) {
+    parts[existingIndex] = value;
+  }
+}
+
+function formatPlaceLocationAddress(place) {
+  const parts = [];
+  pushUniquePlacePart(parts, place?.address);
+  pushUniquePlacePart(parts, place?.area);
+  pushUniquePlacePart(parts, place?.district);
+  pushUniquePlacePart(parts, getDisplayLocation(place) || place?.location);
+  return parts.join(" | ");
+}
+
 function getRecordStatusLabel(place) {
   return cleanText(place?.recordStatus);
 }
@@ -181,7 +236,7 @@ function buildPublicPlaceSummary(place) {
     title: getDisplayTitle(place),
     category: cleanText(place?.category) || "Community place",
     location: getDisplayLocation(place),
-    description: cleanText(place?.description) || "No overview has been added yet.",
+    description: getPublicDescription(place),
     assetType: getAssetType(place),
     recordStatus: getRecordStatusLabel(place),
     coordinates: getCoordinateDisplay(place)
@@ -238,10 +293,13 @@ export {
   formatCriteriaList,
   formatRecordDate,
   getAssetType,
+  getAreaAddress,
   getCoordinateDisplay,
   getDisplayLocation,
   getDisplayTitle,
   getHeritageCriteria,
+  getPublicDescription,
+  formatPlaceLocationAddress,
   getRecordStatusLabel,
   getRelatedArticleReferences,
   getRelatedArticleSubjectUrls,
