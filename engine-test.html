@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Alex Heritage Engine Test Harness</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f1e9;
+      --panel: #fffaf2;
+      --text: #2d2418;
+      --muted: #725f4a;
+      --pass: #1f7a45;
+      --fail: #b3261e;
+      --border: #decfb9;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1100px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 2rem 0 3rem;
+    }
+
+    header,
+    .summary,
+    .test-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(80, 60, 35, 0.08);
+    }
+
+    header {
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    h1,
+    h2,
+    p {
+      margin-top: 0;
+    }
+
+    .warning {
+      display: inline-block;
+      margin: 0.5rem 0 0;
+      padding: 0.45rem 0.7rem;
+      border-radius: 999px;
+      background: #4b3422;
+      color: #fff7ea;
+      font-weight: 700;
+    }
+
+    .summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .summary span {
+      font-weight: 700;
+    }
+
+    .test-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .test-card {
+      overflow: hidden;
+    }
+
+    .test-card h2 {
+      margin: 0;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 1.05rem;
+    }
+
+    .result {
+      display: grid;
+      grid-template-columns: 5.5rem 1fr;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result:last-child {
+      border-bottom: 0;
+    }
+
+    .badge {
+      align-self: start;
+      width: max-content;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .badge--pass {
+      background: var(--pass);
+    }
+
+    .badge--fail {
+      background: var(--fail);
+    }
+
+    .result__name {
+      font-weight: 700;
+    }
+
+    .result__details {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-top: 0.2rem;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Alex Heritage Engine Test Harness</h1>
+      <p>This page runs lightweight browser checks against pure helper modules in <code>heritage-engine/</code>.</p>
+      <p class="warning">Developer test page. Not part of the public site.</p>
+    </header>
+
+    <section class="summary" aria-live="polite">
+      <div>Total tests: <span id="totalCount">0</span></div>
+      <div>Passed: <span id="passCount">0</span></div>
+      <div>Failed: <span id="failCount">0</span></div>
+    </section>
+
+    <section class="test-grid" id="testResults" aria-label="Engine helper test results"></section>
+  </main>
+
+  <script type="module">
+    import {
+      getSearchText,
+      placeMatchesFilters,
+      placeMatchesSearch,
+      sortPlaces
+    } from "./heritage-engine/search.js";
+    import {
+      buildNominationUrlFromCoordinates,
+      buildPlaceRecordUrl,
+      hasValidCoordinates as mapHasValidCoordinates,
+      isValidLatitude,
+      isValidLongitude
+    } from "./heritage-engine/maps.js";
+    import {
+      buildMapUrl,
+      formatCriteriaList,
+      getDisplayLocation,
+      getDisplayTitle,
+      getHeritageCriteria
+    } from "./heritage-engine/places.js";
+    import {
+      buildPublicGraph,
+      buildPublicHeritageJsonLd
+    } from "./heritage-engine/export.js";
+    import {
+      ARTICLE_RELATIONSHIP_COLLECTIONS,
+      PLACE_RELATIONSHIP_COLLECTIONS,
+      buildPublicRelationshipUrl,
+      getRelationshipWarningSummary,
+      normalizeRelationshipReferences
+    } from "./heritage-engine/relationships.js";
+    import {
+      buildSubmittedNominationPayload,
+      getInitialNominationStatus,
+      normalizeNominationCriteria,
+      validateNominationAgreements,
+      validateNominationEvidenceFields,
+      validateNominationRequiredFields
+    } from "./heritage-engine/nominations.js";
+    import {
+      appendReviewHistory,
+      buildPromotionHistoryEntry,
+      buildReviewSavedHistoryEntry,
+      buildStatusChangedHistoryEntry,
+      formatReviewHistoryAction,
+      formatReviewHistoryEntry,
+      getReviewHistorySummary,
+      trimReviewHistory
+    } from "./heritage-engine/audit.js";
+    import {
+      buildAdminAssessmentSummary,
+      buildReviewUpdatePayload,
+      buildStatusChangeReviewPayload,
+      getAllowedReviewStatuses,
+      getReviewStatusLabel,
+      getReviewValidationErrors,
+      isAllowedReviewStatus,
+      normalizeAdminAssessmentFields,
+      normalizeAdminNotes,
+      normalizeReviewStatus,
+      shouldRecordStatusChanged,
+      stripDisallowedReviewFields,
+      validateReviewUpdate
+    } from "./heritage-engine/review.js";
+    import {
+      buildPromotionHistoryEntryPayload,
+      buildPromotionUpdatePayload,
+      buildPublicPlacePayloadFromNomination,
+      getPromotedPlaceId,
+      getPromotionSummary,
+      getPromotionValidationErrors,
+      shouldAllowPromotion,
+      stripPrivateFieldsForPromotion,
+      validatePromotionSource
+    } from "./heritage-engine/promotion.js";
+    import {
+      HERITAGE_CRITERIA,
+      containsUnsafePublicField,
+      isHttpsUrl,
+      isValidEmail,
+      normalizeCriteriaList,
+      stripUnsafePublicFields
+    } from "./heritage-engine/validation.js";
+
+    const groups = new Map();
+    const counts = {
+      total: 0,
+      passed: 0,
+      failed: 0
+    };
+
+    const samplePlaces = [
+      {
+        id: "alpha-square",
+        title: "Alpha Community Square",
+        area: "Old Town",
+        address: "1 Memory Lane",
+        city: "Pingxiang",
+        district: "Anyuan",
+        province: "Jiangxi",
+        category: "Public Space",
+        assetType: "Square",
+        localSignificanceSummary: "A place for public gathering and local memory.",
+        description: "Community events and daily public life happen here.",
+        heritageCriteria: ["Social or communal value", "Landmark or streetscape value"],
+        recordStatus: "published",
+        createdAt: { seconds: 200 },
+        lat: 27.622,
+        lng: 113.885
+      },
+      {
+        id: "beta-hall",
+        title: "Beta Workers Hall",
+        area: "Factory Quarter",
+        address: "2 Archive Road",
+        city: "Pingxiang",
+        district: "Anyuan",
+        province: "Jiangxi",
+        category: "Building",
+        assetType: "Hall",
+        description: "A meeting place connected with local work history.",
+        heritageCriteria: "Historic interest; Social or communal value",
+        recordStatus: "published",
+        createdAt: { seconds: 100 },
+        lat: 27.5,
+        lng: 113.8
+      }
+    ];
+
+    function getGroup(groupName) {
+      if (!groups.has(groupName)) {
+        const card = document.createElement("article");
+        card.className = "test-card";
+        const heading = document.createElement("h2");
+        heading.textContent = groupName;
+        card.appendChild(heading);
+        document.getElementById("testResults").appendChild(card);
+        groups.set(groupName, card);
+      }
+      return groups.get(groupName);
+    }
+
+    function updateSummary() {
+      document.getElementById("totalCount").textContent = String(counts.total);
+      document.getElementById("passCount").textContent = String(counts.passed);
+      document.getElementById("failCount").textContent = String(counts.failed);
+    }
+
+    function addResult(groupName, name, passed, details = "") {
+      counts.total += 1;
+      if (passed) {
+        counts.passed += 1;
+      } else {
+        counts.failed += 1;
+      }
+
+      const row = document.createElement("div");
+      row.className = "result";
+
+      const badge = document.createElement("span");
+      badge.className = `badge ${passed ? "badge--pass" : "badge--fail"}`;
+      badge.textContent = passed ? "PASS" : "FAIL";
+
+      const body = document.createElement("div");
+      const title = document.createElement("div");
+      title.className = "result__name";
+      title.textContent = name;
+      body.appendChild(title);
+
+      if (details) {
+        const detail = document.createElement("div");
+        detail.className = "result__details";
+        detail.textContent = details;
+        body.appendChild(detail);
+      }
+
+      row.append(badge, body);
+      getGroup(groupName).appendChild(row);
+      updateSummary();
+    }
+
+    function assert(condition, groupName, name, details = "") {
+      addResult(groupName, name, Boolean(condition), details);
+    }
+
+    function assertEqual(actual, expected, groupName, name) {
+      const passed = Object.is(actual, expected);
+      addResult(groupName, name, passed, `Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+    }
+
+    function assertNotContains(serialized, forbiddenText, groupName, name) {
+      addResult(
+        groupName,
+        name,
+        !serialized.includes(forbiddenText),
+        `Forbidden text: ${forbiddenText}`
+      );
+    }
+
+    function assertContains(serialized, expectedText, groupName, name) {
+      addResult(
+        groupName,
+        name,
+        serialized.includes(expectedText),
+        `Expected text: ${expectedText}`
+      );
+    }
+
+    function runSearchTests() {
+      const alpha = samplePlaces[0];
+      const query = "alpha";
+      const searchText = getSearchText(alpha);
+
+      assert(placeMatchesSearch(alpha, query), "Search Helpers", "keyword matches by title", searchText);
+      assert(placeMatchesSearch(alpha, "old town"), "Search Helpers", "keyword matches by area");
+      assert(placeMatchesSearch(alpha, "memory lane"), "Search Helpers", "keyword matches by address");
+      assert(
+        placeMatchesFilters(alpha, {
+          query: "gathering",
+          categories: ["Public Space"],
+          city: "Pingxiang",
+          district: "Anyuan",
+          assetType: "Square",
+          heritageCriteria: "Social or communal value"
+        }),
+        "Search Helpers",
+        "filter matching by asset type and criteria"
+      );
+      assertEqual(sortPlaces(samplePlaces, "", "title")[0].title, "Alpha Community Square", "Search Helpers", "sort by title returns expected order");
+      assertEqual(sortPlaces(samplePlaces, "", "newest")[0].title, "Alpha Community Square", "Search Helpers", "sort by newest returns expected order");
+    }
+
+    function runMapTests() {
+      assert(isValidLatitude(27.622), "Map Helpers", "valid latitude returns true");
+      assert(!isValidLatitude(120), "Map Helpers", "invalid latitude returns false");
+      assert(isValidLongitude(113.885), "Map Helpers", "valid longitude returns true");
+      assert(!isValidLongitude(220), "Map Helpers", "invalid longitude returns false");
+      assert(mapHasValidCoordinates({ lat: 27.622, lng: 113.885 }), "Map Helpers", "valid coordinate object returns true");
+      assert(!mapHasValidCoordinates({ lat: 99, lng: 113.885 }), "Map Helpers", "invalid coordinate object returns false");
+      assertEqual(
+        buildNominationUrlFromCoordinates(27.622, 113.885, "http://localhost:8000/map.html"),
+        "/nominate-place.html?lat=27.622&lng=113.885",
+        "Map Helpers",
+        "build nomination URL from coordinates"
+      );
+      assertEqual(buildPlaceRecordUrl("alpha square"), "place.html?id=alpha%20square", "Map Helpers", "build place record URL");
+    }
+
+    function runPlaceTests() {
+      const alpha = samplePlaces[0];
+      const withPrivateFields = {
+        ...alpha,
+        nominatorEmail: "private@example.com",
+        adminNotes: "private note",
+        reviewHistory: [{ action: "review_saved" }]
+      };
+
+      assertEqual(getDisplayTitle(alpha), "Alpha Community Square", "Place Helpers", "getDisplayTitle returns title");
+      assertEqual(getDisplayTitle({}), "Untitled community place", "Place Helpers", "getDisplayTitle returns fallback");
+      assertEqual(getDisplayLocation(alpha), "Pingxiang, Jiangxi", "Place Helpers", "getDisplayLocation returns readable location");
+      assertEqual(getHeritageCriteria(alpha).length, 2, "Place Helpers", "getHeritageCriteria returns criteria safely");
+      assertEqual(formatCriteriaList(alpha)[0], "Social or communal value", "Place Helpers", "formatCriteriaList returns criteria");
+      assertEqual(buildMapUrl(alpha), "map.html?lat=27.622&lng=113.885", "Place Helpers", "buildMapUrl returns coordinate link");
+
+      const serializedPublicValues = JSON.stringify({
+        title: getDisplayTitle(withPrivateFields),
+        location: getDisplayLocation(withPrivateFields),
+        criteria: getHeritageCriteria(withPrivateFields),
+        mapUrl: buildMapUrl(withPrivateFields)
+      });
+      assertNotContains(serializedPublicValues, "private@example.com", "Place Helpers", "private email is not used by display helpers");
+      assertNotContains(serializedPublicValues, "private note", "Place Helpers", "admin notes are not used by display helpers");
+    }
+
+    function runExportTests() {
+      const records = [
+        {
+          id: "alpha-square",
+          collectionName: "communityPlaces",
+          data: {
+            ...samplePlaces[0],
+            relatedArticles: [
+              { collection: "history", id: "history-story", title: "Alpha Square Story" },
+              { collection: "placeNominations", id: "private-nomination", title: "Private nomination" },
+              { collection: "history", id: "history-story", title: "Duplicate Alpha Square Story" }
+            ],
+            jsonld: {
+              nominatorEmail: "private@example.com",
+              adminNotes: "private note",
+              adminHistoricInterest: true,
+              adminArchitecturalInterest: true,
+              adminCommunityValue: true,
+              adminConditionRisk: false,
+              adminAssessmentSummary: "private assessment",
+              reviewHistory: [{ action: "review_saved" }],
+              placeNominations: "private collection name",
+              "schema:customMetadata": {
+                "schema:name": "Public metadata",
+                nestedReview: {
+                  nominatorEmail: "nested-private@example.com",
+                  adminNotes: "nested private note",
+                  reviewHistory: [{ action: "nested_review_saved" }]
+                }
+              },
+              "schema:description": "Stored public description"
+            }
+          }
+        },
+        {
+          id: "history-story",
+          collectionName: "history",
+          data: {
+            title: "Alpha Square Story",
+            author: "Alex",
+            relatedPlaces: [{ collection: "communityPlaces", id: "alpha-square", title: "Alpha Community Square" }]
+          }
+        },
+        {
+          id: "news-story",
+          collectionName: "news",
+          data: {
+            title: "Community News",
+            relatedPlaces: [{ collection: "communityPlaces", id: "alpha-square", title: "Alpha Community Square" }]
+          }
+        }
+      ];
+
+      const graph = buildPublicGraph(records);
+      const jsonLd = buildPublicHeritageJsonLd(graph);
+      const serialized = JSON.stringify(jsonLd);
+      const hardenedPayload = buildPublicHeritageJsonLd([
+        {
+          "@id": "place.html?id=nested-privacy-test",
+          "@type": "schema:Place",
+          "schema:customMetadata": {
+            nestedReview: {
+              adminAssessmentSummary: "nested private assessment",
+              adminCommunityValue: true
+            }
+          }
+        }
+      ]);
+      const hardenedSerialized = JSON.stringify(hardenedPayload);
+
+      assert(Boolean(jsonLd["@context"]), "Export Helpers", "@context exists");
+      assert(Array.isArray(jsonLd["@graph"]), "Export Helpers", "@graph exists");
+      assertEqual(jsonLd["@graph"].length, 3, "Export Helpers", "public graph contains expected records");
+      JSON.parse(serialized);
+      assert(true, "Export Helpers", "generated JSON is valid");
+
+      [
+        "nominatorEmail",
+        "private@example.com",
+        "adminNotes",
+        "private note",
+        "adminHistoricInterest",
+        "adminArchitecturalInterest",
+        "adminCommunityValue",
+        "adminConditionRisk",
+        "adminAssessmentSummary",
+        "private assessment",
+        "reviewHistory",
+        "placeNominations",
+        "private-nomination",
+        "nested-private@example.com",
+        "nested private note"
+      ].forEach((forbiddenText) => {
+        assertNotContains(serialized, forbiddenText, "Export Helpers", `public export excludes ${forbiddenText}`);
+      });
+
+      assertContains(serialized, "article.html?id=history-story&type=history", "Export Helpers", "public export keeps safe related history link");
+
+      [
+        "adminAssessmentSummary",
+        "nested private assessment",
+        "adminCommunityValue"
+      ].forEach((forbiddenText) => {
+        assertNotContains(hardenedSerialized, forbiddenText, "Export Helpers", `final public payload recursively excludes ${forbiddenText}`);
+      });
+    }
+
+    function runValidationTests() {
+      const unsafeObject = {
+        title: "Public title",
+        nested: {
+          adminNotes: "private note",
+          safeValue: "public value"
+        },
+        reviewHistory: [{ action: "review_saved" }],
+        nominatorEmail: "private@example.com"
+      };
+      const stripped = stripUnsafePublicFields(unsafeObject);
+      const strippedSerialized = JSON.stringify(stripped);
+
+      assert(HERITAGE_CRITERIA.includes("Historic interest"), "Validation Helpers", "HERITAGE_CRITERIA includes Historic interest");
+      assert(isValidEmail("person@example.org"), "Validation Helpers", "isValidEmail accepts valid email");
+      assert(!isValidEmail("not-an-email"), "Validation Helpers", "isValidEmail rejects invalid email");
+      assert(isHttpsUrl("https://example.org/source"), "Validation Helpers", "isHttpsUrl accepts https URL");
+      assert(!isHttpsUrl("http://example.org/source"), "Validation Helpers", "isHttpsUrl rejects http URL");
+      assertEqual(
+        normalizeCriteriaList("Historic interest; Unknown criterion; Rarity").join("|"),
+        "Historic interest|Rarity",
+        "Validation Helpers",
+        "normalizeCriteriaList keeps allowed criteria only"
+      );
+      assert(!containsUnsafePublicField(stripped), "Validation Helpers", "stripUnsafePublicFields removes unsafe fields");
+      assert(containsUnsafePublicField(unsafeObject), "Validation Helpers", "containsUnsafePublicField detects unsafe object fields");
+      assert(containsUnsafePublicField(JSON.stringify(unsafeObject)), "Validation Helpers", "containsUnsafePublicField detects unsafe serialized fields");
+      assertNotContains(strippedSerialized, "private@example.com", "Validation Helpers", "stripped object removes private email value");
+      assertNotContains(strippedSerialized, "private note", "Validation Helpers", "stripped object removes admin note value");
+    }
+
+    function runRelationshipTests() {
+      const articleReport = normalizeRelationshipReferences([
+        { collection: "news", id: "news-1", title: "Community News" },
+        { collection: "history", id: "history-1", title: "" },
+        { collection: "placeNominations", id: "private-1", title: "Private nomination" },
+        { collection: "news", id: "news-1", title: "Duplicate Community News" },
+        { collection: "news", id: "", title: "Broken" }
+      ], {
+        allowedCollections: ARTICLE_RELATIONSHIP_COLLECTIONS
+      });
+      const placeReport = normalizeRelationshipReferences([
+        { collection: "communityPlaces", id: "alpha-square", title: "Alpha Community Square" }
+      ], {
+        allowedCollections: PLACE_RELATIONSHIP_COLLECTIONS
+      });
+      const warningSummary = getRelationshipWarningSummary(articleReport.warnings);
+
+      assertEqual(articleReport.references.length, 2, "Relationship Helpers", "relationship normalization keeps only safe unique article references");
+      assertEqual(articleReport.references[1].title, "History story: history-1", "Relationship Helpers", "missing titles fall back to a safe label");
+      assert(articleReport.warnings.length >= 3, "Relationship Helpers", "malformed or unsupported references create warnings");
+      assertContains(warningSummary, "unsupported_collection", "Relationship Helpers", "warning summary includes unsupported collections");
+      assertEqual(
+        buildPublicRelationshipUrl({ collection: "communityPlaces", id: "alpha-square" }),
+        "place.html?id=alpha-square",
+        "Relationship Helpers",
+        "community place URLs map to place.html"
+      );
+      assertEqual(
+        buildPublicRelationshipUrl({ collection: "history", id: "history-1" }),
+        "article.html?id=history-1&type=history",
+        "Relationship Helpers",
+        "history URLs map to article detail"
+      );
+      assertEqual(buildPublicRelationshipUrl({ collection: "placeNominations", id: "private-1" }), "", "Relationship Helpers", "private collections do not get public URLs");
+      assertEqual(placeReport.references.length, 1, "Relationship Helpers", "place-only normalization keeps valid communityPlaces references");
+    }
+
+    function buildValidNominationValues(overrides = {}) {
+      return {
+        title: "Test Community Place",
+        address: "1 Test Street, Pingxiang",
+        area: "Test Area",
+        lat: "27.720570019360082",
+        lng: "114.15617044085226",
+        assetType: "Public space",
+        description: "A test place used only for nomination helper validation.",
+        localSignificanceSummary: "A locally valued test place.",
+        heritageCriteria: ["Historic interest", "Rarity"],
+        criteriaExplanation: "The place has local memory and rarity value.",
+        evidenceImageUrl: "",
+        evidenceImageCaption: "",
+        evidenceSourceCredit: "",
+        nominatorDisplayName: "Test Nominator",
+        nominatorEmail: "test@example.org",
+        submittedOnBehalfOf: "self",
+        projectPositionAccepted: true,
+        reviewAccepted: true,
+        termsAccepted: true,
+        privacyAccepted: true,
+        adminNotes: "private note",
+        reviewHistory: [{ action: "review_saved" }],
+        promotedPlaceId: "private-place",
+        promotedAt: "private-date",
+        communityPlaces: { unsafe: true },
+        ...overrides
+      };
+    }
+
+    function runNominationTests() {
+      const validValues = buildValidNominationValues();
+      const payload = buildSubmittedNominationPayload(validValues, {
+        createdAt: "created",
+        updatedAt: "updated",
+        submittedAt: "submitted"
+      });
+      const payloadSerialized = JSON.stringify(payload);
+
+      assertEqual(getInitialNominationStatus(), "submitted", "Nomination Helpers", "initial status is submitted");
+      assertEqual(
+        normalizeNominationCriteria(["Historic interest", "Unknown criterion", "Rarity"]).join("|"),
+        "Historic interest|Rarity",
+        "Nomination Helpers",
+        "normalizeNominationCriteria removes invalid criteria"
+      );
+      assert(
+        validateNominationRequiredFields(buildValidNominationValues({ title: "", address: "", description: "", localSignificanceSummary: "", criteriaExplanation: "", nominatorEmail: "" })).length >= 6,
+        "Nomination Helpers",
+        "required field validation catches missing text fields"
+      );
+      assertEqual(validateNominationEvidenceFields({ evidenceImageUrl: "" }).length, 0, "Nomination Helpers", "blank evidence URL is allowed");
+      assertEqual(validateNominationEvidenceFields({ evidenceImageUrl: "https://example.org/photo.jpg" }).length, 0, "Nomination Helpers", "HTTPS evidence URL is allowed");
+      assert(validateNominationEvidenceFields({ evidenceImageUrl: "http://example.org/photo.jpg" }).length > 0, "Nomination Helpers", "HTTP evidence URL is rejected");
+      assert(validateNominationAgreements(buildValidNominationValues({ termsAccepted: false })).length > 0, "Nomination Helpers", "terms agreement is required");
+      assert(validateNominationAgreements(buildValidNominationValues({ privacyAccepted: false })).length > 0, "Nomination Helpers", "privacy agreement is required");
+      assertEqual(payload.nominationStatus, "submitted", "Nomination Helpers", "submitted payload status is submitted");
+      assertEqual(payload.title, "Test Community Place", "Nomination Helpers", "submitted payload includes public title");
+      assertEqual(payload.nominatorEmail, "test@example.org", "Nomination Helpers", "submitted payload includes private email for placeNominations");
+      assertNotContains(payloadSerialized, "adminNotes", "Nomination Helpers", "submitted payload excludes adminNotes");
+      assertNotContains(payloadSerialized, "reviewHistory", "Nomination Helpers", "submitted payload excludes reviewHistory");
+      assertNotContains(payloadSerialized, "promotedPlaceId", "Nomination Helpers", "submitted payload excludes promotedPlaceId");
+      assertNotContains(payloadSerialized, "promotedAt", "Nomination Helpers", "submitted payload excludes promotedAt");
+      assertNotContains(payloadSerialized, "communityPlaces", "Nomination Helpers", "submitted payload does not create communityPlaces data");
+    }
+
+    function runAuditTests() {
+      const reviewSaved = buildReviewSavedHistoryEntry({
+        at: "2026-06-17T10:00:00Z",
+        by: "admin",
+        toStatus: "submitted",
+        note: "Initial review note"
+      });
+      const statusChanged = buildStatusChangedHistoryEntry("submitted", "approved", {
+        at: "2026-06-17T11:00:00Z",
+        note: "Approved after review"
+      });
+      const promoted = buildPromotionHistoryEntry("alpha-square", {
+        at: "2026-06-17T12:00:00Z"
+      });
+      const history = appendReviewHistory([reviewSaved], statusChanged);
+      const promotedHistory = appendReviewHistory(history, promoted);
+      const longHistory = Array.from({ length: 55 }, (_, index) => buildReviewSavedHistoryEntry({ note: `Entry ${index}` }));
+      const trimmedHistory = trimReviewHistory(longHistory);
+      const summary = getReviewHistorySummary(promotedHistory);
+      const serializedReviewSaved = JSON.stringify(reviewSaved);
+      const serializedPromoted = JSON.stringify(promoted);
+
+      assertEqual(reviewSaved.action, "review_saved", "Audit Helpers", "review saved entry uses review_saved action");
+      assertEqual(statusChanged.action, "status_changed", "Audit Helpers", "status changed entry uses status_changed action");
+      assertEqual(statusChanged.fromStatus, "submitted", "Audit Helpers", "status changed entry keeps previous status");
+      assertEqual(statusChanged.toStatus, "approved", "Audit Helpers", "status changed entry keeps new status");
+      assertEqual(promoted.action, "promoted", "Audit Helpers", "promotion entry uses promoted action");
+      assertEqual(promoted.promotedPlaceId, "alpha-square", "Audit Helpers", "promotion entry keeps promoted place id");
+      assertEqual(history.length, 2, "Audit Helpers", "appendReviewHistory appends entries");
+      assertEqual(trimmedHistory.length, 50, "Audit Helpers", "trimReviewHistory caps history length");
+      assertEqual(formatReviewHistoryAction("status_changed"), "Status changed", "Audit Helpers", "formatReviewHistoryAction returns readable label");
+      assert(formatReviewHistoryEntry(statusChanged).includes("Status changed"), "Audit Helpers", "formatReviewHistoryEntry includes action label");
+      assertEqual(summary.count, 3, "Audit Helpers", "getReviewHistorySummary counts entries");
+      assertEqual(summary.actions.promoted, 1, "Audit Helpers", "getReviewHistorySummary counts promoted entries");
+      assertNotContains(serializedReviewSaved, "serverTimestamp", "Audit Helpers", "audit entries do not create Firestore timestamps");
+      assertNotContains(serializedPromoted, "nominatorEmail", "Audit Helpers", "promotion audit entry excludes private nominator email");
+    }
+
+    function runReviewTests() {
+      const allowedStatuses = getAllowedReviewStatuses();
+      const reviewValues = {
+        nominationStatus: "approved",
+        adminNotes: "  Keep as a strong local heritage candidate.  ",
+        adminHistoricInterest: true,
+        adminArchitecturalInterest: "yes",
+        adminCommunityValue: true,
+        adminConditionRisk: false,
+        adminAssessmentSummary: "  Strong community value.  ",
+        reviewHistory: [{ action: "review_saved" }],
+        promotedPlaceId: "alpha-square",
+        promotedAt: "private-date",
+        nominatorEmail: "private@example.org"
+      };
+      const stripped = stripDisallowedReviewFields(reviewValues);
+      const assessment = normalizeAdminAssessmentFields(reviewValues);
+      const assessmentSummary = buildAdminAssessmentSummary(reviewValues);
+      const payload = buildReviewUpdatePayload(reviewValues, {
+        reviewedAt: "reviewed",
+        updatedAt: "updated"
+      });
+      const statusChangePayload = buildStatusChangeReviewPayload("submitted", "approved", reviewValues, {
+        updatedAt: "updated"
+      });
+      const payloadSerialized = JSON.stringify(payload);
+
+      assert(allowedStatuses.includes("submitted"), "Review Helpers", "allowed statuses include submitted");
+      assert(allowedStatuses.includes("under review"), "Review Helpers", "allowed statuses include under review");
+      assert(allowedStatuses.includes("approved"), "Review Helpers", "allowed statuses include approved");
+      assert(allowedStatuses.includes("rejected"), "Review Helpers", "allowed statuses include rejected");
+      assert(allowedStatuses.includes("promoted"), "Review Helpers", "allowed statuses include promoted");
+      assertEqual(normalizeReviewStatus("APPROVED"), "approved", "Review Helpers", "normalizeReviewStatus accepts allowed statuses");
+      assertEqual(normalizeReviewStatus("not-real"), "submitted", "Review Helpers", "normalizeReviewStatus falls back safely");
+      assertEqual(getReviewStatusLabel("under review"), "Under review", "Review Helpers", "getReviewStatusLabel returns readable labels");
+      assert(isAllowedReviewStatus("approved"), "Review Helpers", "isAllowedReviewStatus accepts approved");
+      assert(!isAllowedReviewStatus("invalid"), "Review Helpers", "isAllowedReviewStatus rejects invalid status");
+      assertEqual(normalizeAdminNotes("  notes  "), "notes", "Review Helpers", "normalizeAdminNotes trims notes");
+      assertEqual(assessment.adminHistoricInterest, true, "Review Helpers", "assessment boolean true is preserved");
+      assertEqual(assessment.adminArchitecturalInterest, false, "Review Helpers", "assessment non-boolean value is false");
+      assertEqual(assessment.adminAssessmentSummary, "Strong community value.", "Review Helpers", "assessment summary is trimmed");
+      assert(assessmentSummary.activeCriteria.includes("Historic interest"), "Review Helpers", "assessment summary includes active criteria");
+      assertEqual(validateReviewUpdate(reviewValues), true, "Review Helpers", "validateReviewUpdate accepts valid review values");
+      assert(getReviewValidationErrors({ nominationStatus: "invalid" }).length > 0, "Review Helpers", "validation catches invalid status");
+      assert(!("promotedPlaceId" in stripped), "Review Helpers", "stripDisallowedReviewFields removes promotedPlaceId");
+      assert(!("nominatorEmail" in stripped), "Review Helpers", "stripDisallowedReviewFields removes private email");
+      assertEqual(payload.nominationStatus, "approved", "Review Helpers", "review payload includes nominationStatus");
+      assertEqual(payload.adminNotes, "Keep as a strong local heritage candidate.", "Review Helpers", "review payload includes normalized adminNotes");
+      assertEqual(payload.adminCommunityValue, true, "Review Helpers", "review payload includes admin assessment fields");
+      assertEqual(payload.reviewedAt, "reviewed", "Review Helpers", "review payload accepts caller-provided reviewedAt");
+      assertNotContains(payloadSerialized, "promotedPlaceId", "Review Helpers", "review payload excludes promotedPlaceId");
+      assertNotContains(payloadSerialized, "promotedAt", "Review Helpers", "review payload excludes promotedAt");
+      assertNotContains(payloadSerialized, "private@example.org", "Review Helpers", "review payload excludes nominator email");
+      assert(shouldRecordStatusChanged("submitted", "approved"), "Review Helpers", "shouldRecordStatusChanged detects changed status");
+      assert(!shouldRecordStatusChanged("approved", "APPROVED"), "Review Helpers", "shouldRecordStatusChanged ignores same normalized status");
+      assertEqual(statusChangePayload.statusChanged, true, "Review Helpers", "status change payload records statusChanged flag");
+      assertEqual(statusChangePayload.previousStatus, "submitted", "Review Helpers", "status change payload includes previous status");
+    }
+
+    function buildApprovedNomination(overrides = {}) {
+      return {
+        id: "nomination-123",
+        title: "Alpha Community Square",
+        address: "1 Memory Lane",
+        area: "Old Town",
+        city: "Pingxiang",
+        district: "Anyuan",
+        province: "Jiangxi",
+        lat: "27.622",
+        lng: "113.885",
+        category: "Submitted category",
+        assetType: "Square",
+        description: "A public place nominated by the community.",
+        localSignificanceSummary: "A locally valued gathering space.",
+        heritageCriteria: ["Social or communal value", "Unknown criterion", "Rarity"],
+        criteriaExplanation: "The nomination explains social value and rarity.",
+        condition: "In use",
+        communityUse: "Gathering and everyday use",
+        sourceReference: "Community nomination",
+        nominationStatus: "approved",
+        nominatorEmail: "private@example.org",
+        adminNotes: "private admin note",
+        adminHistoricInterest: true,
+        adminArchitecturalInterest: false,
+        adminCommunityValue: true,
+        adminConditionRisk: false,
+        adminAssessmentSummary: "private assessment",
+        reviewHistory: [{ action: "review_saved" }],
+        promotedPlaceId: "old-id",
+        promotedAt: "private timestamp",
+        ...overrides
+      };
+    }
+
+    function runPromotionTests() {
+      const approvedNomination = buildApprovedNomination();
+      const submittedNomination = buildApprovedNomination({ nominationStatus: "submitted" });
+      const publicPlacePayload = buildPublicPlacePayloadFromNomination(approvedNomination, {
+        placeId: "alpha-community-square",
+        dateAdded: "2026-06-17",
+        lastReviewed: "2026-06-17",
+        createdAt: "created",
+        updatedAt: "updated"
+      });
+      const promotionUpdatePayload = buildPromotionUpdatePayload("alpha-community-square", {
+        promotedAt: "promoted",
+        updatedAt: "updated",
+        reviewHistory: [{ action: "promoted" }]
+      });
+      const promotionHistoryEntry = buildPromotionHistoryEntryPayload("alpha-community-square", {
+        at: "2026-06-17T12:00:00Z"
+      });
+      const stripped = stripPrivateFieldsForPromotion(approvedNomination);
+      const summary = getPromotionSummary(approvedNomination);
+      const serializedPublicPlace = JSON.stringify(publicPlacePayload);
+      const serializedPromotionUpdate = JSON.stringify(promotionUpdatePayload);
+
+      assert(shouldAllowPromotion(approvedNomination), "Promotion Helpers", "shouldAllowPromotion accepts approved nomination");
+      assert(!shouldAllowPromotion(submittedNomination), "Promotion Helpers", "shouldAllowPromotion rejects submitted nomination");
+      assert(validatePromotionSource(approvedNomination), "Promotion Helpers", "validatePromotionSource accepts approved nomination");
+      assert(getPromotionValidationErrors(buildApprovedNomination({ title: "" })).length > 0, "Promotion Helpers", "validation catches missing title");
+      assertEqual(getPromotedPlaceId(approvedNomination), "alpha-community-square", "Promotion Helpers", "getPromotedPlaceId uses stable title slug");
+      assertEqual(getPromotedPlaceId({ id: "ABC_123", title: "" }), "nomination-abc123", "Promotion Helpers", "getPromotedPlaceId falls back to source id");
+      assertEqual(publicPlacePayload.title, "Alpha Community Square", "Promotion Helpers", "public payload includes title");
+      assertEqual(publicPlacePayload.address, "1 Memory Lane", "Promotion Helpers", "public payload includes address");
+      assertEqual(publicPlacePayload.area, "Old Town", "Promotion Helpers", "public payload includes area");
+      assertEqual(publicPlacePayload.city, "Pingxiang", "Promotion Helpers", "public payload includes city");
+      assertEqual(publicPlacePayload.district, "Anyuan", "Promotion Helpers", "public payload includes district");
+      assertEqual(publicPlacePayload.province, "Jiangxi", "Promotion Helpers", "public payload includes province");
+      assertEqual(publicPlacePayload.category, "Square", "Promotion Helpers", "public payload uses asset type as category");
+      assertEqual(publicPlacePayload.assetType, "Square", "Promotion Helpers", "public payload includes assetType");
+      assertEqual(publicPlacePayload.description, "A public place nominated by the community.", "Promotion Helpers", "public payload includes description");
+      assertEqual(publicPlacePayload.localSignificanceSummary, "A locally valued gathering space.", "Promotion Helpers", "public payload includes local significance");
+      assertEqual(publicPlacePayload.criteriaExplanation, "The nomination explains social value and rarity.", "Promotion Helpers", "public payload includes criteria explanation");
+      assertEqual(publicPlacePayload.recordStatus, "published", "Promotion Helpers", "public payload defaults to published");
+      assertEqual(publicPlacePayload.lat, 27.622, "Promotion Helpers", "public payload includes numeric latitude");
+      assertEqual(publicPlacePayload.lng, 113.885, "Promotion Helpers", "public payload includes numeric longitude");
+      assertEqual(publicPlacePayload.heritageCriteria.join("|"), "Social or communal value|Rarity", "Promotion Helpers", "public payload keeps allowed criteria only");
+      assert(!("nominatorEmail" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes nominatorEmail");
+      assert(!("adminNotes" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes adminNotes");
+      assert(!("reviewHistory" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes reviewHistory");
+      assertEqual(promotionUpdatePayload.nominationStatus, "promoted", "Promotion Helpers", "promotion update payload sets promoted status");
+      assertEqual(promotionUpdatePayload.promotedPlaceId, "alpha-community-square", "Promotion Helpers", "promotion update payload includes promotedPlaceId");
+      assertNotContains(serializedPromotionUpdate, "Alpha Community Square", "Promotion Helpers", "promotion update payload excludes public place data");
+      assertEqual(promotionHistoryEntry.action, "promoted", "Promotion Helpers", "promotion history entry uses promoted action");
+      assertEqual(summary.allowed, true, "Promotion Helpers", "promotion summary reports allowed nomination");
+
+      [
+        "nominatorEmail",
+        "private@example.org",
+        "adminNotes",
+        "private admin note",
+        "adminHistoricInterest",
+        "adminArchitecturalInterest",
+        "adminCommunityValue",
+        "adminConditionRisk",
+        "adminAssessmentSummary",
+        "private assessment",
+        "reviewHistory",
+        "promotedPlaceId",
+        "promotedAt"
+      ].forEach((forbiddenText) => {
+        assertNotContains(serializedPublicPlace, forbiddenText, "Promotion Helpers", `public promoted place excludes ${forbiddenText}`);
+      });
+    }
+
+    function runAdminWorkflowHelperChainTests() {
+      const approvedNomination = buildApprovedNomination({
+        id: "admin-chain-001",
+        title: "Chain Test Community Hall",
+        address: "10 Chain Street",
+        area: "Chain Quarter",
+        city: "Pingxiang",
+        district: "Anyuan",
+        province: "Jiangxi",
+        lat: "27.7001",
+        lng: "113.9002",
+        category: "Community nomination",
+        assetType: "Hall",
+        description: "A sample approved nomination for helper-chain testing only.",
+        localSignificanceSummary: "A community-valued place with local social memory.",
+        heritageCriteria: ["Historic interest", "Social or communal value"],
+        criteriaExplanation: "The sample explains local historic and social value.",
+        nominationStatus: "approved",
+        nominatorEmail: "private-chain@example.org",
+        adminNotes: "Admin chain note",
+        adminHistoricInterest: true,
+        adminArchitecturalInterest: false,
+        adminCommunityValue: true,
+        adminConditionRisk: false,
+        adminAssessmentSummary: "Private admin assessment",
+        reviewHistory: [{ action: "review_saved", by: "admin" }],
+        promotedPlaceId: "old-private-place",
+        promotedAt: "old private timestamp"
+      });
+      const submittedNomination = buildApprovedNomination({
+        ...approvedNomination,
+        nominationStatus: "submitted"
+      });
+      const reviewPayload = buildReviewUpdatePayload({
+        nominationStatus: "approved",
+        adminNotes: approvedNomination.adminNotes,
+        adminHistoricInterest: approvedNomination.adminHistoricInterest,
+        adminArchitecturalInterest: approvedNomination.adminArchitecturalInterest,
+        adminCommunityValue: approvedNomination.adminCommunityValue,
+        adminConditionRisk: approvedNomination.adminConditionRisk,
+        adminAssessmentSummary: approvedNomination.adminAssessmentSummary,
+        promotedPlaceId: "should-not-appear",
+        promotedAt: "should-not-appear"
+      }, {
+        reviewedAt: "reviewed",
+        updatedAt: "updated"
+      });
+      const statusChangedEntry = buildStatusChangedHistoryEntry("submitted", "approved", {
+        at: "2026-06-17T13:00:00Z",
+        note: "Approved in helper-chain test."
+      });
+      const appendedHistory = appendReviewHistory(approvedNomination.reviewHistory, statusChangedEntry);
+      const longHistory = appendReviewHistory(
+        Array.from({ length: 60 }, (_, index) => buildReviewSavedHistoryEntry({ note: `History ${index}` })),
+        statusChangedEntry
+      );
+      const trimmedHistory = trimReviewHistory(longHistory);
+      const publicPlacePayload = buildPublicPlacePayloadFromNomination(approvedNomination, {
+        placeId: "chain-test-community-hall",
+        dateAdded: "2026-06-17",
+        lastReviewed: "2026-06-17",
+        createdAt: "created",
+        updatedAt: "updated"
+      });
+      const promotionUpdatePayload = buildPromotionUpdatePayload("chain-test-community-hall", {
+        promotedAt: "promoted",
+        updatedAt: "updated",
+        reviewHistory: appendReviewHistory(appendedHistory, buildPromotionHistoryEntryPayload("chain-test-community-hall"))
+      });
+      const publicPlaceSerialized = JSON.stringify(publicPlacePayload);
+      const promotionUpdateSerialized = JSON.stringify(promotionUpdatePayload);
+
+      assertEqual(normalizeReviewStatus("approved"), "approved", "Admin Workflow Helper Chain", "review status normalization keeps approved");
+      assert(shouldRecordStatusChanged("submitted", "approved"), "Admin Workflow Helper Chain", "status change detection catches submitted to approved");
+      assertEqual(reviewPayload.nominationStatus, "approved", "Admin Workflow Helper Chain", "review payload includes nominationStatus");
+      assertEqual(reviewPayload.adminNotes, "Admin chain note", "Admin Workflow Helper Chain", "review payload includes adminNotes");
+      assertNotContains(JSON.stringify(reviewPayload), "promotedPlaceId", "Admin Workflow Helper Chain", "review payload excludes promotedPlaceId");
+      assertNotContains(JSON.stringify(reviewPayload), "promotedAt", "Admin Workflow Helper Chain", "review payload excludes promotedAt");
+      assertEqual(statusChangedEntry.action, "status_changed", "Admin Workflow Helper Chain", "status changed audit entry uses status_changed action");
+      assertEqual(appendedHistory.length, 2, "Admin Workflow Helper Chain", "appendReviewHistory adds status change entry");
+      assertEqual(trimmedHistory.length, 50, "Admin Workflow Helper Chain", "trimReviewHistory keeps maximum history length");
+      assert(shouldAllowPromotion(approvedNomination), "Admin Workflow Helper Chain", "approved nomination is eligible for promotion");
+      assert(!shouldAllowPromotion(submittedNomination), "Admin Workflow Helper Chain", "submitted nomination is not eligible for promotion");
+      assertEqual(publicPlacePayload.title, "Chain Test Community Hall", "Admin Workflow Helper Chain", "public promoted payload includes title");
+      assertEqual(publicPlacePayload.address, "10 Chain Street", "Admin Workflow Helper Chain", "public promoted payload includes address");
+      assertEqual(publicPlacePayload.area, "Chain Quarter", "Admin Workflow Helper Chain", "public promoted payload includes area");
+      assertEqual(publicPlacePayload.city, "Pingxiang", "Admin Workflow Helper Chain", "public promoted payload includes city");
+      assertEqual(publicPlacePayload.district, "Anyuan", "Admin Workflow Helper Chain", "public promoted payload includes district");
+      assertEqual(publicPlacePayload.province, "Jiangxi", "Admin Workflow Helper Chain", "public promoted payload includes province");
+      assertEqual(publicPlacePayload.heritageCriteria.join("|"), "Historic interest|Social or communal value", "Admin Workflow Helper Chain", "public promoted payload includes criteria");
+      assertEqual(promotionUpdatePayload.nominationStatus, "promoted", "Admin Workflow Helper Chain", "promotion update payload sets promoted status");
+      assertEqual(promotionUpdatePayload.promotedPlaceId, "chain-test-community-hall", "Admin Workflow Helper Chain", "promotion update payload includes promotedPlaceId");
+      assertNotContains(promotionUpdateSerialized, "Chain Test Community Hall", "Admin Workflow Helper Chain", "promotion update payload excludes communityPlaces title");
+      assert(!containsUnsafePublicField(publicPlacePayload), "Admin Workflow Helper Chain", "public promoted payload has no unsafe public fields");
+      assertNotContains(publicPlaceSerialized, "private-chain@example.org", "Admin Workflow Helper Chain", "public promoted payload excludes private email value");
+
+      [
+        "nominatorEmail",
+        "adminNotes",
+        "adminHistoricInterest",
+        "adminArchitecturalInterest",
+        "adminCommunityValue",
+        "adminConditionRisk",
+        "adminAssessmentSummary",
+        "reviewHistory",
+        "promotedPlaceId",
+        "promotedAt"
+      ].forEach((forbiddenText) => {
+        assertNotContains(publicPlaceSerialized, forbiddenText, "Admin Workflow Helper Chain", `public promoted payload excludes ${forbiddenText}`);
+      });
+    }
+
+    try {
+      runSearchTests();
+      runMapTests();
+      runPlaceTests();
+    runExportTests();
+    runValidationTests();
+    runRelationshipTests();
+    runNominationTests();
+      runAuditTests();
+      runReviewTests();
+      runPromotionTests();
+      runAdminWorkflowHelperChainTests();
+    } catch (error) {
+      addResult("Harness Runtime", "test harness completed without uncaught errors", false, error.message);
+      console.error(error);
+    }
+  </script>
+</body>
+</html>

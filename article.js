@@ -5,6 +5,11 @@ import {
   doc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import {
+  getRelationshipWarningSummary,
+  normalizeRelationshipReferences,
+  PLACE_RELATIONSHIP_COLLECTIONS
+} from "./heritage-engine/relationships.js?v=2026-06-19-12a";
 
 // === Firebase config ===
 const firebaseConfig = {
@@ -116,42 +121,15 @@ function setArticleImage(url) {
   articleImage.style.display = "block";
 }
 
-function buildPlaceUrl(reference, options = {}) {
-  const collection = cleanText(reference?.collection);
-  const placeId = cleanText(reference?.id);
-  if (collection !== "communityPlaces" || !placeId) return "";
-
-  const path = `place.html?id=${encodeURIComponent(placeId)}`;
-  if (options.absolute) {
-    return new URL(path, window.location.href).href;
-  }
-  return path;
-}
-
 function getRelatedPlaceReferences(article) {
-  if (!Array.isArray(article?.relatedPlaces)) return [];
-  const seen = new Set();
-
-  return article.relatedPlaces
-    .map((reference) => {
-      const collection = cleanText(reference?.collection);
-      const placeId = cleanText(reference?.id);
-      if (collection !== "communityPlaces" || !placeId) return null;
-      if (seen.has(placeId)) return null;
-      seen.add(placeId);
-      return {
-        collection,
-        id: placeId,
-        title: cleanText(reference?.title) || placeId,
-        url: buildPlaceUrl({ collection, id: placeId })
-      };
-    })
-    .filter(Boolean);
+  return normalizeRelationshipReferences(article?.relatedPlaces, {
+    allowedCollections: PLACE_RELATIONSHIP_COLLECTIONS
+  });
 }
 
 function getRelatedPlaceUrls(article) {
-  return getRelatedPlaceReferences(article)
-    .map((reference) => buildPlaceUrl(reference, { absolute: true }))
+  return getRelatedPlaceReferences(article).references
+    .map((reference) => new URL(reference.url, window.location.href).href)
     .filter(Boolean);
 }
 
@@ -159,13 +137,17 @@ function renderRelatedPlaces(article) {
   if (!articleRelatedPlacesSection || !articleRelatedPlaces) return;
   articleRelatedPlaces.textContent = "";
 
-  const relatedPlaces = getRelatedPlaceReferences(article);
-  if (relatedPlaces.length === 0) {
+  const relationshipReport = getRelatedPlaceReferences(article);
+  if (relationshipReport.warnings.length > 0) {
+    console.warn("Skipped unsafe or malformed article relationships:", getRelationshipWarningSummary(relationshipReport.warnings));
+  }
+
+  if (relationshipReport.references.length === 0) {
     articleRelatedPlacesSection.hidden = true;
     return;
   }
 
-  relatedPlaces.forEach((reference) => {
+  relationshipReport.references.forEach((reference) => {
     const link = document.createElement("a");
     link.href = reference.url;
     link.className = "article-related-places__item";

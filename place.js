@@ -16,14 +16,18 @@ import {
   getDisplayTitle,
   getHeritageCriteria,
   getPublicDescription,
-  getRelatedArticleReferences,
   getRelatedArticleUrl,
   getTags,
   hasUsableJsonLd,
   hasValidCoordinates,
   normalizeCoordinate,
   toSafeUrl
-} from "./heritage-engine/places.js?v=2026-06-19-11b2";
+} from "./heritage-engine/places.js?v=2026-06-19-12a";
+import {
+  ARTICLE_RELATIONSHIP_COLLECTIONS,
+  getRelationshipWarningSummary,
+  normalizeRelationshipReferences
+} from "./heritage-engine/relationships.js?v=2026-06-19-12a";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -50,6 +54,7 @@ const els = {
   locationContent: document.getElementById("placeLocationContent"),
   localHeritageSection: document.getElementById("localHeritageRecord"),
   localHeritageContent: document.getElementById("placeLocalHeritageRecord"),
+  relatedArticlesSection: document.getElementById("relatedArticles"),
   relatedArticles: document.getElementById("placeRelatedArticles"),
   sourceReference: document.getElementById("placeSourceReference"),
   metadata: document.getElementById("placeMetadata"),
@@ -295,11 +300,20 @@ function renderActions(place) {
 }
 
 function renderRelatedArticles(place) {
-  if (!els.relatedArticles) return;
+  if (!els.relatedArticles || !els.relatedArticlesSection) return;
   els.relatedArticles.textContent = "";
 
-  const relatedArticles = getRelatedArticleReferences(place);
+  const relationshipReport = normalizeRelationshipReferences(place?.relatedArticles, {
+    allowedCollections: ARTICLE_RELATIONSHIP_COLLECTIONS
+  });
+  const relatedArticles = relationshipReport.references;
+
+  if (relationshipReport.warnings.length > 0) {
+    console.warn("Skipped unsafe or malformed place relationships:", getRelationshipWarningSummary(relationshipReport.warnings));
+  }
+
   if (relatedArticles.length > 0) {
+    els.relatedArticlesSection.hidden = false;
     relatedArticles.forEach((reference) => {
       const link = document.createElement("a");
       link.href = reference.url;
@@ -321,6 +335,7 @@ function renderRelatedArticles(place) {
 
   const legacyArticle = getRelatedArticleUrl(place);
   if (legacyArticle) {
+    els.relatedArticlesSection.hidden = false;
     const link = document.createElement("a");
     link.href = legacyArticle;
     link.className = "place-related-articles__item";
@@ -337,11 +352,7 @@ function renderRelatedArticles(place) {
       els.relatedArticles.appendChild(link);
     return;
   }
-
-  const empty = document.createElement("p");
-  empty.className = "place-empty-message";
-  empty.textContent = "No related stories linked yet.";
-  els.relatedArticles.appendChild(empty);
+  els.relatedArticlesSection.hidden = true;
 }
 
 function renderSourceReference(place) {
