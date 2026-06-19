@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin"></script>
   <script type="module" src="public-nav.js" defer></script>
-  <script type="module" src="place.js" defer></script>
+  <script type="module" src="place.js?v=2026-06-19-11b2" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#placeRecordMain">Skip to record</a>
@@ -32,9 +32,8 @@
     <section class="place-record-hero" aria-labelledby="placeTitle">
       <p id="placeRecordStatus" class="place-record-status" role="status" aria-live="polite">Loading community place record...</p>
       <div class="place-record-hero__inner">
-        <p id="placeCategoryKicker" class="place-record-kicker"></p>
+        <p class="place-record-eyebrow">Local Heritage Record</p>
         <h2 id="placeTitle">Community place record</h2>
-        <p id="placeHeroLocation" class="place-record-location"></p>
       </div>
     </section>
 
@@ -60,15 +59,18 @@
 
       <div id="overview-panel" class="place-tab-panel" role="tabpanel" aria-labelledby="overviewTab">
         <section id="overview" class="place-record-section place-overview" aria-labelledby="overviewTitle">
-          <div class="place-overview__text">
-            <h3 id="overviewTitle">Summary</h3>
-            <p id="placeDescription"></p>
-            <div id="placeTags" class="place-tags"></div>
-            <div class="place-record-details" aria-labelledby="placeDetailsTitle">
-              <h3 id="placeDetailsTitle">Basic Record Information</h3>
+          <div class="place-overview__main">
+            <div class="place-overview__text">
+              <h3 id="overviewTitle">Record overview</h3>
+              <p id="placeDescription"></p>
+              <div id="placeTags" class="place-tags"></div>
+              <div id="placeActions" class="place-actions"></div>
+            </div>
+
+            <div class="place-record-card place-record-card--facts" aria-labelledby="placeDetailsTitle">
+              <h3 id="placeDetailsTitle">Key facts</h3>
               <dl id="placeMetadata" class="place-metadata"></dl>
             </div>
-            <div id="placeActions" class="place-actions"></div>
           </div>
 
           <figure class="place-overview__media">
@@ -77,19 +79,41 @@
           </figure>
         </section>
 
-        <section id="localHeritageRecord" class="place-record-section place-local-heritage" aria-labelledby="localHeritageRecordTitle" hidden>
-          <h3 id="localHeritageRecordTitle">Local Heritage Record</h3>
-          <div id="placeLocalHeritageRecord" class="place-local-heritage__content"></div>
-        </section>
-
-        <section id="relatedArticles" class="place-record-section place-related-articles" aria-labelledby="relatedArticlesTitle" hidden>
-          <h3 id="relatedArticlesTitle">Related articles</h3>
-          <div id="placeRelatedArticles" class="place-related-articles__list"></div>
+        <section id="localHeritageRecord" class="place-record-section place-local-heritage" aria-labelledby="localHeritageRecordTitle">
+          <div class="place-record-card place-record-card--heritage">
+            <h3 id="localHeritageRecordTitle">Why this place matters</h3>
+            <p class="place-section-intro">This local heritage record highlights the community value, significance, and heritage criteria recorded for this place.</p>
+            <div id="placeLocalHeritageRecord" class="place-local-heritage__content"></div>
+          </div>
         </section>
 
         <section id="location" class="place-record-section place-location" aria-labelledby="locationTitle">
-          <h3 id="locationTitle">Location</h3>
-          <div id="placeLocationContent" class="place-location__content"></div>
+          <div class="place-record-card place-record-card--location">
+            <h3 id="locationTitle">Location</h3>
+            <div id="placeLocationContent" class="place-location__content"></div>
+          </div>
+        </section>
+
+        <section id="sourcesRelationships" class="place-record-section place-sources" aria-labelledby="sourcesRelationshipsTitle">
+          <div class="place-record-card place-record-card--sources">
+            <h3 id="sourcesRelationshipsTitle">Sources and relationships</h3>
+            <div class="place-source-reference" aria-labelledby="sourceReferenceTitle">
+              <h4 id="sourceReferenceTitle">Source reference</h4>
+              <p id="placeSourceReference" class="place-source-reference__text">No source reference recorded yet.</p>
+            </div>
+
+            <div id="relatedArticles" class="place-related-articles" aria-labelledby="relatedArticlesTitle">
+              <h4 id="relatedArticlesTitle">Related stories</h4>
+              <div id="placeRelatedArticles" class="place-related-articles__list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="openDataNote" class="place-record-section place-open-data" aria-labelledby="openDataNoteTitle">
+          <div class="place-record-card place-record-card--open-data">
+            <h3 id="openDataNoteTitle">Open data note</h3>
+            <p>This public community heritage record may also appear in Alex's Photo Board open heritage data export where appropriate.</p>
+          </div>
         </section>
       </div>
 

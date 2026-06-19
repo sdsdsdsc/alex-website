@@ -9,10 +9,13 @@ import {
   buildPlaceJsonLd,
   buildPublicPlaceSummary,
   cleanText,
+  formatPlaceLocationAddress,
   formatRecordDate,
+  getAssetType,
   getCoordinateDisplay,
   getDisplayTitle,
   getHeritageCriteria,
+  getPublicDescription,
   getRelatedArticleReferences,
   getRelatedArticleUrl,
   getTags,
@@ -20,7 +23,7 @@ import {
   hasValidCoordinates,
   normalizeCoordinate,
   toSafeUrl
-} from "./heritage-engine/places.js";
+} from "./heritage-engine/places.js?v=2026-06-19-11b2";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -38,8 +41,6 @@ const els = {
   status: document.getElementById("placeRecordStatus"),
   content: document.getElementById("placeRecordContent"),
   title: document.getElementById("placeTitle"),
-  kicker: document.getElementById("placeCategoryKicker"),
-  heroLocation: document.getElementById("placeHeroLocation"),
   breadcrumbTitle: document.getElementById("placeBreadcrumbTitle"),
   description: document.getElementById("placeDescription"),
   tags: document.getElementById("placeTags"),
@@ -49,8 +50,8 @@ const els = {
   locationContent: document.getElementById("placeLocationContent"),
   localHeritageSection: document.getElementById("localHeritageRecord"),
   localHeritageContent: document.getElementById("placeLocalHeritageRecord"),
-  relatedArticlesSection: document.getElementById("relatedArticles"),
   relatedArticles: document.getElementById("placeRelatedArticles"),
+  sourceReference: document.getElementById("placeSourceReference"),
   metadata: document.getElementById("placeMetadata"),
   tabs: Array.from(document.querySelectorAll(".place-record-tab")),
   panels: Array.from(document.querySelectorAll(".place-tab-panel"))
@@ -126,44 +127,54 @@ function setupTabs() {
   });
 }
 
-function appendMetadata(label, value) {
+function appendMetadata(label, value, emptyText = "Not recorded yet.") {
   if (!els.metadata) return;
   const safeValue = cleanText(value);
-  if (!safeValue) return;
   const dt = document.createElement("dt");
   const dd = document.createElement("dd");
   dt.textContent = label;
-  dd.textContent = safeValue;
+  if (safeValue) {
+    dd.textContent = safeValue;
+  } else {
+    dd.textContent = emptyText;
+    dd.className = "place-empty-value";
+  }
   els.metadata.append(dt, dd);
 }
 
 function appendHeritageDetail(details, label, value, options = {}) {
   const safeValue = cleanText(value);
-  if (!safeValue) return false;
-
   const dt = document.createElement("dt");
   const dd = document.createElement("dd");
   dt.textContent = label;
-  dd.textContent = safeValue;
+  dd.textContent = safeValue || options.emptyText || "Not recorded yet.";
   if (options.long) {
     dt.className = "place-local-heritage__long-label";
     dd.className = "place-local-heritage__long-value";
   }
+  if (!safeValue) {
+    dd.classList.add("place-empty-value");
+  }
   details.append(dt, dd);
-  return true;
+  return Boolean(safeValue);
 }
 
 function appendHeritageCriteria(details, criteria) {
-  if (criteria.length === 0) return false;
-
   const dt = document.createElement("dt");
   const dd = document.createElement("dd");
-  const list = document.createElement("div");
   dt.textContent = "Community heritage criteria";
   dt.className = "place-local-heritage__long-label";
   dd.className = "place-local-heritage__long-value";
-  list.className = "place-local-heritage__criteria";
 
+  if (criteria.length === 0) {
+    dd.textContent = "No criteria recorded yet.";
+    dd.classList.add("place-empty-value");
+    details.append(dt, dd);
+    return false;
+  }
+
+  const list = document.createElement("div");
+  list.className = "place-local-heritage__criteria";
   criteria.forEach((criterion) => {
     const item = document.createElement("span");
     item.className = "place-local-heritage__criterion";
@@ -182,28 +193,37 @@ function renderLocalHeritageRecord(place) {
 
   const details = document.createElement("dl");
   details.className = "place-local-heritage__details";
-  let hasDetails = false;
-
-  hasDetails = appendHeritageDetail(details, "Local significance", place.localSignificanceSummary, { long: true }) || hasDetails;
-  hasDetails = appendHeritageDetail(details, "Asset type", place.assetType) || hasDetails;
-  hasDetails = appendHeritageDetail(details, "Area / neighbourhood", place.area) || hasDetails;
-  hasDetails = appendHeritageCriteria(details, getHeritageCriteria(place)) || hasDetails;
-  hasDetails = appendHeritageDetail(details, "Criteria explanation", place.criteriaExplanation, { long: true }) || hasDetails;
-  hasDetails = appendHeritageDetail(details, "Heritage value", place.heritageValue, { long: true }) || hasDetails;
-  hasDetails = appendHeritageDetail(details, "Condition", place.condition) || hasDetails;
-  hasDetails = appendHeritageDetail(details, "Community use", place.communityUse, { long: true }) || hasDetails;
-  hasDetails = appendHeritageDetail(details, "Source reference", place.sourceReference, { long: true }) || hasDetails;
-  hasDetails = appendHeritageDetail(details, "Date added", formatRecordDate(place.dateAdded)) || hasDetails;
-  hasDetails = appendHeritageDetail(details, "Last reviewed", formatRecordDate(place.lastReviewed)) || hasDetails;
-  hasDetails = appendHeritageDetail(details, "Record status", place.recordStatus) || hasDetails;
-
-  if (!hasDetails) {
-    els.localHeritageSection.hidden = true;
-    return;
-  }
+  appendHeritageDetail(details, "Local significance", place.localSignificanceSummary, {
+    long: true,
+    emptyText: "No local significance summary recorded yet."
+  });
+  appendHeritageCriteria(details, getHeritageCriteria(place));
+  appendHeritageDetail(details, "Criteria explanation", place.criteriaExplanation, {
+    long: true,
+    emptyText: "No criteria explanation recorded yet."
+  });
+  appendHeritageDetail(details, "Heritage value", place.heritageValue, {
+    long: true,
+    emptyText: "No heritage value note recorded yet."
+  });
+  appendHeritageDetail(details, "Condition", place.condition, {
+    emptyText: "No condition note recorded yet."
+  });
+  appendHeritageDetail(details, "Community use", place.communityUse, {
+    long: true,
+    emptyText: "No community use note recorded yet."
+  });
+  appendHeritageDetail(details, "Date added", formatRecordDate(place.dateAdded), {
+    emptyText: "Date not recorded yet."
+  });
+  appendHeritageDetail(details, "Last reviewed", formatRecordDate(place.lastReviewed), {
+    emptyText: "No review date recorded yet."
+  });
+  appendHeritageDetail(details, "Record status", place.recordStatus, {
+    emptyText: "No public record status recorded yet."
+  });
 
   els.localHeritageContent.appendChild(details);
-  els.localHeritageSection.hidden = false;
 }
 
 function renderImage(place) {
@@ -260,23 +280,22 @@ function renderTags(place) {
 function renderActions(place) {
   if (!els.actions) return;
   els.actions.textContent = "";
-  const relatedArticles = getRelatedArticleReferences(place);
   const mapLink = document.createElement("a");
   mapLink.href = buildMapUrl(place);
   mapLink.textContent = "View on map";
   els.actions.appendChild(mapLink);
 
   const relatedArticle = getRelatedArticleUrl(place);
-  if (relatedArticle && relatedArticles.length === 0) {
+  if (relatedArticle) {
     const articleLink = document.createElement("a");
     articleLink.href = relatedArticle;
-    articleLink.textContent = "Read related article";
+    articleLink.textContent = "Open related story";
     els.actions.appendChild(articleLink);
   }
 }
 
 function renderRelatedArticles(place) {
-  if (!els.relatedArticlesSection || !els.relatedArticles) return;
+  if (!els.relatedArticles) return;
   els.relatedArticles.textContent = "";
 
   const relatedArticles = getRelatedArticleReferences(place);
@@ -297,7 +316,6 @@ function renderRelatedArticles(place) {
       link.append(title, meta);
       els.relatedArticles.appendChild(link);
     });
-    els.relatedArticlesSection.hidden = false;
     return;
   }
 
@@ -311,17 +329,32 @@ function renderRelatedArticles(place) {
     title.className = "place-related-articles__title";
     title.textContent = "Read related article";
 
-    const meta = document.createElement("span");
-    meta.className = "place-related-articles__meta";
-    meta.textContent = "Legacy link";
+      const meta = document.createElement("span");
+      meta.className = "place-related-articles__meta";
+      meta.textContent = "Related story";
 
-    link.append(title, meta);
-    els.relatedArticles.appendChild(link);
-    els.relatedArticlesSection.hidden = false;
+      link.append(title, meta);
+      els.relatedArticles.appendChild(link);
     return;
   }
 
-  els.relatedArticlesSection.hidden = true;
+  const empty = document.createElement("p");
+  empty.className = "place-empty-message";
+  empty.textContent = "No related stories linked yet.";
+  els.relatedArticles.appendChild(empty);
+}
+
+function renderSourceReference(place) {
+  if (!els.sourceReference) return;
+  const sourceReference = cleanText(place.sourceReference);
+  if (sourceReference) {
+    els.sourceReference.textContent = sourceReference;
+    els.sourceReference.classList.remove("place-empty-value");
+    return;
+  }
+
+  els.sourceReference.textContent = "No source reference recorded yet.";
+  els.sourceReference.classList.add("place-empty-value");
 }
 
 function renderLocation(place) {
@@ -395,23 +428,21 @@ function renderPlace(place) {
   const summary = buildPublicPlaceSummary(place);
   const title = getDisplayTitle(place);
   const category = summary.category;
-  const heroLocation = summary.location;
+  const publicDescription = getPublicDescription(place);
   document.title = `${title} | Alex's Photo Board`;
   if (els.title) els.title.textContent = title;
   if (els.breadcrumbTitle) els.breadcrumbTitle.textContent = title;
-  if (els.kicker) els.kicker.textContent = category;
-  if (els.heroLocation) els.heroLocation.textContent = heroLocation;
-  if (els.description) els.description.textContent = summary.description;
+  if (els.description) els.description.textContent = publicDescription;
 
   if (els.metadata) {
     els.metadata.textContent = "";
-    appendMetadata("Title", title);
     appendMetadata("Category", category);
-    appendMetadata("Address", place.address);
-    appendMetadata("Locality", place.location);
-    appendMetadata("Associated type", place.associatedType);
-    appendMetadata("Period", place.period);
-    appendMetadata("Grade", place.grade);
+    appendMetadata("Asset type", getAssetType(place), "No asset type recorded yet.");
+    appendMetadata("Location / Address", formatPlaceLocationAddress(place), "No location/address recorded yet.");
+    appendMetadata("Coordinates", summary.coordinates, "Location coordinates are not available yet.");
+    appendMetadata("Associated type", place.associatedType, "No associated type recorded yet.");
+    appendMetadata("Period", place.period, "No period recorded yet.");
+    appendMetadata("Grade", place.grade, "No grade or classification recorded yet.");
   }
 
   renderImage(place);
@@ -419,6 +450,7 @@ function renderPlace(place) {
   renderTags(place);
   renderActions(place);
   renderLocalHeritageRecord(place);
+  renderSourceReference(place);
   renderRelatedArticles(place);
   renderLocation(place);
   injectJsonLd(place);
