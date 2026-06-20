@@ -26,7 +26,12 @@ const PUBLIC_RECORD_STATUSES = Object.freeze([
 ]);
 
 const UNSAFE_PUBLIC_FIELD_NAMES = Object.freeze([
+  "publicUsers",
   "placeNominations",
+  "submittedByUid",
+  "submitterEmail",
+  "submitterDisplayName",
+  "submissionAuthType",
   "nominatorEmail",
   "adminNotes",
   "adminHistoricInterest",

@@ -29,6 +29,10 @@ const PUBLIC_NOMINATION_FIELDS = Object.freeze([
   "nominatorEmail",
   "organisationName",
   "submittedOnBehalfOf",
+  "submittedByUid",
+  "submitterEmail",
+  "submitterDisplayName",
+  "submissionAuthType",
   "termsAccepted",
   "privacyAccepted",
   "nominationStatus",
@@ -190,6 +194,29 @@ function addOptionalText(payload, field, value) {
   if (cleanValue) payload[field] = cleanValue;
 }
 
+function buildNominationOwnershipMetadata(user = {}) {
+  const uid = cleanText(user.submittedByUid || user.uid);
+  const submitterEmail = cleanText(user.submitterEmail || user.email);
+  const submissionAuthType = cleanText(user.submissionAuthType) || "signedIn";
+
+  if (!uid || !submitterEmail || submissionAuthType !== "signedIn") {
+    throw new Error("Please sign in before submitting a place nomination.");
+  }
+
+  const ownership = {
+    submittedByUid: uid,
+    submitterEmail,
+    submissionAuthType
+  };
+
+  const submitterDisplayName = cleanText(user.submitterDisplayName || user.displayName);
+  if (submitterDisplayName) {
+    ownership.submitterDisplayName = submitterDisplayName;
+  }
+
+  return ownership;
+}
+
 function buildSubmittedNominationPayload(values = {}, timestamps = {}) {
   const cleanValues = stripPublicDisallowedNominationFields(values);
   const textValues = normalizeNominationTextFields(cleanValues);
@@ -233,6 +260,10 @@ function buildSubmittedNominationPayload(values = {}, timestamps = {}) {
     if (timestamps[field]) payload[field] = timestamps[field];
   });
 
+  if (timestamps.ownershipMetadata) {
+    Object.assign(payload, buildNominationOwnershipMetadata(timestamps.ownershipMetadata));
+  }
+
   return Object.entries(payload).reduce((clean, [key, entry]) => {
     if (PUBLIC_NOMINATION_FIELDS.includes(key)) {
       clean[key] = entry;
@@ -256,6 +287,7 @@ export {
   REQUIRED_TEXT_FIELDS,
   SUBMISSION_ROLES,
   buildNominationDraftFromFormValues,
+  buildNominationOwnershipMetadata,
   buildSubmittedNominationPayload,
   getInitialNominationStatus,
   getNominationValidationErrors,

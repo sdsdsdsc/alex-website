@@ -23,6 +23,10 @@ const PUBLIC_PROMOTION_TEXT_FIELDS = Object.freeze([
   "sourceReference"
 ]);
 const PRIVATE_PROMOTION_FIELDS = Object.freeze([
+  "submittedByUid",
+  "submitterEmail",
+  "submitterDisplayName",
+  "submissionAuthType",
   "nominatorEmail",
   "adminNotes",
   "adminHistoricInterest",
