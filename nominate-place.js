@@ -26,6 +26,7 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+let authResolved = false;
 
 const FORM_TEXT_FIELDS = [
   "title",
@@ -142,10 +143,12 @@ function setNominationAccessState(user) {
   }
 
   if (!user) {
+    console.log("Auth state resolved: signed out");
     showStatus(status, "Please sign in before submitting a place nomination.", "error");
     return;
   }
 
+  console.log("Auth state resolved: signed in");
   showStatus(
     status,
     `You are signed in as ${cleanText(user.email)}. This nomination will be linked privately to your account.`,
@@ -154,15 +157,26 @@ function setNominationAccessState(user) {
 }
 
 fillNominationCoordinates();
-setNominationAccessState(null);
+if (submitButton) {
+  submitButton.disabled = true;
+}
+if (signInRequiredSection) signInRequiredSection.hidden = true;
+if (signedInSection) signedInSection.hidden = true;
+showStatus(status, "Checking sign-in...");
 
 onAuthStateChanged(auth, (user) => {
+  authResolved = true;
   setNominationAccessState(user);
 });
 
 form?.addEventListener("submit", async (event) => {
   event.preventDefault();
   showStatus(status, "");
+
+  if (!authResolved) {
+    showStatus(status, "Checking sign-in...", "error");
+    return;
+  }
 
   const user = auth.currentUser;
   if (!user) {

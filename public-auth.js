@@ -1,8 +1,10 @@
 import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
+  browserLocalPersistence,
   createUserWithEmailAndPassword,
   getAuth,
   onAuthStateChanged,
+  setPersistence,
   signInWithEmailAndPassword,
   signOut,
   updateProfile
@@ -19,6 +21,14 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const authPersistenceReady = setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log("Public auth persistence ready.");
+  })
+  .catch((error) => {
+    console.error("Could not enable public auth persistence:", error);
+    throw error;
+  });
 
 function getNextPath() {
   const params = new URLSearchParams(window.location.search);
@@ -57,6 +67,26 @@ function updateNextLinks() {
 
 function buildMyNominationsPath() {
   return "my-nominations.html";
+}
+
+function waitForSignedInUser(expectedUid) {
+  if (auth.currentUser?.uid === expectedUid) {
+    return Promise.resolve(auth.currentUser);
+  }
+
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      unsubscribe();
+      reject(new Error("Timed out waiting for public auth state to finish signing in."));
+    }, 5000);
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user?.uid !== expectedUid) return;
+      window.clearTimeout(timeoutId);
+      unsubscribe();
+      resolve(user);
+    });
+  });
 }
 
 function setStatus(message, type = "") {
@@ -144,12 +174,15 @@ async function handleRegister(event) {
   if (button) button.disabled = true;
 
   try {
+    await authPersistenceReady;
     const credentials = await createUserWithEmailAndPassword(auth, email, password);
     if (displayName) {
       await updateProfile(credentials.user, {
         displayName
       });
     }
+    setStatus("Finishing sign-in...", "success");
+    await waitForSignedInUser(credentials.user.uid);
     if (redirectToNextPathIfPresent()) return;
     setStatus("Account created successfully. You are now signed in.", "success");
     form.reset();
@@ -173,7 +206,10 @@ async function handleSignIn(event) {
   if (button) button.disabled = true;
 
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    await authPersistenceReady;
+    const credentials = await signInWithEmailAndPassword(auth, email, password);
+    setStatus("Finishing sign-in...", "success");
+    await waitForSignedInUser(credentials.user.uid);
     if (redirectToNextPathIfPresent()) return;
     setStatus("Sign-in successful.", "success");
     form.reset();
@@ -191,6 +227,7 @@ async function handleSignOut() {
   if (button) button.disabled = true;
 
   try {
+    await authPersistenceReady;
     await signOut(auth);
     setStatus("You have been signed out.", "success");
   } catch (error) {
@@ -202,21 +239,24 @@ async function handleSignOut() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  setStatus("Checking sign-in...");
   updateNextLinks();
   document.getElementById("publicRegisterForm")?.addEventListener("submit", handleRegister);
   document.getElementById("publicLoginForm")?.addEventListener("submit", handleSignIn);
   document.getElementById("publicAuthSignOutButton")?.addEventListener("click", handleSignOut);
 
+  authPersistenceReady.catch(() => {
+    setStatus("Could not prepare sign-in persistence. Please try again.", "error");
+  });
+
   onAuthStateChanged(auth, (user) => {
     setSignedInState(user);
     if (!user) {
-      if (!document.getElementById("publicAuthStatus")?.textContent.trim()) {
-        setStatus("You need to sign in before submitting a place nomination.");
-      }
+      console.log("Auth state resolved: signed out");
+      setStatus("You need to sign in before submitting a place nomination.");
       return;
     }
-    if (!document.getElementById("publicAuthStatus")?.textContent.trim()) {
-      setStatus("Signed in. Your nomination will be linked privately to your account.", "success");
-    }
+    console.log("Auth state resolved: signed in");
+    setStatus("Signed in. Your nomination will be linked privately to your account.", "success");
   });
 });

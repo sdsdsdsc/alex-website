@@ -23,6 +23,7 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+let authResolved = false;
 
 function cleanText(value) {
   return String(value || "").trim();
@@ -196,6 +197,7 @@ async function handleSignedInUser(user) {
   if (signedIn) signedIn.hidden = false;
   if (email) email.textContent = cleanText(user?.email);
 
+  console.log("Auth state resolved: signed in");
   setStatus("Loading your nominations...");
 
   try {
@@ -222,15 +224,23 @@ function handleSignedOutUser() {
   if (signedOut) signedOut.hidden = false;
   if (signedIn) signedIn.hidden = true;
   if (container) container.textContent = "";
+  console.log("Auth state resolved: signed out");
   setStatus("Please sign in to view your nominations.");
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  const signedOut = document.getElementById("myNominationsSignedOut");
+  const signedIn = document.getElementById("myNominationsSignedIn");
+  if (signedOut) signedOut.hidden = true;
+  if (signedIn) signedIn.hidden = true;
+  setStatus("Checking sign-in...");
+
   document.querySelectorAll('#myNominationsSignInLink, #myNominationsPrimarySignInLink').forEach((link) => {
     link.setAttribute("href", buildSignInHref());
   });
 
   onAuthStateChanged(auth, (user) => {
+    authResolved = true;
     if (!user) {
       handleSignedOutUser();
       return;
