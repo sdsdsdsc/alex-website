@@ -141,6 +141,7 @@
     <header>
       <h1>Alex Heritage Engine Test Harness</h1>
       <p>This page runs lightweight browser checks against pure helper modules in <code>heritage-engine/</code>.</p>
+      <p>It verifies source-level helper behavior only. It does not replace Firebase Auth checks, Firestore rules verification, or live browser workflow testing.</p>
       <p class="warning">Developer test page. Not part of the public site.</p>
     </header>
 
@@ -189,6 +190,8 @@
       normalizeRelationshipReferences
     } from "./heritage-engine/relationships.js";
     import {
+      PUBLIC_DISALLOWED_NOMINATION_FIELDS,
+      buildNominationDraftFromFormValues,
       buildNominationOwnershipMetadata,
       buildSubmittedNominationPayload,
       getInitialNominationStatus,
@@ -716,6 +719,7 @@
         email: "account@example.org",
         displayName: "Account User"
       });
+      const draft = buildNominationDraftFromFormValues(validValues);
       const payload = buildSubmittedNominationPayload(validValues, {
         createdAt: "created",
         updatedAt: "updated",
@@ -723,6 +727,16 @@
         ownershipMetadata
       });
       const payloadSerialized = JSON.stringify(payload);
+      const unsafeFieldNames = [
+        "adminNotes",
+        "reviewHistory",
+        "adminHistoricInterest",
+        "adminArchitecturalInterest",
+        "adminCommunityValue",
+        "adminConditionRisk",
+        "adminAssessmentSummary",
+        "promotedPlaceId"
+      ];
 
       assertEqual(getInitialNominationStatus(), "submitted", "Nomination Helpers", "initial status is submitted");
       assertEqual(
@@ -741,9 +755,43 @@
       assert(validateNominationEvidenceFields({ evidenceImageUrl: "http://example.org/photo.jpg" }).length > 0, "Nomination Helpers", "HTTP evidence URL is rejected");
       assert(validateNominationAgreements(buildValidNominationValues({ termsAccepted: false })).length > 0, "Nomination Helpers", "terms agreement is required");
       assert(validateNominationAgreements(buildValidNominationValues({ privacyAccepted: false })).length > 0, "Nomination Helpers", "privacy agreement is required");
+      assertEqual(PUBLIC_DISALLOWED_NOMINATION_FIELDS.includes("adminNotes"), true, "Nomination Helpers", "public disallowed fields include adminNotes");
+      assertEqual(PUBLIC_DISALLOWED_NOMINATION_FIELDS.includes("promotedPlaceId"), true, "Nomination Helpers", "public disallowed fields include promotedPlaceId");
+      assertEqual(draft.submittedOnBehalfOf, "self", "Nomination Helpers", "draft shaping keeps allowed submission role");
+      assertEqual(draft.lat, 27.720570019360082, "Nomination Helpers", "draft shaping keeps numeric latitude");
+      assertEqual(draft.lng, 114.15617044085226, "Nomination Helpers", "draft shaping keeps numeric longitude");
       assertEqual(ownershipMetadata.submittedByUid, "public-user-1", "Nomination Helpers", "ownership helper includes submitter uid");
       assertEqual(ownershipMetadata.submitterEmail, "account@example.org", "Nomination Helpers", "ownership helper includes account email");
+      assertEqual(ownershipMetadata.submitterDisplayName, "Account User", "Nomination Helpers", "ownership helper includes account display name");
       assertEqual(ownershipMetadata.submissionAuthType, "signedIn", "Nomination Helpers", "ownership helper marks signed-in submissions");
+      assert(buildNominationOwnershipMetadata({
+        submittedByUid: "public-user-2",
+        submitterEmail: "account-2@example.org",
+        submitterDisplayName: "Second User",
+        submissionAuthType: "signedIn"
+      }).submittedByUid === "public-user-2", "Nomination Helpers", "ownership helper accepts already-normalized ownership metadata");
+      try {
+        buildNominationOwnershipMetadata({ email: "missing-uid@example.org" });
+        assert(false, "Nomination Helpers", "ownership helper rejects missing uid");
+      } catch (error) {
+        assertContains(error.message, "Please sign in", "Nomination Helpers", "ownership helper rejects missing uid");
+      }
+      try {
+        buildNominationOwnershipMetadata({ uid: "public-user-1" });
+        assert(false, "Nomination Helpers", "ownership helper rejects missing email");
+      } catch (error) {
+        assertContains(error.message, "Please sign in", "Nomination Helpers", "ownership helper rejects missing email");
+      }
+      try {
+        buildNominationOwnershipMetadata({
+          uid: "public-user-1",
+          email: "account@example.org",
+          submissionAuthType: "guest"
+        });
+        assert(false, "Nomination Helpers", "ownership helper rejects non-signedIn auth type");
+      } catch (error) {
+        assertContains(error.message, "Please sign in", "Nomination Helpers", "ownership helper rejects non-signedIn auth type");
+      }
       assertEqual(payload.nominationStatus, "submitted", "Nomination Helpers", "submitted payload status is submitted");
       assertEqual(payload.title, "Test Community Place", "Nomination Helpers", "submitted payload includes public title");
       assertEqual(payload.nominatorEmail, "test@example.org", "Nomination Helpers", "submitted payload includes private email for placeNominations");
@@ -751,11 +799,15 @@
       assertEqual(payload.submitterEmail, "account@example.org", "Nomination Helpers", "submitted payload includes account email");
       assertEqual(payload.submitterDisplayName, "Account User", "Nomination Helpers", "submitted payload includes account display name");
       assertEqual(payload.submissionAuthType, "signedIn", "Nomination Helpers", "submitted payload includes signed-in submission type");
-      assertNotContains(payloadSerialized, "adminNotes", "Nomination Helpers", "submitted payload excludes adminNotes");
-      assertNotContains(payloadSerialized, "reviewHistory", "Nomination Helpers", "submitted payload excludes reviewHistory");
-      assertNotContains(payloadSerialized, "promotedPlaceId", "Nomination Helpers", "submitted payload excludes promotedPlaceId");
+      unsafeFieldNames.forEach((fieldName) => {
+        assertNotContains(payloadSerialized, fieldName, "Nomination Helpers", `submitted payload excludes ${fieldName}`);
+        assert(!Object.prototype.hasOwnProperty.call(draft, fieldName), "Nomination Helpers", `draft shaping excludes ${fieldName}`);
+      });
       assertNotContains(payloadSerialized, "promotedAt", "Nomination Helpers", "submitted payload excludes promotedAt");
       assertNotContains(payloadSerialized, "communityPlaces", "Nomination Helpers", "submitted payload does not create communityPlaces data");
+      assertEqual(Object.prototype.hasOwnProperty.call(payload, "submittedByUid"), true, "Nomination Helpers", "submitted payload preserves submittedByUid");
+      assertEqual(Object.prototype.hasOwnProperty.call(payload, "submitterEmail"), true, "Nomination Helpers", "submitted payload preserves submitterEmail");
+      assertEqual(Object.prototype.hasOwnProperty.call(payload, "submissionAuthType"), true, "Nomination Helpers", "submitted payload preserves submissionAuthType");
     }
 
     function runAuditTests() {
@@ -972,6 +1024,7 @@
       ].forEach((forbiddenText) => {
         assertNotContains(serializedPublicPlace, forbiddenText, "Promotion Helpers", `public promoted place excludes ${forbiddenText}`);
       });
+      assert(!containsUnsafePublicField(publicPlacePayload), "Promotion Helpers", "public promoted place contains no unsafe public fields");
     }
 
     function runAdminWorkflowHelperChainTests() {
@@ -1086,18 +1139,28 @@
       });
     }
 
+    function runPhase12BoundaryTests() {
+      assert(
+        typeof loadNominationsForUser === "undefined",
+        "Phase 12 Boundary Notes",
+        "owner-scoped My nominations reads are not tested here",
+        "engine-test.html covers pure helpers only. Firestore owner-scoped reads still require browser and rules verification."
+      );
+    }
+
     try {
       runSearchTests();
       runMapTests();
       runPlaceTests();
-    runExportTests();
-    runValidationTests();
-    runRelationshipTests();
-    runNominationTests();
+      runExportTests();
+      runValidationTests();
+      runRelationshipTests();
+      runNominationTests();
       runAuditTests();
       runReviewTests();
       runPromotionTests();
       runAdminWorkflowHelperChainTests();
+      runPhase12BoundaryTests();
     } catch (error) {
       addResult("Harness Runtime", "test harness completed without uncaught errors", false, error.message);
       console.error(error);
