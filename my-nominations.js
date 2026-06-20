@@ -212,6 +212,13 @@ async function handleSignedInUser(user) {
   } catch (error) {
     console.error("Failed to load account nominations:", error);
     renderNominations([]);
+    if (error?.code === "permission-denied" || error?.code === "firestore/permission-denied") {
+      setStatus(
+        "You are signed in, but Firestore rules blocked loading your nominations. The deployed rules or page query may not match the owner-scoped model.",
+        "error"
+      );
+      return;
+    }
     setStatus("Could not load your nominations. Please check sign-in and Firestore rules.", "error");
   }
 }
