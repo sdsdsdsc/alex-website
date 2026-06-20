@@ -55,6 +55,10 @@ function updateNextLinks() {
   });
 }
 
+function buildMyNominationsPath() {
+  return "my-nominations.html";
+}
+
 function setStatus(message, type = "") {
   const status = document.getElementById("publicAuthStatus");
   if (!status) return;
@@ -99,6 +103,11 @@ function setSignedInState(user) {
   if (email) email.textContent = user?.email || "";
   if (displayName) displayName.textContent = user?.displayName || "";
   if (displayNameRow) displayNameRow.hidden = !user?.displayName;
+
+  const myNominationsLink = document.querySelector('#publicAuthSignedIn a[href="my-nominations.html"]');
+  if (myNominationsLink) {
+    myNominationsLink.setAttribute("href", buildMyNominationsPath());
+  }
 }
 
 function validateRegistrationForm(form) {

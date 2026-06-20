@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>My Nominations | Alex's Photo Board</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="public-nav.js" defer></script>
+  <script type="module" src="my-nominations.js?v=2026-06-19-12d" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#myNominationsMain">Skip to my nominations</a>
+  <header>
+    <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
+    <div id="public-nav"></div>
+  </header>
+
+  <main id="myNominationsMain" class="public-auth-page">
+    <section class="public-auth-hero" aria-labelledby="myNominationsTitle">
+      <p class="public-auth-hero__kicker">Signed-in nomination history</p>
+      <h2 id="myNominationsTitle">My nominations</h2>
+      <p>Review the nominations linked privately to your public account. This page is read-only in this phase.</p>
+    </section>
+
+    <section class="public-auth-layout" aria-label="My nominations page">
+      <aside class="public-auth-note">
+        <h3>Privacy note</h3>
+        <p>These nominations are visible only to you and site administrators. Published community place records may be edited by administrators before appearing publicly.</p>
+        <div class="admin-actions">
+          <a href="nominate-place.html">Nominate a place</a>
+          <a id="myNominationsSignInLink" href="public-auth.html?next=my-nominations.html">Sign in</a>
+        </div>
+      </aside>
+
+      <div class="public-auth-panels">
+        <section class="admin-card" id="myNominationsSignedOut" aria-labelledby="myNominationsSignedOutTitle">
+          <h3 id="myNominationsSignedOutTitle">Sign in required</h3>
+          <p>Please sign in to view your nominations.</p>
+          <div class="admin-actions">
+            <a id="myNominationsPrimarySignInLink" href="public-auth.html?next=my-nominations.html">Sign in to continue</a>
+          </div>
+        </section>
+
+        <section class="admin-card" id="myNominationsSignedIn" aria-labelledby="myNominationsSignedInTitle" hidden>
+          <div class="my-nominations-toolbar">
+            <div>
+              <h3 id="myNominationsSignedInTitle">Your submitted nominations</h3>
+              <p class="public-auth-current-user">Signed in as <strong id="myNominationsCurrentEmail"></strong></p>
+            </div>
+            <div class="admin-actions">
+              <a href="nominate-place.html">Submit another nomination</a>
+            </div>
+          </div>
+
+          <p class="my-nominations-note">Only nominations linked to your current signed-in account are shown here.</p>
+          <div id="myNominationsList" class="my-nominations-list" aria-live="polite"></div>
+        </section>
+
+        <p id="myNominationsStatus" class="admin-status" role="status" aria-live="polite">Please sign in to view your nominations.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

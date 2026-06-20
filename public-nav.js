@@ -7,6 +7,7 @@ const PUBLIC_NAV_LINKS = [
   ["guidance.html", "Guidance"],
   ["map.html", "Map"],
   ["search.html", "Places"],
+  ["my-nominations.html", "My nominations"],
   ["export.html", "Open Data"],
   ["public-auth.html", "Sign in"]
 ];
