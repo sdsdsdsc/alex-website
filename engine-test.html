@@ -189,13 +189,14 @@
       normalizeRelationshipReferences
     } from "./heritage-engine/relationships.js";
     import {
+      buildNominationOwnershipMetadata,
       buildSubmittedNominationPayload,
       getInitialNominationStatus,
       normalizeNominationCriteria,
       validateNominationAgreements,
       validateNominationEvidenceFields,
       validateNominationRequiredFields
-    } from "./heritage-engine/nominations.js";
+    } from "./heritage-engine/nominations.js?v=2026-06-19-12c";
     import {
       appendReviewHistory,
       buildPromotionHistoryEntry,
@@ -231,7 +232,7 @@
       shouldAllowPromotion,
       stripPrivateFieldsForPromotion,
       validatePromotionSource
-    } from "./heritage-engine/promotion.js";
+    } from "./heritage-engine/promotion.js?v=2026-06-19-12c";
     import {
       HERITAGE_CRITERIA,
       containsUnsafePublicField,
@@ -239,7 +240,7 @@
       isValidEmail,
       normalizeCriteriaList,
       stripUnsafePublicFields
-    } from "./heritage-engine/validation.js";
+    } from "./heritage-engine/validation.js?v=2026-06-19-12c";
 
     const groups = new Map();
     const counts = {
@@ -509,6 +510,10 @@
 
       [
         "nominatorEmail",
+        "submittedByUid",
+        "submitterEmail",
+        "submitterDisplayName",
+        "submissionAuthType",
         "private@example.com",
         "adminNotes",
         "private note",
@@ -543,10 +548,14 @@
         title: "Public title",
         nested: {
           adminNotes: "private note",
+          submissionAuthType: "signedIn",
           safeValue: "public value"
         },
         reviewHistory: [{ action: "review_saved" }],
-        nominatorEmail: "private@example.com"
+        nominatorEmail: "private@example.com",
+        submittedByUid: "public-user-1",
+        submitterEmail: "account@example.com",
+        submitterDisplayName: "Account User"
       };
       const stripped = stripUnsafePublicFields(unsafeObject);
       const strippedSerialized = JSON.stringify(stripped);
@@ -702,10 +711,16 @@
 
     function runNominationTests() {
       const validValues = buildValidNominationValues();
+      const ownershipMetadata = buildNominationOwnershipMetadata({
+        uid: "public-user-1",
+        email: "account@example.org",
+        displayName: "Account User"
+      });
       const payload = buildSubmittedNominationPayload(validValues, {
         createdAt: "created",
         updatedAt: "updated",
-        submittedAt: "submitted"
+        submittedAt: "submitted",
+        ownershipMetadata
       });
       const payloadSerialized = JSON.stringify(payload);
 
@@ -726,9 +741,16 @@
       assert(validateNominationEvidenceFields({ evidenceImageUrl: "http://example.org/photo.jpg" }).length > 0, "Nomination Helpers", "HTTP evidence URL is rejected");
       assert(validateNominationAgreements(buildValidNominationValues({ termsAccepted: false })).length > 0, "Nomination Helpers", "terms agreement is required");
       assert(validateNominationAgreements(buildValidNominationValues({ privacyAccepted: false })).length > 0, "Nomination Helpers", "privacy agreement is required");
+      assertEqual(ownershipMetadata.submittedByUid, "public-user-1", "Nomination Helpers", "ownership helper includes submitter uid");
+      assertEqual(ownershipMetadata.submitterEmail, "account@example.org", "Nomination Helpers", "ownership helper includes account email");
+      assertEqual(ownershipMetadata.submissionAuthType, "signedIn", "Nomination Helpers", "ownership helper marks signed-in submissions");
       assertEqual(payload.nominationStatus, "submitted", "Nomination Helpers", "submitted payload status is submitted");
       assertEqual(payload.title, "Test Community Place", "Nomination Helpers", "submitted payload includes public title");
       assertEqual(payload.nominatorEmail, "test@example.org", "Nomination Helpers", "submitted payload includes private email for placeNominations");
+      assertEqual(payload.submittedByUid, "public-user-1", "Nomination Helpers", "submitted payload includes submitter uid");
+      assertEqual(payload.submitterEmail, "account@example.org", "Nomination Helpers", "submitted payload includes account email");
+      assertEqual(payload.submitterDisplayName, "Account User", "Nomination Helpers", "submitted payload includes account display name");
+      assertEqual(payload.submissionAuthType, "signedIn", "Nomination Helpers", "submitted payload includes signed-in submission type");
       assertNotContains(payloadSerialized, "adminNotes", "Nomination Helpers", "submitted payload excludes adminNotes");
       assertNotContains(payloadSerialized, "reviewHistory", "Nomination Helpers", "submitted payload excludes reviewHistory");
       assertNotContains(payloadSerialized, "promotedPlaceId", "Nomination Helpers", "submitted payload excludes promotedPlaceId");
@@ -853,6 +875,10 @@
         condition: "In use",
         communityUse: "Gathering and everyday use",
         sourceReference: "Community nomination",
+        submittedByUid: "public-user-1",
+        submitterEmail: "account@example.org",
+        submitterDisplayName: "Account User",
+        submissionAuthType: "signedIn",
         nominationStatus: "approved",
         nominatorEmail: "private@example.org",
         adminNotes: "private admin note",
@@ -912,6 +938,10 @@
       assertEqual(publicPlacePayload.lat, 27.622, "Promotion Helpers", "public payload includes numeric latitude");
       assertEqual(publicPlacePayload.lng, 113.885, "Promotion Helpers", "public payload includes numeric longitude");
       assertEqual(publicPlacePayload.heritageCriteria.join("|"), "Social or communal value|Rarity", "Promotion Helpers", "public payload keeps allowed criteria only");
+      assert(!("submittedByUid" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes submitter uid");
+      assert(!("submitterEmail" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes submitter email");
+      assert(!("submitterDisplayName" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes submitter display name");
+      assert(!("submissionAuthType" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes submission auth type");
       assert(!("nominatorEmail" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes nominatorEmail");
       assert(!("adminNotes" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes adminNotes");
       assert(!("reviewHistory" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes reviewHistory");
@@ -922,6 +952,10 @@
       assertEqual(summary.allowed, true, "Promotion Helpers", "promotion summary reports allowed nomination");
 
       [
+        "submittedByUid",
+        "submitterEmail",
+        "submitterDisplayName",
+        "submissionAuthType",
         "nominatorEmail",
         "private@example.org",
         "adminNotes",

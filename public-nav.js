@@ -7,7 +7,8 @@ const PUBLIC_NAV_LINKS = [
   ["guidance.html", "Guidance"],
   ["map.html", "Map"],
   ["search.html", "Places"],
-  ["export.html", "Open Data"]
+  ["export.html", "Open Data"],
+  ["public-auth.html", "Sign in"]
 ];
 
 function getCurrentPageName() {

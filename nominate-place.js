@@ -6,8 +6,13 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  buildNominationOwnershipMetadata,
   buildSubmittedNominationPayload
-} from "./heritage-engine/nominations.js";
+} from "./heritage-engine/nominations.js?v=2026-06-19-12c";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -20,6 +25,7 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 const FORM_TEXT_FIELDS = [
   "title",
@@ -92,11 +98,18 @@ function readNominationFormValues(formData) {
   return values;
 }
 
-function buildNominationPayload(formData) {
+function buildPublicAuthUrlWithNext() {
+  const authUrl = new URL("public-auth.html", window.location.href);
+  authUrl.searchParams.set("next", `${window.location.pathname}${window.location.search}`);
+  return `${authUrl.pathname}${authUrl.search}`;
+}
+
+function buildNominationPayload(formData, user) {
   return buildSubmittedNominationPayload(readNominationFormValues(formData), {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-    submittedAt: serverTimestamp()
+    submittedAt: serverTimestamp(),
+    ownershipMetadata: buildNominationOwnershipMetadata(user)
   });
 }
 
@@ -110,12 +123,52 @@ function showStatus(element, message, type = "") {
 const form = document.getElementById("nominationForm");
 const submitButton = document.getElementById("nominationSubmitButton");
 const status = document.getElementById("nominationFormStatus");
+const signInRequiredSection = document.getElementById("nominationAuthRequired");
+const signedInSection = document.getElementById("nominationAuthSignedIn");
+const signedInEmail = document.getElementById("nominationSignedInEmail");
+const signInLink = document.getElementById("nominationAuthLink");
+
+function setNominationAccessState(user) {
+  if (signInLink) {
+    signInLink.href = buildPublicAuthUrlWithNext();
+  }
+
+  if (signInRequiredSection) signInRequiredSection.hidden = Boolean(user);
+  if (signedInSection) signedInSection.hidden = !user;
+  if (signedInEmail) signedInEmail.textContent = cleanText(user?.email) || "";
+
+  if (submitButton) {
+    submitButton.disabled = !user;
+  }
+
+  if (!user) {
+    showStatus(status, "Please sign in before submitting a place nomination.", "error");
+    return;
+  }
+
+  showStatus(
+    status,
+    `You are signed in as ${cleanText(user.email)}. This nomination will be linked privately to your account.`,
+    "success"
+  );
+}
 
 fillNominationCoordinates();
+setNominationAccessState(null);
+
+onAuthStateChanged(auth, (user) => {
+  setNominationAccessState(user);
+});
 
 form?.addEventListener("submit", async (event) => {
   event.preventDefault();
   showStatus(status, "");
+
+  const user = auth.currentUser;
+  if (!user) {
+    setNominationAccessState(null);
+    return;
+  }
 
   if (!form.checkValidity()) {
     form.reportValidity();
@@ -125,7 +178,7 @@ form?.addEventListener("submit", async (event) => {
 
   let payload;
   try {
-    payload = buildNominationPayload(new FormData(form));
+    payload = buildNominationPayload(new FormData(form), user);
   } catch (err) {
     showStatus(status, err.message || "Please check the nomination details.", "error");
     return;
@@ -137,6 +190,7 @@ form?.addEventListener("submit", async (event) => {
   try {
     await addDoc(collection(db, "placeNominations"), payload);
     form.reset();
+    fillNominationCoordinates();
     showStatus(
       status,
       "Thank you. Your nomination has been submitted for review. It has not been published and does not create an official designation.",

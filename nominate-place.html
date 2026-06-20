@@ -8,7 +8,7 @@
   <title>Nominate a Community Place | Alex's Photo Board</title>
   <link rel="stylesheet" href="style.css">
   <script type="module" src="public-nav.js" defer></script>
-  <script type="module" src="nominate-place.js" defer></script>
+  <script type="module" src="nominate-place.js?v=2026-06-19-12c" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#nominatePlaceMain">Skip to nomination form</a>
@@ -28,7 +28,7 @@
 
     <header class="nomination-hero">
       <div class="nomination-hero__inner">
-        <p class="nomination-hero__kicker">Static form preview</p>
+        <p class="nomination-hero__kicker">Public sign-in required</p>
         <h2>Nominate a Community Place</h2>
         <p>Use this form to suggest a community-valued place and explain why it matters locally.</p>
       </div>
@@ -50,6 +50,20 @@
         <h3 id="beforeNominateTitle">What you can nominate</h3>
         <p>This form is for suggesting community-valued places such as public spaces, buildings, parks, streets, routes, landmarks, public art, industrial heritage, archaeological features, landscapes, or places connected to local memory.</p>
         <p>Please explain the place clearly and provide evidence of its local significance where possible. Do not include private or sensitive personal information. Photo upload will be considered in a later phase.</p>
+      </section>
+
+      <section class="nomination-auth-note nomination-auth-note--warning" id="nominationAuthRequired" aria-labelledby="nominationAuthRequiredTitle" hidden>
+        <h3 id="nominationAuthRequiredTitle">Sign in required</h3>
+        <p>Please sign in before submitting a place nomination.</p>
+        <p>Your nomination will be linked privately to your account for review and future account features. Signing in does not give access to admin tools.</p>
+        <div class="admin-actions">
+          <a id="nominationAuthLink" href="public-auth.html?next=nominate-place.html">Sign in to continue</a>
+        </div>
+      </section>
+
+      <section class="nomination-auth-note nomination-auth-note--signed-in" id="nominationAuthSignedIn" aria-labelledby="nominationAuthSignedInTitle" hidden>
+        <h3 id="nominationAuthSignedInTitle">Signed in for nomination</h3>
+        <p>You are signed in as <strong id="nominationSignedInEmail"></strong>. This nomination will be linked privately to your account.</p>
       </section>
 
       <form id="nominationForm" class="nomination-form" aria-describedby="nominationFormStatus">
@@ -224,7 +238,7 @@
 
         <div class="nomination-submit">
           <button id="nominationSubmitButton" type="submit">Submit nomination for review</button>
-          <p id="nominationFormStatus" class="nomination-submit__status" role="status" aria-live="polite">Your nomination will be stored separately for admin review. It will not be published automatically.</p>
+          <p id="nominationFormStatus" class="nomination-submit__status" role="status" aria-live="polite">Please sign in before submitting a place nomination.</p>
         </div>
       </form>
     </div>

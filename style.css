@@ -596,6 +596,40 @@ body > header h1 a.home-link:hover {
   padding-left: 24px;
 }
 
+.nomination-auth-note {
+  margin-bottom: 32px;
+  padding: clamp(22px, 4vw, 32px);
+  background: #fff;
+  border-top: 5px solid #17475b;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.nomination-auth-note h3 {
+  margin: 0 0 14px;
+  color: #173b32;
+  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+}
+
+.nomination-auth-note p {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.nomination-auth-note p:last-child {
+  margin-bottom: 0;
+}
+
+.nomination-auth-note--warning {
+  background: #fff4d7;
+  border-top-color: #fcbf49;
+}
+
+.nomination-auth-note--signed-in {
+  background: #dff3ec;
+  border-top-color: #2f7a54;
+}
+
 .nomination-form {
   display: grid;
   gap: 26px;
@@ -814,6 +848,12 @@ body > header h1 a.home-link:hover {
   .nomination-step__intro,
   .nomination-choice-group {
     grid-column: 1;
+  }
+}
+
+@media (max-width: 860px) {
+  .public-auth-layout {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -3501,6 +3541,126 @@ footer {
   color: #17475b;
 }
 
+.admin-card h3 {
+  margin-top: 0;
+  color: #17475b;
+}
+
+.public-auth-page {
+  min-height: calc(100vh - 180px);
+  padding: clamp(36px, 5vw, 56px) 20px 64px;
+  background: #f5f7f8;
+}
+
+.public-auth-hero,
+.public-auth-layout {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
+.public-auth-hero {
+  margin-bottom: 30px;
+  padding: clamp(24px, 4vw, 36px);
+  background: #17475b;
+  color: #fff;
+}
+
+.public-auth-hero__kicker {
+  margin: 0 0 12px;
+  color: #fcbf49;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.public-auth-hero h2 {
+  margin: 0 0 14px;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.1;
+}
+
+.public-auth-hero p:last-child {
+  margin: 0;
+  max-width: 760px;
+  line-height: 1.65;
+}
+
+.public-auth-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.public-auth-note {
+  padding: 24px;
+  background: #fff4d7;
+  border-top: 5px solid #fcbf49;
+}
+
+.public-auth-note h3 {
+  margin-top: 0;
+  color: #173b32;
+}
+
+.public-auth-note p,
+.public-auth-note li {
+  line-height: 1.6;
+}
+
+.public-auth-note ul {
+  margin: 0 0 18px;
+  padding-left: 22px;
+}
+
+.public-auth-note .admin-actions {
+  margin-top: 16px;
+}
+
+.public-auth-panels {
+  display: grid;
+  gap: 20px;
+}
+
+.public-auth-panels .admin-card {
+  width: 100%;
+}
+
+.public-auth-intro {
+  margin: 0 0 18px;
+  line-height: 1.6;
+}
+
+.public-auth-divider {
+  margin: 24px 0;
+  border: 0;
+  border-top: 1px solid #d7dde1;
+}
+
+.public-auth-current-user {
+  line-height: 1.6;
+}
+
+.public-auth-help {
+  margin: -4px 0 4px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.public-auth-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.55;
+}
+
+.public-auth-checkbox input {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+}
+
 .admin-form {
   display: grid;
   gap: 12px;
@@ -3516,6 +3676,15 @@ footer {
   border: 1px solid #b9c3c9;
   border-radius: 4px;
   font: inherit;
+}
+
+.admin-form textarea {
+  min-height: 120px;
+  padding: 9px 12px;
+  border: 1px solid #b9c3c9;
+  border-radius: 4px;
+  font: inherit;
+  resize: vertical;
 }
 
 .admin-form button,
@@ -3819,6 +3988,69 @@ footer {
   background: #17475b;
   color: #fff;
   outline: none;
+}
+
+.admin-warning-list {
+  margin: 0 0 14px;
+  padding-left: 20px;
+  color: #7d1f18;
+}
+
+.admin-warning-list li + li {
+  margin-top: 6px;
+}
+
+.admin-relationship-picker {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-relationship-group {
+  padding: 14px;
+  border: 1px solid #d7dde1;
+  background: #fff;
+}
+
+.admin-relationship-group h4 {
+  margin: 0 0 12px;
+  color: #17475b;
+}
+
+.admin-relationship-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 8px 0;
+  font-weight: 700;
+  color: #111;
+}
+
+.admin-relationship-option + .admin-relationship-option {
+  border-top: 1px solid #e6ecef;
+}
+
+.admin-relationship-option input[type="checkbox"] {
+  width: auto;
+  min-height: 0;
+  margin: 2px 0 0;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
+.admin-relationship-option__content {
+  display: grid;
+  gap: 2px;
+}
+
+.admin-relationship-option__title {
+  font-weight: 800;
+}
+
+.admin-relationship-option__meta {
+  color: #55636c;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .admin-related-places-section {

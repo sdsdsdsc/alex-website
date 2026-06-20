@@ -40,7 +40,7 @@
       buildPromotionUpdatePayload,
       buildPublicPlacePayloadFromNomination,
       shouldAllowPromotion
-    } from "./heritage-engine/promotion.js";
+    } from "./heritage-engine/promotion.js?v=2026-06-19-12c";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -573,6 +573,9 @@
         createDetailRow("Condition", record.condition),
         createDetailRow("Community use", record.communityUse),
         createDetailRow("Source reference", record.sourceReference),
+        createDetailRow("Submission account", record.submitterEmail),
+        createDetailRow("Submission type", record.submissionAuthType),
+        createDetailRow("Submission account display name", record.submitterDisplayName),
         createDetailRow("Nominator display name", record.nominatorDisplayName),
         createDetailRow("Nominator email", record.nominatorEmail),
         createDetailRow("Organisation name", record.organisationName),
