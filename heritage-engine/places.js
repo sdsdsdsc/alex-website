@@ -77,6 +77,15 @@ function getDisplayLocation(place) {
   return parts.join(", ") || cleanText(place?.location);
 }
 
+function getContainedInPlaceName(place) {
+  return cleanText(
+    place?.containedInPlace?.name
+      || place?.containedInPlace?.["schema:name"]
+      || place?.["schema:containedInPlace"]?.name
+      || place?.["schema:containedInPlace"]?.["schema:name"]
+  );
+}
+
 function getPublicDescription(place) {
   return cleanText(place?.description) || "No public description has been added yet.";
 }
@@ -125,11 +134,22 @@ function pushUniquePlacePart(parts, rawValue) {
 
 function formatPlaceLocationAddress(place) {
   const parts = [];
-  pushUniquePlacePart(parts, place?.address);
-  pushUniquePlacePart(parts, place?.area);
-  pushUniquePlacePart(parts, place?.district);
-  pushUniquePlacePart(parts, getDisplayLocation(place) || place?.location);
-  return parts.join(" | ");
+  [
+    place?.locationName,
+    place?.location,
+    place?.address,
+    place?.area,
+    place?.locality,
+    place?.community,
+    place?.neighbourhood || place?.neighborhood,
+    getContainedInPlaceName(place),
+    place?.district,
+    getDisplayLocation(place)
+  ].forEach((value) => {
+    pushUniquePlacePart(parts, value);
+  });
+
+  return parts.join(", ");
 }
 
 function getRecordStatusLabel(place) {

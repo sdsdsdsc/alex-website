@@ -49,11 +49,73 @@ function getTags(record) {
   return Array.isArray(record?.tags) ? record.tags.join(" ") : record?.tags || "";
 }
 
+function normalizePlacePartForComparison(value) {
+  return cleanText(value)
+    .toLowerCase()
+    .replace(/[|,/()-]+/g, " ")
+    .replace(/\b(province|city|district|neighbourhood|neighborhood|area|community|locality)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function pushUniquePlacePart(parts, rawValue) {
+  const value = cleanText(rawValue);
+  if (!value) return;
+
+  const normalizedValue = normalizePlacePartForComparison(value);
+  if (!normalizedValue) return;
+
+  const existingIndex = parts.findIndex((part) => {
+    const normalizedPart = normalizePlacePartForComparison(part);
+    return normalizedPart === normalizedValue
+      || normalizedPart.includes(normalizedValue)
+      || normalizedValue.includes(normalizedPart);
+  });
+
+  if (existingIndex === -1) {
+    parts.push(value);
+    return;
+  }
+
+  if (value.length > parts[existingIndex].length) {
+    parts[existingIndex] = value;
+  }
+}
+
+function getContainedInPlaceName(record) {
+  return cleanText(
+    record?.containedInPlace?.name
+      || record?.containedInPlace?.["schema:name"]
+      || record?.["schema:containedInPlace"]?.name
+      || record?.["schema:containedInPlace"]?.["schema:name"]
+  );
+}
+
 function getCommunityDisplayLocation(record) {
+  const parts = [];
+
+  [
+    record?.locationName,
+    record?.location,
+    record?.address,
+    record?.area,
+    record?.locality,
+    record?.community,
+    record?.neighbourhood || record?.neighborhood,
+    getContainedInPlaceName(record)
+  ].forEach((value) => {
+    pushUniquePlacePart(parts, value);
+  });
+
+  if (parts.length > 0) {
+    return parts.join(", ");
+  }
+
   const city = cleanText(record?.city);
   const province = cleanText(record?.province);
   if (city && province) return `${city}, ${province}`;
-  return cleanText(record?.location);
+  if (city) return city;
+  return province;
 }
 
 function recordMatchesSearch(record, term) {
@@ -70,11 +132,18 @@ function recordMatchesSearch(record, term) {
     record?.linkedArticle,
     record?.type,
     record?.category,
+    record?.locationName,
     record?.location,
+    record?.area,
+    record?.locality,
+    record?.community,
+    record?.neighbourhood,
+    record?.neighborhood,
     record?.province,
     record?.city,
     record?.district,
     record?.address,
+    getContainedInPlaceName(record),
     record?.associatedType,
     record?.contributor,
     record?.period,
