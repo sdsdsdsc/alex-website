@@ -164,17 +164,19 @@
     import {
       buildNominationUrlFromCoordinates,
       buildPlaceRecordUrl,
+      getCommunityDisplayLocation,
       hasValidCoordinates as mapHasValidCoordinates,
       isValidLatitude,
       isValidLongitude
-    } from "./heritage-engine/maps.js";
+    } from "./heritage-engine/maps.js?v=2026-06-20-releasepolish";
     import {
       buildMapUrl,
       formatCriteriaList,
+      formatPlaceLocationAddress,
       getDisplayLocation,
       getDisplayTitle,
       getHeritageCriteria
-    } from "./heritage-engine/places.js";
+    } from "./heritage-engine/places.js?v=2026-06-20-releasepolish";
     import {
       buildPublicGraph,
       buildPublicHeritageJsonLd
@@ -394,6 +396,16 @@
     }
 
     function runMapTests() {
+      const fallbackLocationRecord = {
+        address: "Lindong community",
+        area: "Fenyi"
+      };
+      const containedInPlaceFallbackRecord = {
+        "schema:containedInPlace": {
+          "schema:name": "Fenyi County"
+        }
+      };
+
       assert(isValidLatitude(27.622), "Map Helpers", "valid latitude returns true");
       assert(!isValidLatitude(120), "Map Helpers", "invalid latitude returns false");
       assert(isValidLongitude(113.885), "Map Helpers", "valid longitude returns true");
@@ -407,6 +419,18 @@
         "build nomination URL from coordinates"
       );
       assertEqual(buildPlaceRecordUrl("alpha square"), "place.html?id=alpha%20square", "Map Helpers", "build place record URL");
+      assertEqual(
+        getCommunityDisplayLocation(fallbackLocationRecord),
+        "Lindong community, Fenyi",
+        "Map Helpers",
+        "map popup location fallback combines address and area"
+      );
+      assertEqual(
+        getCommunityDisplayLocation(containedInPlaceFallbackRecord),
+        "Fenyi County",
+        "Map Helpers",
+        "map popup location fallback uses containedInPlace name"
+      );
     }
 
     function runPlaceTests() {
@@ -417,13 +441,31 @@
         adminNotes: "private note",
         reviewHistory: [{ action: "review_saved" }]
       };
+      const fallbackLocationPlace = {
+        address: "Lindong community",
+        area: "Fenyi"
+      };
+      const optionalValuePlace = {
+        associatedType: "Workers' hall",
+        period: "20th century",
+        grade: "Local interest"
+      };
 
       assertEqual(getDisplayTitle(alpha), "Alpha Community Square", "Place Helpers", "getDisplayTitle returns title");
       assertEqual(getDisplayTitle({}), "Untitled community place", "Place Helpers", "getDisplayTitle returns fallback");
       assertEqual(getDisplayLocation(alpha), "Pingxiang, Jiangxi", "Place Helpers", "getDisplayLocation returns readable location");
+      assertEqual(
+        formatPlaceLocationAddress(fallbackLocationPlace),
+        "Lindong community, Fenyi",
+        "Place Helpers",
+        "place location formatter combines address and area"
+      );
       assertEqual(getHeritageCriteria(alpha).length, 2, "Place Helpers", "getHeritageCriteria returns criteria safely");
       assertEqual(formatCriteriaList(alpha)[0], "Social or communal value", "Place Helpers", "formatCriteriaList returns criteria");
       assertEqual(buildMapUrl(alpha), "map.html?lat=27.622&lng=113.885", "Place Helpers", "buildMapUrl returns coordinate link");
+      assertEqual(optionalValuePlace.associatedType, "Workers' hall", "Place Helpers", "optional associated type values remain available when present");
+      assertEqual(optionalValuePlace.period, "20th century", "Place Helpers", "optional period values remain available when present");
+      assertEqual(optionalValuePlace.grade, "Local interest", "Place Helpers", "optional grade values remain available when present");
 
       const serializedPublicValues = JSON.stringify({
         title: getDisplayTitle(withPrivateFields),

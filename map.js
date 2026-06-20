@@ -21,7 +21,7 @@ import {
   normalizeCoordinate,
   normalizeSearchValue,
   recordMatchesSearch
-} from "./heritage-engine/maps.js";
+} from "./heritage-engine/maps.js?v=2026-06-20-releasepolish";
 
 // === Firebase Config ===
 const firebaseConfig = {
@@ -604,11 +604,18 @@ function initCommunityMap({
           id: docSnap.id,
           title: cleanText(data.title),
           category: cleanText(data.category),
+          locationName: cleanText(data.locationName),
           location: cleanText(data.location),
+          area: cleanText(data.area),
+          locality: cleanText(data.locality),
+          community: cleanText(data.community),
+          neighbourhood: cleanText(data.neighbourhood || data.neighborhood),
           province: cleanText(data.province),
           city: cleanText(data.city),
           district: cleanText(data.district),
           address: cleanText(data.address),
+          containedInPlace: data.containedInPlace,
+          "schema:containedInPlace": data["schema:containedInPlace"],
           associatedType: cleanText(data.associatedType),
           contributor: cleanText(data.contributor),
           period: cleanText(data.period),

@@ -22,7 +22,7 @@ import {
   hasValidCoordinates,
   normalizeCoordinate,
   toSafeUrl
-} from "./heritage-engine/places.js?v=2026-06-19-12a";
+} from "./heritage-engine/places.js?v=2026-06-20-releasepolish";
 import {
   ARTICLE_RELATIONSHIP_COLLECTIONS,
   getRelationshipWarningSummary,
@@ -132,9 +132,12 @@ function setupTabs() {
   });
 }
 
-function appendMetadata(label, value, emptyText = "Not recorded yet.") {
+function appendMetadata(label, value, emptyText = "Not recorded yet.", options = {}) {
   if (!els.metadata) return;
   const safeValue = cleanText(value);
+  if (!safeValue && options.hideIfEmpty) {
+    return;
+  }
   const dt = document.createElement("dt");
   const dd = document.createElement("dd");
   dt.textContent = label;
@@ -451,9 +454,9 @@ function renderPlace(place) {
     appendMetadata("Asset type", getAssetType(place), "No asset type recorded yet.");
     appendMetadata("Location / Address", formatPlaceLocationAddress(place), "No location/address recorded yet.");
     appendMetadata("Coordinates", summary.coordinates, "Location coordinates are not available yet.");
-    appendMetadata("Associated type", place.associatedType, "No associated type recorded yet.");
-    appendMetadata("Period", place.period, "No period recorded yet.");
-    appendMetadata("Grade", place.grade, "No grade or classification recorded yet.");
+    appendMetadata("Associated type", place.associatedType, "No associated type recorded yet.", { hideIfEmpty: true });
+    appendMetadata("Period", place.period, "No period recorded yet.", { hideIfEmpty: true });
+    appendMetadata("Grade", place.grade, "No grade or classification recorded yet.", { hideIfEmpty: true });
   }
 
   renderImage(place);
