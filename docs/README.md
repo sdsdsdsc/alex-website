@@ -1,37 +1,50 @@
-# Docs Index
+# Alex's Photo Board Documentation
 
-This folder is the working documentation hub for Alex's Photo Board.
+This page is the current documentation navigation index for Alex's Photo Board.
 
-## Current orientation docs
+## Start Here
 
+- [current-project-state-and-doc-cleanup-audit.md](./current-project-state-and-doc-cleanup-audit.md)
+- [project-status-checkpoint.md](./project-status-checkpoint.md)
 - [site-structure.md](./site-structure.md)
-- [alex-heritage-engine-roadmap.md](./alex-heritage-engine-roadmap.md)
+
+## Current Verification and Release Safety
+
+- [phase-12-final-verification-record.md](./phase-12-final-verification-record.md)
+- [release-smoke-test-matrix.md](./release-smoke-test-matrix.md)
+- [firestore-rules-verification-plan.md](./firestore-rules-verification-plan.md)
+- [release-rollback-runbook.md](./release-rollback-runbook.md)
+- [phase-12e-auth-rules-release-checklist.md](./phase-12e-auth-rules-release-checklist.md)
+
+## Current Phase 13 Planning
+
+- [phase-13a-media-evidence-rights-model.md](./phase-13a-media-evidence-rights-model.md)
+- [phase-13b-storage-backup-media-audit-plan.md](./phase-13b-storage-backup-media-audit-plan.md)
+
+## Current Reference Docs
+
 - [local-heritage-listing-guidance.md](./local-heritage-listing-guidance.md)
-- [cambridgeshire-local-heritage-list-skill.md](./cambridgeshire-local-heritage-list-skill.md)
-
-## Engine docs
-
+- [phase-11a-live-readonly-backup-session-note.md](./phase-11a-live-readonly-backup-session-note.md)
 - [heritage-engine README](../heritage-engine/README.md)
 
-## Current Phase 11A summary docs
+## Maintenance-Only Docs
 
-- [phase-11a-live-readonly-backup-session-note.md](./phase-11a-live-readonly-backup-session-note.md)
-- [phase-11a-live-vs-local-audit-worksheet.md](./phase-11a-live-vs-local-audit-worksheet.md)
-- [phase-11a-communityplaces-user-approval-proposal.md](./phase-11a-communityplaces-user-approval-proposal.md)
-- [phase-11a-cleanup-closeout.md](./phase-11a-cleanup-closeout.md)
+- [maintenance/README-gallery-cleanup.md](../maintenance/README-gallery-cleanup.md)
+- [scripts/README-community-places-import.md](../scripts/README-community-places-import.md)
 
-## Archived planning docs
+## Archive
 
-Phase 9 and Phase 10 detailed planning docs are archived under:
+Archived docs are historical records, not current instructions.
 
 - [archive/phase-9/](./archive/phase-9/)
 - [archive/phase-10/](./archive/phase-10/)
-
-Phase 11A detailed working docs are archived under:
-
 - [archive/phase-11a/](./archive/phase-11a/)
+- [archive/phase-12-design/](./archive/phase-12-design/)
+- [archive/old-roadmaps/](./archive/old-roadmaps/)
+- [archive/retired-workflows/](./archive/retired-workflows/)
+- [archive/reference-experiments/](./archive/reference-experiments/)
 
-Current useful docs remain in the `docs` root.
+Older archived docs should not override newer current-state, verification, release, or rules documents.
 
 ## Warning
 
