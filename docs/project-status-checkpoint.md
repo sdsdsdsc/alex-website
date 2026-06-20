@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-This document is the current project status map for Alex's Photo Board after the Phase 10 engine work, the Phase 11A backup and audit checkpoint, the Phase 11B/11C public information and place-page work, and the documentation reorganization.
+This document is the current project status map for Alex's Photo Board after the Phase 10 engine work, the Phase 11A backup and audit checkpoint, the Phase 11B/11C public information and place-page work, the Phase 12 public-user auth/account source work, and the documentation reorganization.
 
 It is a source-based checkpoint, not proof that every deployed workflow has been tested recently. A page or helper is marked complete only where the repository and recorded project evidence support that conclusion. Firebase was not contacted while preparing this checkpoint.
 
@@ -106,7 +106,7 @@ The engine boundary is coherent: Firebase initialization, reads/writes, DOM rend
 | Phase 11B | Public guidance / Local Heritage Listing-style pages | Mostly done | `get-involved.html`, `criteria.html`, `guidance.html`, and `about-local-heritage.html` exist and are linked through shared navigation or page routes. | Formal accessibility/content review and deployed-browser regression are not recorded. | Preserve; improve only when content or accessibility evidence calls for it. |
 | Phase 11C | Better public place detail page | Mostly done | `place.html`, `place.js`, and `heritage-engine/places.js` provide a Local Heritage Record layout, facts, significance, criteria, sources, links, location, and empty states. | Needs a final deployed/browser regression across records with varied missing fields. | Treat as usable and test before release; avoid more cosmetic iteration now. |
 | Phase 11D | Places/search/map discovery | Mostly done | Search/filter/sort/result count, map markers, record links, and map-to-nomination coordinate handoff are implemented against `communityPlaces`. | No automated end-to-end tests; live data and responsive behavior should be regression-tested. | Stabilize with a short release test matrix, then move to relationship integrity. |
-| Phase 12 | Public user registration/login | Not started | Only admin Firebase Auth pages exist. | User identity model, privacy basis, account lifecycle, permissions, moderation, and UX. | Pause until a concrete community need justifies the privacy and support cost. |
+| Phase 12 | Public user registration/login | Source-complete; live public-auth workflow partially verified; final release/rules verification still required. | Public account safety model documented; public email/password registration/login/logout implemented; registration form includes display name, relevant local interest, confirm password, and consent checkbox; sign-in is required before nomination submission; signed-in nomination ownership metadata is stored privately on `placeNominations`; `my-nominations.html` provides a read-only owner-scoped view; admin nomination review shows submission account/type; promotion strips ownership/private/admin fields; local Firestore rules support signed-in create plus owner-scoped reads; auth stability hardening added `browserLocalPersistence` and `onAuthStateChanged` waiting; Phase 12E release checklist exists. Verified project evidence includes successful public sign-in, signed-in nomination detection for `alex.home@gmail.com`, at least one signed-in nomination submission, “My nominations” showing that user's own nomination, and admin `manage-nominations` displaying the submitted nomination. | Owner-vs-other-user rules verification; Firebase emulator or controlled deployed rules verification; admin review and promotion regression test after Phase 12 changes; intentional Firebase rules deployment review; final backup before production release. | Treat as source-complete with release verification pending. Do not mark fully released until auth/rules/admin regression checks are completed intentionally. |
 | Phase 13 | Media upload, evidence, copyright/source management | Partly done | Article uploads use Storage; nominations accept evidence/photo URLs and source fields. | Unified rights metadata, consent/licensing, file upload policy, retention, Storage backup, moderation, and public display rules. | Plan a narrow media/evidence rights model before adding more uploads. |
 | Phase 14 | GIS layers / official dataset connection | Not started | Leaflet base mapping and place markers exist; retired map collections are absent from active code. | Dataset selection, licensing, provenance, layer model, update strategy, legend, accessibility, and performance plan. | Pause until a named dataset and user need are agreed. |
 | Phase 15 | Testing/staging/deployment/rollback | Partly done | Pure-helper browser harness, manual phase checks, Git workflow, and GitHub Pages deployment history exist. | No staging environment, automated CI, release checklist, smoke suite, rollback procedure, or deployed-rules verification record tied to releases. | Make this one of the next structural priorities. |
@@ -115,7 +115,7 @@ The engine boundary is coherent: Firebase initialization, reads/writes, DOM rend
 
 ### Actual Current Phase
 
-The project is past architecture setup and safe-audit work. Its public place, search, map, article, nomination, review, promotion, and export pathways are implemented, but several are mature only at the source-code level and need a coherent release test process. The practical position is: **Phase 11 public platform mostly complete, with relationship integrity and release assurance now more valuable than additional page polish.**
+The project is past architecture setup and safe-audit work. Its public place, search, map, article, nomination, review, promotion, export, and public-user auth/account pathways are implemented, but several are mature only at the source-code level and still need a coherent release test process. The practical position is: **Phase 12 source work is complete, with release assurance and rules verification now more valuable than additional page polish or new features.**
 
 ## 9. Stop / Pause List
 
@@ -145,16 +145,17 @@ The project is past architecture setup and safe-audit work. Its public place, se
 
 ## 11. Suggested Next Immediate Phase
 
-### Relationship Integrity And Link Management
+### Release Assurance: Smoke Tests, Rules Verification, and Rollback
 
-Scope the next phase around the existing `relatedArticles` and `relatedPlaces` fields:
+The next immediate work should focus on release assurance for the now source-complete Phase 12 public auth/account flow and the related admin/public Firebase boundary:
 
-- document one canonical relationship reference shape;
-- audit current public/admin handling for one-way and broken relationships;
-- add pure validation helpers only where needed;
-- add admin warnings and selection support without automatic destructive rewrites;
-- preserve stable IDs and current public URLs;
-- keep Firebase writes admin-only;
-- test place-to-article, article-to-place, missing-target, and deleted-target behavior.
+- create a repeatable smoke test matrix;
+- verify public auth register/login/logout;
+- verify signed-in nomination submission;
+- verify `My nominations` owner-scoped reads;
+- verify admin review and promotion still work;
+- verify public export safety;
+- verify deployed or emulator Firestore rules;
+- document rollback steps before any release.
 
-This is structural, directly improves the heritage record network, and builds on working pages without restarting them.
+This is the highest-value next step because the current codebase now needs dependable release verification more than new features or another structural rewrite.
