@@ -204,7 +204,7 @@ form?.addEventListener("submit", async (event) => {
   submitButton.textContent = "Submitting...";
 
   try {
-    console.log("13C nomination payload debug", {
+    const payloadDebug = {
       allKeys: Object.keys(payload).sort(),
 
       lat: payload.lat,
@@ -227,14 +227,20 @@ form?.addEventListener("submit", async (event) => {
       evidenceImageUrl: payload.evidenceImageUrl,
       evidenceImageUrlType: typeof payload.evidenceImageUrl,
 
-      evidenceImageCaption: payload.evidenceImageCaption,
-      evidenceSourceCredit: payload.evidenceSourceCredit,
-
       evidenceRightsStatus: payload.evidenceRightsStatus,
       evidencePermissionConfirmed: payload.evidencePermissionConfirmed,
       evidencePermissionConfirmedType: typeof payload.evidencePermissionConfirmed,
       evidenceVisibility: payload.evidenceVisibility
-    });
+    };
+
+    if (Object.prototype.hasOwnProperty.call(payload, "evidenceImageCaption")) {
+      payloadDebug.evidenceImageCaption = payload.evidenceImageCaption;
+    }
+    if (Object.prototype.hasOwnProperty.call(payload, "evidenceSourceCredit")) {
+      payloadDebug.evidenceSourceCredit = payload.evidenceSourceCredit;
+    }
+
+    console.log("13C nomination payload debug", payloadDebug);
     await addDoc(collection(db, "placeNominations"), payload);
     form.reset();
     fillNominationCoordinates();
