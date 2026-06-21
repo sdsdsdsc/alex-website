@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "import:places": "node scripts/import-community-places.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}

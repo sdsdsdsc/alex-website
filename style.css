@@ -702,6 +702,11 @@ body > header h1 a.home-link:hover {
   font: inherit;
 }
 
+#nominationEvidenceRightsStatus {
+  line-height: 1.4;
+  padding-right: 36px;
+}
+
 .nomination-field textarea {
   resize: vertical;
   line-height: 1.55;
