@@ -115,7 +115,7 @@ The engine boundary is coherent: Firebase initialization, reads/writes, DOM rend
 
 ### Actual Current Phase
 
-The project is past architecture setup and safe-audit work. Its public place, search, map, article, nomination, review, promotion, export, and public-user auth/account pathways are implemented, but several are mature only at the source-code level and still need a coherent release test process. The practical position is: **Phase 12 source work is complete, with release assurance and rules verification now more valuable than additional page polish or new features.**
+The project is past architecture setup and safe-audit work. Its public place, search, map, article, nomination, review, promotion, export, and public-user auth/account pathways are implemented, but several are mature only at the source-code level and still need a coherent release test process. Phase 12 is functionally verified for the current project stage; Phase 13A and Phase 13B are complete planning work; Phase 13C remains paused; and Phase Reset 1A through 1D have focused on documentation, rules-sync planning, and legacy-route classification. The practical position is: **Phase 12 source work is complete, with reset cleanup and release assurance now more valuable than new media features or additional page polish.**
 
 ## 9. Stop / Pause List
 
@@ -145,17 +145,14 @@ The project is past architecture setup and safe-audit work. Its public place, se
 
 ## 11. Suggested Next Immediate Phase
 
-### Release Assurance: Smoke Tests, Rules Verification, and Rollback
+### Phase Reset 1E — Retired Page Cleanup Implementation, Docs/Page Warnings Only
 
-The next immediate work should focus on release assurance for the now source-complete Phase 12 public auth/account flow and the related admin/public Firebase boundary:
+The next immediate work should focus on small, reversible cleanup based on the completed reset planning:
 
-- create a repeatable smoke test matrix;
-- verify public auth register/login/logout;
-- verify signed-in nomination submission;
-- verify `My nominations` owner-scoped reads;
-- verify admin review and promotion still work;
-- verify public export safety;
-- verify deployed or emulator Firestore rules;
-- document rollback steps before any release.
+- update current docs so route status and legacy dependencies are clearer;
+- add light page-label cleanup where wording is inconsistent;
+- add non-destructive warnings or notes for retired or legacy route concepts only where helpful;
+- keep Drupal/Pantheon behavior intact while documenting it as active-but-legacy;
+- avoid refactors, route removal, or dependency removal until a later explicit decision.
 
-This is the highest-value next step because the current codebase now needs dependable release verification more than new features or another structural rewrite.
+This is the highest-value next step because the route and dependency model is now documented well enough for light cleanup, while larger release assurance and Drupal/Pantheon decisions still need their own deliberate follow-up.

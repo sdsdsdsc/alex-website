@@ -15,6 +15,8 @@ This page is the current documentation navigation index for Alex's Photo Board.
 - [firestore-rules-verification-plan.md](./firestore-rules-verification-plan.md)
 - [release-rollback-runbook.md](./release-rollback-runbook.md)
 - [phase-12e-auth-rules-release-checklist.md](./phase-12e-auth-rules-release-checklist.md)
+- [firestore-rules-sync-and-verification-plan.md](./firestore-rules-sync-and-verification-plan.md)
+- [retired-page-navigation-cleanup-plan.md](./retired-page-navigation-cleanup-plan.md)
 
 ## Current Phase 13 Planning
 

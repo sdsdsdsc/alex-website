@@ -4,6 +4,8 @@ Alex's Photo Board is becoming a lightweight community heritage website with lin
 
 This document describes the current structure and the preferred direction for relationship-building work. It is not a rebuild plan.
 
+Phase 12 public-account nomination work is functionally verified for the current project stage. Phase 13A and Phase 13B planning are complete. Phase 13C remains paused while rules, navigation, and legacy-route cleanup are clarified.
+
 ## Hybrid Heritage Model
 
 Alex's Photo Board is a small hybrid community heritage website. It combines a light Hebridean Connections-style approach to linked community heritage records with a Historic England-style approach to clear public news, history, and story presentation. The site should remain practical, focused, and easy to maintain rather than growing into either a national heritage database or a large multi-record archive.
@@ -27,7 +29,7 @@ The project should adapt useful Local Heritage Listing principles to its small c
 - Stable IDs, reliable location data, source references, clear criteria, and clean relationships are more important than adding many new record types too early.
 - `relatedArticles` and `relatedPlaces` should remain core relationship links between records and narratives.
 
-Public nominations are a future workflow, but they must not write directly to `communityPlaces`. A later nomination form should create records in a separate collection such as `placeNominations`. Admin review should then approve, reject, or request more information and decide whether an approved nomination becomes a published `communityPlaces` record.
+Public nominations are now an active signed-in workflow, but they must not write directly to `communityPlaces`. The public nomination form writes to `placeNominations`, and admin review then approves, rejects, requests more information, or promotes an approved nomination into a published `communityPlaces` record.
 
 Future public and admin wording should use terms such as "community heritage record" and "community-valued place". It should avoid describing the project as an official Local Heritage List, statutory list, or planning authority record.
 
@@ -35,9 +37,9 @@ Future public and admin wording should use terms such as "community heritage rec
 
 | Layer | Role | Current implementation | Direction |
 | --- | --- | --- | --- |
-| Public website layer | Presents places, maps, search, articles, and exports to visitors. | `index.html`, `search.html`, `map.html`, `place.html`, `news.html`, `history.html`, `article.html`, `export.html` | Keep public behavior centered on `communityPlaces`, `news`, and `history`. |
-| Firebase content layer | Stores editable content records. | Firestore collections: `communityPlaces`, `news`, `history` | Keep Firebase as the practical content database. |
-| Admin editing layer | Lets signed-in admins create, review, update, and manage content. | `admin-login.html`, `admin.html`, `manage-community-places.html`, `upload-article.html`, `manage-articles.html` | Add relationship editing gradually and safely. |
+| Public website layer | Presents places, maps, search, articles, exports, and signed-in nomination/account pages to visitors. | `index.html`, `search.html`, `map.html`, `place.html`, `news.html`, `history.html`, `article.html`, `export.html`, `public-auth.html`, `nominate-place.html`, `my-nominations.html` | Keep public behavior centered on `communityPlaces`, `news`, and `history`, with private nominations kept separate. |
+| Firebase content layer | Stores editable content records. | Firestore collections: `communityPlaces`, `placeNominations`, `news`, `history` | Keep Firebase as the practical content database while preserving public/private separation. |
+| Admin editing layer | Lets signed-in admins create, review, update, and manage content. | `admin-login.html`, `admin.html`, `manage-community-places.html`, `manage-nominations.html`, `upload-article.html`, `manage-articles.html`, `admin-export.html` | Add relationship editing gradually and safely. |
 | Semantic metadata layer | Adds machine-readable meaning to public records. | JSON-LD on place and article pages; stored `jsonld` fields; export generation | Normalize place/article relationships using stable IDs and URLs. |
 | Future open-data / RDF export layer | Makes the dataset reusable outside the website. | `export.html` and `export.js` currently download `heritage.json` as JSON-LD with `@context` and `@graph`. | Continue refining clean JSON-LD, then optionally convert to RDF for Fuseki or GraphDB. |
 
@@ -51,13 +53,20 @@ Future public and admin wording should use terms such as "community heritage rec
 | `place.html` | Official public detail page for one community place record. | Reads one `communityPlaces` document. | `map.html`, `search.html`, optional related article URL |
 | `news.html` | Public news listing. | Reads `news` through `script.js`; also reads external Drupal JSON:API news. | `article.html?id={id}&type=news`, `article.html?id={id}&type=drupal` |
 | `history.html` | Public history listing. | Reads `history` through `script.js`. | `article.html?id={id}&type=history` |
-| `article.html` | Public article detail page. | Reads one `news` or `history` document, or an external Drupal article when `type=drupal`. | Main site navigation |
-| `export.html` | Public open-data download page. | Reads through `export.js`. | Main site navigation |
+| `article.html` | Public article detail destination page, not a top-level nav tab. | Reads one `news` or `history` document, or an external Drupal article when `type=drupal`. | Main site navigation |
+| `export.html` | Public open-data download page, labelled Open Data in navigation. | Reads through `export.js`. | Main site navigation |
+| `public-auth.html` | Public account registration/sign-in/sign-out page. | Uses Firebase Auth only. | `nominate-place.html`, `my-nominations.html` |
+| `nominate-place.html` | Signed-in public nomination form. | Creates `placeNominations`; does not create `communityPlaces`. | `public-auth.html?next=...`, `my-nominations.html` |
+| `my-nominations.html` | Owner-scoped public nomination history page. | Reads owner-scoped `placeNominations`. | `public-auth.html`, `nominate-place.html` |
 | `admin-login.html` | Firebase Auth sign-in page for admin workflows. | Uses Firebase Auth only. | Redirects to the requested admin page after sign-in |
 | `admin.html` | Protected admin dashboard. | Uses Firebase Auth only. | `manage-community-places.html`, `upload-article.html`, `manage-articles.html` |
 | `manage-community-places.html` | Protected admin manager for community place records. | Reads/writes/deletes `communityPlaces`. | `place.html?id={id}`, `map.html?lat={lat}&lng={lng}`, `admin.html` |
+| `manage-nominations.html` | Protected admin review and promotion page for nominations. | Reads/updates `placeNominations`; creates `communityPlaces` during approved promotion. | `admin.html` |
 | `upload-article.html` | Protected article create/edit page. | Creates and updates `news` or `history`; uploads article assets to Firebase Storage. | `admin.html`, `manage-articles.html` |
 | `manage-articles.html` | Protected article management page. | Reads and deletes `news` and `history`. | `upload-article.html`, `admin.html` |
+| `admin-export.html` | Protected private admin backup/export page. | Reads `communityPlaces`, `placeNominations`, `news`, and `history`. | `admin.html` |
+
+There is no current `gallery.html` or `upload.html` route in the active site model.
 
 ## Current Firestore Collections
 
@@ -91,6 +100,15 @@ Known fields:
 - `jsonld`
 - `createdAt`
 - `updatedAt`
+
+### `placeNominations`
+
+Known current purpose:
+
+- private nomination submission and admin-review records
+- public signed-in create only
+- owner-scoped public reads through `my-nominations.html`
+- admin review and promotion workflow source records
 
 ### `news`
 
@@ -257,6 +275,12 @@ Current export behavior:
 This is not yet a triplestore or SPARQL system. Later, JSON-LD may be converted into RDF and stored in Apache Jena Fuseki or GraphDB after the website relationship model is stable.
 
 ## Legacy Warning
+
+- `mapPoints`, `mapPolygons`, and old `posts` are retired and must not return to the active public or admin workflow.
+- `search.html` is the active route for the public page labelled Places.
+- `export.html` is the active route for the public page labelled Open Data.
+- `article.html` and `place.html` are active destination pages, not primary top-level navigation tabs.
+- Drupal/Pantheon remains active for some public `news` and `article` behavior, but it is no longer the core Firebase content model. Treat it as an active-but-legacy dependency that needs a separate keep/isolate/retire decision later.
 
 The old `mapPoints` / `mapPolygons` map admin workflow has been retired. Opening `map.html?admin=true` should no longer enable legacy map editing.
 
