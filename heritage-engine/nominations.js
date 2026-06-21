@@ -303,6 +303,9 @@ function buildSubmittedNominationPayload(values = {}, timestamps = {}) {
   }
 
   return Object.entries(payload).reduce((clean, [key, entry]) => {
+    if (entry === undefined) {
+      return clean;
+    }
     if (PUBLIC_NOMINATION_FIELDS.includes(key)) {
       clean[key] = entry;
     }
