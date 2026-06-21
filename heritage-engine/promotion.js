@@ -23,6 +23,12 @@ const PUBLIC_PROMOTION_TEXT_FIELDS = Object.freeze([
   "sourceReference"
 ]);
 const PRIVATE_PROMOTION_FIELDS = Object.freeze([
+  "evidenceImageUrl",
+  "evidenceImageCaption",
+  "evidenceSourceCredit",
+  "evidenceRightsStatus",
+  "evidencePermissionConfirmed",
+  "evidenceVisibility",
   "submittedByUid",
   "submitterEmail",
   "submitterDisplayName",

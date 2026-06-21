@@ -40,7 +40,7 @@
       buildPromotionUpdatePayload,
       buildPublicPlacePayloadFromNomination,
       shouldAllowPromotion
-    } from "./heritage-engine/promotion.js?v=2026-06-19-12c";
+    } from "./heritage-engine/promotion.js?v=2026-06-20-13c";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -313,12 +313,34 @@
       }
     }
 
+    function getEvidenceRightsStatusLabel(value) {
+      switch (cleanText(value)) {
+        case "own-work":
+          return "I created this image or evidence myself";
+        case "permission-granted":
+          return "I have permission to share it";
+        case "public-domain-or-open-license":
+          return "It is public domain or openly licensed";
+        case "public-web-reference":
+          return "It is a public web reference for review only";
+        case "unknown-needs-review":
+          return "I am not sure — admin review needed";
+        default:
+          return "";
+      }
+    }
+
     function renderEvidenceSection(record) {
       const evidenceUrl = cleanText(record.evidenceImageUrl) || cleanText(record.photoUrl);
       const evidenceCaption = cleanText(record.evidenceImageCaption) || cleanText(record.photoDescription);
       const evidenceSourceCredit = cleanText(record.evidenceSourceCredit);
+      const evidenceRightsStatus = getEvidenceRightsStatusLabel(record.evidenceRightsStatus);
+      const evidencePermissionConfirmed = record.evidencePermissionConfirmed === true
+        ? "Confirmed by nominator"
+        : "";
+      const evidenceVisibility = cleanText(record.evidenceVisibility);
 
-      if (!evidenceUrl && !evidenceCaption && !evidenceSourceCredit) return null;
+      if (!evidenceUrl && !evidenceCaption && !evidenceSourceCredit && !evidenceRightsStatus && !evidencePermissionConfirmed && !evidenceVisibility) return null;
 
       const section = document.createElement("section");
       section.className = "manage-nominations-card__evidence";
@@ -329,7 +351,7 @@
 
       const note = document.createElement("p");
       note.className = "admin-help-note";
-      note.textContent = "This evidence was submitted by the nominator and has not been verified as official material in this phase.";
+      note.textContent = "This evidence was submitted by the nominator for review only. Rights metadata here must not be copied automatically into public place records in this phase.";
       section.appendChild(note);
 
       const grid = document.createElement("dl");
@@ -342,6 +364,12 @@
       if (captionRow) grid.appendChild(captionRow);
       const creditRow = createDetailRow("Evidence source / credit", evidenceSourceCredit);
       if (creditRow) grid.appendChild(creditRow);
+      const rightsRow = createDetailRow("Evidence rights / permission status", evidenceRightsStatus);
+      if (rightsRow) grid.appendChild(rightsRow);
+      const permissionRow = createDetailRow("Permission acknowledgement", evidencePermissionConfirmed);
+      if (permissionRow) grid.appendChild(permissionRow);
+      const visibilityRow = createDetailRow("Evidence visibility", evidenceVisibility);
+      if (visibilityRow) grid.appendChild(visibilityRow);
 
       section.appendChild(grid);
 

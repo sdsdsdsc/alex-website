@@ -8,7 +8,7 @@ import {
 import {
   buildGraphNode,
   buildPublicHeritageJsonLd
-} from "./heritage-engine/export.js?v=2026-06-19-12a";
+} from "./heritage-engine/export.js?v=2026-06-20-13c";
 
 // === Firebase config (reuse your existing settings) ===
 const firebaseConfig = {

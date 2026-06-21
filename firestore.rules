@@ -11,6 +11,11 @@ service cloud.firestore {
         && request.auth.uid == "VT3I9KMktMXsdJeyYBye54Sgnqu2";
     }
 
+    function isNominationOwner() {
+      return request.auth != null
+        && resource.data.submittedByUid == request.auth.uid;
+    }
+
     function hasField(fieldName) {
       return request.resource.data.keys().hasAny([fieldName]);
     }
@@ -30,6 +35,16 @@ service cloud.firestore {
           'Age',
           'Condition or vulnerability'
         ]);
+    }
+
+    function isAllowedEvidenceRightsStatus(value) {
+      return value in [
+        'own-work',
+        'permission-granted',
+        'public-domain-or-open-license',
+        'public-web-reference',
+        'unknown-needs-review'
+      ];
     }
 
     function isTrimmedString(value, maxLength) {
@@ -72,12 +87,19 @@ service cloud.firestore {
           'evidenceImageUrl',
           'evidenceImageCaption',
           'evidenceSourceCredit',
+          'evidenceRightsStatus',
+          'evidencePermissionConfirmed',
+          'evidenceVisibility',
           'photoUrl',
           'photoDescription',
           'nominatorDisplayName',
           'nominatorEmail',
           'organisationName',
           'submittedOnBehalfOf',
+          'submittedByUid',
+          'submitterEmail',
+          'submitterDisplayName',
+          'submissionAuthType',
           'termsAccepted',
           'privacyAccepted',
           'nominationStatus',
@@ -93,6 +115,9 @@ service cloud.firestore {
           'heritageCriteria',
           'criteriaExplanation',
           'nominatorEmail',
+          'submittedByUid',
+          'submitterEmail',
+          'submissionAuthType',
           'termsAccepted',
           'privacyAccepted',
           'nominationStatus',
@@ -104,6 +129,7 @@ service cloud.firestore {
 
     function isValidNominationCreate() {
       return hasValidNominationFields()
+        && request.auth != null
         && isTrimmedString(request.resource.data.title, 160)
         && isTrimmedString(request.resource.data.address, 1000)
         && isTrimmedString(request.resource.data.description, 5000)
@@ -112,6 +138,10 @@ service cloud.firestore {
         && isTrimmedString(request.resource.data.criteriaExplanation, 5000)
         && isTrimmedString(request.resource.data.nominatorEmail, 254)
         && request.resource.data.nominatorEmail.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+        && request.resource.data.submittedByUid == request.auth.uid
+        && isTrimmedString(request.resource.data.submitterEmail, 254)
+        && request.resource.data.submitterEmail == request.auth.token.email
+        && request.resource.data.submissionAuthType == 'signedIn'
         && request.resource.data.termsAccepted == true
         && request.resource.data.privacyAccepted == true
         && request.resource.data.nominationStatus == 'submitted'
@@ -130,10 +160,42 @@ service cloud.firestore {
         )
         && isOptionalString('evidenceImageCaption', 300)
         && isOptionalString('evidenceSourceCredit', 300)
+        && (
+          !hasField('evidenceRightsStatus')
+          || request.resource.data.evidenceRightsStatus == null
+          || request.resource.data.evidenceRightsStatus == ''
+          || (
+            request.resource.data.evidenceRightsStatus is string
+            && isAllowedEvidenceRightsStatus(request.resource.data.evidenceRightsStatus)
+          )
+        )
+        && (
+          !hasField('evidencePermissionConfirmed')
+          || request.resource.data.evidencePermissionConfirmed == null
+          || request.resource.data.evidencePermissionConfirmed is bool
+        )
+        && (
+          !hasField('evidenceVisibility')
+          || request.resource.data.evidenceVisibility == null
+          || request.resource.data.evidenceVisibility == ''
+          || request.resource.data.evidenceVisibility == 'nomination-private'
+        )
+        && (
+          !hasField('evidenceImageUrl')
+          || request.resource.data.evidenceImageUrl == null
+          || request.resource.data.evidenceImageUrl == ''
+          || (
+            request.resource.data.evidenceRightsStatus is string
+            && isAllowedEvidenceRightsStatus(request.resource.data.evidenceRightsStatus)
+            && request.resource.data.evidencePermissionConfirmed == true
+            && request.resource.data.evidenceVisibility == 'nomination-private'
+          )
+        )
         && isOptionalString('photoUrl', 2048)
         && isOptionalString('photoDescription', 1000)
         && isOptionalString('nominatorDisplayName', 120)
         && isOptionalString('organisationName', 180)
+        && isOptionalString('submitterDisplayName', 120)
         && (
           !hasField('submittedOnBehalfOf')
           || request.resource.data.submittedOnBehalfOf == null
@@ -222,7 +284,7 @@ service cloud.firestore {
 
     match /placeNominations/{nominationId} {
       allow create: if isValidNominationCreate();
-      allow read: if isAdmin();
+      allow read: if isAdmin() || isNominationOwner();
       allow update: if isAdmin() && (
         isValidNominationReviewUpdate()
         || isValidNominationPromotionUpdate()

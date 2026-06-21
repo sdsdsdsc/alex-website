@@ -16,6 +16,12 @@ const RELATIONSHIP_FIELDS = new Set([
 ]);
 const UNSAFE_PUBLIC_EXPORT_FIELDS = new Set([
   "placeNominations",
+  "evidenceImageUrl",
+  "evidenceImageCaption",
+  "evidenceSourceCredit",
+  "evidenceRightsStatus",
+  "evidencePermissionConfirmed",
+  "evidenceVisibility",
   "nominatorEmail",
   "adminNotes",
   "adminHistoricInterest",

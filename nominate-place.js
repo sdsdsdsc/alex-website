@@ -12,7 +12,7 @@ import {
 import {
   buildNominationOwnershipMetadata,
   buildSubmittedNominationPayload
-} from "./heritage-engine/nominations.js?v=2026-06-19-12c";
+} from "./heritage-engine/nominations.js?v=2026-06-20-13c";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -44,6 +44,7 @@ const FORM_TEXT_FIELDS = [
   "evidenceImageUrl",
   "evidenceImageCaption",
   "evidenceSourceCredit",
+  "evidenceRightsStatus",
   "nominatorDisplayName",
   "nominatorEmail",
   "organisationName",
@@ -91,6 +92,7 @@ function readNominationFormValues(formData) {
   [
     "projectPositionAccepted",
     "reviewAccepted",
+    "evidencePermissionConfirmed",
     "privacyAccepted",
     "termsAccepted"
   ].forEach((field) => {

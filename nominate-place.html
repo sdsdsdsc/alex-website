@@ -8,7 +8,7 @@
   <title>Nominate a Community Place | Alex's Photo Board</title>
   <link rel="stylesheet" href="style.css">
   <script type="module" src="public-nav.js" defer></script>
-  <script type="module" src="nominate-place.js?v=2026-06-19-12c" defer></script>
+  <script type="module" src="nominate-place.js?v=2026-06-20-13c" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#nominatePlaceMain">Skip to nomination form</a>
@@ -194,6 +194,34 @@
           <div class="nomination-field">
             <label for="nominationEvidenceCredit">Evidence source / credit</label>
             <input id="nominationEvidenceCredit" name="evidenceSourceCredit" type="text" maxlength="300" placeholder="Photo by nominator">
+          </div>
+
+          <div class="nomination-field nomination-field--full">
+            <label for="nominationEvidenceRightsStatus">Evidence rights / permission status</label>
+            <select
+              id="nominationEvidenceRightsStatus"
+              name="evidenceRightsStatus"
+              aria-describedby="nominationEvidenceRightsStatusHelp"
+            >
+              <option value="">Select one if you provide an evidence URL</option>
+              <option value="own-work">I created this image or evidence myself</option>
+              <option value="permission-granted">I have permission to share it</option>
+              <option value="public-domain-or-open-license">It is public domain or openly licensed</option>
+              <option value="public-web-reference">It is a public web reference for review only</option>
+              <option value="unknown-needs-review">I am not sure — admin review needed</option>
+            </select>
+            <p id="nominationEvidenceRightsStatusHelp" class="nomination-field__help">Choose the option that best explains why this evidence link can be reviewed safely.</p>
+          </div>
+
+          <div class="nomination-field nomination-field--full">
+            <label class="public-auth-checkbox">
+              <input id="nominationEvidencePermissionConfirmed" name="evidencePermissionConfirmed" type="checkbox">
+              <span>I understand I should only provide evidence links that I created, have permission to share, or can clearly cite as a public reference.</span>
+            </label>
+          </div>
+
+          <div class="nomination-field nomination-field--full">
+            <p class="nomination-field__help">This URL is stored with the nomination for review. It is not uploaded by the site and is not included in the public open-data export unless a later approved workflow says so.</p>
           </div>
         </fieldset>
 

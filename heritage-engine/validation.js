@@ -28,6 +28,12 @@ const PUBLIC_RECORD_STATUSES = Object.freeze([
 const UNSAFE_PUBLIC_FIELD_NAMES = Object.freeze([
   "publicUsers",
   "placeNominations",
+  "evidenceImageUrl",
+  "evidenceImageCaption",
+  "evidenceSourceCredit",
+  "evidenceRightsStatus",
+  "evidencePermissionConfirmed",
+  "evidenceVisibility",
   "submittedByUid",
   "submitterEmail",
   "submitterDisplayName",

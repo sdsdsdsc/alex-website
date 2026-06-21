@@ -192,6 +192,8 @@
       normalizeRelationshipReferences
     } from "./heritage-engine/relationships.js";
     import {
+      EVIDENCE_RIGHTS_STATUSES,
+      NOMINATION_PRIVATE_EVIDENCE_VISIBILITY,
       PUBLIC_DISALLOWED_NOMINATION_FIELDS,
       buildNominationDraftFromFormValues,
       buildNominationOwnershipMetadata,
@@ -201,7 +203,7 @@
       validateNominationAgreements,
       validateNominationEvidenceFields,
       validateNominationRequiredFields
-    } from "./heritage-engine/nominations.js?v=2026-06-19-12c";
+    } from "./heritage-engine/nominations.js?v=2026-06-20-13c";
     import {
       appendReviewHistory,
       buildPromotionHistoryEntry,
@@ -237,7 +239,7 @@
       shouldAllowPromotion,
       stripPrivateFieldsForPromotion,
       validatePromotionSource
-    } from "./heritage-engine/promotion.js?v=2026-06-19-12c";
+    } from "./heritage-engine/promotion.js?v=2026-06-20-13c";
     import {
       HERITAGE_CRITERIA,
       containsUnsafePublicField,
@@ -245,7 +247,7 @@
       isValidEmail,
       normalizeCriteriaList,
       stripUnsafePublicFields
-    } from "./heritage-engine/validation.js?v=2026-06-19-12c";
+    } from "./heritage-engine/validation.js?v=2026-06-20-13c";
 
     const groups = new Map();
     const counts = {
@@ -490,6 +492,12 @@
               { collection: "history", id: "history-story", title: "Duplicate Alpha Square Story" }
             ],
             jsonld: {
+              evidenceImageUrl: "https://example.org/private-evidence.jpg",
+              evidenceImageCaption: "Private evidence caption",
+              evidenceSourceCredit: "Private evidence credit",
+              evidenceRightsStatus: "permission-granted",
+              evidencePermissionConfirmed: true,
+              evidenceVisibility: "nomination-private",
               nominatorEmail: "private@example.com",
               adminNotes: "private note",
               adminHistoricInterest: true,
@@ -554,11 +562,20 @@
       assert(true, "Export Helpers", "generated JSON is valid");
 
       [
+        "evidenceImageUrl",
+        "evidenceImageCaption",
+        "evidenceSourceCredit",
+        "evidenceRightsStatus",
+        "evidencePermissionConfirmed",
+        "evidenceVisibility",
         "nominatorEmail",
         "submittedByUid",
         "submitterEmail",
         "submitterDisplayName",
         "submissionAuthType",
+        "private-evidence.jpg",
+        "Private evidence caption",
+        "Private evidence credit",
         "private@example.com",
         "adminNotes",
         "private note",
@@ -738,6 +755,8 @@
         evidenceImageUrl: "",
         evidenceImageCaption: "",
         evidenceSourceCredit: "",
+        evidenceRightsStatus: "",
+        evidencePermissionConfirmed: false,
         nominatorDisplayName: "Test Nominator",
         nominatorEmail: "test@example.org",
         submittedOnBehalfOf: "self",
@@ -768,7 +787,21 @@
         submittedAt: "submitted",
         ownershipMetadata
       });
+      const valuesWithEvidence = buildValidNominationValues({
+        evidenceImageUrl: "https://example.org/evidence.jpg",
+        evidenceImageCaption: "Front view",
+        evidenceSourceCredit: "Photo by nominator",
+        evidenceRightsStatus: "own-work",
+        evidencePermissionConfirmed: true
+      });
+      const payloadWithEvidence = buildSubmittedNominationPayload(valuesWithEvidence, {
+        createdAt: "created",
+        updatedAt: "updated",
+        submittedAt: "submitted",
+        ownershipMetadata
+      });
       const payloadSerialized = JSON.stringify(payload);
+      const payloadWithEvidenceSerialized = JSON.stringify(payloadWithEvidence);
       const unsafeFieldNames = [
         "adminNotes",
         "reviewHistory",
@@ -795,6 +828,26 @@
       assertEqual(validateNominationEvidenceFields({ evidenceImageUrl: "" }).length, 0, "Nomination Helpers", "blank evidence URL is allowed");
       assertEqual(validateNominationEvidenceFields({ evidenceImageUrl: "https://example.org/photo.jpg" }).length, 0, "Nomination Helpers", "HTTPS evidence URL is allowed");
       assert(validateNominationEvidenceFields({ evidenceImageUrl: "http://example.org/photo.jpg" }).length > 0, "Nomination Helpers", "HTTP evidence URL is rejected");
+      assert(EVIDENCE_RIGHTS_STATUSES.includes("own-work"), "Nomination Helpers", "rights statuses include own-work");
+      assert(EVIDENCE_RIGHTS_STATUSES.includes("unknown-needs-review"), "Nomination Helpers", "rights statuses include unknown-needs-review");
+      assertEqual(validateNominationEvidenceFields({
+        evidenceImageUrl: "https://example.org/photo.jpg",
+        evidenceRightsStatus: "own-work",
+        evidencePermissionConfirmed: true
+      }).length, 0, "Nomination Helpers", "evidence URL with valid rights metadata passes validation");
+      assert(validateNominationEvidenceFields({
+        evidenceImageUrl: "https://example.org/photo.jpg",
+        evidencePermissionConfirmed: true
+      }).length > 0, "Nomination Helpers", "evidence URL without rights status fails validation");
+      assert(validateNominationEvidenceFields({
+        evidenceImageUrl: "https://example.org/photo.jpg",
+        evidenceRightsStatus: "own-work",
+        evidencePermissionConfirmed: false
+      }).length > 0, "Nomination Helpers", "evidence URL without permission confirmation fails validation");
+      assertEqual(validateNominationEvidenceFields({
+        evidenceRightsStatus: "own-work",
+        evidencePermissionConfirmed: true
+      }).length, 0, "Nomination Helpers", "no evidence URL does not require rights metadata");
       assert(validateNominationAgreements(buildValidNominationValues({ termsAccepted: false })).length > 0, "Nomination Helpers", "terms agreement is required");
       assert(validateNominationAgreements(buildValidNominationValues({ privacyAccepted: false })).length > 0, "Nomination Helpers", "privacy agreement is required");
       assertEqual(PUBLIC_DISALLOWED_NOMINATION_FIELDS.includes("adminNotes"), true, "Nomination Helpers", "public disallowed fields include adminNotes");
@@ -841,6 +894,10 @@
       assertEqual(payload.submitterEmail, "account@example.org", "Nomination Helpers", "submitted payload includes account email");
       assertEqual(payload.submitterDisplayName, "Account User", "Nomination Helpers", "submitted payload includes account display name");
       assertEqual(payload.submissionAuthType, "signedIn", "Nomination Helpers", "submitted payload includes signed-in submission type");
+      assertEqual(payloadWithEvidence.evidenceRightsStatus, "own-work", "Nomination Helpers", "submitted payload keeps evidence rights status");
+      assertEqual(payloadWithEvidence.evidencePermissionConfirmed, true, "Nomination Helpers", "submitted payload keeps evidence permission confirmation");
+      assertEqual(payloadWithEvidence.evidenceVisibility, NOMINATION_PRIVATE_EVIDENCE_VISIBILITY, "Nomination Helpers", "evidence visibility defaults to nomination-private when evidence URL is present");
+      assertNotContains(payloadWithEvidenceSerialized, "adminNotes", "Nomination Helpers", "submitted payload with evidence still excludes adminNotes");
       unsafeFieldNames.forEach((fieldName) => {
         assertNotContains(payloadSerialized, fieldName, "Nomination Helpers", `submitted payload excludes ${fieldName}`);
         assert(!Object.prototype.hasOwnProperty.call(draft, fieldName), "Nomination Helpers", `draft shaping excludes ${fieldName}`);
@@ -966,6 +1023,12 @@
         localSignificanceSummary: "A locally valued gathering space.",
         heritageCriteria: ["Social or communal value", "Unknown criterion", "Rarity"],
         criteriaExplanation: "The nomination explains social value and rarity.",
+        evidenceImageUrl: "https://example.org/private-evidence.jpg",
+        evidenceImageCaption: "Private evidence caption",
+        evidenceSourceCredit: "Private evidence credit",
+        evidenceRightsStatus: "permission-granted",
+        evidencePermissionConfirmed: true,
+        evidenceVisibility: "nomination-private",
         condition: "In use",
         communityUse: "Gathering and everyday use",
         sourceReference: "Community nomination",
@@ -1036,6 +1099,12 @@
       assert(!("submitterEmail" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes submitter email");
       assert(!("submitterDisplayName" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes submitter display name");
       assert(!("submissionAuthType" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes submission auth type");
+      assert(!("evidenceImageUrl" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes evidenceImageUrl");
+      assert(!("evidenceImageCaption" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes evidenceImageCaption");
+      assert(!("evidenceSourceCredit" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes evidenceSourceCredit");
+      assert(!("evidenceRightsStatus" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes evidenceRightsStatus");
+      assert(!("evidencePermissionConfirmed" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes evidencePermissionConfirmed");
+      assert(!("evidenceVisibility" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes evidenceVisibility");
       assert(!("nominatorEmail" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes nominatorEmail");
       assert(!("adminNotes" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes adminNotes");
       assert(!("reviewHistory" in stripped), "Promotion Helpers", "stripPrivateFieldsForPromotion removes reviewHistory");
@@ -1050,6 +1119,12 @@
         "submitterEmail",
         "submitterDisplayName",
         "submissionAuthType",
+        "evidenceImageUrl",
+        "evidenceImageCaption",
+        "evidenceSourceCredit",
+        "evidenceRightsStatus",
+        "evidencePermissionConfirmed",
+        "evidenceVisibility",
         "nominatorEmail",
         "private@example.org",
         "adminNotes",
