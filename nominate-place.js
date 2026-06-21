@@ -205,14 +205,35 @@ form?.addEventListener("submit", async (event) => {
 
   try {
     console.log("13C nomination payload debug", {
+      allKeys: Object.keys(payload).sort(),
+
+      lat: payload.lat,
+      latType: typeof payload.lat,
+      lng: payload.lng,
+      lngType: typeof payload.lng,
+
+      submittedByUid: payload.submittedByUid,
+      authUid: auth.currentUser && auth.currentUser.uid,
+
+      submitterEmail: payload.submitterEmail,
+      authEmail: auth.currentUser && auth.currentUser.email,
+
+      nominatorEmail: payload.nominatorEmail,
+
+      createdAt: payload.createdAt,
+      updatedAt: payload.updatedAt,
+      submittedAt: payload.submittedAt,
+
       evidenceImageUrl: payload.evidenceImageUrl,
+      evidenceImageUrlType: typeof payload.evidenceImageUrl,
+
+      evidenceImageCaption: payload.evidenceImageCaption,
+      evidenceSourceCredit: payload.evidenceSourceCredit,
+
       evidenceRightsStatus: payload.evidenceRightsStatus,
       evidencePermissionConfirmed: payload.evidencePermissionConfirmed,
       evidencePermissionConfirmedType: typeof payload.evidencePermissionConfirmed,
-      evidenceVisibility: payload.evidenceVisibility,
-      submittedOnBehalfOf: payload.submittedOnBehalfOf,
-      heritageCriteria: payload.heritageCriteria,
-      allKeys: Object.keys(payload).sort()
+      evidenceVisibility: payload.evidenceVisibility
     });
     await addDoc(collection(db, "placeNominations"), payload);
     form.reset();
