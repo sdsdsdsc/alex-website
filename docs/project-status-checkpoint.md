@@ -107,7 +107,7 @@ The engine boundary is coherent: Firebase initialization, reads/writes, DOM rend
 | Phase 11C | Better public place detail page | Mostly done | `place.html`, `place.js`, and `heritage-engine/places.js` provide a Local Heritage Record layout, facts, significance, criteria, sources, links, location, and empty states. | Needs a final deployed/browser regression across records with varied missing fields. | Treat as usable and test before release; avoid more cosmetic iteration now. |
 | Phase 11D | Places/search/map discovery | Mostly done | Search/filter/sort/result count, map markers, record links, and map-to-nomination coordinate handoff are implemented against `communityPlaces`. | No automated end-to-end tests; live data and responsive behavior should be regression-tested. | Stabilize with a short release test matrix, then move to relationship integrity. |
 | Phase 12 | Public user registration/login | Source-complete; live public-auth workflow partially verified; final release/rules verification still required. | Public account safety model documented; public email/password registration/login/logout implemented; registration form includes display name, relevant local interest, confirm password, and consent checkbox; sign-in is required before nomination submission; signed-in nomination ownership metadata is stored privately on `placeNominations`; `my-nominations.html` provides a read-only owner-scoped view; admin nomination review shows submission account/type; promotion strips ownership/private/admin fields; local Firestore rules support signed-in create plus owner-scoped reads; auth stability hardening added `browserLocalPersistence` and `onAuthStateChanged` waiting; Phase 12E release checklist exists. Verified project evidence includes successful public sign-in, signed-in nomination detection for `alex.home@gmail.com`, at least one signed-in nomination submission, “My nominations” showing that user's own nomination, and admin `manage-nominations` displaying the submitted nomination. | Owner-vs-other-user rules verification; Firebase emulator or controlled deployed rules verification; admin review and promotion regression test after Phase 12 changes; intentional Firebase rules deployment review; final backup before production release. | Treat as source-complete with release verification pending. Do not mark fully released until auth/rules/admin regression checks are completed intentionally. |
-| Phase 13 | Media upload, evidence, copyright/source management | Partly done | Article uploads use Storage; nominations accept evidence/photo URLs and source fields. | Unified rights metadata, consent/licensing, file upload policy, retention, Storage backup, moderation, and public display rules. | Plan a narrow media/evidence rights model before adding more uploads. |
+| Phase 13 | Media upload, evidence, copyright/source management | In progress | Article uploads use Storage; nominations accept evidence/photo URLs and source fields; Phase 13C now adds URL-only evidence rights metadata around the existing nomination evidence fields. | Broader consent/licensing workflow, file upload policy, retention, Storage backup, moderation, and public display rules still remain incomplete. | Keep Phase 13C narrow and rights-aware before adding any upload behavior. |
 | Phase 14 | GIS layers / official dataset connection | Not started | Leaflet base mapping and place markers exist; retired map collections are absent from active code. | Dataset selection, licensing, provenance, layer model, update strategy, legend, accessibility, and performance plan. | Pause until a named dataset and user need are agreed. |
 | Phase 15 | Testing/staging/deployment/rollback | Partly done | Pure-helper browser harness, manual phase checks, Git workflow, and GitHub Pages deployment history exist. | No staging environment, automated CI, release checklist, smoke suite, rollback procedure, or deployed-rules verification record tied to releases. | Make this one of the next structural priorities. |
 | Phase 16 | Configuration system for other towns/cities | Not started | Some location helpers and generic place fields are reusable. | Tenant/config model, branding/content configuration, collection isolation, security model, onboarding, and migration strategy. | Do not begin before current single-site workflows are tested and documented. |
@@ -115,7 +115,7 @@ The engine boundary is coherent: Firebase initialization, reads/writes, DOM rend
 
 ### Actual Current Phase
 
-The project is past architecture setup and safe-audit work. Its public place, search, map, article, nomination, review, promotion, export, and public-user auth/account pathways are implemented, but several are mature only at the source-code level and still need a coherent release test process. Phase 12 is functionally verified for the current project stage; Phase 13A and Phase 13B are complete planning work; Phase 13C remains paused; and Phase Reset 1A through 1D have focused on documentation, rules-sync planning, and legacy-route classification. The practical position is: **Phase 12 source work is complete, with reset cleanup and release assurance now more valuable than new media features or additional page polish.**
+The project is past architecture setup and safe-audit work. Its public place, search, map, article, nomination, review, promotion, export, and public-user auth/account pathways are implemented, but several are mature only at the source-code level and still need a coherent release test process. Phase 12 is functionally verified for the current project stage; Phase 13A and Phase 13B are complete planning work; and Phase 13C has now resumed in a narrow URL-only form to add evidence-rights metadata around the existing nomination evidence fields without adding uploads or public export exposure. The practical position is: **Phase 12 source work is complete, reset cleanup is complete, and Phase 13C can proceed only in small rights-aware steps that do not outrun release assurance or privacy controls.**
 
 ## 9. Stop / Pause List
 
@@ -145,14 +145,14 @@ The project is past architecture setup and safe-audit work. Its public place, se
 
 ## 11. Suggested Next Immediate Phase
 
-### Phase Reset 1E — Retired Page Cleanup Implementation, Docs/Page Warnings Only
+### Phase 13C — Media Rights Metadata Around Existing Evidence URL Fields
 
-The next immediate work should focus on small, reversible cleanup based on the completed reset planning:
+The next immediate work should stay narrow and rights-aware around the existing nomination evidence URL fields:
 
-- update current docs so route status and legacy dependencies are clearer;
-- add light page-label cleanup where wording is inconsistent;
-- add non-destructive warnings or notes for retired or legacy route concepts only where helpful;
-- keep Drupal/Pantheon behavior intact while documenting it as active-but-legacy;
-- avoid refactors, route removal, or dependency removal until a later explicit decision.
+- reuse the existing nomination evidence URL, caption, and source/credit fields rather than adding duplicate inputs;
+- add small rights and permission metadata only around that existing evidence section;
+- keep nomination evidence metadata private to nomination review unless a later approved workflow says otherwise;
+- keep Drupal/Pantheon behavior intact;
+- avoid upload behavior, Storage changes, public export expansion, or broader media-system redesign until later phases.
 
-This is the highest-value next step because the route and dependency model is now documented well enough for light cleanup, while larger release assurance and Drupal/Pantheon decisions still need their own deliberate follow-up.
+This is the highest-value next step because the project now has enough release and rules-assurance evidence to make a small URL-only metadata improvement safely, while larger upload, Storage, and public-media decisions still need their own deliberate follow-up.
