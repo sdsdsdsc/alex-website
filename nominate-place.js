@@ -204,6 +204,16 @@ form?.addEventListener("submit", async (event) => {
   submitButton.textContent = "Submitting...";
 
   try {
+    console.log("13C nomination payload debug", {
+      evidenceImageUrl: payload.evidenceImageUrl,
+      evidenceRightsStatus: payload.evidenceRightsStatus,
+      evidencePermissionConfirmed: payload.evidencePermissionConfirmed,
+      evidencePermissionConfirmedType: typeof payload.evidencePermissionConfirmed,
+      evidenceVisibility: payload.evidenceVisibility,
+      submittedOnBehalfOf: payload.submittedOnBehalfOf,
+      heritageCriteria: payload.heritageCriteria,
+      allKeys: Object.keys(payload).sort()
+    });
     await addDoc(collection(db, "placeNominations"), payload);
     form.reset();
     fillNominationCoordinates();
