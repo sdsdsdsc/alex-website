@@ -204,43 +204,6 @@ form?.addEventListener("submit", async (event) => {
   submitButton.textContent = "Submitting...";
 
   try {
-    const payloadDebug = {
-      allKeys: Object.keys(payload).sort(),
-
-      lat: payload.lat,
-      latType: typeof payload.lat,
-      lng: payload.lng,
-      lngType: typeof payload.lng,
-
-      submittedByUid: payload.submittedByUid,
-      authUid: auth.currentUser && auth.currentUser.uid,
-
-      submitterEmail: payload.submitterEmail,
-      authEmail: auth.currentUser && auth.currentUser.email,
-
-      nominatorEmail: payload.nominatorEmail,
-
-      createdAt: payload.createdAt,
-      updatedAt: payload.updatedAt,
-      submittedAt: payload.submittedAt,
-
-      evidenceImageUrl: payload.evidenceImageUrl,
-      evidenceImageUrlType: typeof payload.evidenceImageUrl,
-
-      evidenceRightsStatus: payload.evidenceRightsStatus,
-      evidencePermissionConfirmed: payload.evidencePermissionConfirmed,
-      evidencePermissionConfirmedType: typeof payload.evidencePermissionConfirmed,
-      evidenceVisibility: payload.evidenceVisibility
-    };
-
-    if (Object.prototype.hasOwnProperty.call(payload, "evidenceImageCaption")) {
-      payloadDebug.evidenceImageCaption = payload.evidenceImageCaption;
-    }
-    if (Object.prototype.hasOwnProperty.call(payload, "evidenceSourceCredit")) {
-      payloadDebug.evidenceSourceCredit = payload.evidenceSourceCredit;
-    }
-
-    console.log("13C nomination payload debug", payloadDebug);
     await addDoc(collection(db, "placeNominations"), payload);
     form.reset();
     fillNominationCoordinates();
