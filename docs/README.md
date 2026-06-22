@@ -1,25 +1,33 @@
 # Alex's Photo Board Documentation
 
-This page is the current Markdown map for Alex's Photo Board. It indexes the active docs, the phase records, and the historical archive without deleting old records.
+This page is the current Markdown map for Alex's Photo Board. It separates active guides from reference material and archived history without deleting older records.
 
-## Project Guides
+## Active Guides
 
 - [docs/current-project-state-and-doc-cleanup-audit.md](./current-project-state-and-doc-cleanup-audit.md): Broad current-state audit and documentation cleanup reference. Status: active.
 - [docs/project-status-checkpoint.md](./project-status-checkpoint.md): Source-based project status map and current practical phase summary. Status: active.
 - [docs/site-structure.md](./site-structure.md): Page, collection, and workflow structure map. Status: active.
-- [docs/documentation-index-and-archive-plan.md](./documentation-index-and-archive-plan.md): Plan for indexing and archiving docs. Status: reference.
-- [docs/local-heritage-listing-guidance.md](./local-heritage-listing-guidance.md): Content and heritage framing guidance. Status: reference.
-
-## Verification Records
-
-- [docs/phase-12-final-verification-record.md](./phase-12-final-verification-record.md): Phase 12 verification record. Status: historical.
-- [docs/phase-11a-live-readonly-backup-session-note.md](./phase-11a-live-readonly-backup-session-note.md): Read-only backup session note. Status: historical.
-- [docs/phase-reset-1f-a-codex-source-assurance-report.md](./phase-reset-1f-a-codex-source-assurance-report.md): Reset source assurance report. Status: reference.
 - [docs/phase-13c-source-verification-note.md](./phase-13c-source-verification-note.md): Phase 13C source verification note. Status: active.
 - [docs/phase-13c-ui-live-rules-readiness-note.md](./phase-13c-ui-live-rules-readiness-note.md): Phase 13C UI, live-test, and rules readiness note. Status: active.
-- [docs/retired-page-navigation-cleanup-completion-note.md](./retired-page-navigation-cleanup-completion-note.md): Completion note for retired navigation cleanup work. Status: historical.
 
-## Release and Rules Safety
+## Codex Skills
+
+- [CODEX_PROJECT_GUIDE.md](../CODEX_PROJECT_GUIDE.md): Master operating guide for Codex work in this repo. Status: active.
+- [codex-skills/README.md](../codex-skills/README.md): Skills index. Status: active.
+- [codex-skills/firestore-permission-debugging.md](../codex-skills/firestore-permission-debugging.md): Permission-denied debugging workflow. Status: active.
+- [codex-skills/github-pages-live-site-check.md](../codex-skills/github-pages-live-site-check.md): Live-site mismatch workflow. Status: active.
+- [codex-skills/firebase-rules-repo-sync.md](../codex-skills/firebase-rules-repo-sync.md): Firebase rules sync workflow. Status: active.
+- [codex-skills/form-field-compatibility.md](../codex-skills/form-field-compatibility.md): Form-field tracing workflow. Status: active.
+- [codex-skills/public-export-privacy-check.md](../codex-skills/public-export-privacy-check.md): Public export and privacy workflow. Status: active.
+- [codex-skills/admin-review-promotion-workflow.md](../codex-skills/admin-review-promotion-workflow.md): Admin review and promotion workflow. Status: active.
+- [codex-skills/evidence-rights-workflow.md](../codex-skills/evidence-rights-workflow.md): Evidence URL and rights workflow. Status: active.
+- [codex-skills/minimal-fix-regression-check.md](../codex-skills/minimal-fix-regression-check.md): Minimal-fix regression checklist. Status: active.
+
+## Current Reference Docs
+
+- [docs/documentation-index-and-archive-plan.md](./documentation-index-and-archive-plan.md): Planning note for documentation cleanup and archive structure. Status: reference.
+- [docs/local-heritage-listing-guidance.md](./local-heritage-listing-guidance.md): Content and heritage framing guidance. Status: reference.
+- [docs/phase-reset-1f-a-codex-source-assurance-report.md](./phase-reset-1f-a-codex-source-assurance-report.md): Source-level assurance report used for repo-state verification. Status: reference.
 
 - [docs/firestore-rules-verification-plan.md](./firestore-rules-verification-plan.md): Firestore rules verification plan. Status: active.
 - [docs/firestore-rules-sync-and-verification-plan.md](./firestore-rules-sync-and-verification-plan.md): Rules sync and verification planning doc. Status: active.
@@ -28,36 +36,38 @@ This page is the current Markdown map for Alex's Photo Board. It indexes the act
 - [docs/phase-12e-auth-rules-release-checklist.md](./phase-12e-auth-rules-release-checklist.md): Auth and rules release checklist. Status: active.
 - [docs/phase-reset-1f-release-rules-assurance-checklist.md](./phase-reset-1f-release-rules-assurance-checklist.md): Owner-facing release and rules assurance checklist. Status: active.
 
-## Phase Records and Implementation Notes
-
 - [docs/phase-13a-media-evidence-rights-model.md](./phase-13a-media-evidence-rights-model.md): Phase 13A rights model planning. Status: reference.
 - [docs/phase-13b-storage-backup-media-audit-plan.md](./phase-13b-storage-backup-media-audit-plan.md): Phase 13B storage and backup plan. Status: reference.
 - [docs/phase-13c-media-rights-metadata-completion-note.md](./phase-13c-media-rights-metadata-completion-note.md): Phase 13C implementation note. Status: active.
 - [docs/retired-page-navigation-cleanup-plan.md](./retired-page-navigation-cleanup-plan.md): Navigation cleanup planning record. Status: reference.
 
-## Archive and Historical Records
+## Archived Phase Records
 
 - [docs/archive/README.md](./archive/README.md): Archive index. Status: archive candidate.
+- [docs/archive/phase-records/retired-page-navigation-cleanup-completion-note.md](./archive/phase-records/retired-page-navigation-cleanup-completion-note.md): Historical completion note for the retired-page navigation cleanup. Status: historical.
 - [docs/archive/old-roadmaps/alex-heritage-engine-roadmap.md](./archive/old-roadmaps/alex-heritage-engine-roadmap.md): Older roadmap for the heritage engine direction. Status: historical.
 - [docs/archive/phase-10/phase-10-engine-checkpoint.md](./archive/phase-10/phase-10-engine-checkpoint.md): Phase 10 engine checkpoint. Status: historical.
 - [docs/archive/phase-10/phase-10-engine-closeout.md](./archive/phase-10/phase-10-engine-closeout.md): Phase 10 engine closeout. Status: historical.
 - [docs/archive/phase-10/phase-10m-nomination-extraction-plan.md](./archive/phase-10/phase-10m-nomination-extraction-plan.md): Earlier nomination extraction plan. Status: historical.
 - [docs/archive/phase-10/phase-10o-admin-review-promotion-plan.md](./archive/phase-10/phase-10o-admin-review-promotion-plan.md): Earlier admin review and promotion plan. Status: historical.
-- [docs/archive/phase-11a/phase-11a-admin-export-safety-review.md](./archive/phase-11a/phase-11a-admin-export-safety-review.md): Admin export safety review. Status: historical.
 - [docs/archive/phase-11a/phase-11a-cleanup-closeout.md](./archive/phase-11a/phase-11a-cleanup-closeout.md): Phase 11A cleanup closeout. Status: historical.
 - [docs/archive/phase-11a/phase-11a-communityplaces-audit-worksheet.md](./archive/phase-11a/phase-11a-communityplaces-audit-worksheet.md): Community places audit worksheet. Status: historical.
 - [docs/archive/phase-11a/phase-11a-communityplaces-live-polish-plan.md](./archive/phase-11a/phase-11a-communityplaces-live-polish-plan.md): Live polish plan for community places. Status: historical.
 - [docs/archive/phase-11a/phase-11a-communityplaces-user-approval-proposal.md](./archive/phase-11a/phase-11a-communityplaces-user-approval-proposal.md): Approval proposal record. Status: historical.
 - [docs/archive/phase-11a/phase-11a-data-cleanup-audit-plan.md](./archive/phase-11a/phase-11a-data-cleanup-audit-plan.md): Data cleanup audit plan. Status: historical.
-- [docs/archive/phase-11a/phase-11a-firestore-rules-verification-checklist.md](./archive/phase-11a/phase-11a-firestore-rules-verification-checklist.md): Older rules verification checklist. Status: historical.
-- [docs/archive/phase-11a/phase-11a-live-firebase-readonly-audit-plan.md](./archive/phase-11a/phase-11a-live-firebase-readonly-audit-plan.md): Read-only live audit plan. Status: historical.
 - [docs/archive/phase-11a/phase-11a-live-readonly-backup-checklist.md](./archive/phase-11a/phase-11a-live-readonly-backup-checklist.md): Backup checklist. Status: historical.
-- [docs/archive/phase-11a/phase-11a-live-vs-local-audit-worksheet.md](./archive/phase-11a/phase-11a-live-vs-local-audit-worksheet.md): Live vs local audit worksheet. Status: historical.
-- [docs/archive/phase-11a/phase-11a-news-history-audit-worksheet.md](./archive/phase-11a/phase-11a-news-history-audit-worksheet.md): News/history audit worksheet. Status: historical.
 - [docs/archive/phase-11a/phase-11a-pre-live-audit-hardening.md](./archive/phase-11a/phase-11a-pre-live-audit-hardening.md): Pre-live hardening note. Status: historical.
 - [docs/archive/phase-12-design/phase-12a-public-account-model.md](./archive/phase-12-design/phase-12a-public-account-model.md): Public account model design. Status: historical.
 - [docs/archive/phase-9/phase-9-nomination-workflow-spec.md](./archive/phase-9/phase-9-nomination-workflow-spec.md): Early nomination workflow spec. Status: historical.
 - [docs/archive/reference-experiments/cambridgeshire-local-heritage-list-skill.md](./archive/reference-experiments/cambridgeshire-local-heritage-list-skill.md): Reference experiment doc. Status: historical.
+
+## Archived Debugging Records
+
+- [docs/archive/phase-11a/phase-11a-live-vs-local-audit-worksheet.md](./archive/phase-11a/phase-11a-live-vs-local-audit-worksheet.md): Historical live-vs-local audit worksheet. Status: historical.
+- [docs/archive/phase-11a/phase-11a-news-history-audit-worksheet.md](./archive/phase-11a/phase-11a-news-history-audit-worksheet.md): Historical news/history audit worksheet. Status: historical.
+- [docs/archive/phase-11a/phase-11a-firestore-rules-verification-checklist.md](./archive/phase-11a/phase-11a-firestore-rules-verification-checklist.md): Historical rules verification checklist. Status: historical.
+- [docs/archive/phase-11a/phase-11a-live-firebase-readonly-audit-plan.md](./archive/phase-11a/phase-11a-live-firebase-readonly-audit-plan.md): Historical live Firebase audit plan. Status: historical.
+- [docs/archive/phase-11a/phase-11a-admin-export-safety-review.md](./archive/phase-11a/phase-11a-admin-export-safety-review.md): Historical admin export safety review. Status: historical.
 
 ## Related Markdown Outside docs
 
@@ -65,34 +75,25 @@ This page is the current Markdown map for Alex's Photo Board. It indexes the act
 - [maintenance/README-gallery-cleanup.md](../maintenance/README-gallery-cleanup.md): Maintenance-only gallery cleanup note. Status: reference.
 - [scripts/README-community-places-import.md](../scripts/README-community-places-import.md): Import script usage note. Status: reference.
 
-## Recommendations
+## Intentionally Not Moved Yet
 
-- Important active references:
+- [docs/phase-12-final-verification-record.md](./phase-12-final-verification-record.md): Mixed status. Historical milestone record, but still referenced as the best Phase 12 verification source. Status: unclear for archive move.
+- [docs/phase-11a-live-readonly-backup-session-note.md](./phase-11a-live-readonly-backup-session-note.md): Historical evidence for backup boundaries that still has reference value. Status: unclear for archive move.
+- [docs/phase-reset-1f-a-codex-source-assurance-report.md](./phase-reset-1f-a-codex-source-assurance-report.md): Recent source-check report with both historical and current reference value. Status: unclear for archive move.
+
+## Notes
+
+- Important active references remain:
   - `docs/current-project-state-and-doc-cleanup-audit.md`
   - `docs/project-status-checkpoint.md`
-  - `docs/site-structure.md`
-  - `docs/firestore-rules-verification-plan.md`
-  - `docs/release-smoke-test-matrix.md`
-  - `docs/phase-13c-source-verification-note.md`
-  - `docs/phase-13c-ui-live-rules-readiness-note.md`
-- Historical phase records:
-  - most files under `docs/archive/`
-  - `docs/phase-12-final-verification-record.md`
-  - `docs/phase-11a-live-readonly-backup-session-note.md`
-  - `docs/retired-page-navigation-cleanup-completion-note.md`
-- Files that could later be moved more aggressively into `docs/archive/`:
-  - `docs/phase-12-final-verification-record.md`
-  - `docs/phase-11a-live-readonly-backup-session-note.md`
-  - `docs/retired-page-navigation-cleanup-completion-note.md`
-  - `docs/phase-reset-1f-a-codex-source-assurance-report.md`
-- Files that should not be touched yet:
-  - `docs/project-status-checkpoint.md`
-  - `docs/current-project-state-and-doc-cleanup-audit.md`
   - `docs/site-structure.md`
   - `docs/firestore-rules-verification-plan.md`
   - `docs/firestore-rules-sync-and-verification-plan.md`
+  - `docs/release-smoke-test-matrix.md`
   - `docs/phase-13c-source-verification-note.md`
   - `docs/phase-13c-ui-live-rules-readiness-note.md`
+- Historical evidence is preserved rather than deleted.
+- Archive moves in this pass were limited to files with clearly historical status and no conflicting “keep visible” guidance.
 
 ## Warning
 
