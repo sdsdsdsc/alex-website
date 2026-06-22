@@ -24,9 +24,13 @@ const validation = await import(pathToFileURL(path.join(tempEngineRoot, "validat
 const publicExport = await import(pathToFileURL(path.join(tempEngineRoot, "export.mjs")).href);
 
 const {
+  EVIDENCE_RIGHTS_STATUSES,
   NOMINATION_PRIVATE_EVIDENCE_VISIBILITY,
   buildNominationOwnershipMetadata,
-  buildSubmittedNominationPayload
+  buildSubmittedNominationPayload,
+  normalizeNominationCoordinates,
+  validateNominationAgreements,
+  validateNominationEvidenceFields
 } = nominations;
 const { UNSAFE_PUBLIC_FIELD_NAMES, containsUnsafePublicField, stripUnsafePublicFields } = validation;
 const { buildPublicGraph, buildPublicHeritageJsonLd } = publicExport;
@@ -80,6 +84,15 @@ function buildValidNominationValues(overrides = {}) {
   };
 }
 
+function buildSignedInOwnership(overrides = {}) {
+  return buildNominationOwnershipMetadata({
+    uid: "public-user-1",
+    email: "account@example.org",
+    displayName: "Account User",
+    ...overrides
+  });
+}
+
 function assertNoUndefined(value, pathLabel = "root") {
   assert.notStrictEqual(value, undefined, `${pathLabel} should not be undefined`);
 
@@ -98,11 +111,7 @@ function assertNoUndefined(value, pathLabel = "root") {
 }
 
 test("builds a valid nomination payload with blank optional evidence fields", () => {
-  const ownershipMetadata = buildNominationOwnershipMetadata({
-    uid: "public-user-1",
-    email: "account@example.org",
-    displayName: "Account User"
-  });
+  const ownershipMetadata = buildSignedInOwnership();
 
   const payload = buildSubmittedNominationPayload(buildValidNominationValues(), {
     createdAt: "created",
@@ -127,6 +136,9 @@ test("builds a valid nomination payload with blank optional evidence fields", ()
   assert.equal("evidenceRightsStatus" in payload, false);
   assert.equal("evidencePermissionConfirmed" in payload, false);
   assert.equal("evidenceVisibility" in payload, false);
+  assert.equal("condition" in payload, false);
+  assert.equal("communityUse" in payload, false);
+  assert.equal("sourceReference" in payload, false);
 
   [
     "publicUsers",
@@ -150,7 +162,7 @@ test("builds a valid nomination payload with blank optional evidence fields", ()
 });
 
 test("builds a valid nomination payload with evidence metadata and boolean ownership fields", () => {
-  const ownershipMetadata = buildNominationOwnershipMetadata({
+  const ownershipMetadata = buildSignedInOwnership({
     uid: "public-user-2",
     email: "owner@example.org",
     submissionAuthType: "signedIn"
@@ -181,6 +193,189 @@ test("builds a valid nomination payload with evidence metadata and boolean owner
   assert.equal(payload.submittedByUid, "public-user-2");
   assert.equal(payload.submitterEmail, "owner@example.org");
   assert.equal(payload.submissionAuthType, "signedIn");
+  assertNoUndefined(payload);
+});
+
+test("rejects invalid evidence URLs at the helper layer", () => {
+  assert(validateNominationEvidenceFields({
+    evidenceImageUrl: "http://example.org/photo.jpg",
+    evidenceRightsStatus: "own-work",
+    evidencePermissionConfirmed: true
+  }).includes("Evidence image URL must begin with https://."));
+
+  assert(validateNominationEvidenceFields({
+    evidenceImageUrl: "definitely-not-a-url",
+    evidenceRightsStatus: "own-work",
+    evidencePermissionConfirmed: true
+  }).includes("Evidence image URL must begin with https://."));
+
+  assert.throws(() => {
+    buildSubmittedNominationPayload(buildValidNominationValues({
+      evidenceImageUrl: "http://example.org/photo.jpg",
+      evidenceRightsStatus: "own-work",
+      evidencePermissionConfirmed: true
+    }), {
+      createdAt: "created",
+      updatedAt: "updated",
+      submittedAt: "submitted",
+      ownershipMetadata: buildSignedInOwnership()
+    });
+  }, /Evidence image URL must begin with https:\/\//);
+});
+
+test("keeps nominator and signed-in submitter identity separate", () => {
+  const ownershipMetadata = buildSignedInOwnership({
+    uid: "auth-user-9",
+    email: "signed-in@example.org",
+    displayName: "Signed In User"
+  });
+
+  const payload = buildSubmittedNominationPayload(buildValidNominationValues({
+    nominatorEmail: "nominator@example.org",
+    nominatorDisplayName: "Different Nominator"
+  }), {
+    createdAt: "created",
+    updatedAt: "updated",
+    submittedAt: "submitted",
+    ownershipMetadata
+  });
+
+  assert.equal(payload.submittedByUid, "auth-user-9");
+  assert.equal(payload.submitterEmail, "signed-in@example.org");
+  assert.equal(payload.submitterDisplayName, "Signed In User");
+  assert.equal(payload.submissionAuthType, "signedIn");
+  assert.equal(payload.nominatorEmail, "nominator@example.org");
+  assert.notEqual(payload.nominatorEmail, payload.submitterEmail);
+  assertNoUndefined(payload);
+});
+
+test("ownership helper shapes signed-in metadata and rejects non-signed-in input", () => {
+  const ownership = buildSignedInOwnership();
+
+  assert.equal(ownership.submittedByUid, "public-user-1");
+  assert.equal(ownership.submitterEmail, "account@example.org");
+  assert.equal(ownership.submitterDisplayName, "Account User");
+  assert.equal(ownership.submissionAuthType, "signedIn");
+
+  assert.throws(() => buildNominationOwnershipMetadata({ email: "missing-uid@example.org" }), /Please sign in/);
+  assert.throws(() => buildNominationOwnershipMetadata({ uid: "missing-email" }), /Please sign in/);
+  assert.throws(() => buildNominationOwnershipMetadata({
+    uid: "public-user-1",
+    email: "account@example.org",
+    submissionAuthType: "guest"
+  }), /Please sign in/);
+});
+
+test("helper layer does not validate auth/payload UID-email mismatch because Firestore rules own that boundary", () => {
+  const payload = buildSubmittedNominationPayload(buildValidNominationValues({
+    submittedByUid: "forged-user",
+    submitterEmail: "forged@example.org"
+  }), {
+    createdAt: "created",
+    updatedAt: "updated",
+    submittedAt: "submitted",
+    ownershipMetadata: buildSignedInOwnership({
+      uid: "actual-auth-user",
+      email: "actual-auth@example.org"
+    })
+  });
+
+  assert.equal(payload.submittedByUid, "actual-auth-user");
+  assert.equal(payload.submitterEmail, "actual-auth@example.org");
+  assert.equal(payload.submissionAuthType, "signedIn");
+});
+
+test.todo("Phase 14D emulator rules tests should verify auth-vs-payload UID and email mismatch rejection against placeNominations create rules");
+
+test("normalizes coordinates to numbers and omits blank coordinates from the submitted payload", () => {
+  const coordinates = normalizeNominationCoordinates({
+    lat: " 27.720570019360082 ",
+    lng: "114.15617044085226"
+  });
+
+  assert.equal(typeof coordinates.lat, "number");
+  assert.equal(typeof coordinates.lng, "number");
+  assert.equal(coordinates.lat, 27.720570019360082);
+  assert.equal(coordinates.lng, 114.15617044085226);
+
+  const blankCoordinates = normalizeNominationCoordinates({
+    lat: "",
+    lng: ""
+  });
+
+  assert.equal(blankCoordinates.lat, null);
+  assert.equal(blankCoordinates.lng, null);
+
+  const payload = buildSubmittedNominationPayload(buildValidNominationValues({
+    lat: "",
+    lng: ""
+  }), {
+    createdAt: "created",
+    updatedAt: "updated",
+    submittedAt: "submitted",
+    ownershipMetadata: buildSignedInOwnership()
+  });
+
+  assert.equal("lat" in payload, false);
+  assert.equal("lng" in payload, false);
+  assertNoUndefined(payload);
+});
+
+test("rejects invalid coordinates instead of coercing them into misleading payload numbers", () => {
+  assert.throws(() => normalizeNominationCoordinates({ lat: "north", lng: "114.15617044085226" }), /Enter a valid latitude/);
+  assert.throws(() => normalizeNominationCoordinates({ lat: "27.720570019360082", lng: "east" }), /Enter a valid longitude/);
+  assert.throws(() => normalizeNominationCoordinates({ lat: "91", lng: "114.15617044085226" }), /Enter a valid latitude/);
+  assert.throws(() => normalizeNominationCoordinates({ lat: "27.720570019360082", lng: "181" }), /Enter a valid longitude/);
+});
+
+test("requires terms and privacy acknowledgements for submitted payloads", () => {
+  assert.deepEqual(validateNominationAgreements(buildValidNominationValues()), []);
+  assert(validateNominationAgreements(buildValidNominationValues({ termsAccepted: false })).includes("Accept all required terms and privacy acknowledgements."));
+  assert(validateNominationAgreements(buildValidNominationValues({ privacyAccepted: false })).includes("Accept all required terms and privacy acknowledgements."));
+  assert(validateNominationAgreements(buildValidNominationValues({ projectPositionAccepted: false })).includes("Accept all required terms and privacy acknowledgements."));
+  assert(validateNominationAgreements(buildValidNominationValues({ reviewAccepted: false })).includes("Accept all required terms and privacy acknowledgements."));
+
+  assert.throws(() => {
+    buildSubmittedNominationPayload(buildValidNominationValues({ termsAccepted: false }), {
+      createdAt: "created",
+      updatedAt: "updated",
+      submittedAt: "submitted",
+      ownershipMetadata: buildSignedInOwnership()
+    });
+  }, /Accept all required terms and privacy acknowledgements\./);
+});
+
+test("strips user-submitted private and admin fields recursively before building the Firestore payload", () => {
+  const payload = buildSubmittedNominationPayload(buildValidNominationValues({
+    privateReviewData: {
+      adminNotes: "nested private note",
+      promotedAt: "private-date"
+    },
+    adminBackupMetadata: {
+      submitterEmail: "hidden@example.org"
+    }
+  }), {
+    createdAt: "created",
+    updatedAt: "updated",
+    submittedAt: "submitted",
+    ownershipMetadata: buildSignedInOwnership()
+  });
+
+  const serialized = JSON.stringify(payload);
+
+  [
+    "adminNotes",
+    "adminAssessmentSummary",
+    "reviewHistory",
+    "promotedPlaceId",
+    "promotedAt",
+    "privateReviewData",
+    "adminBackupMetadata"
+  ].forEach((fieldName) => {
+    assert.equal(Object.prototype.hasOwnProperty.call(payload, fieldName), false, `${fieldName} should not survive payload shaping`);
+    assert.doesNotMatch(serialized, new RegExp(fieldName));
+  });
+
   assertNoUndefined(payload);
 });
 
@@ -278,7 +473,7 @@ test("public validation and export helpers recursively strip unsafe private fiel
   });
 });
 
-test.todo("public export should recursively strip export-only nested fields like privateReviewData, adminBackupMetadata, promotedPlaceId, and promotedAt");
+test.todo("public export should recursively strip export-only nested fields like privateReviewData, adminBackupMetadata, promotedPlaceId, and promotedAt when stored JSON-LD contains them under non-blocklisted parent keys");
 
 test("unsafe public field list covers the Phase 14B regression boundary", () => {
   [
@@ -304,5 +499,17 @@ test("unsafe public field list covers the Phase 14B regression boundary", () => 
     "reviewHistory"
   ].forEach((fieldName) => {
     assert(UNSAFE_PUBLIC_FIELD_NAMES.includes(fieldName), `${fieldName} should stay on the unsafe public field list`);
+  });
+});
+
+test("evidence rights statuses stay aligned with payload validation coverage", () => {
+  [
+    "own-work",
+    "permission-granted",
+    "public-domain-or-open-license",
+    "public-web-reference",
+    "unknown-needs-review"
+  ].forEach((status) => {
+    assert(EVIDENCE_RIGHTS_STATUSES.includes(status), `${status} should remain an allowed evidence rights status`);
   });
 });
