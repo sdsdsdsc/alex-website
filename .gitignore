@@ -3,7 +3,7 @@ serviceAccountKey.json
 firebase-adminsdk*.json
 .DS_Store
 node_modules/
-data/communityPlaces.json
+firestore-debug.log
 
 # Private admin backup downloads
 communityPlaces-backup-*.json
