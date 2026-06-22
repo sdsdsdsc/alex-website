@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "test": "node --test tests/*.test.mjs",
     "import:places": "node scripts/import-community-places.js"
   },
   "dependencies": {
