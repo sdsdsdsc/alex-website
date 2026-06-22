@@ -1,0 +1,283 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test, { after, before, beforeEach } from "node:test";
+
+import {
+  assertFails,
+  assertSucceeds,
+  initializeTestEnvironment
+} from "@firebase/rules-unit-testing";
+import {
+  Timestamp,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc
+} from "firebase/firestore";
+
+const PROJECT_ID = "alex-photo-board-test";
+const ADMIN_UID = "VT3I9KMktMXsdJeyYBye54Sgnqu2";
+const OWNER_UID = "nomination-owner";
+const OWNER_EMAIL = "owner@example.org";
+const OTHER_UID = "another-user";
+const OTHER_EMAIL = "another@example.org";
+const RULES_PATH = new URL("../firestore.rules", import.meta.url);
+
+let testEnv;
+
+function timestamp(offset = 0) {
+  return Timestamp.fromMillis(1_750_000_000_000 + offset);
+}
+
+function validNomination(overrides = {}) {
+  return {
+    title: "Test Community Place",
+    address: "1 Test Street, Pingxiang",
+    description: "A deterministic nomination used only by emulator tests.",
+    localSignificanceSummary: "A locally valued place.",
+    heritageCriteria: ["Historic interest"],
+    criteriaExplanation: "The place has documented local historic interest.",
+    nominatorEmail: "nominator@example.org",
+    submittedByUid: OWNER_UID,
+    submitterEmail: OWNER_EMAIL,
+    submissionAuthType: "signedIn",
+    termsAccepted: true,
+    privacyAccepted: true,
+    nominationStatus: "submitted",
+    createdAt: timestamp(1),
+    updatedAt: timestamp(2),
+    submittedAt: timestamp(3),
+    ...overrides
+  };
+}
+
+function ownerFirestore() {
+  return testEnv.authenticatedContext(OWNER_UID, { email: OWNER_EMAIL }).firestore();
+}
+
+function otherFirestore() {
+  return testEnv.authenticatedContext(OTHER_UID, { email: OTHER_EMAIL }).firestore();
+}
+
+function adminFirestore() {
+  return testEnv.authenticatedContext(ADMIN_UID, { email: "admin@example.org" }).firestore();
+}
+
+async function seedDocument(path, data) {
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), path), data);
+  });
+}
+
+before(async () => {
+  testEnv = await initializeTestEnvironment({
+    projectId: PROJECT_ID,
+    firestore: {
+      host: "127.0.0.1",
+      port: 8080,
+      rules: await readFile(RULES_PATH, "utf8")
+    }
+  });
+});
+
+beforeEach(async () => {
+  await testEnv.clearFirestore();
+});
+
+after(async () => {
+  await testEnv?.cleanup();
+});
+
+test("public collections are readable while nominations remain private", async () => {
+  for (const collectionName of ["communityPlaces", "news", "history"]) {
+    await seedDocument(`${collectionName}/public-document`, { title: "Public document" });
+  }
+  await seedDocument("placeNominations/private-nomination", validNomination());
+
+  const publicDb = testEnv.unauthenticatedContext().firestore();
+  for (const collectionName of ["communityPlaces", "news", "history"]) {
+    const snapshot = await assertSucceeds(getDoc(doc(publicDb, collectionName, "public-document")));
+    assert.equal(snapshot.exists(), true);
+  }
+  await assertFails(getDoc(doc(publicDb, "placeNominations", "private-nomination")));
+});
+
+test("a signed-in owner can create a valid nomination", async () => {
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeNominations", "valid-create"),
+    validNomination()
+  ));
+});
+
+test("optional evidence fields may be omitted or blank where the rules permit", async () => {
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeNominations", "missing-evidence"),
+    validNomination()
+  ));
+
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeNominations", "blank-evidence-metadata"),
+    validNomination({
+      evidenceImageCaption: "",
+      evidenceSourceCredit: "",
+      evidenceRightsStatus: "",
+      evidenceVisibility: ""
+    })
+  ));
+});
+
+test("HTTPS evidence and nomination-private rights metadata are accepted", async () => {
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeNominations", "https-evidence-only"),
+    validNomination({ evidenceImageUrl: "https://example.org/evidence.jpg" })
+  ));
+
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeNominations", "https-evidence-metadata"),
+    validNomination({
+      evidenceImageUrl: "https://example.org/evidence.jpg",
+      evidenceRightsStatus: "permission-granted",
+      evidencePermissionConfirmed: true,
+      evidenceVisibility: "nomination-private"
+    })
+  ));
+});
+
+test("non-HTTPS evidence URLs are denied", async () => {
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "http-evidence"),
+    validNomination({ evidenceImageUrl: "http://example.org/evidence.jpg" })
+  ));
+});
+
+test.todo("malformed HTTPS evidence URL rejection needs intentional rules hardening because the current ^https://.+$ rule accepts any non-empty HTTPS-prefixed string");
+
+test("nomination creation rejects ownership mismatches", async () => {
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "uid-mismatch"),
+    validNomination({ submittedByUid: OTHER_UID })
+  ));
+
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "email-mismatch"),
+    validNomination({ submitterEmail: OTHER_EMAIL })
+  ));
+});
+
+test("nomination creation rejects missing required fields and forbidden extras", async () => {
+  const missingTitle = validNomination();
+  delete missingTitle.title;
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "missing-title"),
+    missingTitle
+  ));
+
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "unknown-extra"),
+    validNomination({ unexpectedField: "not allowed" })
+  ));
+
+  for (const fieldName of [
+    "adminNotes",
+    "adminAssessmentSummary",
+    "reviewHistory",
+    "promotedPlaceId",
+    "promotedAt"
+  ]) {
+    await assertFails(setDoc(
+      doc(ownerFirestore(), "placeNominations", `forbidden-${fieldName}`),
+      validNomination({ [fieldName]: fieldName === "reviewHistory" ? [] : "private" })
+    ));
+  }
+});
+
+test("owners and admins can read nominations but other users and guests cannot", async () => {
+  await seedDocument("placeNominations/read-boundary", validNomination());
+
+  await assertSucceeds(getDoc(doc(ownerFirestore(), "placeNominations", "read-boundary")));
+  await assertFails(getDoc(doc(otherFirestore(), "placeNominations", "read-boundary")));
+  await assertFails(getDoc(doc(
+    testEnv.unauthenticatedContext().firestore(),
+    "placeNominations",
+    "read-boundary"
+  )));
+  await assertSucceeds(getDoc(doc(adminFirestore(), "placeNominations", "read-boundary")));
+});
+
+test("only admins can update the allowed review fields", async () => {
+  const reviewUpdate = {
+    nominationStatus: "under review",
+    adminNotes: "Review note",
+    adminHistoricInterest: true,
+    adminArchitecturalInterest: false,
+    adminCommunityValue: true,
+    adminConditionRisk: false,
+    adminAssessmentSummary: "Initial assessment",
+    reviewHistory: [{ action: "review_saved", by: ADMIN_UID }],
+    reviewedAt: timestamp(10),
+    updatedAt: timestamp(11)
+  };
+
+  await seedDocument("placeNominations/admin-review", validNomination());
+  await assertSucceeds(updateDoc(
+    doc(adminFirestore(), "placeNominations", "admin-review"),
+    reviewUpdate
+  ));
+
+  await seedDocument("placeNominations/non-admin-review", validNomination());
+  await assertFails(updateDoc(
+    doc(ownerFirestore(), "placeNominations", "non-admin-review"),
+    reviewUpdate
+  ));
+
+  await seedDocument("placeNominations/outside-review-allowlist", validNomination());
+  await assertFails(updateDoc(
+    doc(adminFirestore(), "placeNominations", "outside-review-allowlist"),
+    { ...reviewUpdate, title: "Changed by review" }
+  ));
+});
+
+test("promotion is admin-only, approved-only, and restricted to its allowed shape", async () => {
+  const promotionUpdate = {
+    nominationStatus: "promoted",
+    promotedPlaceId: "promoted-place-id",
+    promotedAt: timestamp(20),
+    updatedAt: timestamp(21),
+    reviewHistory: [{ action: "nomination_promoted", by: ADMIN_UID }]
+  };
+
+  await seedDocument(
+    "placeNominations/admin-promotion",
+    validNomination({ nominationStatus: "approved" })
+  );
+  await assertSucceeds(updateDoc(
+    doc(adminFirestore(), "placeNominations", "admin-promotion"),
+    promotionUpdate
+  ));
+
+  await seedDocument(
+    "placeNominations/non-admin-promotion",
+    validNomination({ nominationStatus: "approved" })
+  );
+  await assertFails(updateDoc(
+    doc(ownerFirestore(), "placeNominations", "non-admin-promotion"),
+    promotionUpdate
+  ));
+
+  await seedDocument("placeNominations/non-approved-promotion", validNomination());
+  await assertFails(updateDoc(
+    doc(adminFirestore(), "placeNominations", "non-approved-promotion"),
+    promotionUpdate
+  ));
+
+  await seedDocument(
+    "placeNominations/outside-promotion-allowlist",
+    validNomination({ nominationStatus: "approved" })
+  );
+  await assertFails(updateDoc(
+    doc(adminFirestore(), "placeNominations", "outside-promotion-allowlist"),
+    { ...promotionUpdate, title: "Promotion must not rewrite the nomination title" }
+  ));
+});
+
+test.todo("admin updates must reject newly added fields; current rules use changedKeys(), which does not include added keys, and should be hardened only after repo/Console rules parity is confirmed");

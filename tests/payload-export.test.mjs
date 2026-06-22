@@ -285,8 +285,6 @@ test("helper layer does not validate auth/payload UID-email mismatch because Fir
   assert.equal(payload.submissionAuthType, "signedIn");
 });
 
-test.todo("Phase 14D emulator rules tests should verify auth-vs-payload UID and email mismatch rejection against placeNominations create rules");
-
 test("normalizes coordinates to numbers and omits blank coordinates from the submitted payload", () => {
   const coordinates = normalizeNominationCoordinates({
     lat: " 27.720570019360082 ",
