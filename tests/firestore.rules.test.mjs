@@ -150,7 +150,12 @@ test("non-HTTPS evidence URLs are denied", async () => {
   ));
 });
 
-test.todo("malformed HTTPS evidence URL rejection needs intentional rules hardening because the current ^https://.+$ rule accepts any non-empty HTTPS-prefixed string");
+test("malformed HTTPS-prefixed evidence URLs are denied", async () => {
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "malformed-https-evidence"),
+    validNomination({ evidenceImageUrl: "https://not-a-real-host-path" })
+  ));
+});
 
 test("nomination creation rejects ownership mismatches", async () => {
   await assertFails(setDoc(
@@ -280,4 +285,42 @@ test("promotion is admin-only, approved-only, and restricted to its allowed shap
   ));
 });
 
-test.todo("admin updates must reject newly added fields; current rules use changedKeys(), which does not include added keys, and should be hardened only after repo/Console rules parity is confirmed");
+test("admin updates reject newly added fields outside the review and promotion allowlists", async () => {
+  const reviewUpdate = {
+    nominationStatus: "under review",
+    adminNotes: "Review note",
+    adminHistoricInterest: true,
+    adminArchitecturalInterest: false,
+    adminCommunityValue: true,
+    adminConditionRisk: false,
+    adminAssessmentSummary: "Initial assessment",
+    reviewHistory: [{ action: "review_saved", by: ADMIN_UID }],
+    reviewedAt: timestamp(10),
+    updatedAt: timestamp(11),
+    unexpectedField: "should be denied"
+  };
+
+  await seedDocument("placeNominations/review-added-field", validNomination());
+  await assertFails(updateDoc(
+    doc(adminFirestore(), "placeNominations", "review-added-field"),
+    reviewUpdate
+  ));
+
+  const promotionUpdate = {
+    nominationStatus: "promoted",
+    promotedPlaceId: "promoted-place-id",
+    promotedAt: timestamp(20),
+    updatedAt: timestamp(21),
+    reviewHistory: [{ action: "nomination_promoted", by: ADMIN_UID }],
+    unexpectedField: "should be denied"
+  };
+
+  await seedDocument(
+    "placeNominations/promotion-added-field",
+    validNomination({ nominationStatus: "approved" })
+  );
+  await assertFails(updateDoc(
+    doc(adminFirestore(), "placeNominations", "promotion-added-field"),
+    promotionUpdate
+  ));
+});
