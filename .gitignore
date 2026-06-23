@@ -4,6 +4,9 @@ firebase-adminsdk*.json
 .DS_Store
 node_modules/
 firestore-debug.log
+test-results/
+playwright-report/
+blob-report/
 
 # Private admin backup downloads
 communityPlaces-backup-*.json
