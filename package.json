@@ -1,6 +1,7 @@
 {
   "scripts": {
     "test": "npm run test:payload && npm run test:rules",
+    "test:browser": "./node_modules/.bin/playwright test",
     "test:payload": "node --test tests/payload-export.test.mjs",
     "test:rules": "firebase emulators:exec --only firestore --project alex-photo-board-test \"node --test tests/firestore.rules.test.mjs\"",
     "import:places": "node scripts/import-community-places.js"
@@ -10,6 +11,7 @@
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.1",
+    "@playwright/test": "^1.61.0",
     "firebase": "^12.15.0",
     "firebase-tools": "^15.22.0"
   }
