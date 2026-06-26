@@ -421,6 +421,7 @@ function initCommunityMap({
       record.description,
       record.localSignificanceSummary,
       record.area,
+      record.locationName,
       record.location,
       record.locality,
       record.community,
