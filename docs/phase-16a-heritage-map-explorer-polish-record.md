@@ -7,9 +7,11 @@ Phase 16A focused on public map usability polish only. The goal was to replace t
 ## What Improved
 
 - Replaced the outdated documentation-style sidebar on `map.html` with a heritage explorer panel.
-- Added clearer public-facing map copy, keyword search, live result count, a readable result list, and a nomination call to action.
+- Added clearer public-facing map copy, a dedicated `Find a place` search card, live result count, a compact readable result list, and a nomination call to action.
 - Improved map result cards so each record shows title, type, area or location context, and a clear `View record` action.
 - Kept the map canvas clear on the right so the controls no longer crowd the map itself.
+- Made the left explorer sidebar internally scrollable so the map remains visually dominant on desktop.
+- Limited the visible results preview so the map page does not become a long full-record list by default.
 
 ## Reference Direction Used
 
@@ -27,8 +29,9 @@ No external branding, exact layout, or reference text was copied.
 - Removed the old hard-coded city or province-style map filter that showed demo values such as `Jiujiang`, `Nanchang`, `Pingxiang`, and `Xinyu`.
 - Replaced it with filters driven only by real current record data:
   - `assetType`
-  - `area` when real area values exist
+  - `Town / area` grouping derived safely from existing location text when broader labels are available
   - `heritageCriteria` when criteria values exist
+- Avoided exposing a giant raw area dropdown by hiding the `Town / area` filter when grouping becomes too fragmented to stay useful.
 
 ## Files Changed
 
@@ -50,6 +53,7 @@ Checked the following locally after implementation:
 - `map.html`
 - map markers appear
 - keyword search updates results
+- `Town / area` filter narrows matching records when usable grouped values exist
 - result count updates
 - empty state appears when no matches are found
 - old city or province demo filter is gone

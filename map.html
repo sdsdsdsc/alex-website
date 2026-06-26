@@ -17,7 +17,7 @@
   <!-- Firebase -->
   <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="script.js" defer></script>
-  <script type="module" src="map.js" defer></script>
+  <script type="module" src="map.js?v=2026-06-24-16a-rev3" defer></script>
 </head>
 <body>
   <header>
@@ -30,124 +30,133 @@
       <aside class="map-search-sidebar map-explorer-panel" aria-label="Heritage map explorer">
         <div class="map-explorer-panel__intro">
           <p class="map-explorer-panel__eyebrow">Heritage explorer</p>
-          <h2 class="map-explorer-panel__title">Explore heritage records</h2>
+          <h2 class="map-explorer-panel__title">Explore records</h2>
           <p class="map-explorer-panel__text">
-            Search the map, browse community places, or nominate a place for review.
+            Search, filter, and open published community heritage records.
           </p>
         </div>
 
-        <form class="map-search-form map-search-form--sidebar" id="mapSearchForm">
-          <label class="map-search-form__label" for="mapSearchInput">Keyword search</label>
-          <div class="map-search-form__row">
-            <input
-              class="map-search-form__input"
-              id="mapSearchInput"
-              name="search"
-              type="search"
-              placeholder="Search by title, address, area, or significance"
-            >
-            <button class="map-search-form__button" type="submit">Search</button>
-          </div>
-        </form>
+        <nav class="map-tool-index" aria-label="Map tools">
+          <button class="map-tool-index__button is-active" type="button" data-tool-target="search" aria-expanded="true">Search</button>
+          <button class="map-tool-index__button" type="button" data-tool-target="filters" aria-expanded="false">Filters</button>
+          <button class="map-tool-index__button" type="button" data-tool-target="help" aria-expanded="false">Info</button>
+        </nav>
 
-        <section class="map-explorer-section" aria-labelledby="mapFilterTitle">
-          <div class="map-explorer-section__heading">
-            <h3 id="mapFilterTitle">Filter records</h3>
-            <button class="map-filter-panel__reset" id="mapFilterReset" type="button">Reset</button>
-          </div>
-
-          <div class="map-filter-panel map-filter-panel--sidebar" id="mapFilterPanel">
-            <div class="map-filter-panel__body map-filter-panel__body--sidebar">
-              <fieldset class="map-filter-group">
-                <legend>Record type</legend>
-                <div class="map-filter-field">
-                  <span class="map-filter-field__label" id="mapAssetTypeFilterLabel">Asset type</span>
-                  <div class="community-custom-filter map-custom-filter" data-filter-key="assetType">
-                    <button
-                      class="community-custom-filter__trigger"
-                      type="button"
-                      aria-haspopup="listbox"
-                      aria-expanded="false"
-                      aria-labelledby="mapAssetTypeFilterLabel"
-                      aria-controls="mapAssetTypeFilterPanel"
-                    >
-                      <span class="community-custom-filter__value">Show all</span>
-                      <span class="community-custom-filter__chevron" aria-hidden="true"></span>
-                    </button>
-                    <div class="community-custom-filter__panel" id="mapAssetTypeFilterPanel" role="listbox" aria-labelledby="mapAssetTypeFilterLabel" hidden></div>
-                  </div>
-                </div>
-              </fieldset>
-
-              <fieldset class="map-filter-group" id="mapAreaFilterGroup" hidden>
-                <legend>Area</legend>
-                <div class="map-filter-field">
-                  <span class="map-filter-field__label" id="mapAreaFilterLabel">Area</span>
-                  <div class="community-custom-filter map-custom-filter" data-filter-key="area">
-                    <button
-                      class="community-custom-filter__trigger"
-                      type="button"
-                      aria-haspopup="listbox"
-                      aria-expanded="false"
-                      aria-labelledby="mapAreaFilterLabel"
-                      aria-controls="mapAreaFilterPanel"
-                    >
-                      <span class="community-custom-filter__value">Show all</span>
-                      <span class="community-custom-filter__chevron" aria-hidden="true"></span>
-                    </button>
-                    <div class="community-custom-filter__panel" id="mapAreaFilterPanel" role="listbox" aria-labelledby="mapAreaFilterLabel" hidden></div>
-                  </div>
-                </div>
-              </fieldset>
-
-              <fieldset class="map-filter-group" id="mapCriteriaFilterGroup" hidden>
-                <legend>Significance</legend>
-                <div class="map-filter-field">
-                  <span class="map-filter-field__label" id="mapCriteriaFilterLabel">Heritage criteria</span>
-                  <div class="community-custom-filter map-custom-filter" data-filter-key="heritageCriteria">
-                    <button
-                      class="community-custom-filter__trigger"
-                      type="button"
-                      aria-haspopup="listbox"
-                      aria-expanded="false"
-                      aria-labelledby="mapCriteriaFilterLabel"
-                      aria-controls="mapCriteriaFilterPanel"
-                    >
-                      <span class="community-custom-filter__value">Show all</span>
-                      <span class="community-custom-filter__chevron" aria-hidden="true"></span>
-                    </button>
-                    <div class="community-custom-filter__panel" id="mapCriteriaFilterPanel" role="listbox" aria-labelledby="mapCriteriaFilterLabel" hidden></div>
-                  </div>
-                </div>
-              </fieldset>
-            </div>
-          </div>
-        </section>
-
-        <section class="map-explorer-section" aria-labelledby="mapResultsTitle">
-          <div class="map-explorer-section__heading map-explorer-section__heading--stacked">
-            <h3 id="mapResultsTitle">Map results</h3>
+        <div class="map-explorer-panel__body">
+          <section class="map-explorer-section map-explorer-section--search is-active" data-tool-panel="search" aria-labelledby="mapSearchPanelTitle">
+            <h3 id="mapSearchPanelTitle">Find a place</h3>
+            <p class="map-explorer-section__text">Search by title, address, street, story, or keyword.</p>
+            <form class="map-search-form" id="mapSearchForm">
+              <label class="map-search-form__label" for="mapSearchInput">Keyword search</label>
+              <div class="map-search-form__row">
+                <input
+                  class="map-search-form__input"
+                  id="mapSearchInput"
+                  name="search"
+                  type="search"
+                  placeholder="Title, address, street, or keyword"
+                >
+                <button class="map-search-form__button" type="submit">Search</button>
+              </div>
+            </form>
             <p class="map-search-status map-search-status--panel" id="mapSearchStatus" role="status" aria-live="polite"></p>
-          </div>
-          <div class="map-results" id="mapResults" aria-live="polite"></div>
-          <p class="map-results__empty" id="mapResultsEmpty" hidden>No records match this search yet.</p>
-        </section>
+          </section>
 
-        <section class="map-explorer-cta" aria-labelledby="mapNominationTitle">
-          <h3 id="mapNominationTitle">Nominate a place</h3>
-          <p>Know a community place that should be recorded? Submit it for review.</p>
-          <button class="map-nomination-entry__button" id="mapNominationToggle" type="button" aria-pressed="false">
-            Nominate a place
-          </button>
-          <p class="map-nomination-entry__status" id="mapNominationStatus" role="status" aria-live="polite" hidden></p>
-        </section>
+          <section class="map-explorer-section" data-tool-panel="filters" aria-labelledby="mapFilterTitle" hidden>
+            <div class="map-explorer-section__heading">
+              <h3 id="mapFilterTitle">Filter records</h3>
+              <button class="map-filter-panel__reset" id="mapFilterReset" type="button">Reset</button>
+            </div>
+
+            <div class="map-filter-panel map-filter-panel--sidebar" id="mapFilterPanel">
+              <div class="map-filter-panel__body map-filter-panel__body--sidebar">
+                <fieldset class="map-filter-group">
+                  <legend>Record type</legend>
+                  <div class="map-filter-field">
+                    <span class="map-filter-field__label" id="mapAssetTypeFilterLabel">Asset type</span>
+                    <div class="community-custom-filter map-custom-filter" data-filter-key="assetType">
+                      <button
+                        class="community-custom-filter__trigger"
+                        type="button"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-labelledby="mapAssetTypeFilterLabel"
+                        aria-controls="mapAssetTypeFilterPanel"
+                      >
+                        <span class="community-custom-filter__value">Show all</span>
+                        <span class="community-custom-filter__chevron" aria-hidden="true"></span>
+                      </button>
+                      <div class="community-custom-filter__panel" id="mapAssetTypeFilterPanel" role="listbox" aria-labelledby="mapAssetTypeFilterLabel" hidden></div>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <fieldset class="map-filter-group" id="mapAreaFilterGroup" hidden>
+                  <legend class="visually-hidden">Location filter</legend>
+                  <div class="map-filter-field">
+                    <span class="map-filter-field__label" id="mapAreaFilterLabel">Town / area</span>
+                    <div class="community-custom-filter map-custom-filter" data-filter-key="area">
+                      <button
+                        class="community-custom-filter__trigger"
+                        type="button"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-labelledby="mapAreaFilterLabel"
+                        aria-controls="mapAreaFilterPanel"
+                      >
+                        <span class="community-custom-filter__value">Show all</span>
+                        <span class="community-custom-filter__chevron" aria-hidden="true"></span>
+                      </button>
+                      <div class="community-custom-filter__panel" id="mapAreaFilterPanel" role="listbox" aria-labelledby="mapAreaFilterLabel" hidden></div>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <fieldset class="map-filter-group" id="mapCriteriaFilterGroup" hidden>
+                  <legend>Significance</legend>
+                  <div class="map-filter-field">
+                    <span class="map-filter-field__label" id="mapCriteriaFilterLabel">Heritage criteria</span>
+                    <div class="community-custom-filter map-custom-filter" data-filter-key="heritageCriteria">
+                      <button
+                        class="community-custom-filter__trigger"
+                        type="button"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-labelledby="mapCriteriaFilterLabel"
+                        aria-controls="mapCriteriaFilterPanel"
+                      >
+                        <span class="community-custom-filter__value">Show all</span>
+                        <span class="community-custom-filter__chevron" aria-hidden="true"></span>
+                      </button>
+                      <div class="community-custom-filter__panel" id="mapCriteriaFilterPanel" role="listbox" aria-labelledby="mapCriteriaFilterLabel" hidden></div>
+                    </div>
+                  </div>
+                </fieldset>
+              </div>
+            </div>
+          </section>
+
+          <section class="map-explorer-section map-explorer-section--info" data-tool-panel="help" aria-labelledby="mapHelpTitle" hidden>
+            <h3 id="mapHelpTitle">Map guide</h3>
+            <p class="map-explorer-section__text">Use the search and filters to focus the map, then open a place record for full details.</p>
+
+            <div class="map-explorer-cta" aria-labelledby="mapNominationTitle">
+              <h3 id="mapNominationTitle">Nominate a place</h3>
+              <p>Know a community place that should be recorded? Submit it for review.</p>
+              <button class="map-nomination-entry__button" id="mapNominationToggle" type="button" aria-pressed="false">
+                Nominate a place
+              </button>
+              <p class="map-nomination-entry__status" id="mapNominationStatus" role="status" aria-live="polite" hidden></p>
+            </div>
+          </section>
+        </div>
       </aside>
 
       <section class="map-search-main" id="map-search" aria-label="Community map search">
         <header class="map-search-heading" aria-labelledby="mapSearchTitle">
           <h2 id="mapSearchTitle">Community heritage map</h2>
           <p>
-            Browse published heritage records on the map and open each place record for more detail.
+            Browse published records on the map and open a place record for more detail.
           </p>
         </header>
 
