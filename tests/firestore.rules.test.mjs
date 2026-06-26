@@ -55,6 +55,14 @@ function ownerFirestore() {
   return testEnv.authenticatedContext(OWNER_UID, { email: OWNER_EMAIL }).firestore();
 }
 
+function ownerFirestoreWithoutEmailClaim() {
+  return testEnv.authenticatedContext(OWNER_UID, {}).firestore();
+}
+
+function ownerFirestoreWithUppercaseEmailClaim() {
+  return testEnv.authenticatedContext(OWNER_UID, { email: OWNER_EMAIL.toUpperCase() }).firestore();
+}
+
 function otherFirestore() {
   return testEnv.authenticatedContext(OTHER_UID, { email: OTHER_EMAIL }).firestore();
 }
@@ -109,6 +117,20 @@ test("a signed-in owner can create a valid nomination", async () => {
   ));
 });
 
+test("a signed-in owner can create a valid nomination when the auth token omits email", async () => {
+  await assertSucceeds(setDoc(
+    doc(ownerFirestoreWithoutEmailClaim(), "placeNominations", "valid-create-no-email-claim"),
+    validNomination()
+  ));
+});
+
+test("a signed-in owner can create a nomination when the auth token email only differs by case", async () => {
+  await assertSucceeds(setDoc(
+    doc(ownerFirestoreWithUppercaseEmailClaim(), "placeNominations", "valid-create-case-insensitive-email"),
+    validNomination()
+  ));
+});
+
 test("optional evidence fields may be omitted or blank where the rules permit", async () => {
   await assertSucceeds(setDoc(
     doc(ownerFirestore(), "placeNominations", "missing-evidence"),
@@ -157,14 +179,19 @@ test("malformed HTTPS-prefixed evidence URLs are denied", async () => {
   ));
 });
 
-test("nomination creation rejects ownership mismatches", async () => {
+test("nomination creation rejects UID ownership mismatches, malformed submitter emails, and mismatched token emails when the claim is present", async () => {
   await assertFails(setDoc(
     doc(ownerFirestore(), "placeNominations", "uid-mismatch"),
     validNomination({ submittedByUid: OTHER_UID })
   ));
 
   await assertFails(setDoc(
-    doc(ownerFirestore(), "placeNominations", "email-mismatch"),
+    doc(ownerFirestore(), "placeNominations", "invalid-submitter-email"),
+    validNomination({ submitterEmail: "not-an-email" })
+  ));
+
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "mismatched-token-email"),
     validNomination({ submitterEmail: OTHER_EMAIL })
   ));
 });
