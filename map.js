@@ -1,4 +1,3 @@
-// === Import Firebase ===
 import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getFirestore,
@@ -7,23 +6,20 @@ import {
   query
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import {
-  buildFullMapUrl,
-  buildMapStatusText,
   buildNominationUrlFromCoordinates,
   buildPlaceRecordUrl,
   cleanText,
   escapeHTML,
   getCommunityDisplayLocation,
-  getDescription,
-  getTitle,
-  getType,
   hasValidCoordinates,
   normalizeCoordinate,
-  normalizeSearchValue,
-  recordMatchesSearch
+  normalizeSearchValue
 } from "./heritage-engine/maps.js?v=2026-06-20-releasepolish";
+import {
+  getHeritageCriteria,
+  isPublicRecord
+} from "./heritage-engine/search.js";
 
-// === Firebase Config ===
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
   authDomain: "alexs-community-efcd8.firebaseapp.com",
@@ -35,103 +31,66 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const TOWN_AREA_BLOCKLIST = /\b(province|district|county|street|road|route|lane|avenue|close|park|square|community|neighbou?rhood|village committee|residential committee)\b/i;
+const SPLIT_PATTERN = /[|,/;]+|\s+-\s+/;
 
-const CITY_OPTIONS = [
-  "Nanchang",
-  "Jiujiang",
-  "Jingdezhen",
-  "Pingxiang",
-  "Xinyu",
-  "Yingtan",
-  "Ganzhou",
-  "Yichun",
-  "Shangrao",
-  "Ji'an",
-  "Fuzhou"
-];
-
-function toSafeUrl(value) {
-  if (!value) return "";
-  try {
-    const parsed = new URL(value, window.location.href);
-    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-      return parsed.href;
-    }
-  } catch (err) {
-    console.warn("Invalid URL skipped:", value);
-  }
-  return "";
+function toTitleCase(value) {
+  const text = cleanText(value);
+  if (!text) return "";
+  return text.replace(/\b([a-z])([a-z]*)/gi, (_, first, rest) => `${first.toUpperCase()}${rest.toLowerCase()}`);
 }
 
-function buildCommunityPopupHtml(record, searchTerm = "", options = {}) {
-  const safeTitle = escapeHTML(getTitle(record));
-  const safeDesc = escapeHTML(getDescription(record));
-  const safeType = escapeHTML(getType(record));
-  const safeArticleLink = toSafeUrl(record?.linkedArticle || "");
-  const fullMapUrl = buildFullMapUrl(searchTerm);
-  const showAdminPointControls = Boolean(options.showAdminPointControls && record?.id);
-
-  let html = `
-    <article class="map-point-card">
-      <h3>${safeTitle}</h3>
-      ${safeDesc ? `<p>${safeDesc}</p>` : ""}
-      <p class="map-point-card__meta"><span>Category/type:</span> ${safeType}</p>
-  `;
-
-  if (safeArticleLink) {
-    html += `<a class="map-point-card__link" href="${safeArticleLink}" target="_blank" rel="noopener noreferrer">View linked article</a>`;
-  }
-
-  html += `
-      <a class="map-point-card__link" href="${fullMapUrl}">Open in full map</a>
-      <button class="map-point-card__zoom" type="button" data-action="zoom-point">Zoom in</button>
-  `;
-
-  if (showAdminPointControls) {
-    html += `
-      <div class="map-point-card__admin-actions">
-        <button type="button" data-action="edit-point" data-point-id="${escapeHTML(record.id)}">Edit Point</button>
-        <button type="button" data-action="delete-point" data-point-id="${escapeHTML(record.id)}">Delete Point</button>
-      </div>
-    `;
-  }
-
-  html += `
-    </article>
-  `;
-
-  return html;
+function truncateText(value, maxLength = 110) {
+  const text = cleanText(value);
+  if (!text || text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength).trimEnd()}...`;
 }
 
-function buildCommunityPlacePopupHtml(record) {
-  const safeTitle = escapeHTML(cleanText(record.title) || "Untitled community place");
-  const safeCategory = escapeHTML(cleanText(record.category) || "Not specified");
-  const safeLocation = escapeHTML(getCommunityDisplayLocation(record) || "Not specified");
-  const safePeriod = escapeHTML(cleanText(record.period) || "Not specified");
-  const safeDescription = escapeHTML(cleanText(record.description) || "No description has been added yet.");
-  const recordUrl = buildPlaceRecordUrl(record.id);
+function normalizeTownAreaCandidate(value) {
+  return toTitleCase(cleanText(value).replace(/\s+/g, " "));
+}
 
-  return `
-    <article class="map-point-card map-point-card--record">
-      <h3>${safeTitle}</h3>
-      <dl class="map-point-card__facts">
-        <div>
-          <dt>Category</dt>
-          <dd>${safeCategory}</dd>
-        </div>
-        <div>
-          <dt>Location</dt>
-          <dd>${safeLocation}</dd>
-        </div>
-        <div>
-          <dt>Period</dt>
-          <dd>${safePeriod}</dd>
-        </div>
-      </dl>
-      <p>${safeDescription}</p>
-      <a class="map-point-card__link" href="${recordUrl}">View record</a>
-    </article>
-  `;
+function isUsefulTownAreaCandidate(value) {
+  const text = normalizeTownAreaCandidate(value);
+  if (!text) return false;
+  if (text.length < 2 || text.length > 40) return false;
+  if (/\d/.test(text)) return false;
+  if (/^jiangxi$/i.test(text) || /^jiangxi province$/i.test(text) || /^china$/i.test(text)) return false;
+  return !TOWN_AREA_BLOCKLIST.test(text);
+}
+
+function extractBroaderTownAreaCandidates(value) {
+  const segments = cleanText(value)
+    .split(SPLIT_PATTERN)
+    .map(normalizeTownAreaCandidate)
+    .filter(Boolean);
+
+  if (segments.length === 0) return [];
+
+  const usefulSegments = segments.filter((segment) => isUsefulTownAreaCandidate(segment));
+  if (segments.length === 1) {
+    return usefulSegments;
+  }
+
+  const preferredSegment = [...segments]
+    .reverse()
+    .find((segment) => isUsefulTownAreaCandidate(segment));
+
+  return preferredSegment ? [preferredSegment] : usefulSegments;
+}
+
+function getTownAreaValues(record) {
+  return [
+    cleanText(record.city),
+    cleanText(record.area),
+    cleanText(record.location),
+    cleanText(record.locality),
+    cleanText(record.address),
+    getCommunityDisplayLocation(record)
+  ]
+    .flatMap((value) => extractBroaderTownAreaCandidates(value))
+    .filter(Boolean)
+    .filter((value, index, values) => values.indexOf(value) === index);
 }
 
 function makeBluePinIcon() {
@@ -175,23 +134,46 @@ function fitMapToLayers(map, boundsItems, fallbackCenter) {
   }
 
   const bounds = L.latLngBounds(boundsItems);
-  map.fitBounds(bounds, { padding: [50, 50] });
+  map.fitBounds(bounds, { padding: [40, 40] });
   if (boundsItems.length === 1) {
-    map.setZoom(14);
+    map.setZoom(15);
     map.panTo(bounds.getCenter());
   }
 }
 
-function updateUrlSearch(term) {
-  const url = new URL(window.location.href);
-  url.searchParams.delete("lat");
-  url.searchParams.delete("lng");
-  if (term) {
-    url.searchParams.set("search", term);
-  } else {
-    url.searchParams.delete("search");
-  }
-  window.history.replaceState({}, "", url);
+function buildCommunityPlacePopupHtml(record) {
+  const safeTitle = escapeHTML(cleanText(record.title) || "Untitled community place");
+  const safeAssetType = escapeHTML(cleanText(record.assetType) || cleanText(record.category) || "Not specified");
+  const safeLocation = escapeHTML(getCommunityDisplayLocation(record) || "Not specified");
+  const safeArea = escapeHTML(record.townAreaValues[0] || cleanText(record.area) || cleanText(record.city) || "Not specified");
+  const safeDescription = escapeHTML(
+    cleanText(record.localSignificanceSummary)
+      || cleanText(record.description)
+      || "No description has been added yet."
+  );
+  const recordUrl = buildPlaceRecordUrl(record.id);
+
+  return `
+    <article class="map-point-card map-point-card--record">
+      <h3>${safeTitle}</h3>
+      <dl class="map-point-card__facts">
+        <div>
+          <dt>Type</dt>
+          <dd>${safeAssetType}</dd>
+        </div>
+        <div>
+          <dt>Area</dt>
+          <dd>${safeArea}</dd>
+        </div>
+        <div>
+          <dt>Location</dt>
+          <dd>${safeLocation}</dd>
+        </div>
+      </dl>
+      <p>${safeDescription}</p>
+      <a class="map-point-card__link" href="${recordUrl}">View record</a>
+    </article>
+  `;
 }
 
 function initCommunityMap({
@@ -199,7 +181,6 @@ function initCommunityMap({
   mode,
   searchFormId,
   searchInputId,
-  clearButtonId,
   statusId
 }) {
   const container = document.getElementById(containerId);
@@ -207,26 +188,13 @@ function initCommunityMap({
 
   const searchForm = document.getElementById(searchFormId);
   const searchInput = document.getElementById(searchInputId);
-  const clearButton = clearButtonId ? document.getElementById(clearButtonId) : null;
-  const statusEl = statusId ? document.getElementById(statusId) : null;
+  const statusEl = document.getElementById(statusId);
+  const areaFilterGroup = document.getElementById("mapAreaFilterGroup");
+  const criteriaFilterGroup = document.getElementById("mapCriteriaFilterGroup");
+  const resetButton = document.getElementById("mapFilterReset");
+  const toolButtons = Array.from(document.querySelectorAll(".map-tool-index__button"));
+  const toolPanels = Array.from(document.querySelectorAll("[data-tool-panel]"));
   const urlParams = new URLSearchParams(window.location.search);
-  const isRetiredAdminRequest = urlParams.get("admin") === "true";
-  const isPublicCommunityMode = true;
-  const filterPanel = document.getElementById("mapFilterPanel");
-  const filterToggle = document.getElementById("mapFilterToggle");
-  const filterClose = document.getElementById("mapFilterClose");
-  const filterApply = document.getElementById("mapFilterApply");
-  const filterReset = document.getElementById("mapFilterReset");
-  const drawSearchToggle = document.getElementById("mapDrawSearchToggle");
-  const drawSearchPanel = document.getElementById("mapDrawSearchPanel");
-  const drawSearchClose = document.getElementById("mapDrawSearchClose");
-  const drawSearchX = document.getElementById("mapDrawSearchX");
-  const drawSearchMessage = document.getElementById("mapDrawSearchMessage");
-  const mapNominationToggle = document.getElementById("mapNominationToggle");
-  const mapNominationStatus = document.getElementById("mapNominationStatus");
-  const customFilters = Array.from(document.querySelectorAll(".map-custom-filter"));
-  const categoryInputs = Array.from(document.querySelectorAll('input[name="mapCategory"]'));
-  const initialSearchTerm = urlParams.get("search") || "";
   const requestedLatParam = urlParams.get("lat");
   const requestedLngParam = urlParams.get("lng");
   const hasRequestedLatLng = requestedLatParam !== null
@@ -240,24 +208,27 @@ function initCommunityMap({
     && Number.isFinite(requestedLng)
     ? [requestedLat, requestedLng]
     : null;
-  const fallbackCenter = isPublicCommunityMode ? [27.6202, 113.8825] : [51.505, -0.09];
+  const initialSearchTerm = urlParams.get("search") || "";
+  const fallbackCenter = [27.6202, 113.8825];
+  const customFilters = Array.from(document.querySelectorAll(".map-custom-filter"));
+  const mapNominationToggle = document.getElementById("mapNominationToggle");
+  const mapNominationStatus = document.getElementById("mapNominationStatus");
+
   const map = L.map(containerId).setView(fallbackCenter, 13);
   const pointLayer = L.layerGroup().addTo(map);
-  const polygonLayer = L.layerGroup().addTo(map);
   const focusLayer = L.layerGroup().addTo(map);
   const bluePinIcon = makeBluePinIcon();
   const baseLayers = createBaseLayers();
+  const markersById = new Map();
+  const pendingFilters = {
+    assetType: "",
+    area: "",
+    heritageCriteria: ""
+  };
+
   let allMapPoints = [];
-  let allMapPolygons = [];
   let hasFocusedRequestedLocation = false;
   let isNominationPickMode = false;
-  const pendingFilters = {
-    city: ""
-  };
-  const appliedFilters = {
-    categories: [],
-    city: ""
-  };
 
   baseLayers.osm.addTo(map);
   map.whenReady(() => {
@@ -279,10 +250,36 @@ function initCommunityMap({
     searchInput.value = initialSearchTerm;
   }
 
+  function updateUrlSearch(term) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("lat");
+    url.searchParams.delete("lng");
+    if (term) {
+      url.searchParams.set("search", term);
+    } else {
+      url.searchParams.delete("search");
+    }
+    window.history.replaceState({}, "", url);
+  }
+
   function setStatus(message) {
     if (statusEl) {
       statusEl.textContent = message;
     }
+  }
+
+  function setActiveToolPanel(panelKey) {
+    toolButtons.forEach((button) => {
+      const isActive = button.dataset.toolTarget === panelKey;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-expanded", String(isActive));
+    });
+
+    toolPanels.forEach((panel) => {
+      const isActive = panel.dataset.toolPanel === panelKey;
+      panel.classList.toggle("is-active", isActive);
+      panel.hidden = !isActive;
+    });
   }
 
   function setNominationStatus(message = "") {
@@ -295,7 +292,7 @@ function initCommunityMap({
     isNominationPickMode = false;
     container.classList.remove("is-nomination-pick-mode");
     if (mapNominationToggle) {
-      mapNominationToggle.textContent = "Nominate a place from this map";
+      mapNominationToggle.textContent = "Nominate a place";
       mapNominationToggle.setAttribute("aria-pressed", "false");
     }
     setNominationStatus("");
@@ -303,20 +300,14 @@ function initCommunityMap({
 
   function startMapNominationMode() {
     isNominationPickMode = true;
-    closeFilterPanel();
-    closeDrawSearchPanel();
     closeAllCustomFilters();
     map.closePopup();
     container.classList.add("is-nomination-pick-mode");
     if (mapNominationToggle) {
-      mapNominationToggle.textContent = "Cancel map nomination";
+      mapNominationToggle.textContent = "Cancel nomination";
       mapNominationToggle.setAttribute("aria-pressed", "true");
     }
     setNominationStatus("Click the map to choose the place you want to nominate.");
-  }
-
-  function getSelectedMapCategories() {
-    return categoryInputs.filter((input) => input.checked).map((input) => input.value);
   }
 
   function getCustomFilter(key) {
@@ -381,14 +372,6 @@ function initCommunityMap({
     });
   }
 
-  function selectCustomFilterOption(filter, value) {
-    const key = filter?.dataset.filterKey;
-    if (!key) return;
-    pendingFilters[key] = value;
-    updateCustomFilterSelection(filter);
-    closeCustomFilter(filter, true);
-  }
-
   function handleOptionKeydown(event, filter, option) {
     const options = getOptionButtons(filter);
     const currentIndex = options.indexOf(option);
@@ -405,22 +388,122 @@ function initCommunityMap({
     }
   }
 
-  function getOptionCount(field, value) {
-    if (!value) return allMapPoints.length;
-    return allMapPoints.filter((record) => cleanText(record[field]) === value).length;
+  function matchesFilters(record) {
+    const assetTypeMatches = !pendingFilters.assetType
+      || cleanText(record.assetType) === pendingFilters.assetType;
+    const areaMatches = !pendingFilters.area
+      || record.townAreaValues.includes(pendingFilters.area);
+    const criteriaMatches = !pendingFilters.heritageCriteria
+      || getHeritageCriteria(record).includes(pendingFilters.heritageCriteria);
+    return assetTypeMatches && areaMatches && criteriaMatches;
   }
 
-  function populateCustomFilter(key, values) {
+  function matchesFilterContext(record, excludedKey, normalizedTerm) {
+    const searchMatches = matchesSearch(record, normalizedTerm);
+    const assetTypeMatches = excludedKey === "assetType"
+      || !pendingFilters.assetType
+      || cleanText(record.assetType) === pendingFilters.assetType;
+    const areaMatches = excludedKey === "area"
+      || !pendingFilters.area
+      || record.townAreaValues.includes(pendingFilters.area);
+    const criteriaMatches = excludedKey === "heritageCriteria"
+      || !pendingFilters.heritageCriteria
+      || getHeritageCriteria(record).includes(pendingFilters.heritageCriteria);
+    return searchMatches && assetTypeMatches && areaMatches && criteriaMatches;
+  }
+
+  function matchesSearch(record, term) {
+    if (!term) return true;
+
+    const searchText = [
+      record.title,
+      record.address,
+      record.description,
+      record.localSignificanceSummary,
+      record.area,
+      record.locationName,
+      record.location,
+      record.locality,
+      record.community,
+      record.neighbourhood,
+      record.city,
+      record.district,
+      record.assetType,
+      record.category,
+      ...getHeritageCriteria(record)
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    return searchText.includes(term);
+  }
+
+  function getContextRecords(excludedKey, normalizedTerm) {
+    return allMapPoints.filter((record) => matchesFilterContext(record, excludedKey, normalizedTerm));
+  }
+
+  function buildFilterOptions(key, normalizedTerm) {
+    const source = getContextRecords(key, normalizedTerm);
+    if (key === "assetType") {
+      const counts = new Map();
+      source.forEach((record) => {
+        const value = cleanText(record.assetType);
+        if (!value) return;
+        counts.set(value, (counts.get(value) || 0) + 1);
+      });
+      return {
+        totalCount: source.length,
+        options: [...counts.entries()]
+          .map(([value, count]) => ({ value, count }))
+          .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
+      };
+    }
+
+    if (key === "area") {
+      const counts = new Map();
+      source.forEach((record) => {
+        record.townAreaValues.forEach((value) => {
+          counts.set(value, (counts.get(value) || 0) + 1);
+        });
+      });
+      return {
+        totalCount: source.length,
+        options: [...counts.entries()]
+          .map(([value, count]) => ({ value, count }))
+          .filter((option) => option.count > 0)
+          .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
+      };
+    }
+
+    if (key === "heritageCriteria") {
+      const counts = new Map();
+      source.forEach((record) => {
+        getHeritageCriteria(record).forEach((value) => {
+          counts.set(value, (counts.get(value) || 0) + 1);
+        });
+      });
+      return {
+        totalCount: source.length,
+        options: [...counts.entries()]
+          .map(([value, count]) => ({ value, count }))
+          .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
+      };
+    }
+
+    return { totalCount: source.length, options: [] };
+  }
+
+  function populateCustomFilter(key, config) {
     const filter = getCustomFilter(key);
     const { panel } = getCustomFilterParts(filter);
     if (!filter || !panel) return;
+    const options = config.options || [];
 
-    if (pendingFilters[key] && !values.includes(pendingFilters[key])) {
+    if (pendingFilters[key] && !options.some((option) => option.value === pendingFilters[key])) {
       pendingFilters[key] = "";
     }
 
     panel.textContent = "";
-    ["", ...values].forEach((value) => {
+    const totalCount = config.totalCount || 0;
+    [{ value: "", count: totalCount }, ...options].forEach(({ value, count: optionCount }) => {
       const option = document.createElement("button");
       option.className = "community-custom-filter__option";
       option.type = "button";
@@ -433,13 +516,16 @@ function initCommunityMap({
 
       const count = document.createElement("span");
       count.className = "community-custom-filter__option-count";
-      count.textContent = String(getOptionCount(key, value));
+      count.textContent = String(optionCount);
       count.setAttribute("aria-label", `${count.textContent} records`);
 
       option.append(label, count);
       option.addEventListener("click", (event) => {
         event.stopPropagation();
-        selectCustomFilterOption(filter, value);
+        pendingFilters[key] = value;
+        updateCustomFilterSelection(filter);
+        closeCustomFilter(filter, true);
+        renderMapFeatures(searchInput?.value || "");
       });
       option.addEventListener("keydown", (event) => handleOptionKeydown(event, filter, option));
       panel.appendChild(option);
@@ -449,121 +535,63 @@ function initCommunityMap({
   }
 
   function renderFilterOptions() {
-    if (!isPublicCommunityMode) return;
-    populateCustomFilter("city", CITY_OPTIONS);
-  }
+    const normalizedTerm = normalizeSearchValue(searchInput?.value || "");
+    const assetTypes = buildFilterOptions("assetType", normalizedTerm);
+    const areas = buildFilterOptions("area", normalizedTerm);
+    const criteria = buildFilterOptions("heritageCriteria", normalizedTerm);
 
-  function matchesAppliedFilters(record) {
-    const categoryMatches = appliedFilters.categories.length === 0
-      || appliedFilters.categories.includes(cleanText(record.category));
-    const cityMatches = !appliedFilters.city || cleanText(record.city) === appliedFilters.city;
-    return categoryMatches && cityMatches;
-  }
+    populateCustomFilter("assetType", assetTypes);
+    populateCustomFilter("area", areas);
+    populateCustomFilter("heritageCriteria", criteria);
 
-  function applyMapFilters() {
-    appliedFilters.categories = getSelectedMapCategories();
-    appliedFilters.city = pendingFilters.city;
-    renderMapFeatures(searchInput?.value || "");
-  }
-
-  function resetMapFilters() {
-    categoryInputs.forEach((input) => {
-      input.checked = false;
-    });
-    Object.keys(pendingFilters).forEach((key) => {
-      pendingFilters[key] = "";
-      appliedFilters[key] = "";
-    });
-    appliedFilters.categories = [];
-    customFilters.forEach(updateCustomFilterSelection);
-    closeAllCustomFilters();
-    renderMapFeatures(searchInput?.value || "");
-  }
-
-  function closeDrawSearchPanel(restoreFocus = false) {
-    if (!drawSearchPanel || !drawSearchToggle) return;
-    drawSearchPanel.hidden = true;
-    drawSearchToggle.setAttribute("aria-expanded", "false");
-    if (drawSearchMessage) drawSearchMessage.textContent = "";
-    if (restoreFocus) drawSearchToggle.focus();
-  }
-
-  function openDrawSearchPanel() {
-    if (!drawSearchPanel || !drawSearchToggle) return;
-    closeFilterPanel();
-    drawSearchPanel.hidden = false;
-    drawSearchToggle.setAttribute("aria-expanded", "true");
-  }
-
-  function closeFilterPanel(restoreFocus = false) {
-    if (!filterPanel || !filterToggle) return;
-    filterPanel.hidden = true;
-    filterToggle.setAttribute("aria-expanded", "false");
-    closeAllCustomFilters();
-    if (restoreFocus) filterToggle.focus();
-  }
-
-  function openFilterPanel() {
-    if (!filterPanel || !filterToggle) return;
-    closeDrawSearchPanel();
-    filterPanel.hidden = false;
-    filterToggle.setAttribute("aria-expanded", "true");
+    if (areaFilterGroup) {
+      areaFilterGroup.hidden = areas.options.length === 0;
+    }
+    if (criteriaFilterGroup) {
+      criteriaFilterGroup.hidden = criteria.options.length === 0;
+    }
+    const assetTypeGroup = getCustomFilter("assetType")?.closest(".map-filter-group");
+    if (assetTypeGroup) {
+      assetTypeGroup.hidden = assetTypes.options.length === 0;
+    }
   }
 
   function renderMapFeatures(searchTerm = "") {
     const normalizedTerm = normalizeSearchValue(searchTerm);
     pointLayer.clearLayers();
-    polygonLayer.clearLayers();
+    focusLayer.clearLayers();
+    markersById.clear();
 
-    const matchingPoints = allMapPoints.filter((point) => {
-      const searchMatches = recordMatchesSearch(point, normalizedTerm);
-      return isPublicCommunityMode ? searchMatches && matchesAppliedFilters(point) : searchMatches;
-    });
-    const matchingPolygons = isPublicCommunityMode
-      ? []
-      : allMapPolygons.filter((polygon) => recordMatchesSearch(polygon, normalizedTerm));
+    const matchingPoints = allMapPoints
+      .filter((record) => matchesFilters(record) && matchesSearch(record, normalizedTerm))
+      .sort((a, b) => cleanText(a.title).localeCompare(cleanText(b.title)));
+
     const boundsItems = [];
-
     matchingPoints.forEach((point) => {
       const marker = L.marker([point.lat, point.lng], { icon: bluePinIcon }).addTo(pointLayer);
-      const popupHtml = buildCommunityPlacePopupHtml(point);
-      marker.bindPopup(popupHtml, {
+      marker.bindPopup(buildCommunityPlacePopupHtml(point), {
         className: "community-map-popup",
         closeButton: true,
         autoClose: true
       });
+      markersById.set(point.id, marker);
       boundsItems.push([point.lat, point.lng]);
     });
 
-    matchingPolygons.forEach((polygonRecord) => {
-      const polygonCoords = polygonRecord.points
-        .filter((point) => Number.isFinite(point?.lat) && Number.isFinite(point?.lng))
-        .map((point) => [point.lat, point.lng]);
-
-      if (polygonCoords.length < 3) return;
-
-      const polygon = L.polygon(polygonCoords, {
-        color: "#1f6feb",
-        fillColor: "#1f6feb",
-        fillOpacity: 0.18,
-        weight: 2
-      }).addTo(polygonLayer);
-
-      polygon.bindPopup(buildCommunityPopupHtml(polygonRecord, searchTerm), {
-        className: "community-map-popup",
-        closeButton: true,
-        autoClose: true
-      });
-      polygonCoords.forEach((coord) => boundsItems.push(coord));
-    });
-
-    const totalMatches = matchingPoints.length + matchingPolygons.length;
-    setStatus(buildMapStatusText(totalMatches, Boolean(normalizedTerm), isPublicCommunityMode));
+    renderFilterOptions();
+    const hasFocusControls = Boolean(normalizedTerm || pendingFilters.assetType || pendingFilters.area || pendingFilters.heritageCriteria);
+    setStatus(
+      matchingPoints.length === 0
+        ? "No records match this search."
+        : hasFocusControls
+          ? `${matchingPoints.length} ${matchingPoints.length === 1 ? "record" : "records"} on map.`
+          : `${matchingPoints.length} ${matchingPoints.length === 1 ? "record" : "records"} on map. Search or filter to focus the map.`
+    );
 
     fitMapToLayers(map, boundsItems, fallbackCenter);
+
     if (mode === "full" && requestedLocation && !hasFocusedRequestedLocation && !normalizedTerm) {
       hasFocusedRequestedLocation = true;
-      focusLayer.clearLayers();
       L.circleMarker(requestedLocation, {
         radius: 9,
         color: "#1d3557",
@@ -577,6 +605,7 @@ function initCommunityMap({
       cleanUrl.searchParams.delete("lng");
       window.history.replaceState({}, "", cleanUrl);
     }
+
     setTimeout(() => map.invalidateSize(), 0);
   }
 
@@ -597,35 +626,32 @@ function initCommunityMap({
       allMapPoints = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
-        const lat = normalizeCoordinate(data.lat);
-        const lng = normalizeCoordinate(data.lng);
-
-        const communityRecord = {
+        const record = {
           id: docSnap.id,
           title: cleanText(data.title),
           category: cleanText(data.category),
+          assetType: cleanText(data.assetType || data.category),
+          area: cleanText(data.area),
+          address: cleanText(data.address),
+          description: cleanText(data.description),
+          localSignificanceSummary: cleanText(data.localSignificanceSummary),
+          heritageCriteria: data.heritageCriteria,
           locationName: cleanText(data.locationName),
           location: cleanText(data.location),
-          area: cleanText(data.area),
           locality: cleanText(data.locality),
           community: cleanText(data.community),
           neighbourhood: cleanText(data.neighbourhood || data.neighborhood),
           province: cleanText(data.province),
           city: cleanText(data.city),
           district: cleanText(data.district),
-          address: cleanText(data.address),
-          containedInPlace: data.containedInPlace,
-          "schema:containedInPlace": data["schema:containedInPlace"],
-          associatedType: cleanText(data.associatedType),
-          contributor: cleanText(data.contributor),
-          period: cleanText(data.period),
-          description: cleanText(data.description),
-          tags: data.tags,
-          lat,
-          lng
+          lat: normalizeCoordinate(data.lat),
+          lng: normalizeCoordinate(data.lng),
+          recordStatus: cleanText(data.recordStatus)
         };
-        if (!hasValidCoordinates(communityRecord)) return;
-        allMapPoints.push(communityRecord);
+
+        if (!hasValidCoordinates(record) || !isPublicRecord(record)) return;
+        record.townAreaValues = getTownAreaValues(record);
+        allMapPoints.push(record);
       });
     } catch (err) {
       console.error("Error loading map records:", err);
@@ -633,120 +659,54 @@ function initCommunityMap({
     }
   }
 
-  async function loadPolygons() {
-    allMapPolygons = [];
-  }
-
   searchForm?.addEventListener("submit", (event) => {
     event.preventDefault();
     runSearch(searchInput?.value || "");
   });
 
-  clearButton?.addEventListener("click", () => {
+  resetButton?.addEventListener("click", () => {
+    if (searchInput) {
+      searchInput.value = "";
+    }
+    Object.keys(pendingFilters).forEach((key) => {
+      pendingFilters[key] = "";
+      updateCustomFilterSelection(getCustomFilter(key));
+    });
+    closeAllCustomFilters();
     runSearch("");
-    searchInput?.focus();
   });
 
-  if (isPublicCommunityMode) {
-    filterToggle?.addEventListener("click", () => {
-      const isOpen = filterToggle.getAttribute("aria-expanded") === "true";
+  customFilters.forEach((filter) => {
+    const { trigger } = getCustomFilterParts(filter);
+    trigger?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const isOpen = trigger.getAttribute("aria-expanded") === "true";
       if (isOpen) {
-        closeFilterPanel(true);
+        closeCustomFilter(filter);
       } else {
-        openFilterPanel();
+        openCustomFilter(filter);
       }
     });
 
-    filterClose?.addEventListener("click", () => closeFilterPanel(true));
-    filterApply?.addEventListener("click", () => {
-      applyMapFilters();
-      closeFilterPanel(true);
-    });
-    filterReset?.addEventListener("click", () => {
-      resetMapFilters();
-      closeFilterPanel(true);
-    });
-
-    drawSearchToggle?.addEventListener("click", () => {
-      const isOpen = drawSearchToggle.getAttribute("aria-expanded") === "true";
-      if (isOpen) {
-        closeDrawSearchPanel(true);
-      } else {
-        openDrawSearchPanel();
+    trigger?.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        openCustomFilter(filter, true);
       }
-    });
-
-    drawSearchClose?.addEventListener("click", () => closeDrawSearchPanel(true));
-    drawSearchX?.addEventListener("click", () => closeDrawSearchPanel(true));
-    drawSearchPanel?.querySelectorAll("[data-draw-search-option]").forEach((button) => {
-      button.addEventListener("click", () => {
-        if (drawSearchMessage) {
-          drawSearchMessage.textContent = "Draw search will be added in the next phase.";
-        }
-      });
-    });
-
-    customFilters.forEach((filter) => {
-      const { trigger } = getCustomFilterParts(filter);
-      trigger?.addEventListener("click", (event) => {
-        event.stopPropagation();
-        const isOpen = trigger.getAttribute("aria-expanded") === "true";
-        if (isOpen) {
-          closeCustomFilter(filter);
-        } else {
-          openCustomFilter(filter);
-        }
-      });
-
-      trigger?.addEventListener("keydown", (event) => {
-        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-          event.preventDefault();
-          openCustomFilter(filter, true);
-        }
-      });
-    });
-
-    document.addEventListener("click", (event) => {
-      const target = event.target;
-      if (target instanceof Node && !customFilters.some((filter) => filter.contains(target))) {
-        closeAllCustomFilters();
-      }
-      if (
-        filterPanel
-        && filterToggle
-        && target instanceof Node
-        && !filterPanel.hidden
-        && !filterPanel.contains(target)
-        && !filterToggle.contains(target)
-      ) {
-        closeFilterPanel();
-      }
-      if (
-        drawSearchPanel
-        && drawSearchToggle
-        && target instanceof Node
-        && !drawSearchPanel.hidden
-        && !drawSearchPanel.contains(target)
-        && !drawSearchToggle.contains(target)
-      ) {
-        closeDrawSearchPanel();
-      }
-    });
-  }
-
-  map.on("popupopen", (event) => {
-    const popupEl = event.popup.getElement();
-    const zoomButton = popupEl?.querySelector('[data-action="zoom-point"]');
-    zoomButton?.addEventListener("click", () => {
-      map.setView(event.popup.getLatLng(), Math.max(map.getZoom() + 2, 16));
     });
   });
 
-  map.on("click", (event) => {
-    if (!isNominationPickMode) return;
-    const { lat, lng } = event.latlng;
-    stopMapNominationMode();
-    window.location.href = buildNominationUrlFromCoordinates(lat, lng);
+  toolButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      setActiveToolPanel(button.dataset.toolTarget || "search");
+    });
+  });
+
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (target instanceof Node && !customFilters.some((filter) => filter.contains(target))) {
+      closeAllCustomFilters();
+    }
   });
 
   document.addEventListener("keydown", (event) => {
@@ -755,17 +715,16 @@ function initCommunityMap({
         stopMapNominationMode();
         return;
       }
-      if (isPublicCommunityMode && filterPanel && !filterPanel.hidden) {
-        closeFilterPanel(true);
-        return;
-      }
-      if (isPublicCommunityMode && drawSearchPanel && !drawSearchPanel.hidden) {
-        closeDrawSearchPanel(true);
-        return;
-      }
       closeAllCustomFilters();
       map.closePopup();
     }
+  });
+
+  map.on("click", (event) => {
+    if (!isNominationPickMode) return;
+    const { lat, lng } = event.latlng;
+    stopMapNominationMode();
+    window.location.href = buildNominationUrlFromCoordinates(lat, lng);
   });
 
   mapNominationToggle?.addEventListener("click", () => {
@@ -776,12 +735,9 @@ function initCommunityMap({
     startMapNominationMode();
   });
 
-  Promise.all([loadMarkers(), loadPolygons()]).then(() => {
-    renderFilterOptions();
+  loadMarkers().then(() => {
+    setActiveToolPanel("search");
     runSearch(searchInput?.value || initialSearchTerm);
-    if (isRetiredAdminRequest) {
-      setStatus("Legacy map editing has been retired. Manage community place records from the admin dashboard.");
-    }
   });
 
   return map;
@@ -795,7 +751,6 @@ function initFullMap() {
     mode: "full",
     searchFormId: "mapSearchForm",
     searchInputId: "mapSearchInput",
-    clearButtonId: "mapSearchClear",
     statusId: "mapSearchStatus"
   });
 }
