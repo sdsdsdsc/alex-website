@@ -163,6 +163,18 @@ test("HTTPS evidence and nomination-private rights metadata are accepted", async
       evidenceVisibility: "nomination-private"
     })
   ));
+
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeNominations", "https-evidence-empty-caption-credit"),
+    validNomination({
+      evidenceImageUrl: "https://example.org/evidence.jpg",
+      evidenceImageCaption: "",
+      evidenceSourceCredit: "",
+      evidenceRightsStatus: "public-web-reference",
+      evidencePermissionConfirmed: true,
+      evidenceVisibility: "nomination-private"
+    })
+  ));
 });
 
 test("non-HTTPS evidence URLs are denied", async () => {
@@ -176,6 +188,18 @@ test("malformed HTTPS-prefixed evidence URLs are denied", async () => {
   await assertFails(setDoc(
     doc(ownerFirestore(), "placeNominations", "malformed-https-evidence"),
     validNomination({ evidenceImageUrl: "https://not-a-real-host-path" })
+  ));
+});
+
+test("invalid evidence rights metadata is denied", async () => {
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "invalid-evidence-rights"),
+    validNomination({
+      evidenceImageUrl: "https://example.org/evidence.jpg",
+      evidenceRightsStatus: "review-only",
+      evidencePermissionConfirmed: true,
+      evidenceVisibility: "nomination-private"
+    })
   ));
 });
 

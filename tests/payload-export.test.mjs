@@ -29,6 +29,7 @@ const {
   buildNominationOwnershipMetadata,
   buildSubmittedNominationPayload,
   normalizeNominationCoordinates,
+  sanitizePublicNominationPayload,
   validateNominationAgreements,
   validateNominationEvidenceFields
 } = nominations;
@@ -194,6 +195,66 @@ test("builds a valid nomination payload with evidence metadata and boolean owner
   assert.equal(payload.submitterEmail, "owner@example.org");
   assert.equal(payload.submissionAuthType, "signedIn");
   assertNoUndefined(payload);
+});
+
+test("builds an evidence-url payload without blank caption or source-credit fields", () => {
+  const payload = buildSubmittedNominationPayload(buildValidNominationValues({
+    evidenceImageUrl: "https://example.org/photo.jpg",
+    evidenceImageCaption: "",
+    evidenceSourceCredit: "",
+    evidenceRightsStatus: "public-web-reference",
+    evidencePermissionConfirmed: true
+  }), {
+    createdAt: "created",
+    updatedAt: "updated",
+    submittedAt: "submitted",
+    ownershipMetadata: buildSignedInOwnership()
+  });
+
+  assert.equal(payload.evidenceImageUrl, "https://example.org/photo.jpg");
+  assert.equal(payload.evidenceRightsStatus, "public-web-reference");
+  assert.equal(payload.evidencePermissionConfirmed, true);
+  assert.equal(payload.evidenceVisibility, NOMINATION_PRIVATE_EVIDENCE_VISIBILITY);
+  assert.equal(Object.prototype.hasOwnProperty.call(payload, "evidenceImageCaption"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(payload, "evidenceSourceCredit"), false);
+  assertNoUndefined(payload);
+});
+
+test("final nomination payload sanitization omits undefined entries and blank optional evidence text", () => {
+  const sanitized = sanitizePublicNominationPayload({
+    title: "Safe title",
+    evidenceImageUrl: "https://example.org/photo.jpg",
+    evidenceImageCaption: "",
+    evidenceSourceCredit: undefined,
+    evidenceRightsStatus: "public-web-reference",
+    evidencePermissionConfirmed: true,
+    evidenceVisibility: "nomination-private",
+    submittedByUid: "uid-123",
+    submitterEmail: "person@example.org",
+    submissionAuthType: "signedIn",
+    termsAccepted: true,
+    privacyAccepted: true,
+    nominationStatus: "submitted",
+    notAllowed: "drop me"
+  });
+
+  assert.deepEqual(Object.keys(sanitized).sort(), [
+    "evidenceImageUrl",
+    "evidencePermissionConfirmed",
+    "evidenceRightsStatus",
+    "evidenceVisibility",
+    "nominationStatus",
+    "privacyAccepted",
+    "submissionAuthType",
+    "submittedByUid",
+    "submitterEmail",
+    "termsAccepted",
+    "title"
+  ]);
+  assert.equal(Object.prototype.hasOwnProperty.call(sanitized, "evidenceImageCaption"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(sanitized, "evidenceSourceCredit"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(sanitized, "notAllowed"), false);
+  assertNoUndefined(sanitized);
 });
 
 test("rejects invalid evidence URLs at the helper layer", () => {
