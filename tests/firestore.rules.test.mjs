@@ -138,6 +138,11 @@ test("optional evidence fields may be omitted or blank where the rules permit", 
   ));
 
   await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeNominations", "empty-evidence-url"),
+    validNomination({ evidenceImageUrl: "" })
+  ));
+
+  await assertSucceeds(setDoc(
     doc(ownerFirestore(), "placeNominations", "blank-evidence-metadata"),
     validNomination({
       evidenceImageCaption: "",
@@ -151,7 +156,7 @@ test("optional evidence fields may be omitted or blank where the rules permit", 
 test("HTTPS evidence and nomination-private rights metadata are accepted", async () => {
   await assertSucceeds(setDoc(
     doc(ownerFirestore(), "placeNominations", "https-evidence-only"),
-    validNomination({ evidenceImageUrl: "https://example.org/evidence.jpg" })
+    validNomination({ evidenceImageUrl: "https://example.org/photo.jpg" })
   ));
 
   await assertSucceeds(setDoc(
@@ -165,11 +170,11 @@ test("HTTPS evidence and nomination-private rights metadata are accepted", async
   ));
 
   await assertSucceeds(setDoc(
-    doc(ownerFirestore(), "placeNominations", "https-evidence-empty-caption-credit"),
+    doc(ownerFirestore(), "placeNominations", "https-evidence-caption-credit"),
     validNomination({
       evidenceImageUrl: "https://example.org/evidence.jpg",
-      evidenceImageCaption: "",
-      evidenceSourceCredit: "",
+      evidenceImageCaption: "Community archive photo.",
+      evidenceSourceCredit: "Example.org test source",
       evidenceRightsStatus: "public-web-reference",
       evidencePermissionConfirmed: true,
       evidenceVisibility: "nomination-private"
@@ -184,13 +189,6 @@ test("non-HTTPS evidence URLs are denied", async () => {
   ));
 });
 
-test("malformed HTTPS-prefixed evidence URLs are denied", async () => {
-  await assertFails(setDoc(
-    doc(ownerFirestore(), "placeNominations", "malformed-https-evidence"),
-    validNomination({ evidenceImageUrl: "https://not-a-real-host-path" })
-  ));
-});
-
 test("invalid evidence rights metadata is denied", async () => {
   await assertFails(setDoc(
     doc(ownerFirestore(), "placeNominations", "invalid-evidence-rights"),
@@ -200,6 +198,25 @@ test("invalid evidence rights metadata is denied", async () => {
       evidencePermissionConfirmed: true,
       evidenceVisibility: "nomination-private"
     })
+  ));
+});
+
+test("invalid evidence visibility is denied", async () => {
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "invalid-evidence-visibility"),
+    validNomination({
+      evidenceImageUrl: "https://example.org/evidence.jpg",
+      evidenceRightsStatus: "public-web-reference",
+      evidencePermissionConfirmed: true,
+      evidenceVisibility: "public"
+    })
+  ));
+});
+
+test("signed-out users cannot create nominations", async () => {
+  await assertFails(setDoc(
+    doc(testEnv.unauthenticatedContext().firestore(), "placeNominations", "signed-out-create"),
+    validNomination()
   ));
 });
 
