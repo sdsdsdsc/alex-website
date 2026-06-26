@@ -53,6 +53,11 @@ service cloud.firestore {
         && value.size() <= maxLength;
     }
 
+    function isValidEmailString(value, maxLength) {
+      return isTrimmedString(value, maxLength)
+        && value.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$');
+    }
+
     function isOptionalString(fieldName, maxLength) {
       return !hasField(fieldName)
         || request.resource.data[fieldName] == null
@@ -154,11 +159,17 @@ service cloud.firestore {
         && isTrimmedString(request.resource.data.localSignificanceSummary, 2000)
         && isAllowedCriteria(request.resource.data.heritageCriteria)
         && isTrimmedString(request.resource.data.criteriaExplanation, 5000)
-        && isTrimmedString(request.resource.data.nominatorEmail, 254)
-        && request.resource.data.nominatorEmail.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+        && isValidEmailString(request.resource.data.nominatorEmail, 254)
         && request.resource.data.submittedByUid == request.auth.uid
-        && isTrimmedString(request.resource.data.submitterEmail, 254)
-        && request.resource.data.submitterEmail.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+        && isValidEmailString(request.resource.data.submitterEmail, 254)
+        && (
+          !request.auth.token.keys().hasAny(['email'])
+          || request.auth.token.email == null
+          || (
+            request.auth.token.email is string
+            && request.resource.data.submitterEmail.lower() == request.auth.token.email.lower()
+          )
+        )
         && request.resource.data.submissionAuthType == 'signedIn'
         && request.resource.data.termsAccepted == true
         && request.resource.data.privacyAccepted == true

@@ -34,9 +34,17 @@ In `firestore.rules`, the nomination create rule changed from:
 to:
 
 ```txt
-&& isTrimmedString(request.resource.data.submitterEmail, 254)
-&& request.resource.data.submitterEmail.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+&& isValidEmailString(request.resource.data.submitterEmail, 254)
+&& (
+  request.auth.token.email == null
+  || (
+    request.auth.token.email is string
+    && request.resource.data.submitterEmail.lower() == request.auth.token.email.lower()
+  )
+)
 ```
+
+The related `nominatorEmail` validation now uses the same shared `isValidEmailString(...)` helper for consistency.
 
 No other nomination create protections were removed. The rule still requires:
 
@@ -55,13 +63,14 @@ No other nomination create protections were removed. The rule still requires:
 
 ## Security Impact
 
-This change removes one fragile identity cross-check but keeps the stronger ownership control:
+This change relaxes the most fragile part of the identity check while keeping the stronger ownership control:
 
 - The signed-in caller must still be authenticated.
 - The submitted record must still claim the caller's own UID.
 - `submitterEmail` must still be present as a trimmed, email-shaped string.
+- If the auth token includes an email claim, `submitterEmail` must still match it case-insensitively.
 
-This means the rule continues to prevent anonymous writes and continues to bind nomination ownership to the authenticated Firebase UID, while avoiding false negatives caused by token email claims.
+This means the rule continues to prevent anonymous writes and continues to bind nomination ownership to the authenticated Firebase UID, while avoiding false negatives when a valid signed-in session lacks an email claim.
 
 ## Tests Run
 
