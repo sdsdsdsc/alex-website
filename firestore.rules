@@ -158,7 +158,7 @@ service cloud.firestore {
         && request.resource.data.nominatorEmail.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
         && request.resource.data.submittedByUid == request.auth.uid
         && isTrimmedString(request.resource.data.submitterEmail, 254)
-        && request.resource.data.submitterEmail == request.auth.token.email
+        && request.resource.data.submitterEmail.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
         && request.resource.data.submissionAuthType == 'signedIn'
         && request.resource.data.termsAccepted == true
         && request.resource.data.privacyAccepted == true

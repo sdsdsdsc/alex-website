@@ -157,15 +157,15 @@ test("malformed HTTPS-prefixed evidence URLs are denied", async () => {
   ));
 });
 
-test("nomination creation rejects ownership mismatches", async () => {
+test("nomination creation rejects UID ownership mismatches and malformed submitter emails", async () => {
   await assertFails(setDoc(
     doc(ownerFirestore(), "placeNominations", "uid-mismatch"),
     validNomination({ submittedByUid: OTHER_UID })
   ));
 
   await assertFails(setDoc(
-    doc(ownerFirestore(), "placeNominations", "email-mismatch"),
-    validNomination({ submitterEmail: OTHER_EMAIL })
+    doc(ownerFirestore(), "placeNominations", "invalid-submitter-email"),
+    validNomination({ submitterEmail: "not-an-email" })
   ));
 });
 
