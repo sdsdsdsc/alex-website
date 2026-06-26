@@ -227,6 +227,38 @@ function addOptionalText(payload, field, value) {
   if (cleanValue) payload[field] = cleanValue;
 }
 
+function sanitizePublicNominationPayload(payload = {}) {
+  return Object.entries(payload).reduce((clean, [key, entry]) => {
+    if (!PUBLIC_NOMINATION_FIELDS.includes(key) || entry === undefined) {
+      return clean;
+    }
+
+    if (
+      entry === ""
+      && [
+        "assetType",
+        "area",
+        "condition",
+        "communityUse",
+        "sourceReference",
+        "evidenceImageUrl",
+        "evidenceImageCaption",
+        "evidenceSourceCredit",
+        "evidenceRightsStatus",
+        "evidenceVisibility",
+        "nominatorDisplayName",
+        "organisationName",
+        "submitterDisplayName"
+      ].includes(key)
+    ) {
+      return clean;
+    }
+
+    clean[key] = entry;
+    return clean;
+  }, {});
+}
+
 function buildNominationOwnershipMetadata(user = {}) {
   const uid = cleanText(user.submittedByUid || user.uid);
   const submitterEmail = cleanText(user.submitterEmail || user.email);
@@ -302,15 +334,7 @@ function buildSubmittedNominationPayload(values = {}, timestamps = {}) {
     Object.assign(payload, buildNominationOwnershipMetadata(timestamps.ownershipMetadata));
   }
 
-  return Object.entries(payload).reduce((clean, [key, entry]) => {
-    if (entry === undefined) {
-      return clean;
-    }
-    if (PUBLIC_NOMINATION_FIELDS.includes(key)) {
-      clean[key] = entry;
-    }
-    return clean;
-  }, {});
+  return sanitizePublicNominationPayload(payload);
 }
 
 function buildNominationDraftFromFormValues(values = {}) {
@@ -337,6 +361,7 @@ export {
   normalizeNominationCoordinates,
   normalizeNominationCriteria,
   normalizeNominationTextFields,
+  sanitizePublicNominationPayload,
   stripPublicDisallowedNominationFields,
   validateNominationAgreements,
   validateNominationEvidenceFields,
