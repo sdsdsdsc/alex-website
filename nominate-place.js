@@ -13,7 +13,7 @@ import {
   buildNominationDebugSummary,
   buildNominationOwnershipMetadata,
   buildSubmittedNominationPayload
-} from "./heritage-engine/nominations.js?v=2026-06-26-16d-debug";
+} from "./heritage-engine/nominations.js?v=2026-06-27-16e-diagnosis";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -210,6 +210,9 @@ form?.addEventListener("submit", async (event) => {
     return;
   }
 
+  const safePayloadSummary = buildNominationDebugSummary(payload);
+  console.info("Nomination normal-mode payload summary:", safePayloadSummary);
+
   submitButton.disabled = true;
   submitButton.textContent = "Submitting...";
 
@@ -223,7 +226,11 @@ form?.addEventListener("submit", async (event) => {
       "success"
     );
   } catch (err) {
-    console.error("Nomination submission failed:", err);
+    console.error("Nomination submission failed:", {
+      code: err?.code || "",
+      message: err?.message || "",
+      payloadSummary: safePayloadSummary || buildNominationDebugSummary(payload)
+    });
     showStatus(
       status,
       "Sorry, the nomination could not be submitted. Please check the form and try again.",
