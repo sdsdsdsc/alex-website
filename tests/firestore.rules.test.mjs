@@ -182,9 +182,9 @@ test("HTTPS evidence and nomination-private rights metadata are accepted", async
   ));
 });
 
-test("non-HTTPS evidence URLs are denied", async () => {
-  await assertFails(setDoc(
-    doc(ownerFirestore(), "placeNominations", "http-evidence"),
+test("evidence URL is treated as an optional review string rather than a fetchable URL gate", async () => {
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeNominations", "review-string-evidence"),
     validNomination({ evidenceImageUrl: "http://example.org/evidence.jpg" })
   ));
 });
@@ -220,20 +220,28 @@ test("signed-out users cannot create nominations", async () => {
   ));
 });
 
-test("nomination creation rejects UID ownership mismatches, malformed submitter emails, and mismatched token emails when the claim is present", async () => {
+test("nomination creation keeps UID ownership as the security boundary instead of token email equality", async () => {
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeNominations", "different-submitter-email"),
+    validNomination({ submitterEmail: OTHER_EMAIL })
+  ));
+
   await assertFails(setDoc(
     doc(ownerFirestore(), "placeNominations", "uid-mismatch"),
     validNomination({ submittedByUid: OTHER_UID })
   ));
 
   await assertFails(setDoc(
-    doc(ownerFirestore(), "placeNominations", "invalid-submitter-email"),
-    validNomination({ submitterEmail: "not-an-email" })
+    doc(ownerFirestore(), "placeNominations", "uid-mismatch-email-match"),
+    validNomination({
+      submittedByUid: OTHER_UID,
+      submitterEmail: OWNER_EMAIL
+    })
   ));
 
   await assertFails(setDoc(
-    doc(ownerFirestore(), "placeNominations", "mismatched-token-email"),
-    validNomination({ submitterEmail: OTHER_EMAIL })
+    doc(ownerFirestore(), "placeNominations", "invalid-submitter-email"),
+    validNomination({ submitterEmail: "not-an-email" })
   ));
 });
 

@@ -162,14 +162,6 @@ service cloud.firestore {
         && isValidEmailString(request.resource.data.nominatorEmail, 254)
         && request.resource.data.submittedByUid == request.auth.uid
         && isValidEmailString(request.resource.data.submitterEmail, 254)
-        && (
-          !request.auth.token.keys().hasAny(['email'])
-          || request.auth.token.email == null
-          || (
-            request.auth.token.email is string
-            && request.resource.data.submitterEmail.lower() == request.auth.token.email.lower()
-          )
-        )
         && request.resource.data.submissionAuthType == 'signedIn'
         && request.resource.data.termsAccepted == true
         && request.resource.data.privacyAccepted == true
@@ -182,12 +174,6 @@ service cloud.firestore {
         && isOptionalString('communityUse', 1500)
         && isOptionalString('sourceReference', 2000)
         && isOptionalString('evidenceImageUrl', 1000)
-        && (
-          !hasField('evidenceImageUrl')
-          || request.resource.data.evidenceImageUrl == null
-          || request.resource.data.evidenceImageUrl == ''
-          || request.resource.data.evidenceImageUrl.matches('^https://.+$')
-        )
         && isOptionalString('evidenceImageCaption', 300)
         && isOptionalString('evidenceCaption', 300)
         && isOptionalString('evidenceSourceCredit', 300)
