@@ -13,7 +13,7 @@ import {
   buildNominationDebugSummary,
   buildNominationOwnershipMetadata,
   buildSubmittedNominationPayload
-} from "./heritage-engine/nominations.js?v=2026-06-27-16e-diagnosis";
+} from "./heritage-engine/nominations.js?v=2026-06-20-13c";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
