@@ -51,6 +51,38 @@ const PUBLIC_NOMINATION_FIELDS = Object.freeze([
   "updatedAt",
   "submittedAt"
 ]);
+const NOMINATION_CREATE_ALLOWED_FIELDS = Object.freeze([
+  ...PUBLIC_NOMINATION_FIELDS,
+  "evidenceCaption",
+  "photoUrl",
+  "photoDescription"
+]);
+const REQUIRED_NOMINATION_CREATE_FIELDS = Object.freeze([
+  "title",
+  "address",
+  "description",
+  "localSignificanceSummary",
+  "heritageCriteria",
+  "criteriaExplanation",
+  "nominatorEmail",
+  "submittedByUid",
+  "submitterEmail",
+  "submissionAuthType",
+  "termsAccepted",
+  "privacyAccepted",
+  "nominationStatus",
+  "createdAt",
+  "updatedAt",
+  "submittedAt"
+]);
+const DEBUG_EVIDENCE_FIELDS = Object.freeze([
+  "evidenceImageUrl",
+  "evidenceImageCaption",
+  "evidenceSourceCredit",
+  "evidenceRightsStatus",
+  "evidencePermissionConfirmed",
+  "evidenceVisibility"
+]);
 const PUBLIC_DISALLOWED_NOMINATION_FIELDS = Object.freeze([
   "adminNotes",
   "adminHistoricInterest",
@@ -345,14 +377,61 @@ function buildNominationDraftFromFormValues(values = {}) {
   });
 }
 
+function getFieldType(value) {
+  if (Array.isArray(value)) return "array";
+  if (value === null) return "null";
+  return typeof value;
+}
+
+function redactUid(uid) {
+  const value = cleanText(uid);
+  if (!value) return "";
+  if (value.length <= 8) return `${value.slice(0, 1)}...${value.slice(-1)}`;
+  return `${value.slice(0, 4)}...${value.slice(-4)}`;
+}
+
+function buildNominationDebugSummary(payload = {}) {
+  const keys = Object.keys(payload).sort();
+  const fieldTypes = Object.fromEntries(keys.map((field) => [field, getFieldType(payload[field])]));
+  const missingRequiredFields = REQUIRED_NOMINATION_CREATE_FIELDS.filter((field) => !keys.includes(field));
+  const forbiddenExtraFields = keys.filter((field) => !NOMINATION_CREATE_ALLOWED_FIELDS.includes(field));
+  const undefinedFields = Object.entries(payload)
+    .filter(([, value]) => value === undefined)
+    .map(([field]) => field)
+    .sort();
+
+  return {
+    keys,
+    fieldTypes,
+    evidence: Object.fromEntries(DEBUG_EVIDENCE_FIELDS.map((field) => [field, payload[field]])),
+    submittedByUidPresent: Boolean(cleanText(payload.submittedByUid)),
+    submittedByUidRedacted: redactUid(payload.submittedByUid),
+    submitterEmail: payload.submitterEmail || "",
+    nominationStatus: payload.nominationStatus || "",
+    submissionAuthType: payload.submissionAuthType || "",
+    termsAccepted: payload.termsAccepted === true,
+    privacyAccepted: payload.privacyAccepted === true,
+    lat: payload.lat,
+    latType: getFieldType(payload.lat),
+    lng: payload.lng,
+    lngType: getFieldType(payload.lng),
+    missingRequiredFields,
+    forbiddenExtraFields,
+    undefinedFields
+  };
+}
+
 export {
   EVIDENCE_RIGHTS_STATUSES,
   FIELD_LIMITS,
   NOMINATION_PRIVATE_EVIDENCE_VISIBILITY,
+  NOMINATION_CREATE_ALLOWED_FIELDS,
   PUBLIC_DISALLOWED_NOMINATION_FIELDS,
   PUBLIC_NOMINATION_FIELDS,
+  REQUIRED_NOMINATION_CREATE_FIELDS,
   REQUIRED_TEXT_FIELDS,
   SUBMISSION_ROLES,
+  buildNominationDebugSummary,
   buildNominationDraftFromFormValues,
   buildNominationOwnershipMetadata,
   buildSubmittedNominationPayload,
