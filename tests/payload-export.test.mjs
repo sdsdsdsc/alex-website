@@ -26,6 +26,7 @@ const publicExport = await import(pathToFileURL(path.join(tempEngineRoot, "expor
 const {
   EVIDENCE_RIGHTS_STATUSES,
   NOMINATION_PRIVATE_EVIDENCE_VISIBILITY,
+  buildNominationDebugSummary,
   buildNominationOwnershipMetadata,
   buildSubmittedNominationPayload,
   normalizeNominationCoordinates,
@@ -218,6 +219,61 @@ test("builds an evidence-url payload without blank caption or source-credit fiel
   assert.equal(Object.prototype.hasOwnProperty.call(payload, "evidenceImageCaption"), false);
   assert.equal(Object.prototype.hasOwnProperty.call(payload, "evidenceSourceCredit"), false);
   assertNoUndefined(payload);
+});
+
+test("nomination debug summary reports clean evidence payload keys and field types", () => {
+  const payload = buildSubmittedNominationPayload(buildValidNominationValues({
+    evidenceImageUrl: "https://example.org/photo.jpg",
+    evidenceImageCaption: "Phase 16D test caption",
+    evidenceSourceCredit: "Phase 16D test source",
+    evidenceRightsStatus: "public-web-reference",
+    evidencePermissionConfirmed: true
+  }), {
+    createdAt: "created",
+    updatedAt: "updated",
+    submittedAt: "submitted",
+    ownershipMetadata: buildSignedInOwnership({
+      uid: "public-user-phase-16d",
+      email: "alex.home@gmail.com"
+    })
+  });
+
+  const debug = buildNominationDebugSummary(payload);
+
+  assert.deepEqual(debug.missingRequiredFields, []);
+  assert.deepEqual(debug.forbiddenExtraFields, []);
+  assert.deepEqual(debug.undefinedFields, []);
+  assert.equal(debug.evidence.evidenceImageUrl, "https://example.org/photo.jpg");
+  assert.equal(debug.evidence.evidenceImageCaption, "Phase 16D test caption");
+  assert.equal(debug.evidence.evidenceSourceCredit, "Phase 16D test source");
+  assert.equal(debug.evidence.evidenceRightsStatus, "public-web-reference");
+  assert.equal(debug.evidence.evidencePermissionConfirmed, true);
+  assert.equal(debug.evidence.evidenceVisibility, NOMINATION_PRIVATE_EVIDENCE_VISIBILITY);
+  assert.equal(debug.submittedByUidPresent, true);
+  assert.equal(debug.submittedByUidRedacted, "publ...-16d");
+  assert.equal(debug.submitterEmail, "alex.home@gmail.com");
+  assert.equal(debug.latType, "number");
+  assert.equal(debug.lngType, "number");
+});
+
+test("nomination debug summary detects forbidden extras and missing required fields", () => {
+  const validPayload = buildSubmittedNominationPayload(buildValidNominationValues(), {
+    createdAt: "created",
+    updatedAt: "updated",
+    submittedAt: "submitted",
+    ownershipMetadata: buildSignedInOwnership()
+  });
+
+  const extraFieldDebug = buildNominationDebugSummary({
+    ...validPayload,
+    fakeExtraField: "not allowed"
+  });
+  assert.deepEqual(extraFieldDebug.forbiddenExtraFields, ["fakeExtraField"]);
+
+  const missingRequiredPayload = { ...validPayload };
+  delete missingRequiredPayload.title;
+  const missingRequiredDebug = buildNominationDebugSummary(missingRequiredPayload);
+  assert.deepEqual(missingRequiredDebug.missingRequiredFields, ["title"]);
 });
 
 test("final nomination payload sanitization omits undefined entries and blank optional evidence text", () => {

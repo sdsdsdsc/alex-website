@@ -10,9 +10,10 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
+  buildNominationDebugSummary,
   buildNominationOwnershipMetadata,
   buildSubmittedNominationPayload
-} from "./heritage-engine/nominations.js?v=2026-06-26-16c";
+} from "./heritage-engine/nominations.js?v=2026-06-26-16d-debug";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -27,6 +28,7 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 let authResolved = false;
+const debugNomination = new URLSearchParams(window.location.search).get("debugNomination") === "1";
 
 const FORM_TEXT_FIELDS = [
   "title",
@@ -197,6 +199,14 @@ form?.addEventListener("submit", async (event) => {
     payload = buildNominationPayload(new FormData(form), user);
   } catch (err) {
     showStatus(status, err.message || "Please check the nomination details.", "error");
+    return;
+  }
+
+  if (debugNomination) {
+    const debugSummary = buildNominationDebugSummary(payload);
+    window.__lastNominationDebug = debugSummary;
+    console.info("Nomination debug payload summary:", debugSummary);
+    showStatus(status, "Debug mode: payload logged. Firestore write skipped.", "success");
     return;
   }
 
