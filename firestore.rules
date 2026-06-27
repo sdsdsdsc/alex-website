@@ -37,16 +37,6 @@ service cloud.firestore {
         ]);
     }
 
-    function isAllowedEvidenceRightsStatus(value) {
-      return value in [
-        'own-work',
-        'permission-granted',
-        'public-domain-or-open-license',
-        'public-web-reference',
-        'unknown-needs-review'
-      ];
-    }
-
     function isTrimmedString(value, maxLength) {
       return value is string
         && value.size() > 0
@@ -183,7 +173,13 @@ service cloud.firestore {
           || request.resource.data.evidenceRightsStatus == ''
           || (
             request.resource.data.evidenceRightsStatus is string
-            && isAllowedEvidenceRightsStatus(request.resource.data.evidenceRightsStatus)
+            && (
+              request.resource.data.evidenceRightsStatus == 'own-work'
+              || request.resource.data.evidenceRightsStatus == 'permission-granted'
+              || request.resource.data.evidenceRightsStatus == 'public-domain-or-open-license'
+              || request.resource.data.evidenceRightsStatus == 'public-web-reference'
+              || request.resource.data.evidenceRightsStatus == 'unknown-needs-review'
+            )
           )
         )
         && (
