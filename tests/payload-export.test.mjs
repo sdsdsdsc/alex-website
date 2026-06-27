@@ -24,11 +24,13 @@ const validation = await import(pathToFileURL(path.join(tempEngineRoot, "validat
 const publicExport = await import(pathToFileURL(path.join(tempEngineRoot, "export.mjs")).href);
 
 const {
+  EVIDENCE_METADATA_TEST_MODES,
   EVIDENCE_RIGHTS_STATUSES,
   NOMINATION_PRIVATE_EVIDENCE_VISIBILITY,
   buildNominationDebugSummary,
   buildNominationOwnershipMetadata,
   buildSubmittedNominationPayload,
+  normalizeEvidenceMetadataTestMode,
   normalizeNominationCoordinates,
   sanitizePublicNominationPayload,
   validateNominationAgreements,
@@ -112,6 +114,23 @@ function assertNoUndefined(value, pathLabel = "root") {
   });
 }
 
+function buildSubmittedEvidencePayload(evidenceMetadataTestMode = "", overrides = {}, ownershipOverrides = {}) {
+  return buildSubmittedNominationPayload(buildValidNominationValues({
+    evidenceImageUrl: "https://example.org/photo.jpg",
+    evidenceImageCaption: "Front view",
+    evidenceSourceCredit: "Photo by nominator",
+    evidenceRightsStatus: "public-web-reference",
+    evidencePermissionConfirmed: true,
+    ...overrides
+  }), {
+    createdAt: "created",
+    updatedAt: "updated",
+    submittedAt: "submitted",
+    ownershipMetadata: buildSignedInOwnership(ownershipOverrides),
+    evidenceMetadataTestMode
+  });
+}
+
 test("builds a valid nomination payload with blank optional evidence fields", () => {
   const ownershipMetadata = buildSignedInOwnership();
 
@@ -164,28 +183,17 @@ test("builds a valid nomination payload with blank optional evidence fields", ()
 });
 
 test("builds a valid nomination payload with the temporary 13C evidence-url rollback shape", () => {
-  const ownershipMetadata = buildSignedInOwnership({
+  const payload = buildSubmittedEvidencePayload("", {
+    evidenceRightsStatus: "own-work",
+    submitterEmail: undefined,
+    submissionAuthType: undefined
+  }, {
     uid: "public-user-2",
     email: "owner@example.org",
     submissionAuthType: "signedIn"
   });
 
-  const payload = buildSubmittedNominationPayload(buildValidNominationValues({
-    evidenceImageUrl: "https://example.org/evidence.jpg",
-    evidenceImageCaption: "Front view",
-    evidenceSourceCredit: "Photo by nominator",
-    evidenceRightsStatus: "own-work",
-    evidencePermissionConfirmed: true,
-    submitterEmail: undefined,
-    submissionAuthType: undefined
-  }), {
-    createdAt: "created",
-    updatedAt: "updated",
-    submittedAt: "submitted",
-    ownershipMetadata
-  });
-
-  assert.equal(payload.evidenceImageUrl, "https://example.org/evidence.jpg");
+  assert.equal(payload.evidenceImageUrl, "https://example.org/photo.jpg");
   assert.equal(payload.evidenceImageCaption, "Front view");
   assert.equal(payload.evidenceSourceCredit, "Photo by nominator");
   assert.equal(payload.evidencePermissionConfirmed, true);
@@ -198,18 +206,49 @@ test("builds a valid nomination payload with the temporary 13C evidence-url roll
   assertNoUndefined(payload);
 });
 
+test("builds a rights-only diagnostic evidence payload shape", () => {
+  const payload = buildSubmittedEvidencePayload("rights");
+
+  assert.equal(payload.evidenceImageUrl, "https://example.org/photo.jpg");
+  assert.equal(payload.evidenceRightsStatus, "public-web-reference");
+  assert.equal(payload.evidencePermissionConfirmed, true);
+  assert.equal(Object.prototype.hasOwnProperty.call(payload, "evidenceVisibility"), false);
+  assert.equal(payload.submittedByUid, "public-user-1");
+  assert.equal(payload.submitterEmail, "account@example.org");
+  assert.equal(payload.submissionAuthType, "signedIn");
+  assertNoUndefined(payload);
+});
+
+test("builds a visibility-only diagnostic evidence payload shape", () => {
+  const payload = buildSubmittedEvidencePayload("visibility");
+
+  assert.equal(payload.evidenceImageUrl, "https://example.org/photo.jpg");
+  assert.equal(payload.evidencePermissionConfirmed, true);
+  assert.equal(Object.prototype.hasOwnProperty.call(payload, "evidenceRightsStatus"), false);
+  assert.equal(payload.evidenceVisibility, NOMINATION_PRIVATE_EVIDENCE_VISIBILITY);
+  assert.equal(payload.submittedByUid, "public-user-1");
+  assert.equal(payload.submitterEmail, "account@example.org");
+  assert.equal(payload.submissionAuthType, "signedIn");
+  assertNoUndefined(payload);
+});
+
+test("builds a both-fields diagnostic evidence payload shape", () => {
+  const payload = buildSubmittedEvidencePayload("both");
+
+  assert.equal(payload.evidenceImageUrl, "https://example.org/photo.jpg");
+  assert.equal(payload.evidenceRightsStatus, "public-web-reference");
+  assert.equal(payload.evidencePermissionConfirmed, true);
+  assert.equal(payload.evidenceVisibility, NOMINATION_PRIVATE_EVIDENCE_VISIBILITY);
+  assert.equal(payload.submittedByUid, "public-user-1");
+  assert.equal(payload.submitterEmail, "account@example.org");
+  assert.equal(payload.submissionAuthType, "signedIn");
+  assertNoUndefined(payload);
+});
+
 test("builds an evidence-url payload without blank caption or source-credit fields", () => {
-  const payload = buildSubmittedNominationPayload(buildValidNominationValues({
-    evidenceImageUrl: "https://example.org/photo.jpg",
+  const payload = buildSubmittedEvidencePayload("", {
     evidenceImageCaption: "",
-    evidenceSourceCredit: "",
-    evidenceRightsStatus: "public-web-reference",
-    evidencePermissionConfirmed: true
-  }), {
-    createdAt: "created",
-    updatedAt: "updated",
-    submittedAt: "submitted",
-    ownershipMetadata: buildSignedInOwnership()
+    evidenceSourceCredit: ""
   });
 
   assert.equal(payload.evidenceImageUrl, "https://example.org/photo.jpg");
@@ -222,20 +261,12 @@ test("builds an evidence-url payload without blank caption or source-credit fiel
 });
 
 test("nomination debug summary reports clean evidence payload keys and field types", () => {
-  const payload = buildSubmittedNominationPayload(buildValidNominationValues({
-    evidenceImageUrl: "https://example.org/photo.jpg",
+  const payload = buildSubmittedEvidencePayload("both", {
     evidenceImageCaption: "Phase 16D test caption",
-    evidenceSourceCredit: "Phase 16D test source",
-    evidenceRightsStatus: "public-web-reference",
-    evidencePermissionConfirmed: true
-  }), {
-    createdAt: "created",
-    updatedAt: "updated",
-    submittedAt: "submitted",
-    ownershipMetadata: buildSignedInOwnership({
-      uid: "public-user-phase-16d",
-      email: "alex.home@gmail.com"
-    })
+    evidenceSourceCredit: "Phase 16D test source"
+  }, {
+    uid: "public-user-phase-16d",
+    email: "alex.home@gmail.com"
   });
 
   const debug = buildNominationDebugSummary(payload);
@@ -246,9 +277,9 @@ test("nomination debug summary reports clean evidence payload keys and field typ
   assert.equal(debug.evidence.evidenceImageUrl, "https://example.org/photo.jpg");
   assert.equal(debug.evidence.evidenceImageCaption, "Phase 16D test caption");
   assert.equal(debug.evidence.evidenceSourceCredit, "Phase 16D test source");
+  assert.equal(debug.evidence.evidenceRightsStatus, "public-web-reference");
   assert.equal(debug.evidence.evidencePermissionConfirmed, true);
-  assert.equal(debug.evidence.evidenceRightsStatus, undefined);
-  assert.equal(debug.evidence.evidenceVisibility, undefined);
+  assert.equal(debug.evidence.evidenceVisibility, NOMINATION_PRIVATE_EVIDENCE_VISIBILITY);
   assert.equal(debug.submittedByUidPresent, true);
   assert.equal(debug.submittedByUidRedacted, "publ...-16d");
   assert.equal(debug.submitterEmail, "alex.home@gmail.com");
@@ -311,6 +342,15 @@ test("final nomination payload sanitization omits undefined entries and blank op
   assert.equal(Object.prototype.hasOwnProperty.call(sanitized, "evidenceSourceCredit"), false);
   assert.equal(Object.prototype.hasOwnProperty.call(sanitized, "notAllowed"), false);
   assertNoUndefined(sanitized);
+});
+
+test("normalizes evidence metadata diagnostic modes from query values", () => {
+  assert.equal(normalizeEvidenceMetadataTestMode("rights"), "rights");
+  assert.equal(normalizeEvidenceMetadataTestMode("VISIBILITY"), "visibility");
+  assert.equal(normalizeEvidenceMetadataTestMode(" both "), "both");
+  assert.equal(normalizeEvidenceMetadataTestMode("unknown"), "");
+  assert.equal(normalizeEvidenceMetadataTestMode(""), "");
+  assert.deepEqual(EVIDENCE_METADATA_TEST_MODES, ["rights", "visibility", "both"]);
 });
 
 test("rejects invalid evidence URLs at the helper layer", () => {

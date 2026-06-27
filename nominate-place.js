@@ -12,8 +12,9 @@ import {
 import {
   buildNominationDebugSummary,
   buildNominationOwnershipMetadata,
-  buildSubmittedNominationPayload
-} from "./heritage-engine/nominations.js?v=2026-06-20-13c";
+  buildSubmittedNominationPayload,
+  normalizeEvidenceMetadataTestMode
+} from "./heritage-engine/nominations.js?v=2026-06-27-13c-metadata-diagnostic";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -28,7 +29,16 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 let authResolved = false;
-const debugNomination = new URLSearchParams(window.location.search).get("debugNomination") === "1";
+
+function getNominationQueryFlags() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    debugNomination: params.get("debugNomination") === "1",
+    evidenceMetadataTestMode: normalizeEvidenceMetadataTestMode(params.get("evidenceMetadataTest"))
+  };
+}
+
+const { debugNomination, evidenceMetadataTestMode } = getNominationQueryFlags();
 
 const FORM_TEXT_FIELDS = [
   "title",
@@ -114,8 +124,26 @@ function buildNominationPayload(formData, user) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     submittedAt: serverTimestamp(),
-    ownershipMetadata: buildNominationOwnershipMetadata(user)
+    ownershipMetadata: buildNominationOwnershipMetadata(user),
+    evidenceMetadataTestMode
   });
+}
+
+function buildSafeNominationWriteLog(payload) {
+  const debugSummary = buildNominationDebugSummary(payload);
+  const evidenceFieldsPresent = Object.fromEntries(
+    Object.entries(debugSummary.evidence).filter(([field]) => Object.prototype.hasOwnProperty.call(payload, field))
+  );
+
+  return {
+    evidenceMetadataTestMode: evidenceMetadataTestMode || "default-13c",
+    payloadKeys: debugSummary.keys,
+    fieldTypes: debugSummary.fieldTypes,
+    evidenceFieldsPresent,
+    missingRequiredFields: debugSummary.missingRequiredFields,
+    forbiddenExtraFields: debugSummary.forbiddenExtraFields,
+    undefinedFields: debugSummary.undefinedFields
+  };
 }
 
 function showStatus(element, message, type = "") {
@@ -203,15 +231,15 @@ form?.addEventListener("submit", async (event) => {
   }
 
   if (debugNomination) {
-    const debugSummary = buildNominationDebugSummary(payload);
-    window.__lastNominationDebug = debugSummary;
-    console.info("Nomination debug payload summary:", debugSummary);
+    const safePayloadLog = buildSafeNominationWriteLog(payload);
+    window.__lastNominationDebug = safePayloadLog;
+    console.info("Nomination debug payload summary:", safePayloadLog);
     showStatus(status, "Debug mode: payload logged. Firestore write skipped.", "success");
     return;
   }
 
-  const safePayloadSummary = buildNominationDebugSummary(payload);
-  console.info("Nomination normal-mode payload summary:", safePayloadSummary);
+  const safePayloadLog = buildSafeNominationWriteLog(payload);
+  console.info("Nomination pre-submit payload summary:", safePayloadLog);
 
   submitButton.disabled = true;
   submitButton.textContent = "Submitting...";
@@ -229,7 +257,7 @@ form?.addEventListener("submit", async (event) => {
     console.error("Nomination submission failed:", {
       code: err?.code || "",
       message: err?.message || "",
-      payloadSummary: safePayloadSummary || buildNominationDebugSummary(payload)
+      payloadSummary: safePayloadLog
     });
     showStatus(
       status,
