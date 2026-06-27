@@ -163,7 +163,7 @@ test("builds a valid nomination payload with blank optional evidence fields", ()
   assertNoUndefined(payload);
 });
 
-test("builds a valid nomination payload with evidence metadata and boolean ownership fields", () => {
+test("builds a valid nomination payload with the temporary 13C evidence-url rollback shape", () => {
   const ownershipMetadata = buildSignedInOwnership({
     uid: "public-user-2",
     email: "owner@example.org",
@@ -188,10 +188,10 @@ test("builds a valid nomination payload with evidence metadata and boolean owner
   assert.equal(payload.evidenceImageUrl, "https://example.org/evidence.jpg");
   assert.equal(payload.evidenceImageCaption, "Front view");
   assert.equal(payload.evidenceSourceCredit, "Photo by nominator");
-  assert.equal(payload.evidenceRightsStatus, "own-work");
   assert.equal(payload.evidencePermissionConfirmed, true);
   assert.equal(typeof payload.evidencePermissionConfirmed, "boolean");
-  assert.equal(payload.evidenceVisibility, NOMINATION_PRIVATE_EVIDENCE_VISIBILITY);
+  assert.equal(Object.prototype.hasOwnProperty.call(payload, "evidenceRightsStatus"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(payload, "evidenceVisibility"), false);
   assert.equal(payload.submittedByUid, "public-user-2");
   assert.equal(payload.submitterEmail, "owner@example.org");
   assert.equal(payload.submissionAuthType, "signedIn");
@@ -213,9 +213,9 @@ test("builds an evidence-url payload without blank caption or source-credit fiel
   });
 
   assert.equal(payload.evidenceImageUrl, "https://example.org/photo.jpg");
-  assert.equal(payload.evidenceRightsStatus, "public-web-reference");
   assert.equal(payload.evidencePermissionConfirmed, true);
-  assert.equal(payload.evidenceVisibility, NOMINATION_PRIVATE_EVIDENCE_VISIBILITY);
+  assert.equal(Object.prototype.hasOwnProperty.call(payload, "evidenceRightsStatus"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(payload, "evidenceVisibility"), false);
   assert.equal(Object.prototype.hasOwnProperty.call(payload, "evidenceImageCaption"), false);
   assert.equal(Object.prototype.hasOwnProperty.call(payload, "evidenceSourceCredit"), false);
   assertNoUndefined(payload);
@@ -246,9 +246,9 @@ test("nomination debug summary reports clean evidence payload keys and field typ
   assert.equal(debug.evidence.evidenceImageUrl, "https://example.org/photo.jpg");
   assert.equal(debug.evidence.evidenceImageCaption, "Phase 16D test caption");
   assert.equal(debug.evidence.evidenceSourceCredit, "Phase 16D test source");
-  assert.equal(debug.evidence.evidenceRightsStatus, "public-web-reference");
   assert.equal(debug.evidence.evidencePermissionConfirmed, true);
-  assert.equal(debug.evidence.evidenceVisibility, NOMINATION_PRIVATE_EVIDENCE_VISIBILITY);
+  assert.equal(debug.evidence.evidenceRightsStatus, undefined);
+  assert.equal(debug.evidence.evidenceVisibility, undefined);
   assert.equal(debug.submittedByUidPresent, true);
   assert.equal(debug.submittedByUidRedacted, "publ...-16d");
   assert.equal(debug.submitterEmail, "alex.home@gmail.com");
