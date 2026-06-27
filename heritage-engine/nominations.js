@@ -181,9 +181,7 @@ function validateNominationRequiredFields(values = {}) {
 function validateNominationEvidenceFields(values = {}) {
   const errors = [];
   const evidenceImageUrl = cleanText(values.evidenceImageUrl);
-  const evidenceRightsStatus = cleanText(values.evidenceRightsStatus);
   const evidencePermissionConfirmed = values.evidencePermissionConfirmed === true;
-  const evidenceVisibility = cleanText(values.evidenceVisibility);
 
   if (evidenceImageUrl && !isHttpsUrl(evidenceImageUrl)) {
     errors.push("Evidence image URL must begin with https://.");
@@ -193,16 +191,8 @@ function validateNominationEvidenceFields(values = {}) {
     return errors;
   }
 
-  if (!EVIDENCE_RIGHTS_STATUSES.includes(evidenceRightsStatus)) {
-    errors.push("Select an evidence rights or permission status.");
-  }
-
   if (!evidencePermissionConfirmed) {
     errors.push("Confirm that the evidence link can be shared for review.");
-  }
-
-  if (evidenceVisibility && evidenceVisibility !== NOMINATION_PRIVATE_EVIDENCE_VISIBILITY) {
-    errors.push("Evidence visibility must stay nomination-private in this phase.");
   }
 
   return errors;
@@ -347,9 +337,7 @@ function buildSubmittedNominationPayload(values = {}, timestamps = {}) {
   addOptionalText(payload, "evidenceImageCaption", textValues.evidenceImageCaption);
   addOptionalText(payload, "evidenceSourceCredit", textValues.evidenceSourceCredit);
   if (textValues.evidenceImageUrl) {
-    payload.evidenceRightsStatus = cleanText(textValues.evidenceRightsStatus);
     payload.evidencePermissionConfirmed = cleanValues.evidencePermissionConfirmed === true;
-    payload.evidenceVisibility = NOMINATION_PRIVATE_EVIDENCE_VISIBILITY;
   }
   addOptionalText(payload, "nominatorDisplayName", textValues.nominatorDisplayName);
   addOptionalText(payload, "organisationName", textValues.organisationName);
