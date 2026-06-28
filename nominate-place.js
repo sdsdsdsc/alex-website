@@ -12,9 +12,8 @@ import {
 import {
   buildNominationDebugSummary,
   buildNominationOwnershipMetadata,
-  buildSubmittedNominationPayload,
-  normalizeEvidenceMetadataTestMode
-} from "./heritage-engine/nominations.js?v=2026-06-27-13c-metadata-diagnostic";
+  buildSubmittedNominationPayload
+} from "./heritage-engine/nominations.js?v=2026-06-28-evidence-metadata-cleanup";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -29,16 +28,7 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 let authResolved = false;
-
-function getNominationQueryFlags() {
-  const params = new URLSearchParams(window.location.search);
-  return {
-    debugNomination: params.get("debugNomination") === "1",
-    evidenceMetadataTestMode: normalizeEvidenceMetadataTestMode(params.get("evidenceMetadataTest"))
-  };
-}
-
-const { debugNomination, evidenceMetadataTestMode } = getNominationQueryFlags();
+const debugNomination = new URLSearchParams(window.location.search).get("debugNomination") === "1";
 
 const FORM_TEXT_FIELDS = [
   "title",
@@ -124,8 +114,7 @@ function buildNominationPayload(formData, user) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     submittedAt: serverTimestamp(),
-    ownershipMetadata: buildNominationOwnershipMetadata(user),
-    evidenceMetadataTestMode
+    ownershipMetadata: buildNominationOwnershipMetadata(user)
   });
 }
 
@@ -136,7 +125,6 @@ function buildSafeNominationWriteLog(payload) {
   );
 
   return {
-    evidenceMetadataTestMode: evidenceMetadataTestMode || "default-13c",
     payloadKeys: debugSummary.keys,
     fieldTypes: debugSummary.fieldTypes,
     evidenceFieldsPresent,
