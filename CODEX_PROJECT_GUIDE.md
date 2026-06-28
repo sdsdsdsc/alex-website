@@ -1,15 +1,10 @@
 # Alex's Photo Board Codex Project Guide
 
-## Project
-
-- Project name: Alex's Photo Board
-- Active branch: `codex/structure-replanning`
-
 ## Core Operating Rule
 
 Verify the actual active system before editing.
 
-That means checking the currently loaded HTML/JS path, the current Firebase project, the real payload shape, the deployed Firestore rules, and whether the issue is local-only or live-only before making code changes.
+That means checking the currently loaded live HTML/JS path, the current Firebase project, the real payload shape, the deployed Firestore rules, the GitHub branch that is actually published, and whether the issue is local-only or live-only before making code changes.
 
 ## Project Preferences
 
@@ -25,7 +20,7 @@ That means checking the currently loaded HTML/JS path, the current Firebase proj
 
 ## Skill Activation Map
 
-- If an error says `FirebaseError: Missing or insufficient permissions`, activate [`codex-skills/firestore-permission-debugging.md`](./codex-skills/firestore-permission-debugging.md).
+- If an error says `FirebaseError: Missing or insufficient permissions`, start with [`codex-skills/firestore-permission-debugging.md`](./codex-skills/firestore-permission-debugging.md).
 - If local changes do not appear on the live site, activate [`codex-skills/github-pages-live-site-check.md`](./codex-skills/github-pages-live-site-check.md).
 - If Firebase Console rules and repo rules may differ, activate [`codex-skills/firebase-rules-repo-sync.md`](./codex-skills/firebase-rules-repo-sync.md).
 - If work touches form fields, payload fields, Firestore fields, admin display, or export fields, activate [`codex-skills/form-field-compatibility.md`](./codex-skills/form-field-compatibility.md).
