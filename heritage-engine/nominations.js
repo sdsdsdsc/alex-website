@@ -15,7 +15,6 @@ const EVIDENCE_RIGHTS_STATUSES = Object.freeze([
   "public-web-reference",
   "unknown-needs-review"
 ]);
-const EVIDENCE_METADATA_TEST_MODES = Object.freeze(["rights", "visibility", "both"]);
 const NOMINATION_PRIVATE_EVIDENCE_VISIBILITY = "nomination-private";
 const PUBLIC_NOMINATION_FIELDS = Object.freeze([
   "title",
@@ -126,11 +125,6 @@ const REQUIRED_TEXT_FIELDS = Object.freeze([
 
 function getInitialNominationStatus() {
   return NOMINATION_STATUSES.includes("submitted") ? "submitted" : "submitted";
-}
-
-function normalizeEvidenceMetadataTestMode(value) {
-  const mode = cleanText(value).toLowerCase();
-  return EVIDENCE_METADATA_TEST_MODES.includes(mode) ? mode : "";
 }
 
 function normalizeNominationTextFields(values = {}) {
@@ -314,7 +308,6 @@ function buildSubmittedNominationPayload(values = {}, timestamps = {}) {
   const cleanValues = stripPublicDisallowedNominationFields(values);
   const textValues = normalizeNominationTextFields(cleanValues);
   const heritageCriteria = normalizeNominationCriteria(cleanValues.heritageCriteria);
-  const evidenceMetadataTestMode = normalizeEvidenceMetadataTestMode(timestamps.evidenceMetadataTestMode);
   const errors = getNominationValidationErrors({ ...cleanValues, ...textValues, heritageCriteria });
 
   if (errors.length > 0) {
@@ -341,16 +334,14 @@ function buildSubmittedNominationPayload(values = {}, timestamps = {}) {
   addOptionalText(payload, "communityUse", textValues.communityUse);
   addOptionalText(payload, "sourceReference", textValues.sourceReference);
   addOptionalText(payload, "evidenceImageUrl", textValues.evidenceImageUrl);
-  addOptionalText(payload, "evidenceImageCaption", textValues.evidenceImageCaption);
   addOptionalText(payload, "evidenceSourceCredit", textValues.evidenceSourceCredit);
   if (textValues.evidenceImageUrl) {
+    if (!cleanText(textValues.evidenceRightsStatus)) {
+      addOptionalText(payload, "evidenceImageCaption", textValues.evidenceImageCaption);
+    }
+    addOptionalText(payload, "evidenceRightsStatus", textValues.evidenceRightsStatus);
     payload.evidencePermissionConfirmed = cleanValues.evidencePermissionConfirmed === true;
-    if (evidenceMetadataTestMode === "rights" || evidenceMetadataTestMode === "both") {
-      addOptionalText(payload, "evidenceRightsStatus", textValues.evidenceRightsStatus);
-    }
-    if (evidenceMetadataTestMode === "visibility" || evidenceMetadataTestMode === "both") {
-      payload.evidenceVisibility = NOMINATION_PRIVATE_EVIDENCE_VISIBILITY;
-    }
+    payload.evidenceVisibility = NOMINATION_PRIVATE_EVIDENCE_VISIBILITY;
   }
   addOptionalText(payload, "nominatorDisplayName", textValues.nominatorDisplayName);
   addOptionalText(payload, "organisationName", textValues.organisationName);
@@ -423,7 +414,6 @@ function buildNominationDebugSummary(payload = {}) {
 }
 
 export {
-  EVIDENCE_METADATA_TEST_MODES,
   EVIDENCE_RIGHTS_STATUSES,
   FIELD_LIMITS,
   NOMINATION_PRIVATE_EVIDENCE_VISIBILITY,
@@ -439,7 +429,6 @@ export {
   buildSubmittedNominationPayload,
   getInitialNominationStatus,
   getNominationValidationErrors,
-  normalizeEvidenceMetadataTestMode,
   normalizeNominationCoordinates,
   normalizeNominationCriteria,
   normalizeNominationTextFields,
