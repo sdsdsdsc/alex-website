@@ -167,21 +167,7 @@ service cloud.firestore {
         && isOptionalString('evidenceImageCaption', 300)
         && isOptionalString('evidenceCaption', 300)
         && isOptionalString('evidenceSourceCredit', 300)
-        && (
-          !hasField('evidenceRightsStatus')
-          || request.resource.data.evidenceRightsStatus == null
-          || request.resource.data.evidenceRightsStatus == ''
-          || (
-            request.resource.data.evidenceRightsStatus is string
-            && (
-              request.resource.data.evidenceRightsStatus == 'own-work'
-              || request.resource.data.evidenceRightsStatus == 'permission-granted'
-              || request.resource.data.evidenceRightsStatus == 'public-domain-or-open-license'
-              || request.resource.data.evidenceRightsStatus == 'public-web-reference'
-              || request.resource.data.evidenceRightsStatus == 'unknown-needs-review'
-            )
-          )
-        )
+        && isOptionalString('evidenceRightsStatus', 80)
         && (
           !hasField('evidencePermissionConfirmed')
           || request.resource.data.evidencePermissionConfirmed == null

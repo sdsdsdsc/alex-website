@@ -189,9 +189,9 @@ test("evidence URL is treated as an optional review string rather than a fetchab
   ));
 });
 
-test("invalid evidence rights metadata is denied", async () => {
-  await assertFails(setDoc(
-    doc(ownerFirestore(), "placeNominations", "invalid-evidence-rights"),
+test("evidence rights metadata is accepted as an optional review string", async () => {
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeNominations", "review-string-evidence-rights"),
     validNomination({
       evidenceImageUrl: "https://example.org/evidence.jpg",
       evidenceRightsStatus: "review-only",
