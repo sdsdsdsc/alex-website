@@ -1,5 +1,6 @@
 import {
   cleanText,
+  isHttpsUrl,
   normalizeCoordinate,
   normalizeCriteriaList
 } from "./validation.js";
@@ -21,6 +22,11 @@ const PUBLIC_PROMOTION_TEXT_FIELDS = Object.freeze([
   "condition",
   "communityUse",
   "sourceReference"
+]);
+const PUBLIC_PROMOTION_EVIDENCE_RIGHTS_STATUSES = Object.freeze([
+  "own-work",
+  "permission-granted",
+  "public-domain-or-open-license"
 ]);
 const PRIVATE_PROMOTION_FIELDS = Object.freeze([
   "evidenceImageUrl",
@@ -152,6 +158,29 @@ function addOptionalText(payload, field, value) {
   if (cleanValue) payload[field] = cleanValue;
 }
 
+function hasPromotableEvidenceImage(source = {}) {
+  const evidenceImageUrl = cleanText(source.evidenceImageUrl);
+  const rightsStatus = cleanText(source.evidenceRightsStatus);
+  return Boolean(evidenceImageUrl)
+    && isHttpsUrl(evidenceImageUrl)
+    && source.evidencePermissionConfirmed === true
+    && PUBLIC_PROMOTION_EVIDENCE_RIGHTS_STATUSES.includes(rightsStatus);
+}
+
+function addPromotedImageFields(payload, source = {}) {
+  if (!hasPromotableEvidenceImage(source)) return;
+
+  addOptionalText(payload, "imageUrl", source.evidenceImageUrl);
+  addOptionalText(payload, "imageCaption", source.evidenceImageCaption);
+  addOptionalText(payload, "imageCredit", source.evidenceSourceCredit);
+  addOptionalText(payload, "imageRightsStatus", source.evidenceRightsStatus);
+
+  // `place.js` currently renders the public image source line from `source`.
+  // Use the reviewed evidence credit there so the public detail page explains
+  // where the promoted image came from without exposing nomination-private fields.
+  addOptionalText(payload, "source", source.evidenceSourceCredit);
+}
+
 function buildPublicPlacePayloadFromNomination(source = {}, options = {}) {
   const normalized = normalizePromotionSource(source);
   const placeId = normalizePromotedPlaceId(options.placeId) || getPromotedPlaceId(normalized, normalized.id);
@@ -165,6 +194,8 @@ function buildPublicPlacePayloadFromNomination(source = {}, options = {}) {
   PUBLIC_PROMOTION_TEXT_FIELDS.forEach((field) => {
     addOptionalText(payload, field, normalized[field]);
   });
+
+  addPromotedImageFields(payload, source);
 
   if (normalized.heritageCriteria.length > 0) {
     payload.heritageCriteria = normalized.heritageCriteria;
@@ -237,6 +268,7 @@ export {
   PRIVATE_PROMOTION_FIELDS,
   PROMOTION_ID_LIMIT,
   PROMOTION_STATUS,
+  PUBLIC_PROMOTION_EVIDENCE_RIGHTS_STATUSES,
   PUBLIC_PROMOTION_TEXT_FIELDS,
   buildPromotionHistoryEntryPayload,
   buildPromotionUpdatePayload,
@@ -246,6 +278,7 @@ export {
   getPromotionStatus,
   getPromotionSummary,
   getPromotionValidationErrors,
+  hasPromotableEvidenceImage,
   normalizePromotionSource,
   shouldAllowPromotion,
   stripPrivateFieldsForPromotion,
