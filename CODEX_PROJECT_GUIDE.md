@@ -10,6 +10,7 @@ That means checking the currently loaded live HTML/JS path, the current Firebase
 
 - Make the smallest possible fix that explains the observed problem.
 - Use the development workflow in [`docs/project-workflow.md`](./docs/project-workflow.md) for branch, PR, and merge discipline.
+- Use the staging plan in [`docs/phase-17a-staging-site-plan.md`](./docs/phase-17a-staging-site-plan.md) before changing deployment strategy.
 - Do not randomly loosen Firestore rules.
 - Do not rewrite working sections without a clear reason.
 - Do not create extra Markdown files unless requested.
