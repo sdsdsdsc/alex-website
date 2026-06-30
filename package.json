@@ -1,8 +1,9 @@
 {
   "scripts": {
-    "test": "npm run test:payload && npm run test:promotion && npm run test:rules",
+    "test": "npm run test:payload && npm run test:promotion && npm run test:place-contributions && npm run test:rules",
     "test:browser": "./node_modules/.bin/playwright test",
     "test:payload": "node --test tests/payload-export.test.mjs",
+    "test:place-contributions": "node --test tests/place-contributions.test.mjs",
     "test:promotion": "node --test tests/promotion.test.mjs",
     "test:rules": "firebase emulators:exec --only firestore --project alex-photo-board-test \"node --test tests/firestore.rules.test.mjs\"",
     "import:places": "node scripts/import-community-places.js"
