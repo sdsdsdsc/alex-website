@@ -2,13 +2,23 @@
   "hosting": {
     "public": ".",
     "ignore": [
+      ".git",
+      ".git/**",
+      ".gitignore",
+      ".DS_Store",
+      ".codex/**",
+      ".agents/**",
       "firebase.json",
       ".firebaserc",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
       "firestore.rules",
       "package.json",
       "package-lock.json",
       "playwright.config.mjs",
       ".github/**",
+      "codex-skills/**",
+      "docs/**",
       "node_modules/**",
       "tests/**",
       "scripts/**"

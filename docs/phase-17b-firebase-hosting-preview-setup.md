@@ -45,6 +45,7 @@ Key choices:
 
 - `public` is set to `.`
 - common non-site files are ignored
+- Git internals and local Firebase debug logs are ignored
 - no redirects, rewrites, or app-behavior changes are introduced
 
 This keeps the preview surface close to the current static-site structure while avoiding obvious non-web repo files in Hosting uploads.
@@ -117,6 +118,31 @@ Record:
 - preview URL
 - branch name
 - deployment date
+
+### Troubleshooting note from the first manual attempt
+
+The first manual preview attempt successfully created a preview channel URL, but failed during local file scanning and upload.
+
+Observed failure:
+
+- preview channel was created
+- upload failed while Firebase scanned `.git/fsmonitor--daemon.ipc`
+
+Diagnosis:
+
+- the original Hosting ignore rules were too broad because `public` was `.`
+- Git internal files were still inside the scan path
+
+Fix applied in this phase:
+
+- explicitly ignore `.git`
+- explicitly ignore `.git/**`
+- explicitly ignore local Firebase debug logs such as `firebase-debug.log` and `firebase-debug.*.log`
+
+Important local note:
+
+- `firebase-debug.log` is local troubleshooting output
+- it should not be committed
 
 ## What To Verify On The Preview URL
 
