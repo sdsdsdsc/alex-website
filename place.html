@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin"></script>
   <script type="module" src="public-nav.js" defer></script>
-  <script type="module" src="place.js?v=2026-06-19-12a" defer></script>
+  <script type="module" src="place.js?v=2026-06-30-11c-contributions-renderer" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#placeRecordMain">Skip to record</a>
@@ -125,10 +125,11 @@
         hidden
       >
         <div class="place-comments-panel__main">
-          <h3 id="commentsPhotosTitle">Add Comments and Photos</h3>
-          <p>Share photographs, memories, and local knowledge connected to this community place.</p>
-          <div class="place-comments-empty" role="status">
-            No comments or photos have been added to this record yet.
+          <h3 id="commentsPhotosTitle">Comments and Photos</h3>
+          <p>Approved community photographs, memories, and local knowledge connected to this community place.</p>
+          <div id="placeContributionsList" class="place-contributions-list"></div>
+          <div id="placeContributionsEmpty" class="place-comments-empty" role="status">
+            No approved community comments or photos have been added yet.
           </div>
         </div>
 

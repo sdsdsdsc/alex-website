@@ -9,10 +9,14 @@ import {
 } from "@firebase/rules-unit-testing";
 import {
   Timestamp,
+  collection,
   doc,
   getDoc,
+  getDocs,
+  query,
   setDoc,
-  updateDoc
+  updateDoc,
+  where
 } from "firebase/firestore";
 
 const PROJECT_ID = "alex-photo-board-test";
@@ -47,6 +51,23 @@ function validNomination(overrides = {}) {
     createdAt: timestamp(1),
     updatedAt: timestamp(2),
     submittedAt: timestamp(3),
+    ...overrides
+  };
+}
+
+function validPlaceContribution(overrides = {}) {
+  return {
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    placeTitleSnapshot: "Phase 11C Image Promotion Live Test 20260630024821",
+    contributionText: "An approved community note for the place.",
+    imageUrl: "https://example.org/contribution-photo.jpg",
+    imageCaption: "South entrance",
+    imageCredit: "Photo by resident",
+    imageRightsStatus: "permission-granted",
+    contributionStatus: "approved",
+    createdAt: timestamp(30),
+    updatedAt: timestamp(31),
+    reviewedAt: timestamp(32),
     ...overrides
   };
 }
@@ -108,6 +129,101 @@ test("public collections are readable while nominations remain private", async (
     assert.equal(snapshot.exists(), true);
   }
   await assertFails(getDoc(doc(publicDb, "placeNominations", "private-nomination")));
+});
+
+test("approved place contributions can be read publicly", async () => {
+  await seedDocument(
+    "placeContributions/approved-public-contribution",
+    validPlaceContribution()
+  );
+
+  const publicDb = testEnv.unauthenticatedContext().firestore();
+  const snapshot = await assertSucceeds(getDoc(
+    doc(publicDb, "placeContributions", "approved-public-contribution")
+  ));
+  assert.equal(snapshot.exists(), true);
+  assert.equal(snapshot.data().contributionStatus, "approved");
+});
+
+test("submitted and rejected place contributions cannot be read publicly", async () => {
+  await seedDocument(
+    "placeContributions/submitted-private-contribution",
+    validPlaceContribution({
+      contributionStatus: "submitted",
+      submittedByUid: OWNER_UID,
+      submitterEmail: OWNER_EMAIL
+    })
+  );
+  await seedDocument(
+    "placeContributions/rejected-private-contribution",
+    validPlaceContribution({
+      contributionStatus: "rejected",
+      submittedByUid: OWNER_UID,
+      submitterEmail: OWNER_EMAIL
+    })
+  );
+
+  const publicDb = testEnv.unauthenticatedContext().firestore();
+  await assertFails(getDoc(
+    doc(publicDb, "placeContributions", "submitted-private-contribution")
+  ));
+  await assertFails(getDoc(
+    doc(publicDb, "placeContributions", "rejected-private-contribution")
+  ));
+});
+
+test("approved place contributions with private fields cannot be read publicly", async () => {
+  await seedDocument(
+    "placeContributions/approved-private-field-contribution",
+    validPlaceContribution({
+      submittedByUid: OWNER_UID,
+      submitterEmail: OWNER_EMAIL,
+      adminNotes: "private moderation note",
+      reviewHistory: [{ action: "approved" }]
+    })
+  );
+
+  await assertFails(getDoc(
+    doc(testEnv.unauthenticatedContext().firestore(), "placeContributions", "approved-private-field-contribution")
+  ));
+});
+
+test("approved place contributions query is public while non-approved records stay hidden", async () => {
+  const placeId = "phase-11c-image-promotion-live-test-20260630024821";
+  await seedDocument("placeContributions/approved-matching", validPlaceContribution({ placeId }));
+  await seedDocument("placeContributions/submitted-matching", validPlaceContribution({
+    placeId,
+    contributionStatus: "submitted"
+  }));
+
+  const publicDb = testEnv.unauthenticatedContext().firestore();
+  const snapshot = await assertSucceeds(getDocs(query(
+    collection(publicDb, "placeContributions"),
+    where("placeId", "==", placeId),
+    where("contributionStatus", "==", "approved")
+  )));
+
+  assert.deepEqual(snapshot.docs.map((contributionDoc) => contributionDoc.id), ["approved-matching"]);
+});
+
+test("public and signed-in users cannot create place contributions yet", async () => {
+  await assertFails(setDoc(
+    doc(testEnv.unauthenticatedContext().firestore(), "placeContributions", "signed-out-create"),
+    validPlaceContribution({
+      contributionStatus: "submitted",
+      submittedByUid: OWNER_UID,
+      submitterEmail: OWNER_EMAIL
+    })
+  ));
+
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeContributions", "signed-in-create"),
+    validPlaceContribution({
+      contributionStatus: "submitted",
+      submittedByUid: OWNER_UID,
+      submitterEmail: OWNER_EMAIL
+    })
+  ));
 });
 
 test("a signed-in owner can create a valid nomination", async () => {

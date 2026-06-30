@@ -255,6 +255,26 @@ service cloud.firestore {
         && request.resource.data.updatedAt is timestamp;
     }
 
+    function hasPublicPlaceContributionFields() {
+      return resource.data.keys().hasOnly([
+          'placeId',
+          'placeTitleSnapshot',
+          'contributionText',
+          'imageUrl',
+          'imageCaption',
+          'imageCredit',
+          'imageRightsStatus',
+          'contributionStatus',
+          'createdAt',
+          'updatedAt',
+          'reviewedAt'
+        ])
+        && resource.data.keys().hasAll([
+          'placeId',
+          'contributionStatus'
+        ]);
+    }
+
     match /news/{doc=**} {
       allow read: if true;
       allow write: if isAdmin();
@@ -268,6 +288,12 @@ service cloud.firestore {
     match /communityPlaces/{doc=**} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    match /placeContributions/{contributionId} {
+      allow read: if resource.data.contributionStatus == 'approved'
+        && hasPublicPlaceContributionFields();
+      allow write: if false;
     }
 
     match /placeNominations/{nominationId} {
