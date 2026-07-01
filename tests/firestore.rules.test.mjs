@@ -10,6 +10,7 @@ import {
 import {
   Timestamp,
   collection,
+  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -305,6 +306,108 @@ test("submitted place contributions must include text and or an HTTPS image URL"
       contributionText: "",
       imageUrl: "http://example.org/not-secure.jpg"
     })
+  ));
+});
+
+test("only admins can approve submitted place contributions into a public-safe shape", async () => {
+  await seedDocument(
+    "placeContributions/admin-approve",
+    validSubmittedPlaceContribution({
+      imageUrl: "https://example.org/admin-approve.jpg",
+      imageCaption: "Front elevation",
+      imageCredit: "Owner upload",
+      imageRightsStatus: "permission-granted",
+      imagePermissionConfirmed: true
+    })
+  );
+
+  await assertSucceeds(updateDoc(
+    doc(adminFirestore(), "placeContributions", "admin-approve"),
+    {
+      contributionStatus: "approved",
+      reviewedAt: timestamp(50),
+      updatedAt: timestamp(51),
+      imagePermissionConfirmed: deleteField(),
+      submittedByUid: deleteField(),
+      submitterEmail: deleteField(),
+      submitterDisplayName: deleteField()
+    }
+  ));
+
+  const publicSnapshot = await assertSucceeds(getDoc(
+    doc(testEnv.unauthenticatedContext().firestore(), "placeContributions", "admin-approve")
+  ));
+  assert.equal(publicSnapshot.exists(), true);
+  assert.equal(publicSnapshot.data().contributionStatus, "approved");
+  assert.equal(Object.prototype.hasOwnProperty.call(publicSnapshot.data(), "submittedByUid"), false);
+});
+
+test("admins cannot approve place contributions while leaving private fields in the document", async () => {
+  await seedDocument(
+    "placeContributions/invalid-admin-approve",
+    validSubmittedPlaceContribution()
+  );
+
+  await assertFails(updateDoc(
+    doc(adminFirestore(), "placeContributions", "invalid-admin-approve"),
+    {
+      contributionStatus: "approved",
+      reviewedAt: timestamp(52),
+      updatedAt: timestamp(53)
+    }
+  ));
+});
+
+test("only admins can reject submitted place contributions with private moderation notes", async () => {
+  await seedDocument(
+    "placeContributions/admin-reject",
+    validSubmittedPlaceContribution()
+  );
+
+  await assertSucceeds(updateDoc(
+    doc(adminFirestore(), "placeContributions", "admin-reject"),
+    {
+      contributionStatus: "rejected",
+      reviewedAt: timestamp(54),
+      reviewedByUid: ADMIN_UID,
+      updatedAt: timestamp(55),
+      adminNotes: "The source could not be verified."
+    }
+  ));
+
+  await assertFails(getDoc(
+    doc(testEnv.unauthenticatedContext().firestore(), "placeContributions", "admin-reject")
+  ));
+});
+
+test("non-admin users cannot approve or reject submitted place contributions", async () => {
+  await seedDocument(
+    "placeContributions/non-admin-review",
+    validSubmittedPlaceContribution()
+  );
+
+  await assertFails(updateDoc(
+    doc(ownerFirestore(), "placeContributions", "non-admin-review"),
+    {
+      contributionStatus: "approved",
+      reviewedAt: timestamp(56),
+      updatedAt: timestamp(57),
+      imagePermissionConfirmed: deleteField(),
+      submittedByUid: deleteField(),
+      submitterEmail: deleteField(),
+      submitterDisplayName: deleteField()
+    }
+  ));
+
+  await assertFails(updateDoc(
+    doc(ownerFirestore(), "placeContributions", "non-admin-review"),
+    {
+      contributionStatus: "rejected",
+      reviewedAt: timestamp(58),
+      reviewedByUid: OWNER_UID,
+      updatedAt: timestamp(59),
+      adminNotes: "Not allowed."
+    }
   ));
 });
 

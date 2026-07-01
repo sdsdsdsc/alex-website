@@ -275,6 +275,26 @@ service cloud.firestore {
         ]);
     }
 
+    function requestHasPublicPlaceContributionFields() {
+      return request.resource.data.keys().hasOnly([
+          'placeId',
+          'placeTitleSnapshot',
+          'contributionText',
+          'imageUrl',
+          'imageCaption',
+          'imageCredit',
+          'imageRightsStatus',
+          'contributionStatus',
+          'createdAt',
+          'updatedAt',
+          'reviewedAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'placeId',
+          'contributionStatus'
+        ]);
+    }
+
     function isAllowedContributionImageRightsStatus(value) {
       return value in [
         'own-work',
@@ -358,6 +378,42 @@ service cloud.firestore {
         && request.resource.data.updatedAt is timestamp;
     }
 
+    function isValidPlaceContributionApproveUpdate() {
+      return isAdmin()
+        && resource.data.contributionStatus == 'submitted'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'contributionStatus',
+          'reviewedAt',
+          'updatedAt',
+          'imagePermissionConfirmed',
+          'submittedByUid',
+          'submitterEmail',
+          'submitterDisplayName'
+        ])
+        && request.resource.data.contributionStatus == 'approved'
+        && request.resource.data.reviewedAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && requestHasPublicPlaceContributionFields();
+    }
+
+    function isValidPlaceContributionRejectUpdate() {
+      return isAdmin()
+        && resource.data.contributionStatus == 'submitted'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'contributionStatus',
+          'reviewedAt',
+          'reviewedByUid',
+          'updatedAt',
+          'adminNotes'
+        ])
+        && request.resource.data.contributionStatus == 'rejected'
+        && request.resource.data.reviewedAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && isTrimmedString(request.resource.data.reviewedByUid, 120)
+        && request.resource.data.reviewedByUid == request.auth.uid
+        && isOptionalString('adminNotes', 5000);
+    }
+
     match /news/{doc=**} {
       allow read: if true;
       allow write: if isAdmin();
@@ -377,7 +433,9 @@ service cloud.firestore {
       allow read: if resource.data.contributionStatus == 'approved'
         && hasPublicPlaceContributionFields();
       allow create: if isValidPlaceContributionCreate();
-      allow update, delete: if false;
+      allow update: if isValidPlaceContributionApproveUpdate()
+        || isValidPlaceContributionRejectUpdate();
+      allow delete: if false;
     }
 
     match /placeNominations/{nominationId} {

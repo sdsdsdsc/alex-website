@@ -214,6 +214,7 @@ test("private submitter and admin fields do not appear in public payload", () =>
 test("admin approve update payload is correct", () => {
   const payload = buildApproveContributionUpdate({
     adminNotes: "Approved for public display.",
+    reviewedByUid: "admin-user-1",
     reviewHistory: [{ action: "approved" }]
   }, {
     reviewedAt: "reviewed",
@@ -223,9 +224,7 @@ test("admin approve update payload is correct", () => {
   assert.deepEqual(payload, {
     contributionStatus: "approved",
     reviewedAt: "reviewed",
-    updatedAt: "updated",
-    adminNotes: "Approved for public display.",
-    reviewHistory: [{ action: "approved" }]
+    updatedAt: "updated"
   });
 });
 
@@ -242,5 +241,25 @@ test("admin reject update payload is correct", () => {
     reviewedAt: "reviewed",
     updatedAt: "updated",
     adminNotes: "Rejected because the image source could not be verified."
+  });
+});
+
+test("admin reject update payload can include reviewedByUid and reviewHistory", () => {
+  const payload = buildRejectContributionUpdate({
+    reviewedByUid: "admin-user-1",
+    adminNotes: "Missing permission evidence.",
+    reviewHistory: [{ action: "rejected" }]
+  }, {
+    reviewedAt: "reviewed",
+    updatedAt: "updated"
+  });
+
+  assert.deepEqual(payload, {
+    contributionStatus: "rejected",
+    reviewedAt: "reviewed",
+    updatedAt: "updated",
+    reviewedByUid: "admin-user-1",
+    adminNotes: "Missing permission evidence.",
+    reviewHistory: [{ action: "rejected" }]
   });
 });
