@@ -1,13 +1,19 @@
 import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
+  addDoc,
   collection,
   getFirestore,
   doc,
   getDoc,
   getDocs,
   query,
+  serverTimestamp,
   where
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
   buildMapUrl,
   buildPlaceJsonLd,
@@ -33,6 +39,7 @@ import {
   normalizeRelationshipReferences
 } from "./heritage-engine/relationships.js?v=2026-06-19-12a";
 import {
+  buildPlaceContributionCreatePayload,
   buildPublicPlaceContributionPayload
 } from "./heritage-engine/place-contributions.js?v=2026-06-30-11c-contributions-renderer";
 
@@ -47,6 +54,7 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 const els = {
   status: document.getElementById("placeRecordStatus"),
@@ -67,6 +75,21 @@ const els = {
   metadata: document.getElementById("placeMetadata"),
   contributionCount: document.getElementById("placeContributionCount"),
   contributionSummary: document.getElementById("placeContributionSummary"),
+  contributionEntryButton: document.getElementById("placeContributionEntryButton"),
+  contributionEntryHint: document.getElementById("placeContributionEntryHint"),
+  contributionSignInLink: document.getElementById("placeContributionSignInLink"),
+  contributionSignedOut: document.getElementById("placeContributionSignedOut"),
+  contributionSignedIn: document.getElementById("placeContributionSignedIn"),
+  contributionSignedInSummary: document.getElementById("placeContributionSignedInSummary"),
+  contributionForm: document.getElementById("placeContributionForm"),
+  contributionText: document.getElementById("placeContributionText"),
+  contributionImageUrl: document.getElementById("placeContributionImageUrl"),
+  contributionImageCaption: document.getElementById("placeContributionImageCaption"),
+  contributionImageCredit: document.getElementById("placeContributionImageCredit"),
+  contributionImageRightsStatus: document.getElementById("placeContributionImageRightsStatus"),
+  contributionImagePermissionConfirmed: document.getElementById("placeContributionImagePermissionConfirmed"),
+  contributionSubmitButton: document.getElementById("placeContributionSubmitButton"),
+  contributionFormStatus: document.getElementById("placeContributionFormStatus"),
   contributionsList: document.getElementById("placeContributionsList"),
   contributionsEmpty: document.getElementById("placeContributionsEmpty"),
   tabs: Array.from(document.querySelectorAll(".place-record-tab")),
@@ -74,7 +97,140 @@ const els = {
 };
 
 let placeMap = null;
+let currentPlace = null;
+let currentUser = null;
 const validSections = new Set(["overview", "comments-photos"]);
+
+function buildContributionSignInHref() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("section", "comments-photos");
+  url.hash = "comments-photos-panel";
+  return `public-auth.html?next=${encodeURIComponent(`${url.pathname}${url.search}${url.hash}`)}`;
+}
+
+function setContributionFormStatus(message, type = "") {
+  if (!els.contributionFormStatus) return;
+  els.contributionFormStatus.textContent = message;
+  els.contributionFormStatus.className = type === "error"
+    ? "place-contribution-form__status admin-error"
+    : type === "success"
+      ? "place-contribution-form__status admin-success"
+      : "place-contribution-form__status";
+}
+
+function setContributionEntryState(user) {
+  currentUser = user || null;
+  const isSignedIn = Boolean(user);
+
+  if (els.contributionSignedOut) {
+    els.contributionSignedOut.hidden = isSignedIn;
+  }
+  if (els.contributionSignedIn) {
+    els.contributionSignedIn.hidden = !isSignedIn;
+  }
+  if (els.contributionSignInLink) {
+    els.contributionSignInLink.href = buildContributionSignInHref();
+  }
+  if (els.contributionEntryButton) {
+    els.contributionEntryButton.disabled = false;
+    els.contributionEntryButton.setAttribute("aria-disabled", "false");
+    els.contributionEntryButton.textContent = isSignedIn
+      ? "Add comments and photos"
+      : "Sign in to contribute";
+  }
+  if (els.contributionEntryHint) {
+    els.contributionEntryHint.textContent = isSignedIn
+      ? "New submissions stay private until an admin approves them."
+      : "Sign in with a public account before adding a place-specific contribution.";
+  }
+  if (els.contributionSignedInSummary) {
+    const identity = cleanText(user?.displayName || user?.email || "your public account");
+    els.contributionSignedInSummary.textContent = `Signed in as ${identity}. Your submission will be saved for admin review and will not appear publicly until it is approved.`;
+  }
+  if (!isSignedIn) {
+    setContributionFormStatus("Please sign in before submitting a place-specific contribution.");
+    return;
+  }
+  setContributionFormStatus("");
+}
+
+function getContributionFormValues() {
+  return {
+    contributionText: els.contributionText?.value || "",
+    imageUrl: els.contributionImageUrl?.value || "",
+    imageCaption: els.contributionImageCaption?.value || "",
+    imageCredit: els.contributionImageCredit?.value || "",
+    imageRightsStatus: els.contributionImageRightsStatus?.value || "",
+    imagePermissionConfirmed: els.contributionImagePermissionConfirmed?.checked === true
+  };
+}
+
+function resetContributionForm() {
+  els.contributionForm?.reset();
+}
+
+async function handleContributionSubmit(event) {
+  event.preventDefault();
+
+  if (!currentUser) {
+    setContributionFormStatus("Please sign in before submitting a place-specific contribution.", "error");
+    return;
+  }
+
+  if (!currentPlace?.id) {
+    setContributionFormStatus("This place record is still loading. Please try again in a moment.", "error");
+    return;
+  }
+
+  if (els.contributionSubmitButton) {
+    els.contributionSubmitButton.disabled = true;
+  }
+  setContributionFormStatus("Submitting your contribution for review...");
+
+  try {
+    const payload = buildPlaceContributionCreatePayload({
+      placeId: currentPlace.id,
+      placeTitleSnapshot: getDisplayTitle(currentPlace),
+      submittedByUid: currentUser.uid,
+      submitterEmail: currentUser.email || "",
+      submitterDisplayName: currentUser.displayName || "",
+      ...getContributionFormValues()
+    }, {
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+
+    await addDoc(collection(db, "placeContributions"), payload);
+    resetContributionForm();
+    setContributionFormStatus("Thank you. Your contribution has been submitted for review and will not appear publicly until it is approved.", "success");
+  } catch (error) {
+    console.error("Failed to submit place contribution:", error);
+    if (error?.code === "permission-denied" || error?.code === "firestore/permission-denied") {
+      setContributionFormStatus(
+        "Your contribution form is ready, but current Firestore rules still block place contribution submission. This client slice is in place first; the rules update will be handled separately inside this PR.",
+        "error"
+      );
+      return;
+    }
+    setContributionFormStatus(error?.message || "Could not submit your contribution right now. Please try again.", "error");
+  } finally {
+    if (els.contributionSubmitButton) {
+      els.contributionSubmitButton.disabled = false;
+    }
+  }
+}
+
+function handleContributionEntryButtonClick() {
+  if (!currentUser) {
+    window.location.href = buildContributionSignInHref();
+    return;
+  }
+
+  if (els.contributionText) {
+    els.contributionText.focus();
+    els.contributionText.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
 
 function getSectionFromUrl() {
   const section = new URLSearchParams(window.location.search).get("section");
@@ -631,6 +787,7 @@ function injectJsonLd(place) {
 }
 
 function renderPlace(place) {
+  currentPlace = place;
   const summary = buildPublicPlaceSummary(place);
   const title = getDisplayTitle(place);
   const category = summary.category;
@@ -693,5 +850,16 @@ async function loadPlace() {
   }
 }
 
+function setupContributionForm() {
+  setContributionEntryState(auth.currentUser || null);
+  els.contributionEntryButton?.addEventListener("click", handleContributionEntryButtonClick);
+  els.contributionForm?.addEventListener("submit", handleContributionSubmit);
+
+  onAuthStateChanged(auth, (user) => {
+    setContributionEntryState(user);
+  });
+}
+
 setupTabs();
+setupContributionForm();
 loadPlace();

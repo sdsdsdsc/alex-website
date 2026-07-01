@@ -82,6 +82,52 @@ test("valid image URL contribution normalizes correctly", () => {
   assert.equal(Object.prototype.hasOwnProperty.call(payload, "contributionText"), false);
 });
 
+test("blank optional image metadata fields are omitted from submitted payload", () => {
+  const payload = buildPlaceContributionCreatePayload(buildValidContribution({
+    contributionText: "",
+    imageUrl: "https://example.org/contribution-photo.jpg",
+    imageCaption: "   ",
+    imageCredit: "",
+    imageRightsStatus: "",
+    imagePermissionConfirmed: false
+  }));
+
+  assert.equal(payload.imageUrl, "https://example.org/contribution-photo.jpg");
+  [
+    "imageCaption",
+    "imageCredit",
+    "imageRightsStatus",
+    "imagePermissionConfirmed"
+  ].forEach((fieldName) => {
+    assert.equal(Object.prototype.hasOwnProperty.call(payload, fieldName), false, `${fieldName} should be omitted when blank or false`);
+  });
+});
+
+test("submitted create payload does not emit undefined optional fields", () => {
+  const payload = buildPlaceContributionCreatePayload(buildValidContribution({
+    placeTitleSnapshot: undefined,
+    contributionText: "A short approved-history note.",
+    imageUrl: undefined,
+    imageCaption: undefined,
+    imageCredit: undefined,
+    imageRightsStatus: undefined,
+    submitterDisplayName: undefined
+  }));
+
+  assert.equal(payload.contributionStatus, "submitted");
+  Object.entries(payload).forEach(([fieldName, value]) => {
+    assert.notEqual(value, undefined, `${fieldName} should never be undefined`);
+  });
+});
+
+test("submitted create payload always uses submitted status", () => {
+  const payload = buildPlaceContributionCreatePayload(buildValidContribution({
+    contributionStatus: "approved"
+  }));
+
+  assert.equal(payload.contributionStatus, "submitted");
+});
+
 test("invalid non-HTTPS imageUrl is rejected", () => {
   const errors = getPlaceContributionValidationErrors(buildValidContribution({
     contributionText: "",
