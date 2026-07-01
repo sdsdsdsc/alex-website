@@ -1,131 +1,224 @@
-# Phase 11C — Signed-in place contribution workflow plan
+# Phase 11C / Phase 13 Place Contribution Workflow Plan
 
 Date: 2026-07-01
 Branch: `codex/phase-11c-place-contribution-workflow`
 Base branch: `main`
 Expected PR type: one longer-lived draft PR
 
-## Purpose
+## Goal
 
-Build the first real signed-in contribution workflow for existing published place records.
+Build the first real signed-in `Comments and Photos` contribution workflow for existing published place records.
 
-PR #34 added the approved-only public display layer for `placeContributions`. Phase 11C should add the missing submission and moderation workflow while keeping the public site safe: submitted and rejected contributions must stay hidden, approved contributions may appear publicly, and moderation/private fields must not leak into the public place page.
+The nomination flow stays dedicated to proposing new place records.
+
+This workflow is for supplementary public contributions attached to an existing `communityPlaces` record.
+
+PR #34 already added the approved-only public display layer for `placeContributions`. This workflow PR should add submission and moderation while keeping the public site safe: submitted and rejected contributions must stay hidden, approved contributions may appear publicly, and private moderation fields must not leak into the public place page.
 
 ## Current logic to preserve
 
 - `nominate-place.html` proposes a new place record.
-- `place.html` Comments and Photos tab collects supplementary comments/photos for an existing published place.
+- `place.html` Comments and Photos tab collects supplementary comments and photos for an existing published place.
 - PR #34 built the approved read-only display for place contributions.
-- Nomination workflow, promotion logic, and existing place display should not be changed unless a small compatibility fix is required.
+- Nomination workflow, promotion logic, and existing place display should not change unless a small compatibility fix is required.
 
-## Workflow target
+## Scope For This PR
+
+Target behavior for this PR:
+
+- signed-out users see guidance to sign in before contributing
+- signed-in users can open a contribution form on `place.html`
+- signed-in users can submit:
+  - `contributionText`
+  - optional `imageUrl`
+  - optional `imageCaption`
+  - optional `imageCredit`
+  - optional `imageRightsStatus`
+- new records are written to `placeContributions`
+- new public submissions are saved with `contributionStatus = "submitted"`
+- approved-only public display on `place.html` remains intact
+- admins can review submitted contributions and approve or reject them
+- approved contributions appear publicly
+- rejected contributions stay hidden publicly
+
+Out of scope for this PR:
+
+- reply system
+- contributor profile page
+- local file upload
+- complex media gallery
+- broad user edit/delete flows
+- notification system
+
+## Planned Workflow
 
 ### 1. Public place page entry point
 
-On `place.html`, in the Comments and Photos tab:
+Likely files:
 
-- Keep rendering only approved `placeContributions` records.
-- Show signed-out users clear sign-in guidance.
-- Show the Add comments/photos action as an active submission action only when a user is signed in.
-- Open a simple inline panel or modal for signed-in contribution submission.
-- Keep the UI close to the PR #34 Historic England-inspired structure: contribution callout, approved count, feed-style entries, and right-side User contributions box.
+- `place.html`
+- `place.js`
+- `style.css`
+- `heritage-engine/place-contributions.js`
+- existing public auth helper modules if needed
+
+Planned public behavior:
+
+- keep rendering only approved `placeContributions` records
+- show signed-out visitors a clear sign-in prompt in the `Comments and Photos` tab
+- show signed-in visitors a contribution entry point and form
+- keep the UI aligned with the PR #34 Historic England-inspired structure
+- keep private submitter and moderation fields out of public rendering
+- keep the current approved-only public contribution feed as the only public output
 
 ### 2. Signed-in contribution submission
 
-The first version should be intentionally simple:
+The first version should stay intentionally simple:
 
-- Allow signed-in users to submit contribution text.
-- Allow an optional image URL field.
-- Do not build local file upload yet.
-- Save new records to `placeContributions`.
-- New records must start with `contributionStatus: "submitted"`.
-- Submitted records must not appear in public approved-only rendering until an admin approves them.
+- allow signed-in users to submit contribution text
+- allow an optional image URL field
+- do not build local file upload yet
+- save new records to `placeContributions`
+- new records must start with `contributionStatus = "submitted"`
+- submitted records must not appear in public approved-only rendering until an admin approves them
 
-Recommended public-safe submitted fields:
+New client submissions should include only the fields needed for a submitted record, including:
 
 - `placeId`
-- `contributionText`
-- `imageUrl` or equivalent optional image URL field
-- `contributionStatus: "submitted"`
+- `placeTitleSnapshot`
+- `contributionText` when provided
+- `imageUrl` when provided
+- `imageCaption` when provided
+- `imageCredit` when provided
+- `imageRightsStatus` when provided
+- `submittedByUid`
+- `submitterEmail`
+- optional public-safe `submitterDisplayName`
+- `contributionStatus = "submitted"`
 - `createdAt`
-- `createdByUid`
-- `createdByDisplayName` if already available safely
+- `updatedAt`
 
-Moderation fields should be admin-only and should not be user-writable.
+Users must not be able to submit:
+
+- `contributionStatus = "approved"`
+- `contributionStatus = "rejected"`
+- `adminNotes`
+- `reviewHistory`
+- other private moderation fields
 
 ### 3. Firestore rules
 
+Likely files:
+
+- `firestore.rules`
+- `tests/firestore.rules.test.mjs`
+
 Rules should keep PR #34 approved-only public reading behavior and add controlled create behavior:
 
-- Signed-out users cannot create place contributions.
-- Signed-in users can create submitted place contributions only.
-- Signed-in users cannot create approved or rejected contributions directly.
-- Signed-in users cannot write admin/moderation fields.
-- Public writes remain denied.
-- Public approved-only read behavior remains available for public-safe contribution documents.
-- Submitted/rejected/private contribution documents must not be publicly readable.
+- signed-out users cannot create place contributions
+- signed-in users can create submitted place contributions only
+- signed-in users cannot create approved or rejected contributions directly
+- signed-in users cannot write admin or moderation fields
+- public writes remain denied
+- public approved-only read behavior remains available for approved public-safe contribution documents
+- submitted, rejected, and private contribution documents must not be publicly readable
+- admin review updates stay behind the existing admin access pattern
 
-Important rule-design note: because Firestore rules cannot redact fields from a readable document, documents readable to the public should contain only public-safe fields, or private/admin data should be kept in a separate admin-only document/path.
+Important rule-design note:
 
-### 4. Admin review
+- Firestore rules cannot redact fields from a readable document
+- documents readable to the public should contain only public-safe fields, or private and admin data should be kept in a separate admin-only document or path
 
-Add or extend an admin page/section for `placeContributions` review:
+Important process rule:
 
-- Admin can list submitted contributions.
-- Admin can view enough context to moderate the contribution.
-- Admin can approve or reject.
-- Approved contributions appear on `place.html`.
-- Rejected contributions stay hidden publicly.
-- `adminNotes` and moderation metadata stay private.
+- do not deploy Firestore rules without explicit approval
+
+### 4. Admin review path
+
+Likely files:
+
+- an existing admin review page extended for contributions, or
+- a new focused admin contributions review page if that is cleaner
+
+Planned admin behavior:
+
+- list submitted `placeContributions`
+- inspect contribution text and image metadata
+- approve or reject
+- optionally save private `adminNotes`
+- record `reviewedAt`, `updatedAt`, and moderation history
+- keep approved contributions visible publicly
+- keep submitted and rejected contributions hidden publicly
 
 Recommended moderation fields:
 
 - `contributionStatus`
 - `reviewedAt`
 - `reviewedByUid`
-- `adminNotes` if needed
+- `adminNotes`
+- `reviewHistory` if needed
 
-### 5. Tests
+## Tests
 
-Add or update helper/emulator tests for this workflow:
+Likely files:
 
-- Signed-out user cannot create a contribution.
-- Signed-in user can create a submitted contribution.
-- Signed-in user cannot create an approved contribution.
-- Signed-in user cannot create or update admin/moderation fields.
-- Public can read approved public-safe contributions.
-- Public cannot read submitted contributions.
-- Public cannot read rejected/private contribution documents.
-- Admin can approve or reject.
-- Existing nomination and promotion tests still pass.
+- `tests/place-contributions.test.mjs`
+- `tests/firestore.rules.test.mjs`
 
-### 6. Preview verification checklist
+Planned test coverage:
 
-Before final merge:
+- helper normalization for signed-in submitted contributions
+- invalid empty contribution rejection
+- optional HTTPS image URL validation
+- client payload does not emit forbidden or undefined fields
+- submitted contributions do not create public payloads
+- approved contributions do create public-safe payloads
+- private submitter and moderation fields stay out of public rendering
+- signed-out user cannot create contributions
+- signed-in non-admin user can create only submitted contributions
+- signed-in non-admin user cannot create approved or rejected contributions
+- signed-in non-admin user cannot create or update admin or moderation fields
+- public approved-only read rule still works
+- submitted and rejected contributions remain hidden publicly
+- admin can approve or reject
+- existing nomination and promotion tests still pass
 
-- Deploy Firebase Hosting preview for this branch.
-- Deploy Firestore rules only after explicit approval.
-- Test signed-in contribution submission.
-- Confirm the submitted item does not appear publicly.
-- Approve the item as admin.
-- Confirm the approved item appears on `place.html`.
-- Reject another test item.
-- Confirm the rejected item stays hidden publicly.
-- Confirm GitHub Pages production remains stable until merge.
-- Delete temporary Firestore test documents after verification.
+## Firebase Preview Verification
 
-## Explicit limits for this PR
+Preview verification for this PR should happen on Firebase Hosting preview, not on the GitHub Pages live site.
 
-Do not include these in Phase 11C unless they are only harmless placeholders:
+Manual preview checklist:
 
-- No reply system.
-- No contributor profile page.
-- No local image upload.
-- No nomination workflow changes.
-- No promotion logic changes.
-- No Firebase app config changes unless absolutely required.
-- No multiple small PRs for small fixes inside this feature slice.
+1. signed-out user sees sign-in guidance on `place.html`
+2. signed-in user can open the contribution form
+3. signed-in user can submit a new contribution
+4. submitted contribution does not appear publicly right away
+5. admin can review the submitted contribution
+6. approved contribution appears publicly on `place.html`
+7. rejected contribution remains hidden publicly
+8. private submitter and moderation fields do not appear in the public DOM
+9. Overview tab and existing promoted place image behavior still work
+10. GitHub Pages production remains unchanged until merge
+11. temporary Firestore test documents are cleaned up after verification
 
-## Working rule
+## Rollback Plan
 
-Use one feature slice, one branch, one draft PR, and multiple commits/fixes inside the same PR until preview verification is complete.
+If this workflow introduces regressions, rollback should stay narrow:
+
+- revert or disable the new public submission entry point
+- revert contribution-create client behavior if needed
+- revert contribution admin-review UI changes if needed
+- revert rules changes separately if they are the source of the failure
+
+Rollback should not disturb:
+
+- nomination submission
+- existing approved-only public contribution rendering
+- promoted place image behavior
+- GitHub Pages production deployment source
+
+## Working Rule
+
+Use one feature slice, one branch, one draft PR, and multiple commits or fixes inside the same PR until preview verification is complete.
+
+This document is the first planning commit for the workflow. Implementation, tests, preview verification, and any small fixes should continue inside this same draft PR.
