@@ -408,11 +408,14 @@ function renderContributionImage(contribution, card) {
   image.alt = cleanText(contribution.imageCaption) || "Community contribution photo";
   figure.appendChild(image);
 
-  const captionParts = [
-    cleanText(contribution.imageCaption),
-    cleanText(contribution.imageCredit),
-    formatRightsStatus(contribution.imageRightsStatus)
-  ].filter(Boolean);
+  const captionParts = [];
+  const imageCaption = cleanText(contribution.imageCaption);
+  const imageCredit = cleanText(contribution.imageCredit);
+  const rightsStatus = formatRightsStatus(contribution.imageRightsStatus);
+
+  if (imageCaption) captionParts.push(imageCaption);
+  if (imageCredit) captionParts.push(`Source: ${imageCredit}`);
+  if (rightsStatus) captionParts.push(`Rights: ${rightsStatus}`);
 
   if (captionParts.length > 0) {
     const caption = document.createElement("figcaption");
@@ -438,6 +441,8 @@ function renderApprovedPlaceContributions(contributions) {
     const card = document.createElement("article");
     card.className = "place-contribution-card";
 
+    const dateText = formatRecordDate(contribution.reviewedAt || contribution.updatedAt || contribution.createdAt);
+
     const text = cleanText(contribution.contributionText);
     if (text) {
       const paragraph = document.createElement("p");
@@ -448,11 +453,10 @@ function renderApprovedPlaceContributions(contributions) {
 
     renderContributionImage(contribution, card);
 
-    const dateText = formatRecordDate(contribution.reviewedAt || contribution.updatedAt || contribution.createdAt);
     if (dateText) {
       const meta = document.createElement("p");
       meta.className = "place-contribution-card__meta";
-      meta.textContent = `Approved contribution | ${dateText}`;
+      meta.textContent = `Approved community contribution | ${dateText}`;
       card.appendChild(meta);
     }
 
@@ -478,7 +482,7 @@ async function loadApprovedPlaceContributions(placeId) {
       ...contributionDoc.data()
     })));
     if (!els.contributionsEmpty.hidden) {
-      els.contributionsEmpty.textContent = "No approved community comments or photos have been added yet.";
+      els.contributionsEmpty.textContent = "No approved community comments or photos have been added yet. Future signed-in users will be able to submit place-related comments and photos for review.";
     }
   } catch (err) {
     console.error("Failed to load approved place contributions:", err);
