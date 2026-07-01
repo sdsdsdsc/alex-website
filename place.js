@@ -78,6 +78,10 @@ const els = {
   contributionEntryButton: document.getElementById("placeContributionEntryButton"),
   contributionEntryHint: document.getElementById("placeContributionEntryHint"),
   contributionSignInLink: document.getElementById("placeContributionSignInLink"),
+  contributionModal: document.getElementById("placeContributionModal"),
+  contributionModalBackdrop: document.getElementById("placeContributionModalBackdrop"),
+  contributionModalClose: document.getElementById("placeContributionModalClose"),
+  contributionModalCancel: document.getElementById("placeContributionModalCancel"),
   contributionSignedOut: document.getElementById("placeContributionSignedOut"),
   contributionSignedIn: document.getElementById("placeContributionSignedIn"),
   contributionSignedInSummary: document.getElementById("placeContributionSignedInSummary"),
@@ -99,6 +103,7 @@ const els = {
 let placeMap = null;
 let currentPlace = null;
 let currentUser = null;
+let lastContributionTrigger = null;
 const validSections = new Set(["overview", "comments-photos"]);
 
 function buildContributionSignInHref() {
@@ -169,6 +174,33 @@ function resetContributionForm() {
   els.contributionForm?.reset();
 }
 
+function openContributionModal() {
+  if (!els.contributionModal) return;
+  lastContributionTrigger = document.activeElement instanceof HTMLElement
+    ? document.activeElement
+    : null;
+  els.contributionModal.hidden = false;
+  els.contributionModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("place-contribution-modal-open");
+  window.setTimeout(() => {
+    if (currentUser && els.contributionText) {
+      els.contributionText.focus();
+      return;
+    }
+    els.contributionModalClose?.focus();
+  }, 0);
+}
+
+function closeContributionModal() {
+  if (!els.contributionModal || els.contributionModal.hidden) return;
+  els.contributionModal.hidden = true;
+  els.contributionModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("place-contribution-modal-open");
+  if (lastContributionTrigger?.isConnected) {
+    lastContributionTrigger.focus();
+  }
+}
+
 async function handleContributionSubmit(event) {
   event.preventDefault();
 
@@ -225,10 +257,18 @@ function handleContributionEntryButtonClick() {
     window.location.href = buildContributionSignInHref();
     return;
   }
+  openContributionModal();
+}
 
-  if (els.contributionText) {
-    els.contributionText.focus();
-    els.contributionText.scrollIntoView({ behavior: "smooth", block: "center" });
+function handleContributionModalBackdropClick(event) {
+  if (event.target === els.contributionModalBackdrop) {
+    closeContributionModal();
+  }
+}
+
+function handleContributionModalKeydown(event) {
+  if (event.key === "Escape") {
+    closeContributionModal();
   }
 }
 
@@ -853,6 +893,10 @@ async function loadPlace() {
 function setupContributionForm() {
   setContributionEntryState(auth.currentUser || null);
   els.contributionEntryButton?.addEventListener("click", handleContributionEntryButtonClick);
+  els.contributionModalClose?.addEventListener("click", closeContributionModal);
+  els.contributionModalCancel?.addEventListener("click", closeContributionModal);
+  els.contributionModalBackdrop?.addEventListener("click", handleContributionModalBackdropClick);
+  els.contributionModal?.addEventListener("keydown", handleContributionModalKeydown);
   els.contributionForm?.addEventListener("submit", handleContributionSubmit);
 
   onAuthStateChanged(auth, (user) => {
