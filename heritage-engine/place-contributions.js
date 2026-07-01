@@ -23,6 +23,7 @@ const PUBLIC_PLACE_CONTRIBUTION_FIELDS = Object.freeze([
   "imageUrl",
   "imageCaption",
   "imageCredit",
+  "imageRightsStatus",
   "contributionStatus",
   "createdAt",
   "updatedAt",
@@ -30,7 +31,6 @@ const PUBLIC_PLACE_CONTRIBUTION_FIELDS = Object.freeze([
 ]);
 const PRIVATE_PLACE_CONTRIBUTION_FIELDS = Object.freeze([
   "imagePermissionConfirmed",
-  "imageRightsStatus",
   "submittedByUid",
   "submitterEmail",
   "submitterDisplayName",

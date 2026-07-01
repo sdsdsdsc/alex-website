@@ -1,8 +1,12 @@
 import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
+  collection,
   getFirestore,
   doc,
-  getDoc
+  getDoc,
+  getDocs,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import {
   buildMapUrl,
@@ -28,6 +32,9 @@ import {
   getRelationshipWarningSummary,
   normalizeRelationshipReferences
 } from "./heritage-engine/relationships.js?v=2026-06-19-12a";
+import {
+  buildPublicPlaceContributionPayload
+} from "./heritage-engine/place-contributions.js?v=2026-06-30-11c-contributions-renderer";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -58,6 +65,10 @@ const els = {
   relatedArticles: document.getElementById("placeRelatedArticles"),
   sourceReference: document.getElementById("placeSourceReference"),
   metadata: document.getElementById("placeMetadata"),
+  contributionCount: document.getElementById("placeContributionCount"),
+  contributionSummary: document.getElementById("placeContributionSummary"),
+  contributionsList: document.getElementById("placeContributionsList"),
+  contributionsEmpty: document.getElementById("placeContributionsEmpty"),
   tabs: Array.from(document.querySelectorAll(".place-record-tab")),
   panels: Array.from(document.querySelectorAll(".place-tab-panel"))
 };
@@ -371,6 +382,187 @@ function renderSourceReference(place) {
   els.sourceReference.classList.add("place-empty-value");
 }
 
+function getContributionSortTime(contribution) {
+  const dateValue = contribution?.reviewedAt || contribution?.updatedAt || contribution?.createdAt;
+  if (typeof dateValue?.toMillis === "function") return dateValue.toMillis();
+  if (typeof dateValue?.toDate === "function") return dateValue.toDate().getTime();
+  const parsed = Date.parse(cleanText(dateValue));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatRightsStatus(status) {
+  return cleanText(status)
+    .split("-")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function updateContributionSummary(count, options = {}) {
+  if (!els.contributionCount || !els.contributionSummary) return;
+
+  if (options.loading) {
+    els.contributionCount.textContent = "Loading approved community contributions...";
+    els.contributionSummary.textContent = "Community comments and photos approved for this place will appear here.";
+    return;
+  }
+
+  if (count === 0) {
+    els.contributionCount.textContent = "No approved community contributions yet";
+    els.contributionSummary.textContent = "Signed-in place-specific contribution submission will be added in a later phase.";
+    return;
+  }
+
+  const contributionLabel = count === 1
+    ? "1 approved community contribution"
+    : `${count} approved community contributions`;
+  els.contributionCount.textContent = contributionLabel;
+  els.contributionSummary.textContent = "Approved community comments and photos connected to this place are shown below.";
+}
+
+function renderContributionImage(contribution, card) {
+  const imageUrl = toSafeUrl(contribution.imageUrl);
+  if (!imageUrl) return;
+
+  const figure = document.createElement("figure");
+  figure.className = "place-contribution-card__figure";
+
+  const mediaFrame = document.createElement("div");
+  mediaFrame.className = "place-contribution-card__media-frame";
+
+  const image = document.createElement("img");
+  image.src = imageUrl;
+  image.alt = cleanText(contribution.imageCaption) || "Community contribution photo";
+  mediaFrame.appendChild(image);
+  figure.appendChild(mediaFrame);
+
+  const captionParts = [];
+  const imageCaption = cleanText(contribution.imageCaption);
+  const imageCredit = cleanText(contribution.imageCredit);
+  const rightsStatus = formatRightsStatus(contribution.imageRightsStatus);
+
+  if (imageCaption) captionParts.push(imageCaption);
+  if (imageCredit) captionParts.push(`Source: ${imageCredit}`);
+  if (rightsStatus) captionParts.push(`Rights: ${rightsStatus}`);
+
+  if (captionParts.length > 0) {
+    const caption = document.createElement("figcaption");
+    caption.textContent = captionParts.join(" | ");
+    figure.appendChild(caption);
+  }
+
+  card.appendChild(figure);
+}
+
+function renderApprovedPlaceContributions(contributions) {
+  if (!els.contributionsList || !els.contributionsEmpty) return;
+  els.contributionsList.textContent = "";
+
+  const publicContributions = contributions
+    .map((contribution) => buildPublicPlaceContributionPayload(contribution))
+    .filter(Boolean)
+    .sort((a, b) => getContributionSortTime(b) - getContributionSortTime(a));
+
+  updateContributionSummary(publicContributions.length);
+  els.contributionsEmpty.hidden = publicContributions.length > 0;
+
+  publicContributions.forEach((contribution) => {
+    const card = document.createElement("article");
+    card.className = "place-contribution-card";
+
+    const dateText = formatRecordDate(contribution.reviewedAt || contribution.updatedAt || contribution.createdAt);
+    const contributorName = cleanText(
+      contribution.publicContributorName
+      || contribution.contributorDisplayName
+      || contribution.contributorName
+      || "Approved community contributor"
+    );
+
+    const header = document.createElement("div");
+    header.className = "place-contribution-card__header";
+
+    const avatar = document.createElement("div");
+    avatar.className = "place-contribution-card__avatar";
+    avatar.setAttribute("aria-hidden", "true");
+    avatar.textContent = contributorName.charAt(0).toUpperCase() || "C";
+
+    const identity = document.createElement("div");
+    identity.className = "place-contribution-card__identity";
+
+    const name = document.createElement("p");
+    name.className = "place-contribution-card__name";
+    name.textContent = contributorName;
+    identity.appendChild(name);
+
+    if (dateText) {
+      const date = document.createElement("p");
+      date.className = "place-contribution-card__date";
+      date.textContent = dateText;
+      identity.appendChild(date);
+    }
+
+    header.append(avatar, identity);
+    card.appendChild(header);
+
+    const text = cleanText(contribution.contributionText);
+    if (text) {
+      const paragraph = document.createElement("p");
+      paragraph.className = "place-contribution-card__text";
+      paragraph.textContent = text;
+      card.appendChild(paragraph);
+    }
+
+    renderContributionImage(contribution, card);
+
+    const footer = document.createElement("div");
+    footer.className = "place-contribution-card__footer";
+
+    const meta = document.createElement("p");
+    meta.className = "place-contribution-card__meta";
+    meta.textContent = dateText
+      ? `Approved community contribution | ${dateText}`
+      : "Approved community contribution";
+    footer.appendChild(meta);
+
+    const reply = document.createElement("p");
+    reply.className = "place-contribution-card__reply";
+    reply.textContent = "Replies and new contribution submission will be added later.";
+    footer.appendChild(reply);
+
+    card.appendChild(footer);
+
+    els.contributionsList.appendChild(card);
+  });
+}
+
+async function loadApprovedPlaceContributions(placeId) {
+  if (!els.contributionsList || !els.contributionsEmpty) return;
+  els.contributionsList.textContent = "";
+  els.contributionsEmpty.hidden = false;
+  els.contributionsEmpty.textContent = "Loading approved community comments and photos...";
+  updateContributionSummary(0, { loading: true });
+
+  try {
+    const contributionsQuery = query(
+      collection(db, "placeContributions"),
+      where("placeId", "==", placeId),
+      where("contributionStatus", "==", "approved")
+    );
+    const snapshot = await getDocs(contributionsQuery);
+    renderApprovedPlaceContributions(snapshot.docs.map((contributionDoc) => ({
+      id: contributionDoc.id,
+      ...contributionDoc.data()
+    })));
+    if (!els.contributionsEmpty.hidden) {
+      els.contributionsEmpty.textContent = "No approved community comments or photos have been added yet. Signed-in contribution submission will be added in a later phase.";
+    }
+  } catch (err) {
+    console.error("Failed to load approved place contributions:", err);
+    els.contributionsEmpty.hidden = false;
+    els.contributionsEmpty.textContent = "Could not load community comments and photos. Please try again later.";
+  }
+}
+
 function renderLocation(place) {
   if (!els.locationContent) return;
   els.locationContent.textContent = "";
@@ -494,6 +686,7 @@ async function loadPlace() {
       lat: normalizeCoordinate(data.lat),
       lng: normalizeCoordinate(data.lng)
     });
+    await loadApprovedPlaceContributions(snapshot.id);
   } catch (err) {
     console.error("Failed to load community place:", err);
     if (els.status) els.status.textContent = "Could not load this community place record. Please try again later.";

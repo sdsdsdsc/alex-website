@@ -106,7 +106,8 @@ test("public payload is returned only for approved contributions", () => {
       contributionStatus: "approved",
       imageUrl: "https://example.org/contribution-photo.jpg",
       imageCaption: "South entrance in summer",
-      imageCredit: "Photo by resident"
+      imageCredit: "Photo by resident",
+      imageRightsStatus: "permission-granted"
     }),
     createdAt: "created",
     updatedAt: "updated",
@@ -122,6 +123,7 @@ test("public payload is returned only for approved contributions", () => {
     imageUrl: "https://example.org/contribution-photo.jpg",
     imageCaption: "South entrance in summer",
     imageCredit: "Photo by resident",
+    imageRightsStatus: "permission-granted",
     contributionStatus: "approved",
     createdAt: "created",
     updatedAt: "updated",
@@ -156,7 +158,6 @@ test("private submitter and admin fields do not appear in public payload", () =>
     "submitterEmail",
     "submitterDisplayName",
     "imagePermissionConfirmed",
-    "imageRightsStatus",
     "adminNotes",
     "reviewHistory"
   ].forEach((fieldName) => {
