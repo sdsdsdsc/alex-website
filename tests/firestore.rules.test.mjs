@@ -72,6 +72,21 @@ function validPlaceContribution(overrides = {}) {
   };
 }
 
+function validSubmittedPlaceContribution(overrides = {}) {
+  return {
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    placeTitleSnapshot: "Phase 11C Image Promotion Live Test 20260630024821",
+    contributionText: "A submitted community note for review.",
+    submittedByUid: OWNER_UID,
+    submitterEmail: OWNER_EMAIL,
+    submitterDisplayName: "Owner Example",
+    contributionStatus: "submitted",
+    createdAt: timestamp(40),
+    updatedAt: timestamp(41),
+    ...overrides
+  };
+}
+
 function ownerFirestore() {
   return testEnv.authenticatedContext(OWNER_UID, { email: OWNER_EMAIL }).firestore();
 }
@@ -206,22 +221,89 @@ test("approved place contributions query is public while non-approved records st
   assert.deepEqual(snapshot.docs.map((contributionDoc) => contributionDoc.id), ["approved-matching"]);
 });
 
-test("public and signed-in users cannot create place contributions yet", async () => {
+test("signed-out users cannot create place contributions", async () => {
   await assertFails(setDoc(
     doc(testEnv.unauthenticatedContext().firestore(), "placeContributions", "signed-out-create"),
-    validPlaceContribution({
-      contributionStatus: "submitted",
-      submittedByUid: OWNER_UID,
-      submitterEmail: OWNER_EMAIL
+    validSubmittedPlaceContribution()
+  ));
+});
+
+test("signed-in users can create submitted place contributions", async () => {
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeContributions", "signed-in-create"),
+    validSubmittedPlaceContribution({
+      imageUrl: "https://example.org/submitted-contribution-photo.jpg",
+      imageCaption: "Street frontage in spring",
+      imageCredit: "Photo by owner",
+      imageRightsStatus: "permission-granted",
+      imagePermissionConfirmed: true
+    })
+  ));
+});
+
+test("signed-in users cannot create approved or rejected place contributions directly", async () => {
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeContributions", "invalid-approved-create"),
+    validSubmittedPlaceContribution({
+      contributionStatus: "approved"
     })
   ));
 
   await assertFails(setDoc(
-    doc(ownerFirestore(), "placeContributions", "signed-in-create"),
-    validPlaceContribution({
-      contributionStatus: "submitted",
-      submittedByUid: OWNER_UID,
-      submitterEmail: OWNER_EMAIL
+    doc(ownerFirestore(), "placeContributions", "invalid-rejected-create"),
+    validSubmittedPlaceContribution({
+      contributionStatus: "rejected"
+    })
+  ));
+});
+
+test("signed-in users cannot create place contributions with moderation fields", async () => {
+  for (const [fieldName, value] of [
+    ["adminNotes", "Private moderation note"],
+    ["reviewHistory", [{ action: "submitted" }]],
+    ["reviewedAt", timestamp(42)],
+    ["reviewedByUid", ADMIN_UID]
+  ]) {
+    await assertFails(setDoc(
+      doc(ownerFirestore(), "placeContributions", `forbidden-${fieldName}`),
+      validSubmittedPlaceContribution({
+        [fieldName]: value
+      })
+    ));
+  }
+});
+
+test("signed-in users cannot impersonate another contributor UID", async () => {
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeContributions", "uid-mismatch-create"),
+    validSubmittedPlaceContribution({
+      submittedByUid: OTHER_UID
+    })
+  ));
+});
+
+test("submitted place contributions must include text and or an HTTPS image URL", async () => {
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeContributions", "blank-contribution"),
+    validSubmittedPlaceContribution({
+      contributionText: ""
+    })
+  ));
+
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeContributions", "image-only-contribution"),
+    validSubmittedPlaceContribution({
+      contributionText: "",
+      imageUrl: "https://example.org/image-only-contribution.jpg",
+      imageRightsStatus: "public-web-reference"
+    })
+  ));
+
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeContributions", "invalid-image-url"),
+    validSubmittedPlaceContribution({
+      contributionText: "",
+      imageUrl: "http://example.org/not-secure.jpg"
     })
   ));
 });
