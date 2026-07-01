@@ -65,6 +65,8 @@ const els = {
   relatedArticles: document.getElementById("placeRelatedArticles"),
   sourceReference: document.getElementById("placeSourceReference"),
   metadata: document.getElementById("placeMetadata"),
+  contributionCount: document.getElementById("placeContributionCount"),
+  contributionSummary: document.getElementById("placeContributionSummary"),
   contributionsList: document.getElementById("placeContributionsList"),
   contributionsEmpty: document.getElementById("placeContributionsEmpty"),
   tabs: Array.from(document.querySelectorAll(".place-record-tab")),
@@ -396,6 +398,28 @@ function formatRightsStatus(status) {
     .join(" ");
 }
 
+function updateContributionSummary(count, options = {}) {
+  if (!els.contributionCount || !els.contributionSummary) return;
+
+  if (options.loading) {
+    els.contributionCount.textContent = "Loading approved community contributions...";
+    els.contributionSummary.textContent = "Community comments and photos approved for this place will appear here.";
+    return;
+  }
+
+  if (count === 0) {
+    els.contributionCount.textContent = "No approved community contributions yet";
+    els.contributionSummary.textContent = "Signed-in place-specific contribution submission will be added in a later phase.";
+    return;
+  }
+
+  const contributionLabel = count === 1
+    ? "1 approved community contribution"
+    : `${count} approved community contributions`;
+  els.contributionCount.textContent = contributionLabel;
+  els.contributionSummary.textContent = "Approved community comments and photos connected to this place are shown below.";
+}
+
 function renderContributionImage(contribution, card) {
   const imageUrl = toSafeUrl(contribution.imageUrl);
   if (!imageUrl) return;
@@ -403,10 +427,14 @@ function renderContributionImage(contribution, card) {
   const figure = document.createElement("figure");
   figure.className = "place-contribution-card__figure";
 
+  const mediaFrame = document.createElement("div");
+  mediaFrame.className = "place-contribution-card__media-frame";
+
   const image = document.createElement("img");
   image.src = imageUrl;
   image.alt = cleanText(contribution.imageCaption) || "Community contribution photo";
-  figure.appendChild(image);
+  mediaFrame.appendChild(image);
+  figure.appendChild(mediaFrame);
 
   const captionParts = [];
   const imageCaption = cleanText(contribution.imageCaption);
@@ -435,6 +463,7 @@ function renderApprovedPlaceContributions(contributions) {
     .filter(Boolean)
     .sort((a, b) => getContributionSortTime(b) - getContributionSortTime(a));
 
+  updateContributionSummary(publicContributions.length);
   els.contributionsEmpty.hidden = publicContributions.length > 0;
 
   publicContributions.forEach((contribution) => {
@@ -442,6 +471,38 @@ function renderApprovedPlaceContributions(contributions) {
     card.className = "place-contribution-card";
 
     const dateText = formatRecordDate(contribution.reviewedAt || contribution.updatedAt || contribution.createdAt);
+    const contributorName = cleanText(
+      contribution.publicContributorName
+      || contribution.contributorDisplayName
+      || contribution.contributorName
+      || "Approved community contributor"
+    );
+
+    const header = document.createElement("div");
+    header.className = "place-contribution-card__header";
+
+    const avatar = document.createElement("div");
+    avatar.className = "place-contribution-card__avatar";
+    avatar.setAttribute("aria-hidden", "true");
+    avatar.textContent = contributorName.charAt(0).toUpperCase() || "C";
+
+    const identity = document.createElement("div");
+    identity.className = "place-contribution-card__identity";
+
+    const name = document.createElement("p");
+    name.className = "place-contribution-card__name";
+    name.textContent = contributorName;
+    identity.appendChild(name);
+
+    if (dateText) {
+      const date = document.createElement("p");
+      date.className = "place-contribution-card__date";
+      date.textContent = dateText;
+      identity.appendChild(date);
+    }
+
+    header.append(avatar, identity);
+    card.appendChild(header);
 
     const text = cleanText(contribution.contributionText);
     if (text) {
@@ -453,12 +514,22 @@ function renderApprovedPlaceContributions(contributions) {
 
     renderContributionImage(contribution, card);
 
-    if (dateText) {
-      const meta = document.createElement("p");
-      meta.className = "place-contribution-card__meta";
-      meta.textContent = `Approved community contribution | ${dateText}`;
-      card.appendChild(meta);
-    }
+    const footer = document.createElement("div");
+    footer.className = "place-contribution-card__footer";
+
+    const meta = document.createElement("p");
+    meta.className = "place-contribution-card__meta";
+    meta.textContent = dateText
+      ? `Approved community contribution | ${dateText}`
+      : "Approved community contribution";
+    footer.appendChild(meta);
+
+    const reply = document.createElement("p");
+    reply.className = "place-contribution-card__reply";
+    reply.textContent = "Replies and new contribution submission will be added later.";
+    footer.appendChild(reply);
+
+    card.appendChild(footer);
 
     els.contributionsList.appendChild(card);
   });
@@ -469,6 +540,7 @@ async function loadApprovedPlaceContributions(placeId) {
   els.contributionsList.textContent = "";
   els.contributionsEmpty.hidden = false;
   els.contributionsEmpty.textContent = "Loading approved community comments and photos...";
+  updateContributionSummary(0, { loading: true });
 
   try {
     const contributionsQuery = query(
@@ -482,7 +554,7 @@ async function loadApprovedPlaceContributions(placeId) {
       ...contributionDoc.data()
     })));
     if (!els.contributionsEmpty.hidden) {
-      els.contributionsEmpty.textContent = "No approved community comments or photos have been added yet. Future signed-in users will be able to submit place-related comments and photos for review.";
+      els.contributionsEmpty.textContent = "No approved community comments or photos have been added yet. Signed-in contribution submission will be added in a later phase.";
     }
   } catch (err) {
     console.error("Failed to load approved place contributions:", err);

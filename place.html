@@ -126,22 +126,35 @@
       >
         <div class="place-comments-panel__main">
           <div class="place-comments-intro">
-            <p class="place-comments-intro__eyebrow">Community comments and photos</p>
+            <p class="place-comments-intro__eyebrow">Community contributions</p>
             <h3 id="commentsPhotosTitle">Comments and Photos</h3>
             <p>Approved community contributions connected to this place are shown here.</p>
             <p>Adding new comments and photos will be available in a later phase.</p>
           </div>
+
+          <section class="place-comments-callout" aria-labelledby="placeContributionCount">
+            <div class="place-comments-callout__avatar" aria-hidden="true">◎</div>
+            <div class="place-comments-callout__body">
+              <p id="placeContributionCount" class="place-comments-callout__count">Loading approved community contributions...</p>
+              <p id="placeContributionSummary" class="place-comments-callout__summary">Community comments and photos approved for this place will appear here.</p>
+            </div>
+            <div class="place-comments-callout__actions">
+              <button type="button" class="place-comments-callout__button" disabled aria-disabled="true">Add comments and photos</button>
+              <p class="place-comments-callout__hint">Coming later</p>
+            </div>
+          </section>
+
           <div id="placeContributionsList" class="place-contributions-list"></div>
           <div id="placeContributionsEmpty" class="place-comments-empty" role="status">
-            No approved community comments or photos have been added yet. Future signed-in users will be able to submit place-related comments and photos for review.
+            No approved community comments or photos have been added yet. Signed-in contribution submission will be added in a later phase.
           </div>
         </div>
 
         <aside class="place-comments-panel__notice" aria-labelledby="contributionsNoticeTitle">
           <h4 id="contributionsNoticeTitle">User contributions</h4>
-          <p>These contributions are provided by community members and may not represent the official record for this place.</p>
-          <p>Only approved comments and photos are shown publicly.</p>
-          <p>A record-specific contribution submission system will be added later.</p>
+          <p>These comments and photos are provided by community members as supplementary local context for this place.</p>
+          <p>Only approved contributions are shown publicly, and they may not represent the official record.</p>
+          <p>A signed-in submission workflow for place-specific contributions will be added later.</p>
         </aside>
       </section>
     </div>
