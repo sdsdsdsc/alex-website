@@ -605,7 +605,7 @@ function updateContributionSummary(count, options = {}) {
 
   if (count === 0) {
     els.contributionCount.textContent = "No approved community contributions yet";
-    els.contributionSummary.textContent = "Signed-in place-specific contribution submission will be added in a later phase.";
+    els.contributionSummary.textContent = "Use the button above to submit a place-specific comment or photo reference. Approved contributions will appear here after review.";
     return;
   }
 
@@ -750,7 +750,7 @@ async function loadApprovedPlaceContributions(placeId) {
       ...contributionDoc.data()
     })));
     if (!els.contributionsEmpty.hidden) {
-      els.contributionsEmpty.textContent = "No approved community comments or photos have been added yet. Signed-in contribution submission will be added in a later phase.";
+      els.contributionsEmpty.textContent = "No approved community comments or photos have been added yet. Approved community comments and photos will appear here after review.";
     }
   } catch (err) {
     console.error("Failed to load approved place contributions:", err);
