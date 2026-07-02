@@ -188,6 +188,43 @@ test("submitted and rejected place contributions cannot be read publicly", async
   ));
 });
 
+test("admins can read submitted and rejected place contributions for moderation", async () => {
+  await seedDocument(
+    "placeContributions/admin-readable-submitted-contribution",
+    validSubmittedPlaceContribution()
+  );
+  await seedDocument(
+    "placeContributions/admin-readable-rejected-contribution",
+    validSubmittedPlaceContribution({
+      contributionStatus: "rejected",
+      reviewedAt: timestamp(44),
+      reviewedByUid: ADMIN_UID,
+      adminNotes: "Needs a clearer image source."
+    })
+  );
+
+  const submittedSnapshot = await assertSucceeds(getDoc(
+    doc(adminFirestore(), "placeContributions", "admin-readable-submitted-contribution")
+  ));
+  const rejectedSnapshot = await assertSucceeds(getDoc(
+    doc(adminFirestore(), "placeContributions", "admin-readable-rejected-contribution")
+  ));
+
+  assert.equal(submittedSnapshot.data().contributionStatus, "submitted");
+  assert.equal(rejectedSnapshot.data().contributionStatus, "rejected");
+});
+
+test("signed-in non-admin users cannot read submitted place contributions", async () => {
+  await seedDocument(
+    "placeContributions/non-admin-private-submitted-contribution",
+    validSubmittedPlaceContribution()
+  );
+
+  await assertFails(getDoc(
+    doc(ownerFirestore(), "placeContributions", "non-admin-private-submitted-contribution")
+  ));
+});
+
 test("approved place contributions with private fields cannot be read publicly", async () => {
   await seedDocument(
     "placeContributions/approved-private-field-contribution",

@@ -431,7 +431,11 @@ service cloud.firestore {
 
     match /placeContributions/{contributionId} {
       allow read: if resource.data.contributionStatus == 'approved'
-        && hasPublicPlaceContributionFields();
+        && hasPublicPlaceContributionFields()
+        || (
+          isAdmin()
+          && resource.data.contributionStatus in ['submitted', 'rejected']
+        );
       allow create: if isValidPlaceContributionCreate();
       allow update: if isValidPlaceContributionApproveUpdate()
         || isValidPlaceContributionRejectUpdate();
