@@ -16,6 +16,22 @@ const EVIDENCE_RIGHTS_STATUSES = Object.freeze([
   "unknown-needs-review"
 ]);
 const NOMINATION_PRIVATE_EVIDENCE_VISIBILITY = "nomination-private";
+const NOMINATION_EVIDENCE_STORAGE_ROOT = "nomination-evidence";
+const NOMINATION_EVIDENCE_ALLOWED_CONTENT_TYPES = Object.freeze([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif"
+]);
+const NOMINATION_EVIDENCE_MAX_FILE_SIZE = 5 * 1024 * 1024;
+const UPLOADED_EVIDENCE_FIELDS = Object.freeze([
+  "evidenceStoragePath",
+  "evidenceFileName",
+  "evidenceFileContentType",
+  "evidenceFileSize",
+  "evidenceUploadedAt",
+  "evidenceUploadedByUid"
+]);
 const PUBLIC_NOMINATION_FIELDS = Object.freeze([
   "title",
   "assetType",
@@ -36,6 +52,7 @@ const PUBLIC_NOMINATION_FIELDS = Object.freeze([
   "evidenceRightsStatus",
   "evidencePermissionConfirmed",
   "evidenceVisibility",
+  ...UPLOADED_EVIDENCE_FIELDS,
   "nominatorDisplayName",
   "nominatorEmail",
   "organisationName",
@@ -81,7 +98,8 @@ const DEBUG_EVIDENCE_FIELDS = Object.freeze([
   "evidenceSourceCredit",
   "evidenceRightsStatus",
   "evidencePermissionConfirmed",
-  "evidenceVisibility"
+  "evidenceVisibility",
+  ...UPLOADED_EVIDENCE_FIELDS
 ]);
 const PUBLIC_DISALLOWED_NOMINATION_FIELDS = Object.freeze([
   "adminNotes",
@@ -110,6 +128,10 @@ const FIELD_LIMITS = Object.freeze({
   evidenceImageCaption: 300,
   evidenceSourceCredit: 300,
   evidenceRightsStatus: 64,
+  evidenceStoragePath: 1000,
+  evidenceFileName: 255,
+  evidenceFileContentType: 80,
+  evidenceUploadedByUid: 128,
   nominatorDisplayName: 120,
   nominatorEmail: 254,
   organisationName: 180
@@ -198,6 +220,70 @@ function validateNominationEvidenceFields(values = {}) {
   return errors;
 }
 
+function hasUploadedEvidenceMetadata(values = {}) {
+  return UPLOADED_EVIDENCE_FIELDS.some((field) => {
+    if (field === "evidenceFileSize" || field === "evidenceUploadedAt") {
+      return values[field] !== undefined && values[field] !== null && values[field] !== "";
+    }
+    return Boolean(cleanText(values[field]));
+  });
+}
+
+function isValidEvidenceStoragePathForUid(storagePath, uid) {
+  const cleanStoragePath = cleanText(storagePath);
+  const cleanUid = cleanText(uid);
+  if (!cleanStoragePath || !cleanUid) return false;
+  const parts = cleanStoragePath.split("/");
+  return parts.length === 4
+    && parts[0] === NOMINATION_EVIDENCE_STORAGE_ROOT
+    && parts[1] === cleanUid
+    && parts.slice(2).every(Boolean);
+}
+
+function normalizeEvidenceFileSize(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const numericValue = Number(value);
+  return Number.isInteger(numericValue) ? numericValue : null;
+}
+
+function validateUploadedEvidenceMetadata(values = {}, ownershipMetadata = null) {
+  if (!hasUploadedEvidenceMetadata(values)) return [];
+
+  const errors = [];
+  const uploadedByUid = cleanText(values.evidenceUploadedByUid);
+  const storagePath = cleanText(values.evidenceStoragePath);
+  const contentType = cleanText(values.evidenceFileContentType);
+  const fileSize = normalizeEvidenceFileSize(values.evidenceFileSize);
+  const ownerUid = cleanText(ownershipMetadata?.submittedByUid);
+
+  if (!ownerUid) {
+    errors.push("Please sign in before attaching uploaded nomination evidence.");
+  }
+  if (!uploadedByUid) {
+    errors.push("Uploaded evidence submitter is required.");
+  }
+  if (ownerUid && uploadedByUid && uploadedByUid !== ownerUid) {
+    errors.push("Uploaded evidence submitter must match the signed-in account.");
+  }
+  if (!isValidEvidenceStoragePathForUid(storagePath, uploadedByUid)) {
+    errors.push("Uploaded evidence storage path is invalid.");
+  }
+  if (!NOMINATION_EVIDENCE_ALLOWED_CONTENT_TYPES.includes(contentType)) {
+    errors.push("Uploaded evidence file type must be jpeg, png, webp, or gif.");
+  }
+  if (!fileSize || fileSize > NOMINATION_EVIDENCE_MAX_FILE_SIZE) {
+    errors.push("Uploaded evidence file size is invalid.");
+  }
+  if (cleanText(values.evidenceVisibility) && cleanText(values.evidenceVisibility) !== NOMINATION_PRIVATE_EVIDENCE_VISIBILITY) {
+    errors.push("Uploaded evidence must stay private for nomination review.");
+  }
+  if (values.evidencePermissionConfirmed !== true) {
+    errors.push("Confirm that the uploaded evidence can be shared for review.");
+  }
+
+  return errors;
+}
+
 function validateNominationAgreements(values = {}) {
   const requiredAcknowledgements = [
     "projectPositionAccepted",
@@ -217,10 +303,11 @@ function validateSubmissionRole(value) {
     : ["Select who the nomination is being submitted for."];
 }
 
-function getNominationValidationErrors(values = {}) {
+function getNominationValidationErrors(values = {}, options = {}) {
   return [
     ...validateNominationRequiredFields(values),
     ...validateNominationEvidenceFields(values),
+    ...validateUploadedEvidenceMetadata(values, options.ownershipMetadata),
     ...validateNominationAgreements(values),
     ...validateSubmissionRole(values.submittedOnBehalfOf)
   ];
@@ -268,6 +355,10 @@ function sanitizePublicNominationPayload(payload = {}) {
         "evidenceSourceCredit",
         "evidenceRightsStatus",
         "evidenceVisibility",
+        "evidenceStoragePath",
+        "evidenceFileName",
+        "evidenceFileContentType",
+        "evidenceUploadedByUid",
         "nominatorDisplayName",
         "organisationName",
         "submitterDisplayName"
@@ -308,7 +399,13 @@ function buildSubmittedNominationPayload(values = {}, timestamps = {}) {
   const cleanValues = stripPublicDisallowedNominationFields(values);
   const textValues = normalizeNominationTextFields(cleanValues);
   const heritageCriteria = normalizeNominationCriteria(cleanValues.heritageCriteria);
-  const errors = getNominationValidationErrors({ ...cleanValues, ...textValues, heritageCriteria });
+  const ownershipMetadata = timestamps.ownershipMetadata
+    ? buildNominationOwnershipMetadata(timestamps.ownershipMetadata)
+    : null;
+  const errors = getNominationValidationErrors(
+    { ...cleanValues, ...textValues, heritageCriteria },
+    { ownershipMetadata }
+  );
 
   if (errors.length > 0) {
     throw new Error(errors[0]);
@@ -343,6 +440,20 @@ function buildSubmittedNominationPayload(values = {}, timestamps = {}) {
     payload.evidencePermissionConfirmed = cleanValues.evidencePermissionConfirmed === true;
     payload.evidenceVisibility = NOMINATION_PRIVATE_EVIDENCE_VISIBILITY;
   }
+  if (hasUploadedEvidenceMetadata(cleanValues)) {
+    addOptionalText(payload, "evidenceImageCaption", textValues.evidenceImageCaption);
+    addOptionalText(payload, "evidenceRightsStatus", textValues.evidenceRightsStatus);
+    addOptionalText(payload, "evidenceStoragePath", textValues.evidenceStoragePath);
+    addOptionalText(payload, "evidenceFileName", textValues.evidenceFileName);
+    addOptionalText(payload, "evidenceFileContentType", textValues.evidenceFileContentType);
+    addOptionalText(payload, "evidenceUploadedByUid", textValues.evidenceUploadedByUid);
+    payload.evidenceFileSize = normalizeEvidenceFileSize(cleanValues.evidenceFileSize);
+    if (cleanValues.evidenceUploadedAt !== undefined && cleanValues.evidenceUploadedAt !== null && cleanValues.evidenceUploadedAt !== "") {
+      payload.evidenceUploadedAt = cleanValues.evidenceUploadedAt;
+    }
+    payload.evidencePermissionConfirmed = true;
+    payload.evidenceVisibility = NOMINATION_PRIVATE_EVIDENCE_VISIBILITY;
+  }
   addOptionalText(payload, "nominatorDisplayName", textValues.nominatorDisplayName);
   addOptionalText(payload, "organisationName", textValues.organisationName);
 
@@ -354,8 +465,8 @@ function buildSubmittedNominationPayload(values = {}, timestamps = {}) {
     if (timestamps[field]) payload[field] = timestamps[field];
   });
 
-  if (timestamps.ownershipMetadata) {
-    Object.assign(payload, buildNominationOwnershipMetadata(timestamps.ownershipMetadata));
+  if (ownershipMetadata) {
+    Object.assign(payload, ownershipMetadata);
   }
 
   return sanitizePublicNominationPayload(payload);
@@ -416,6 +527,9 @@ function buildNominationDebugSummary(payload = {}) {
 export {
   EVIDENCE_RIGHTS_STATUSES,
   FIELD_LIMITS,
+  NOMINATION_EVIDENCE_ALLOWED_CONTENT_TYPES,
+  NOMINATION_EVIDENCE_MAX_FILE_SIZE,
+  NOMINATION_EVIDENCE_STORAGE_ROOT,
   NOMINATION_PRIVATE_EVIDENCE_VISIBILITY,
   NOMINATION_CREATE_ALLOWED_FIELDS,
   PUBLIC_DISALLOWED_NOMINATION_FIELDS,
@@ -423,6 +537,7 @@ export {
   REQUIRED_NOMINATION_CREATE_FIELDS,
   REQUIRED_TEXT_FIELDS,
   SUBMISSION_ROLES,
+  UPLOADED_EVIDENCE_FIELDS,
   buildNominationDebugSummary,
   buildNominationDraftFromFormValues,
   buildNominationOwnershipMetadata,

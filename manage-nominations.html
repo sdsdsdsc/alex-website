@@ -26,6 +26,11 @@
       updateDoc
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import {
+      getDownloadURL,
+      getStorage,
+      ref as storageRef
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+    import {
       appendReviewHistory as appendAuditReviewHistory,
       buildReviewSavedHistoryEntry,
       buildStatusChangedHistoryEntry
@@ -89,6 +94,7 @@
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const storage = getStorage(app);
     let nominationRecords = [];
     let lastSavedNominationId = "";
     let lastSavedMessage = "";
@@ -330,6 +336,14 @@
       }
     }
 
+    function formatEvidenceFileSize(value) {
+      const size = Number(value);
+      if (!Number.isFinite(size) || size <= 0) return "";
+      if (size < 1024) return `${size} bytes`;
+      if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
     function renderEvidenceSection(record) {
       const evidenceUrl = cleanText(record.evidenceImageUrl) || cleanText(record.photoUrl);
       const evidenceCaption = cleanText(record.evidenceImageCaption) || cleanText(record.photoDescription);
@@ -339,8 +353,25 @@
         ? "Confirmed by nominator"
         : "";
       const evidenceVisibility = cleanText(record.evidenceVisibility);
+      const evidenceStoragePath = cleanText(record.evidenceStoragePath);
+      const evidenceFileName = cleanText(record.evidenceFileName);
+      const evidenceFileContentType = cleanText(record.evidenceFileContentType);
+      const evidenceFileSize = formatEvidenceFileSize(record.evidenceFileSize);
+      const evidenceUploadedByUid = cleanText(record.evidenceUploadedByUid);
 
-      if (!evidenceUrl && !evidenceCaption && !evidenceSourceCredit && !evidenceRightsStatus && !evidencePermissionConfirmed && !evidenceVisibility) return null;
+      if (
+        !evidenceUrl
+        && !evidenceCaption
+        && !evidenceSourceCredit
+        && !evidenceRightsStatus
+        && !evidencePermissionConfirmed
+        && !evidenceVisibility
+        && !evidenceStoragePath
+        && !evidenceFileName
+        && !evidenceFileContentType
+        && !evidenceFileSize
+        && !evidenceUploadedByUid
+      ) return null;
 
       const section = document.createElement("section");
       section.className = "manage-nominations-card__evidence";
@@ -370,6 +401,16 @@
       if (permissionRow) grid.appendChild(permissionRow);
       const visibilityRow = createDetailRow("Evidence visibility", evidenceVisibility);
       if (visibilityRow) grid.appendChild(visibilityRow);
+      const storagePathRow = createDetailRow("Uploaded evidence storage path", evidenceStoragePath);
+      if (storagePathRow) grid.appendChild(storagePathRow);
+      const fileNameRow = createDetailRow("Uploaded evidence file name", evidenceFileName);
+      if (fileNameRow) grid.appendChild(fileNameRow);
+      const fileTypeRow = createDetailRow("Uploaded evidence file type", evidenceFileContentType);
+      if (fileTypeRow) grid.appendChild(fileTypeRow);
+      const fileSizeRow = createDetailRow("Uploaded evidence file size", evidenceFileSize);
+      if (fileSizeRow) grid.appendChild(fileSizeRow);
+      const uploadedByRow = createDetailRow("Uploaded evidence owner UID", evidenceUploadedByUid);
+      if (uploadedByRow) grid.appendChild(uploadedByRow);
 
       section.appendChild(grid);
 
@@ -380,6 +421,30 @@
         preview.alt = evidenceCaption || "Submitted evidence image preview";
         preview.loading = "lazy";
         section.appendChild(preview);
+      }
+
+      if (evidenceStoragePath && evidenceFileContentType.startsWith("image/")) {
+        const previewStatus = document.createElement("p");
+        previewStatus.className = "admin-help-note";
+        previewStatus.textContent = "Loading private uploaded evidence preview...";
+        section.appendChild(previewStatus);
+
+        getDownloadURL(storageRef(storage, evidenceStoragePath))
+          .then((downloadUrl) => {
+            const preview = document.createElement("img");
+            preview.className = "manage-nominations-card__evidence-preview";
+            preview.src = downloadUrl;
+            preview.alt = evidenceCaption || evidenceFileName || "Uploaded evidence image preview";
+            preview.loading = "lazy";
+            previewStatus.replaceWith(preview);
+          })
+          .catch((err) => {
+            console.warn("Uploaded evidence preview unavailable:", {
+              code: err?.code || "",
+              message: err?.message || ""
+            });
+            previewStatus.textContent = "Private uploaded evidence preview is unavailable. Check admin sign-in and Storage rules.";
+          });
       }
 
       return section;

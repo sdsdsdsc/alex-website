@@ -520,6 +520,25 @@ test("HTTPS evidence and nomination-private rights metadata are accepted", async
   ));
 });
 
+test("uploaded private evidence metadata is accepted for the signed-in owner", async () => {
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeNominations", "uploaded-evidence-metadata"),
+    validNomination({
+      evidenceImageCaption: "South elevation",
+      evidenceSourceCredit: "Photo by nominator",
+      evidenceRightsStatus: "permission-granted",
+      evidencePermissionConfirmed: true,
+      evidenceVisibility: "nomination-private",
+      evidenceStoragePath: `nomination-evidence/${OWNER_UID}/draft-001/photo-001.webp`,
+      evidenceFileName: "photo-001.webp",
+      evidenceFileContentType: "image/webp",
+      evidenceFileSize: 123456,
+      evidenceUploadedAt: timestamp(4),
+      evidenceUploadedByUid: OWNER_UID
+    })
+  ));
+});
+
 test("evidence URL is treated as an optional review string rather than a fetchable URL gate", async () => {
   await assertSucceeds(setDoc(
     doc(ownerFirestore(), "placeNominations", "review-string-evidence"),
@@ -547,6 +566,57 @@ test("invalid evidence visibility is denied", async () => {
       evidenceRightsStatus: "public-web-reference",
       evidencePermissionConfirmed: true,
       evidenceVisibility: "public"
+    })
+  ));
+});
+
+test("uploaded private evidence metadata rejects forged owners and unsafe values", async () => {
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "uploaded-forged-uid"),
+    validNomination({
+      evidencePermissionConfirmed: true,
+      evidenceVisibility: "nomination-private",
+      evidenceStoragePath: `nomination-evidence/${OTHER_UID}/draft-001/photo-001.webp`,
+      evidenceFileName: "photo-001.webp",
+      evidenceFileContentType: "image/webp",
+      evidenceFileSize: 123456,
+      evidenceUploadedAt: timestamp(4),
+      evidenceUploadedByUid: OTHER_UID
+    })
+  ));
+
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "uploaded-orphan-forged-uid"),
+    validNomination({
+      evidenceUploadedByUid: OTHER_UID
+    })
+  ));
+
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "uploaded-public-visibility"),
+    validNomination({
+      evidencePermissionConfirmed: true,
+      evidenceVisibility: "public",
+      evidenceStoragePath: `nomination-evidence/${OWNER_UID}/draft-001/photo-001.webp`,
+      evidenceFileName: "photo-001.webp",
+      evidenceFileContentType: "image/webp",
+      evidenceFileSize: 123456,
+      evidenceUploadedAt: timestamp(4),
+      evidenceUploadedByUid: OWNER_UID
+    })
+  ));
+
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "uploaded-unsafe-content-type"),
+    validNomination({
+      evidencePermissionConfirmed: true,
+      evidenceVisibility: "nomination-private",
+      evidenceStoragePath: `nomination-evidence/${OWNER_UID}/draft-001/file-001.pdf`,
+      evidenceFileName: "file-001.pdf",
+      evidenceFileContentType: "application/pdf",
+      evidenceFileSize: 123456,
+      evidenceUploadedAt: timestamp(4),
+      evidenceUploadedByUid: OWNER_UID
     })
   ));
 });

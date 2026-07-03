@@ -81,6 +81,44 @@ service cloud.firestore {
        );
    }
 
+    function hasUploadedEvidencePath() {
+      return hasField('evidenceStoragePath')
+        && request.resource.data.evidenceStoragePath is string
+        && request.resource.data.evidenceStoragePath.size() > 0;
+    }
+
+    function isValidUploadedEvidenceUid() {
+      return !hasField('evidenceUploadedByUid')
+        || request.resource.data.evidenceUploadedByUid == null
+        || request.resource.data.evidenceUploadedByUid == ''
+        || request.resource.data.evidenceUploadedByUid == request.auth.uid;
+    }
+
+    function isValidUploadedEvidenceMetadata() {
+      return isOptionalString('evidenceFileName', 255)
+        && isValidUploadedEvidenceUid()
+        && (
+          !hasUploadedEvidencePath()
+          || (
+            request.resource.data.evidenceStoragePath is string
+          && request.resource.data.evidenceStoragePath.size() <= 1000
+          && request.resource.data.evidenceStoragePath.matches('^nomination-evidence/' + request.auth.uid + '/[^/]+/[^/]+$')
+          && request.resource.data.evidenceFileContentType in [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+            'image/gif'
+          ]
+          && request.resource.data.evidenceFileSize is int
+          && request.resource.data.evidenceFileSize > 0
+          && request.resource.data.evidenceFileSize <= 5 * 1024 * 1024
+          && request.resource.data.evidenceUploadedByUid == request.auth.uid
+          && request.resource.data.evidenceVisibility == 'nomination-private'
+          && request.resource.data.evidencePermissionConfirmed == true
+          )
+        );
+    }
+
     function hasValidNominationFields() {
       return request.resource.data.keys().hasOnly([
           'title',
@@ -103,6 +141,12 @@ service cloud.firestore {
           'evidenceRightsStatus',
           'evidencePermissionConfirmed',
           'evidenceVisibility',
+          'evidenceStoragePath',
+          'evidenceFileName',
+          'evidenceFileContentType',
+          'evidenceFileSize',
+          'evidenceUploadedAt',
+          'evidenceUploadedByUid',
           'photoUrl',
           'photoDescription',
           'nominatorDisplayName',
@@ -179,6 +223,7 @@ service cloud.firestore {
           || request.resource.data.evidenceVisibility == ''
           || request.resource.data.evidenceVisibility == 'nomination-private'
         )
+        && isValidUploadedEvidenceMetadata()
         && isOptionalString('photoUrl', 2048)
         && isOptionalString('photoDescription', 1000)
         && isOptionalString('nominatorDisplayName', 120)

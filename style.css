@@ -777,6 +777,19 @@ body > header h1 a.home-link:hover {
   line-height: 1.5;
 }
 
+.nomination-upload-status {
+  color: #17475b;
+  font-weight: 800;
+}
+
+.nomination-upload-status--success {
+  color: #17633c;
+}
+
+.nomination-upload-status--error {
+  color: #a21b1b;
+}
+
 .nomination-step--acknowledgements {
   display: block;
 }
