@@ -129,7 +129,7 @@
             <p class="place-comments-intro__eyebrow">Community contributions</p>
             <h3 id="commentsPhotosTitle">Comments and Photos</h3>
             <p>Approved community contributions connected to this place are shown here.</p>
-            <p>Adding new comments and photos will be available in a later phase.</p>
+            <p>New submissions stay private until an admin approves them. Use the button above to submit a place-specific comment or photo reference.</p>
           </div>
 
           <section class="place-comments-callout" aria-labelledby="placeContributionCount">
@@ -139,14 +139,14 @@
               <p id="placeContributionSummary" class="place-comments-callout__summary">Community comments and photos approved for this place will appear here.</p>
             </div>
             <div class="place-comments-callout__actions">
-              <button type="button" class="place-comments-callout__button" disabled aria-disabled="true">Add comments and photos</button>
-              <p class="place-comments-callout__hint">Coming later</p>
+              <button id="placeContributionEntryButton" type="button" class="place-comments-callout__button" disabled aria-disabled="true">Checking sign-in...</button>
+              <p id="placeContributionEntryHint" class="place-comments-callout__hint">Contribution submission stays in review until approved.</p>
             </div>
           </section>
 
           <div id="placeContributionsList" class="place-contributions-list"></div>
           <div id="placeContributionsEmpty" class="place-comments-empty" role="status">
-            No approved community comments or photos have been added yet. Signed-in contribution submission will be added in a later phase.
+            No approved community comments or photos have been added yet. Approved community comments and photos will appear here after review.
           </div>
         </div>
 
@@ -154,11 +154,93 @@
           <h4 id="contributionsNoticeTitle">User contributions</h4>
           <p>These comments and photos are provided by community members as supplementary local context for this place.</p>
           <p>Only approved contributions are shown publicly, and they may not represent the official record.</p>
-          <p>A signed-in submission workflow for place-specific contributions will be added later.</p>
+          <p>Signed-in submissions are reviewed before they appear here. New submissions stay private until an admin approves them.</p>
         </aside>
       </section>
     </div>
   </main>
+
+  <section
+    id="placeContributionModal"
+    class="place-contribution-modal"
+    aria-hidden="true"
+    hidden
+  >
+    <div id="placeContributionModalBackdrop" class="place-contribution-modal__backdrop"></div>
+    <div
+      class="place-contribution-modal__dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="placeContributionEntryTitle"
+      aria-describedby="placeContributionEntryDescription"
+    >
+      <div class="place-contribution-modal__header">
+        <div>
+          <p class="place-contribution-entry__eyebrow">Signed-in contribution</p>
+          <h4 id="placeContributionEntryTitle">Add comments and photos</h4>
+          <p id="placeContributionEntryDescription" class="place-contribution-modal__description">Use this form for supplementary comments or a public HTTPS image URL connected to this existing place record. New submissions stay private until an admin review is complete.</p>
+        </div>
+        <button id="placeContributionModalClose" type="button" class="place-contribution-modal__close" aria-label="Close contribution form">×</button>
+      </div>
+
+      <div id="placeContributionSignedOut" class="place-contribution-entry__panel" hidden>
+        <p class="place-contribution-entry__lead">Please sign in with a public account before adding a place-specific comment or photo.</p>
+        <a id="placeContributionSignInLink" class="place-contribution-entry__link" href="public-auth.html">Sign in to contribute</a>
+      </div>
+
+      <div id="placeContributionSignedIn" class="place-contribution-entry__panel" hidden>
+        <p id="placeContributionSignedInSummary" class="place-contribution-entry__lead">You are signed in. Your submission will be saved for admin review and will not appear publicly until it is approved.</p>
+
+        <form id="placeContributionForm" class="place-contribution-form" novalidate>
+          <div class="place-contribution-form__field">
+            <label for="placeContributionText">Comment or local note</label>
+            <textarea id="placeContributionText" name="contributionText" rows="5" maxlength="5000" placeholder="Share local knowledge, memories, corrections, or context connected to this place."></textarea>
+          </div>
+
+          <div class="place-contribution-form__field">
+            <label for="placeContributionImageUrl">Image URL</label>
+            <input id="placeContributionImageUrl" name="imageUrl" type="url" inputmode="url" placeholder="https://example.com/place-photo.jpg" />
+          </div>
+
+          <div class="place-contribution-form__grid">
+            <div class="place-contribution-form__field">
+              <label for="placeContributionImageCaption">Image caption</label>
+              <input id="placeContributionImageCaption" name="imageCaption" type="text" maxlength="300" placeholder="Short caption for the image" />
+            </div>
+
+            <div class="place-contribution-form__field">
+              <label for="placeContributionImageCredit">Image source or credit</label>
+              <input id="placeContributionImageCredit" name="imageCredit" type="text" maxlength="300" placeholder="Photographer, archive, or website credit" />
+            </div>
+          </div>
+
+          <div class="place-contribution-form__field">
+            <label for="placeContributionImageRightsStatus">Image rights status</label>
+            <select id="placeContributionImageRightsStatus" name="imageRightsStatus">
+              <option value="">Select if needed</option>
+              <option value="own-work">Own work</option>
+              <option value="permission-granted">Permission granted</option>
+              <option value="public-domain-or-open-license">Public domain or open license</option>
+              <option value="public-web-reference">Public web reference</option>
+              <option value="unknown-needs-review">Unknown, needs review</option>
+            </select>
+          </div>
+
+          <label class="place-contribution-form__checkbox">
+            <input id="placeContributionImagePermissionConfirmed" name="imagePermissionConfirmed" type="checkbox" />
+            <span>I confirm that any linked image is my own work, shared with permission, or provided as a review-only public web reference.</span>
+          </label>
+
+          <div class="place-contribution-form__actions">
+            <button id="placeContributionSubmitButton" type="submit">Submit for review</button>
+            <button id="placeContributionModalCancel" type="button" class="place-contribution-form__secondary">Cancel</button>
+          </div>
+        </form>
+
+        <p id="placeContributionFormStatus" class="place-contribution-form__status" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
 
   <footer>
     © 2025 Alex's Photo Board | All Rights Reserved

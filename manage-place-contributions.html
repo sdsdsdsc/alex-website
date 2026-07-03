@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Manage Place Contributions | Alex's Photo Board</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module">
+    import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import {
+      browserLocalPersistence,
+      getAuth,
+      onAuthStateChanged,
+      setPersistence,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import {
+      collection,
+      deleteField,
+      doc,
+      getDocs,
+      getFirestore,
+      query,
+      serverTimestamp,
+      updateDoc,
+      where
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import {
+      buildApproveContributionUpdate,
+      buildRejectContributionUpdate
+    } from "./heritage-engine/place-contributions.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
+      authDomain: "alexs-community-efcd8.firebaseapp.com",
+      projectId: "alexs-community-efcd8",
+      storageBucket: "alexs-community-efcd8.firebasestorage.app",
+      messagingSenderId: "214395622099",
+      appId: "1:214395622099:web:44f99a181741caf3117a26"
+    };
+
+    const ADMIN_UID = "VT3I9KMktMXsdJeyYBye54Sgnqu2";
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const authPersistenceReady = setPersistence(auth, browserLocalPersistence);
+    let contributionRecords = [];
+
+    function buildLoginUrl() {
+      const loginUrl = new URL("admin-login.html", window.location.href);
+      loginUrl.searchParams.set("next", `${window.location.pathname}${window.location.search}`);
+      return loginUrl.href;
+    }
+
+    function cleanText(value) {
+      return String(value || "").trim();
+    }
+
+    function setStatus(message, type = "") {
+      const status = document.getElementById("managePlaceContributionsStatus");
+      if (!status) return;
+      status.textContent = message;
+      status.className = type === "error" ? "admin-error" : "admin-status";
+    }
+
+    function formatTimestamp(value) {
+      if (!value) return "Pending server timestamp";
+
+      const date = typeof value?.toDate === "function"
+        ? value.toDate()
+        : value?.seconds
+          ? new Date(value.seconds * 1000)
+          : value instanceof Date
+            ? value
+            : null;
+
+      return date && Number.isFinite(date.getTime())
+        ? date.toLocaleString()
+        : "Pending server timestamp";
+    }
+
+    function getSortTimestamp(record) {
+      const source = record.createdAt || record.updatedAt || null;
+      if (!source) return 0;
+      if (typeof source?.toMillis === "function") return source.toMillis();
+      if (source?.seconds) return source.seconds * 1000;
+      if (source instanceof Date) return source.getTime();
+      return 0;
+    }
+
+    function createDetailRow(label, value) {
+      const text = cleanText(value);
+      if (!text) return null;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "manage-nominations-card__detail";
+
+      const dt = document.createElement("dt");
+      dt.textContent = label;
+
+      const dd = document.createElement("dd");
+      dd.textContent = text;
+
+      wrapper.append(dt, dd);
+      return wrapper;
+    }
+
+    function createTimestampRow(label, value) {
+      if (!value) return null;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "manage-nominations-card__detail";
+
+      const dt = document.createElement("dt");
+      dt.textContent = label;
+
+      const dd = document.createElement("dd");
+      dd.textContent = formatTimestamp(value);
+
+      wrapper.append(dt, dd);
+      return wrapper;
+    }
+
+    function createLinkRow(label, value) {
+      const text = cleanText(value);
+      if (!text) return null;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "manage-nominations-card__detail";
+
+      const dt = document.createElement("dt");
+      dt.textContent = label;
+
+      const dd = document.createElement("dd");
+      const link = document.createElement("a");
+      link.href = text;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = text;
+      dd.appendChild(link);
+
+      wrapper.append(dt, dd);
+      return wrapper;
+    }
+
+    function isSafeHttpsUrl(value) {
+      const text = cleanText(value);
+      if (!text) return false;
+      try {
+        const url = new URL(text);
+        return url.protocol === "https:";
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function getRightsStatusLabel(value) {
+      switch (cleanText(value)) {
+        case "own-work":
+          return "Own work";
+        case "permission-granted":
+          return "Permission granted";
+        case "public-domain-or-open-license":
+          return "Public domain or open license";
+        case "public-web-reference":
+          return "Public web reference";
+        case "unknown-needs-review":
+          return "Unknown, needs review";
+        default:
+          return "";
+      }
+    }
+
+    function createCardMessage(message, type = "") {
+      const status = document.createElement("p");
+      status.className = type === "error"
+        ? "manage-nominations-card__save-message admin-error"
+        : type === "success"
+          ? "manage-nominations-card__save-message admin-success"
+          : "manage-nominations-card__save-message";
+      status.textContent = message;
+      return status;
+    }
+
+    function createSummaryChip(text, className = "") {
+      const chip = document.createElement("span");
+      chip.className = `manage-nominations-card__chip${className ? ` ${className}` : ""}`;
+      chip.textContent = text;
+      return chip;
+    }
+
+    function createContributionCard(record) {
+      const card = document.createElement("article");
+      card.className = "manage-nominations-card";
+      card.dataset.contributionId = record.id;
+
+      const summary = document.createElement("div");
+      summary.className = "manage-nominations-card__summary";
+
+      const heading = document.createElement("div");
+      heading.className = "manage-nominations-card__heading";
+
+      const title = document.createElement("h3");
+      title.textContent = cleanText(record.placeTitleSnapshot) || cleanText(record.placeId) || "Submitted contribution";
+      heading.appendChild(title);
+
+      const chips = document.createElement("div");
+      chips.className = "manage-nominations-card__chips";
+      chips.appendChild(createSummaryChip("Submitted", "manage-nominations-card__chip--status"));
+      if (cleanText(record.placeId)) chips.appendChild(createSummaryChip(cleanText(record.placeId)));
+      heading.appendChild(chips);
+      summary.appendChild(heading);
+
+      const meta = document.createElement("dl");
+      meta.className = "manage-nominations-card__meta";
+      [
+        createTimestampRow("Created", record.createdAt),
+        createDetailRow("Submitter UID", record.submittedByUid),
+        createDetailRow("Submitter email", record.submitterEmail),
+        createDetailRow("Display name", record.submitterDisplayName)
+      ].forEach((row) => {
+        if (row) meta.appendChild(row);
+      });
+      summary.appendChild(meta);
+
+      if (cleanText(record.contributionText)) {
+        const contributionText = document.createElement("p");
+        contributionText.className = "my-nominations-summary";
+        contributionText.textContent = cleanText(record.contributionText);
+        summary.appendChild(contributionText);
+      }
+
+      card.appendChild(summary);
+
+      const details = document.createElement("details");
+      details.className = "manage-nominations-card__details";
+
+      const detailsSummary = document.createElement("summary");
+      detailsSummary.textContent = "View full submission";
+      details.appendChild(detailsSummary);
+
+      const body = document.createElement("dl");
+      body.className = "manage-nominations-card__detail-grid";
+      [
+        createDetailRow("Place title snapshot", record.placeTitleSnapshot),
+        createDetailRow("Place ID", record.placeId),
+        createDetailRow("Contribution text", record.contributionText),
+        createLinkRow("Image URL", record.imageUrl),
+        createDetailRow("Image caption", record.imageCaption),
+        createDetailRow("Image credit", record.imageCredit),
+        createDetailRow("Image rights status", getRightsStatusLabel(record.imageRightsStatus)),
+        createDetailRow("Image permission confirmed", record.imagePermissionConfirmed === true ? "Confirmed by submitter" : ""),
+        createDetailRow("Submitted by UID", record.submittedByUid),
+        createDetailRow("Submitter email", record.submitterEmail),
+        createDetailRow("Submitter display name", record.submitterDisplayName),
+        createTimestampRow("Created at", record.createdAt),
+        createTimestampRow("Updated at", record.updatedAt)
+      ].forEach((row) => {
+        if (row) body.appendChild(row);
+      });
+      details.appendChild(body);
+
+      if (isSafeHttpsUrl(record.imageUrl)) {
+        const evidence = document.createElement("section");
+        evidence.className = "manage-nominations-card__evidence";
+
+        const titleEl = document.createElement("h4");
+        titleEl.textContent = "Submitted image preview";
+        evidence.appendChild(titleEl);
+
+        const note = document.createElement("p");
+        note.className = "admin-help-note";
+        note.textContent = "This preview is for admin review only. Approval removes private submission metadata so the public place page keeps reading a public-safe document.";
+        evidence.appendChild(note);
+
+        const preview = document.createElement("img");
+        preview.className = "manage-nominations-card__evidence-preview";
+        preview.src = cleanText(record.imageUrl);
+        preview.alt = cleanText(record.imageCaption) || "Submitted contribution image preview";
+        preview.loading = "lazy";
+        evidence.appendChild(preview);
+
+        details.appendChild(evidence);
+      }
+
+      const reviewSection = document.createElement("section");
+      reviewSection.className = "manage-nominations-card__review";
+
+      const reviewTitle = document.createElement("h4");
+      reviewTitle.textContent = "Admin review";
+      reviewSection.appendChild(reviewTitle);
+
+      const reviewHelp = document.createElement("p");
+      reviewHelp.className = "admin-help-note";
+      reviewHelp.textContent = "Reject can save a private admin note. Approve removes private submitter fields so the contribution becomes publicly readable on the place page.";
+      reviewSection.appendChild(reviewHelp);
+
+      const reviewForm = document.createElement("form");
+      reviewForm.className = "manage-nominations-card__review-form";
+
+      const notesLabel = document.createElement("label");
+      notesLabel.textContent = "Private admin notes (saved on reject only in this phase)";
+      const notesInput = document.createElement("textarea");
+      notesInput.name = "adminNotes";
+      notesInput.rows = 4;
+      notesInput.maxLength = 5000;
+      notesLabel.appendChild(notesInput);
+
+      const actions = document.createElement("div");
+      actions.className = "admin-record-actions";
+
+      const approveButton = document.createElement("button");
+      approveButton.type = "submit";
+      approveButton.name = "reviewAction";
+      approveButton.value = "approve";
+      approveButton.textContent = "Approve contribution";
+
+      const rejectButton = document.createElement("button");
+      rejectButton.type = "submit";
+      rejectButton.name = "reviewAction";
+      rejectButton.value = "reject";
+      rejectButton.textContent = "Reject contribution";
+
+      actions.append(approveButton, rejectButton);
+
+      let saveMessage = createCardMessage("");
+      reviewForm.append(notesLabel, actions, saveMessage);
+      reviewSection.appendChild(reviewForm);
+      details.appendChild(reviewSection);
+
+      reviewForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const submitter = event.submitter;
+        const action = submitter?.value;
+        const adminNotes = cleanText(notesInput.value);
+        saveMessage.textContent = "";
+        saveMessage.className = "manage-nominations-card__save-message";
+
+        if (!["approve", "reject"].includes(action)) {
+          saveMessage.className = "manage-nominations-card__save-message admin-error";
+          saveMessage.textContent = "Choose a valid review action.";
+          return;
+        }
+
+        approveButton.disabled = true;
+        rejectButton.disabled = true;
+        const originalApproveText = approveButton.textContent;
+        const originalRejectText = rejectButton.textContent;
+        submitter.textContent = action === "approve" ? "Approving..." : "Rejecting...";
+
+        try {
+          const contributionRef = doc(db, "placeContributions", record.id);
+          const payload = action === "approve"
+            ? {
+              ...buildApproveContributionUpdate({}, {
+                reviewedAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              }),
+              imagePermissionConfirmed: deleteField(),
+              submittedByUid: deleteField(),
+              submitterEmail: deleteField(),
+              submitterDisplayName: deleteField()
+            }
+            : buildRejectContributionUpdate({
+              reviewedByUid: ADMIN_UID,
+              adminNotes
+            }, {
+              reviewedAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            });
+
+          await updateDoc(contributionRef, payload);
+          contributionRecords = contributionRecords.filter((item) => item.id !== record.id);
+          renderContributionList();
+          setStatus(action === "approve"
+            ? "Contribution approved. It is now eligible for the public place page."
+            : "Contribution rejected and kept hidden from public display."
+          );
+        } catch (error) {
+          console.error("Failed to review place contribution:", error);
+          saveMessage.className = "manage-nominations-card__save-message admin-error";
+          saveMessage.textContent = "Could not save the review update. Check admin sign-in and Firestore rules.";
+        } finally {
+          approveButton.disabled = false;
+          rejectButton.disabled = false;
+          approveButton.textContent = originalApproveText;
+          rejectButton.textContent = originalRejectText;
+        }
+      });
+
+      card.appendChild(details);
+      return card;
+    }
+
+    function renderContributionList() {
+      const container = document.getElementById("managePlaceContributionsList");
+      if (!container) return;
+      container.textContent = "";
+
+      if (contributionRecords.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "admin-empty-state";
+        empty.textContent = "No submitted place contributions are waiting for review right now.";
+        container.appendChild(empty);
+        return;
+      }
+
+      contributionRecords.forEach((record) => {
+        container.appendChild(createContributionCard(record));
+      });
+    }
+
+    async function loadSubmittedContributions() {
+      setStatus("Loading submitted place contributions...");
+
+      try {
+        const snapshot = await getDocs(query(
+          collection(db, "placeContributions"),
+          where("contributionStatus", "==", "submitted")
+        ));
+
+        contributionRecords = snapshot.docs
+          .map((docSnap) => ({
+            id: docSnap.id,
+            ...docSnap.data()
+          }))
+          .sort((a, b) => getSortTimestamp(b) - getSortTimestamp(a));
+
+        renderContributionList();
+        setStatus(
+          contributionRecords.length === 0
+            ? "No submitted place contributions are waiting for review."
+            : `Loaded ${contributionRecords.length} submitted place contribution${contributionRecords.length === 1 ? "" : "s"}.`
+        );
+      } catch (error) {
+        console.error("Failed to load submitted place contributions:", error);
+        contributionRecords = [];
+        renderContributionList();
+        setStatus("Could not load submitted place contributions. Check admin sign-in and Firestore rules.", "error");
+      }
+    }
+
+    async function handleSignedInUser(user) {
+      const page = document.getElementById("managePlaceContributionsPage");
+
+      if (!user) {
+        if (page) page.hidden = true;
+        window.location.href = buildLoginUrl();
+        return;
+      }
+
+      if (user.uid !== ADMIN_UID) {
+        if (page) page.hidden = true;
+        setStatus("This page is restricted to the configured admin account.", "error");
+        await signOut(auth);
+        window.location.href = buildLoginUrl();
+        return;
+      }
+
+      if (page) page.hidden = false;
+      await loadSubmittedContributions();
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const signOutButton = document.getElementById("managePlaceContributionsSignOut");
+
+      authPersistenceReady.catch((error) => {
+        console.error("Could not enable admin auth persistence:", error);
+        setStatus("Could not prepare admin sign-in. Please refresh and try again.", "error");
+      });
+
+      onAuthStateChanged(auth, (user) => {
+        handleSignedInUser(user).catch((error) => {
+          console.error("Admin session handling failed:", error);
+          setStatus("Could not verify admin access. Please try again.", "error");
+        });
+      });
+
+      signOutButton?.addEventListener("click", async () => {
+        signOutButton.disabled = true;
+        try {
+          await signOut(auth);
+          window.location.href = "admin-login.html";
+        } catch (error) {
+          console.error("Sign out failed:", error);
+          signOutButton.disabled = false;
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
+    <nav class="menu-bar" aria-label="Admin navigation">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="news.html" class="nav-link">News</a>
+      <a href="history.html" class="nav-link">History</a>
+      <a href="map.html" class="nav-link">Map</a>
+      <a href="search.html" class="nav-link">Places</a>
+      <a href="export.html" class="nav-link">Open Data</a>
+    </nav>
+  </header>
+
+  <main class="admin-page admin-page--wide">
+    <section class="admin-card admin-card--wide" id="managePlaceContributionsPage" aria-labelledby="managePlaceContributionsTitle" hidden>
+      <div class="admin-toolbar">
+        <p id="managePlaceContributionsStatus" role="status" aria-live="polite">Checking admin sign-in...</p>
+        <a href="admin.html">Admin Dashboard</a>
+        <a href="manage-nominations.html">Manage Nominations</a>
+        <button id="managePlaceContributionsSignOut" type="button">Sign Out</button>
+      </div>
+
+      <h2 id="managePlaceContributionsTitle">Manage Place Contributions</h2>
+      <p class="admin-readonly-note">This review page is for signed-in comments and photo submissions tied to existing public place records. Submitted and rejected records stay hidden publicly. Approval converts the record into the public-safe shape already used by the place page.</p>
+      <div id="managePlaceContributionsList" class="my-nominations-list" aria-live="polite"></div>
+    </section>
+  </main>
+</body>
+</html>

@@ -34,6 +34,7 @@ const PRIVATE_PLACE_CONTRIBUTION_FIELDS = Object.freeze([
   "submittedByUid",
   "submitterEmail",
   "submitterDisplayName",
+  "reviewedByUid",
   "adminNotes",
   "reviewHistory"
 ]);
@@ -47,6 +48,7 @@ const FIELD_LIMITS = Object.freeze({
   imageRightsStatus: 64,
   submitterEmail: 254,
   submitterDisplayName: 120,
+  reviewedByUid: 120,
   adminNotes: 5000
 });
 
@@ -236,9 +238,12 @@ function buildContributionReviewUpdatePayload(nextStatus, values = {}, timestamp
     payload.updatedAt = timestamps.updatedAt;
   }
 
-  addOptionalText(payload, "adminNotes", normalized.adminNotes);
+  if (normalizedStatus === "rejected") {
+    addOptionalText(payload, "reviewedByUid", normalized.reviewedByUid);
+    addOptionalText(payload, "adminNotes", normalized.adminNotes);
+  }
 
-  if (Array.isArray(values.reviewHistory)) {
+  if (normalizedStatus === "rejected" && Array.isArray(values.reviewHistory)) {
     payload.reviewHistory = values.reviewHistory;
   }
 

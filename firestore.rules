@@ -275,6 +275,145 @@ service cloud.firestore {
         ]);
     }
 
+    function requestHasPublicPlaceContributionFields() {
+      return request.resource.data.keys().hasOnly([
+          'placeId',
+          'placeTitleSnapshot',
+          'contributionText',
+          'imageUrl',
+          'imageCaption',
+          'imageCredit',
+          'imageRightsStatus',
+          'contributionStatus',
+          'createdAt',
+          'updatedAt',
+          'reviewedAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'placeId',
+          'contributionStatus'
+        ]);
+    }
+
+    function isAllowedContributionImageRightsStatus(value) {
+      return value in [
+        'own-work',
+        'permission-granted',
+        'public-domain-or-open-license',
+        'public-web-reference',
+        'unknown-needs-review'
+      ];
+    }
+
+    function hasValidPlaceContributionCreateFields() {
+      return request.resource.data.keys().hasOnly([
+          'placeId',
+          'placeTitleSnapshot',
+          'contributionText',
+          'imageUrl',
+          'imageCaption',
+          'imageCredit',
+          'imageRightsStatus',
+          'imagePermissionConfirmed',
+          'submittedByUid',
+          'submitterEmail',
+          'submitterDisplayName',
+          'contributionStatus',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'placeId',
+          'submittedByUid',
+          'contributionStatus'
+        ]);
+    }
+
+    function hasContributionTextOrImageUrl() {
+      return (
+          hasField('contributionText')
+          && request.resource.data.contributionText is string
+          && request.resource.data.contributionText.size() > 0
+        )
+        || (
+          hasField('imageUrl')
+          && request.resource.data.imageUrl is string
+          && request.resource.data.imageUrl.size() > 0
+        );
+    }
+
+    function isValidPlaceContributionCreate() {
+      return request.auth != null
+        && hasValidPlaceContributionCreateFields()
+        && isTrimmedString(request.resource.data.placeId, 160)
+        && request.resource.data.submittedByUid == request.auth.uid
+        && request.resource.data.contributionStatus == 'submitted'
+        && hasContributionTextOrImageUrl()
+        && isOptionalString('placeTitleSnapshot', 160)
+        && isOptionalString('contributionText', 5000)
+        && isOptionalHttpsEvidenceUrl('imageUrl', 1000)
+        && isOptionalString('imageCaption', 300)
+        && isOptionalString('imageCredit', 300)
+        && (
+          !hasField('imageRightsStatus')
+          || request.resource.data.imageRightsStatus == null
+          || (
+            request.resource.data.imageRightsStatus is string
+            && request.resource.data.imageRightsStatus.size() <= 64
+            && isAllowedContributionImageRightsStatus(request.resource.data.imageRightsStatus)
+          )
+        )
+        && (
+          !hasField('imagePermissionConfirmed')
+          || request.resource.data.imagePermissionConfirmed == null
+          || request.resource.data.imagePermissionConfirmed is bool
+        )
+        && isOptionalString('submitterDisplayName', 120)
+        && (
+          !hasField('submitterEmail')
+          || request.resource.data.submitterEmail == null
+          || isValidEmailString(request.resource.data.submitterEmail, 254)
+        )
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+    }
+
+    function isValidPlaceContributionApproveUpdate() {
+      return isAdmin()
+        && resource.data.contributionStatus == 'submitted'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'contributionStatus',
+          'reviewedAt',
+          'updatedAt',
+          'imagePermissionConfirmed',
+          'submittedByUid',
+          'submitterEmail',
+          'submitterDisplayName'
+        ])
+        && request.resource.data.contributionStatus == 'approved'
+        && request.resource.data.reviewedAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && requestHasPublicPlaceContributionFields();
+    }
+
+    function isValidPlaceContributionRejectUpdate() {
+      return isAdmin()
+        && resource.data.contributionStatus == 'submitted'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'contributionStatus',
+          'reviewedAt',
+          'reviewedByUid',
+          'updatedAt',
+          'adminNotes'
+        ])
+        && request.resource.data.contributionStatus == 'rejected'
+        && request.resource.data.reviewedAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && isTrimmedString(request.resource.data.reviewedByUid, 120)
+        && request.resource.data.reviewedByUid == request.auth.uid
+        && isOptionalString('adminNotes', 5000);
+    }
+
     match /news/{doc=**} {
       allow read: if true;
       allow write: if isAdmin();
@@ -292,8 +431,15 @@ service cloud.firestore {
 
     match /placeContributions/{contributionId} {
       allow read: if resource.data.contributionStatus == 'approved'
-        && hasPublicPlaceContributionFields();
-      allow write: if false;
+        && hasPublicPlaceContributionFields()
+        || (
+          isAdmin()
+          && resource.data.contributionStatus in ['submitted', 'rejected']
+        );
+      allow create: if isValidPlaceContributionCreate();
+      allow update: if isValidPlaceContributionApproveUpdate()
+        || isValidPlaceContributionRejectUpdate();
+      allow delete: if false;
     }
 
     match /placeNominations/{nominationId} {
