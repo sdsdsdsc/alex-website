@@ -10,10 +10,14 @@
   <script type="module">
     import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import {
+      browserLocalPersistence,
       getAuth,
       onAuthStateChanged,
-      signInWithEmailAndPassword
+      setPersistence,
+      signInWithEmailAndPassword,
+      signOut
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getSafeNextPath, isConfiguredAdmin } from "./admin-auth.mjs";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -24,21 +28,15 @@
       appId: "1:214395622099:web:44f99a181741caf3117a26"
     };
 
+    const ADMIN_UID = "VT3I9KMktMXsdJeyYBye54Sgnqu2";
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const authPersistenceReady = setPersistence(auth, browserLocalPersistence);
+    let isClearingNonAdminSession = false;
 
     function getNextPath() {
       const params = new URLSearchParams(window.location.search);
-      const next = params.get("next") || "admin.html";
-      try {
-        const target = new URL(next, window.location.href);
-        if (target.origin === window.location.origin) {
-          return `${target.pathname}${target.search}${target.hash}`;
-        }
-      } catch (err) {
-        console.warn("Invalid next URL ignored:", next);
-      }
-      return "admin.html";
+      return getSafeNextPath(params.get("next"), window.location.href, "admin.html");
     }
 
     window.addEventListener("DOMContentLoaded", () => {
@@ -48,10 +46,44 @@
       const submitButton = document.getElementById("adminLoginButton");
       const errorEl = document.getElementById("adminLoginError");
 
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          window.location.href = getNextPath();
+      async function handleAuthStateChange(user) {
+        if (!user) {
+          if (isClearingNonAdminSession && errorEl) {
+            errorEl.textContent = "The previous non-admin session was signed out. Please sign in with the configured admin account.";
+          }
+          isClearingNonAdminSession = false;
+          return;
         }
+
+        if (!isConfiguredAdmin(user, ADMIN_UID)) {
+          if (isClearingNonAdminSession) return;
+          isClearingNonAdminSession = true;
+          if (errorEl) {
+            errorEl.textContent = "This page is restricted to the configured admin account. Signing out the current session now.";
+          }
+          emailInput.value = "";
+          passwordInput.value = "";
+          await signOut(auth);
+          return;
+        }
+
+        window.location.href = getNextPath();
+      }
+
+      authPersistenceReady.catch((err) => {
+        console.error("Could not enable admin auth persistence:", err);
+        if (errorEl) {
+          errorEl.textContent = "Could not prepare admin sign-in. Please refresh and try again.";
+        }
+      });
+
+      onAuthStateChanged(auth, (user) => {
+        handleAuthStateChange(user).catch((err) => {
+          console.error("Admin auth state handling failed:", err);
+          if (errorEl) {
+            errorEl.textContent = "Could not verify the admin session. Please try again.";
+          }
+        });
       });
 
       form?.addEventListener("submit", async (event) => {
@@ -60,6 +92,7 @@
         if (submitButton) submitButton.disabled = true;
 
         try {
+          await authPersistenceReady;
           await signInWithEmailAndPassword(
             auth,
             emailInput.value.trim(),
@@ -99,7 +132,7 @@
         <label for="adminPassword">Password</label>
         <input id="adminPassword" name="password" type="password" autocomplete="current-password" required>
 
-        <p id="adminLoginError" class="admin-error" role="alert" aria-live="polite"></p>
+        <p id="adminLoginError" class="admin-error" role="status" aria-live="polite"></p>
         <button id="adminLoginButton" type="submit">Sign In</button>
       </form>
     </section>

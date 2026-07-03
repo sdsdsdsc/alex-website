@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "test": "npm run test:payload && npm run test:promotion && npm run test:place-contributions && npm run test:rules",
+    "test": "npm run test:admin-auth && npm run test:payload && npm run test:promotion && npm run test:place-contributions && npm run test:rules",
+    "test:admin-auth": "node --test tests/admin-auth.test.mjs",
     "test:browser": "./node_modules/.bin/playwright test",
     "test:payload": "node --test tests/payload-export.test.mjs",
     "test:place-contributions": "node --test tests/place-contributions.test.mjs",

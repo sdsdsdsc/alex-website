@@ -49,26 +49,30 @@ Before review, both submitted markers were absent from the public place page.
 
 ## Admin Read Queue Result
 
-The admin review page was reached manually after adding the temporary fallback admin sign-in page:
+After the admin auth/session fix and a Hosting preview redeploy, the deployed `admin-login.html` flow successfully redirected into:
 
-- `admin-login-basic.html?next=/manage-place-contributions.html`
+- `manage-place-contributions.html`
 
-The manually signed-in admin session showed two submitted place contributions in `manage-place-contributions.html`.
+The manually signed-in admin session showed submitted place contributions in the review queue.
 
-The two submitted test documents were also verified through authenticated Firestore REST before review:
+Two reviewable submitted documents were used during live verification:
 
-- `TO5sKsjK3JDo6P2hDXZv`, status `submitted`
-- `uxk5GRAT7q9rrJFPuB3p`, status `submitted`
+- `yBocmtTTBjOjau6zTu2F`
+- `UKv50fRoe5VXntOhFMRv`
 
 ## Approve And Reject Result
 
-The approve and reject state transitions were applied through authenticated Firestore REST because the browser-controlled deployed preview session redirected back to `admin-login.html` and could not stay authenticated for automated admin UI button clicks.
+The final verification pass used the actual deployed admin UI buttons in `manage-place-contributions.html`.
 
 Applied review outcomes:
 
-- Approved: `TO5sKsjK3JDo6P2hDXZv`
-- Rejected: `uxk5GRAT7q9rrJFPuB3p`
-- Review timestamp: `2026-07-03T02:30:17.031Z`
+- Approved through the real `Approve contribution` button: `yBocmtTTBjOjau6zTu2F`
+- Rejected through the real `Reject contribution` button: `UKv50fRoe5VXntOhFMRv`
+
+Observed admin UI status messages:
+
+- `Contribution approved. It is now eligible for the public place page.`
+- `Contribution rejected and kept hidden from public display.`
 
 Public place page verification after review:
 
@@ -76,47 +80,31 @@ Public place page verification after review:
 - The rejected contribution stayed hidden publicly.
 - The public contribution count showed `1 approved community contribution`.
 - Private submitter and moderation fields did not display publicly.
-- The private reject note did not display publicly.
+- Private moderation/reject details did not display publicly.
 
 Private terms checked as absent from public page text:
 
+- `alex.home@gmail.com`
+- `VT3I9KMktMXsdJeyYBye54Sgnqu2`
 - `submitterEmail`
-- `submitterDisplayName`
 - `submittedByUid`
 - `reviewedByUid`
 - `adminNotes`
 - `reviewHistory`
-- `Codex PR35 live reject verification`
-
-## Admin UI Button Click Caveat
-
-Actual clicking of `Approve contribution` and `Reject contribution` inside `manage-place-contributions.html` remains the only manual caveat.
-
-Final automated browser check for this slice opened:
-
-- `manage-place-contributions.html`
-
-Result:
-
-- The deployed preview redirected to `admin-login.html?next=%2Fmanage-place-contributions.html`.
-- No fresh test documents were created for UI-button testing after that redirect.
-- No code changes were made for this caveat.
+- `Codex UI reject test 2026-07-03T07:23:02.400Z`
 
 ## Cleanup Result
 
-Both temporary Firestore test documents were deleted after verification:
+Both temporary Firestore test documents used in the final live UI verification were deleted after verification:
 
-- `TO5sKsjK3JDo6P2hDXZv`
-- `uxk5GRAT7q9rrJFPuB3p`
+- `yBocmtTTBjOjau6zTu2F`
+- `UKv50fRoe5VXntOhFMRv`
 
-Cleanup was confirmed in two ways:
-
-- Authenticated Firestore REST query found no remaining `Codex PR35 live` marked test documents for `jiangxi-test-community-square`.
-- Reloaded public `place.html` showed neither test marker and returned to `No approved community contributions yet`.
+Cleanup was confirmed by deleting both documents directly after the public verification pass.
 
 ## Conclusion
 
-Phase 11C live verification mostly passed.
+Phase 11C live verification passed.
 
 Verified successfully:
 
@@ -128,7 +116,5 @@ Verified successfully:
 - rejected contribution public invisibility
 - public stripping of private submitter and moderation fields
 - cleanup of temporary test documents
-
-Remaining caveat:
-
-- Admin review page button clicks were not automated in the deployed preview because the browser-controlled session could not remain authenticated on the preview origin.
+- deployed admin UI approve button
+- deployed admin UI reject button

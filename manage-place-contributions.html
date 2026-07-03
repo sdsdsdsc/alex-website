@@ -10,8 +10,10 @@
   <script type="module">
     import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import {
+      browserLocalPersistence,
       getAuth,
       onAuthStateChanged,
+      setPersistence,
       signOut
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import {
@@ -43,6 +45,7 @@
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const authPersistenceReady = setPersistence(auth, browserLocalPersistence);
     let contributionRecords = [];
 
     function buildLoginUrl() {
@@ -439,21 +442,40 @@
       }
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
+    async function handleSignedInUser(user) {
       const page = document.getElementById("managePlaceContributionsPage");
+
+      if (!user) {
+        if (page) page.hidden = true;
+        window.location.href = buildLoginUrl();
+        return;
+      }
+
+      if (user.uid !== ADMIN_UID) {
+        if (page) page.hidden = true;
+        setStatus("This page is restricted to the configured admin account.", "error");
+        await signOut(auth);
+        window.location.href = buildLoginUrl();
+        return;
+      }
+
+      if (page) page.hidden = false;
+      await loadSubmittedContributions();
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
       const signOutButton = document.getElementById("managePlaceContributionsSignOut");
 
+      authPersistenceReady.catch((error) => {
+        console.error("Could not enable admin auth persistence:", error);
+        setStatus("Could not prepare admin sign-in. Please refresh and try again.", "error");
+      });
+
       onAuthStateChanged(auth, (user) => {
-        if (!user) {
-          window.location.href = buildLoginUrl();
-          return;
-        }
-        if (user.uid !== ADMIN_UID) {
-          window.location.href = buildLoginUrl();
-          return;
-        }
-        if (page) page.hidden = false;
-        loadSubmittedContributions();
+        handleSignedInUser(user).catch((error) => {
+          console.error("Admin session handling failed:", error);
+          setStatus("Could not verify admin access. Please try again.", "error");
+        });
       });
 
       signOutButton?.addEventListener("click", async () => {
