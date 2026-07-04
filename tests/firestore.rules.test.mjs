@@ -542,7 +542,7 @@ test("uploaded private evidence metadata is accepted for the signed-in owner", a
 });
 
 test("uploaded private evidence metadata is accepted with client server timestamp transforms", async () => {
-  await assertSucceeds(addDoc(
+  const docRef = await assertSucceeds(addDoc(
     collection(ownerFirestore(), "placeNominations"),
     validNomination({
       title: "PR36 Phase13A live upload test 2026-07-03",
@@ -566,6 +566,8 @@ test("uploaded private evidence metadata is accepted with client server timestam
       submittedAt: serverTimestamp()
     })
   ));
+  const storedDoc = await assertSucceeds(getDoc(docRef));
+  assert.equal(storedDoc.data().evidenceUploadedAt instanceof Timestamp, true);
 });
 
 test("evidence URL is treated as an optional review string rather than a fetchable URL gate", async () => {

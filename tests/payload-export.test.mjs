@@ -271,6 +271,22 @@ test("builds a private uploaded evidence metadata payload", () => {
   assertNoUndefined(payload);
 });
 
+test("preserves uploaded evidence timestamp sentinel objects", () => {
+  class TimestampSentinel {
+    constructor() {
+      this._methodName = "serverTimestamp";
+    }
+  }
+
+  const uploadedAt = new TimestampSentinel();
+  const payload = buildSubmittedUploadedEvidencePayload({
+    evidenceUploadedAt: uploadedAt
+  });
+
+  assert.equal(payload.evidenceUploadedAt, uploadedAt);
+  assert.equal(payload.evidenceUploadedAt._methodName, "serverTimestamp");
+});
+
 test("rejects forged or unsafe uploaded evidence metadata", () => {
   assert.throws(() => {
     buildSubmittedUploadedEvidencePayload({

@@ -322,6 +322,11 @@ function stripPublicDisallowedNominationFields(value) {
     return value;
   }
 
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) {
+    return value;
+  }
+
   return Object.entries(value).reduce((clean, [key, entry]) => {
     if (PUBLIC_DISALLOWED_NOMINATION_FIELDS.includes(key)) {
       return clean;
