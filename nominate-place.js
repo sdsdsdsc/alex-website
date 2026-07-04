@@ -19,7 +19,7 @@ import {
   buildNominationDebugSummary,
   buildNominationOwnershipMetadata,
   buildSubmittedNominationPayload
-} from "./heritage-engine/nominations.js?v=2026-07-03-evidence-upload-ui";
+} from "./heritage-engine/nominations.js?v=2026-07-04-evidence-upload-timestamp-fix";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
