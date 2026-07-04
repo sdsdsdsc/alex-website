@@ -10,6 +10,7 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
+  deleteObject,
   getStorage,
   ref as storageRef,
   uploadBytes
@@ -230,6 +231,11 @@ async function uploadEvidenceFile(uploadPlan) {
   });
 }
 
+async function deleteUploadedEvidenceFile(uploadPlan) {
+  if (!uploadPlan?.storagePath) return;
+  await deleteObject(storageRef(storage, uploadPlan.storagePath));
+}
+
 const form = document.getElementById("nominationForm");
 const submitButton = document.getElementById("nominationSubmitButton");
 const status = document.getElementById("nominationFormStatus");
@@ -349,11 +355,13 @@ form?.addEventListener("submit", async (event) => {
 
   submitButton.disabled = true;
   submitButton.textContent = "Submitting...";
+  let uploadSucceeded = false;
 
   try {
     if (uploadPlan) {
       showUploadStatus("Uploading evidence image...");
       await uploadEvidenceFile(uploadPlan);
+      uploadSucceeded = true;
       showUploadStatus("Upload complete.", "success");
     }
 
@@ -367,16 +375,41 @@ form?.addEventListener("submit", async (event) => {
       "success"
     );
   } catch (err) {
-    console.error("Nomination submission failed:", {
+    let uploadCleanup = null;
+    const isStorageError = Boolean(err?.code?.startsWith("storage/"));
+    if (uploadSucceeded && uploadPlan && !isStorageError) {
+      try {
+        await deleteUploadedEvidenceFile(uploadPlan);
+        uploadCleanup = "deleted-uploaded-evidence";
+        showUploadStatus("Upload removed after nomination submission failed.", "error");
+      } catch (cleanupErr) {
+        uploadCleanup = "cleanup-failed";
+        showUploadStatus("Upload cleanup failed after nomination submission failed.", "error");
+        console.error("Nomination evidence cleanup failed:", JSON.stringify({
+          code: cleanupErr?.code || "",
+          message: cleanupErr?.message || "",
+          storagePath: uploadPlan.storagePath
+        }));
+      }
+    }
+
+    const failureSummary = {
       code: err?.code || "",
       message: err?.message || "",
-      payloadSummary: safePayloadLog
-    });
+      payloadSummary: safePayloadLog,
+      storagePath: uploadPlan?.storagePath || "",
+      uploadCleanup
+    };
+    console.error("Nomination submission failed:", JSON.stringify(failureSummary));
     showStatus(
       status,
-      err?.code?.startsWith("storage/")
+      isStorageError
         ? "Upload failed. Please check the selected image and try again."
-        : "Sorry, the nomination could not be submitted. Please check the form and try again.",
+        : `Sorry, the nomination could not be submitted (${err?.code || "unknown error"}). ${
+          uploadCleanup === "deleted-uploaded-evidence"
+            ? "The uploaded image was removed; please try again."
+            : "Please check the form and try again."
+        }`,
       "error"
     );
   } finally {

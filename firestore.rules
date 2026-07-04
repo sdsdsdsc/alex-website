@@ -49,37 +49,34 @@ service cloud.firestore {
     }
 
     function isOptionalString(fieldName, maxLength) {
-      return !hasField(fieldName)
-        || request.resource.data[fieldName] == null
+      return request.resource.data.get(fieldName, null) == null
         || (
-          request.resource.data[fieldName] is string
-          && request.resource.data[fieldName].size() <= maxLength
+          request.resource.data.get(fieldName, null) is string
+          && request.resource.data.get(fieldName, '').size() <= maxLength
         );
     }
 
     function isOptionalHttpsEvidenceUrl(fieldName, maxLength) {
-      return !hasField(fieldName)
-        || request.resource.data[fieldName] == null
+      return request.resource.data.get(fieldName, null) == null
         || (
-          request.resource.data[fieldName] is string
-          && request.resource.data[fieldName].size() > 0
-          && request.resource.data[fieldName].size() <= maxLength
-          && request.resource.data[fieldName].matches('^https://[^\\s/]+\\.[^\\s/]+[^\\s]*$')
+          request.resource.data.get(fieldName, null) is string
+          && request.resource.data.get(fieldName, '').size() > 0
+          && request.resource.data.get(fieldName, '').size() <= maxLength
+          && request.resource.data.get(fieldName, '').matches('^https://[^\\s/]+\\.[^\\s/]+[^\\s]*$')
         );
     }
 
     function isOptionalNumber(fieldName) {
-  return !hasField(fieldName)
-    || request.resource.data[fieldName] == null
-    || request.resource.data[fieldName] is int
-    || request.resource.data[fieldName] is float
-    || (
-      request.resource.data[fieldName] is string
-      && request.resource.data[fieldName].size() > 0
-      && request.resource.data[fieldName].size() <= 40
-      && request.resource.data[fieldName].matches('^-?[0-9]+(\\.[0-9]+)?$')
-       );
-   }
+      return request.resource.data.get(fieldName, null) == null
+        || request.resource.data.get(fieldName, null) is int
+        || request.resource.data.get(fieldName, null) is float
+        || (
+          request.resource.data.get(fieldName, null) is string
+          && request.resource.data.get(fieldName, '').size() > 0
+          && request.resource.data.get(fieldName, '').size() <= 40
+          && request.resource.data.get(fieldName, '').matches('^-?[0-9]+(\\.[0-9]+)?$')
+        );
+    }
 
     function hasUploadedEvidencePath() {
       return hasField('evidenceStoragePath')
@@ -88,10 +85,9 @@ service cloud.firestore {
     }
 
     function isValidUploadedEvidenceUid() {
-      return !hasField('evidenceUploadedByUid')
-        || request.resource.data.evidenceUploadedByUid == null
-        || request.resource.data.evidenceUploadedByUid == ''
-        || request.resource.data.evidenceUploadedByUid == request.auth.uid;
+      return request.resource.data.get('evidenceUploadedByUid', null) == null
+        || request.resource.data.get('evidenceUploadedByUid', '') == ''
+        || request.resource.data.get('evidenceUploadedByUid', '') == request.auth.uid;
     }
 
     function isValidUploadedEvidenceMetadata() {
@@ -200,44 +196,16 @@ service cloud.firestore {
         && request.resource.data.termsAccepted == true
         && request.resource.data.privacyAccepted == true
         && request.resource.data.nominationStatus == 'submitted'
-        && isOptionalString('assetType', 100)
-        && isOptionalString('area', 160)
-        && isOptionalNumber('lat')
-        && isOptionalNumber('lng')
-        && isOptionalString('condition', 1500)
-        && isOptionalString('communityUse', 1500)
-        && isOptionalString('sourceReference', 2000)
-        && isOptionalString('evidenceImageUrl', 1000)
-        && isOptionalString('evidenceImageCaption', 300)
-        && isOptionalString('evidenceCaption', 300)
-        && isOptionalString('evidenceSourceCredit', 300)
-        && isOptionalString('evidenceRightsStatus', 80)
         && (
-          !hasField('evidencePermissionConfirmed')
-          || request.resource.data.evidencePermissionConfirmed == null
-          || request.resource.data.evidencePermissionConfirmed is bool
+          request.resource.data.get('evidencePermissionConfirmed', null) == null
+          || request.resource.data.get('evidencePermissionConfirmed', null) is bool
         )
         && (
-          !hasField('evidenceVisibility')
-          || request.resource.data.evidenceVisibility == null
-          || request.resource.data.evidenceVisibility == ''
-          || request.resource.data.evidenceVisibility == 'nomination-private'
+          request.resource.data.get('evidenceVisibility', null) == null
+          || request.resource.data.get('evidenceVisibility', '') == ''
+          || request.resource.data.get('evidenceVisibility', '') == 'nomination-private'
         )
-        && isValidUploadedEvidenceMetadata()
-        && isOptionalString('photoUrl', 2048)
-        && isOptionalString('photoDescription', 1000)
-        && isOptionalString('nominatorDisplayName', 120)
-        && isOptionalString('organisationName', 180)
-        && isOptionalString('submitterDisplayName', 120)
-        && (
-          !hasField('submittedOnBehalfOf')
-          || request.resource.data.submittedOnBehalfOf == null
-          || request.resource.data.submittedOnBehalfOf in [
-            'self',
-            'someone-else',
-            'organisation'
-          ]
-        );
+        && isValidUploadedEvidenceMetadata();
     }
 
     function isValidNominationReviewStatus(value) {

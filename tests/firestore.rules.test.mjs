@@ -9,12 +9,14 @@ import {
 } from "@firebase/rules-unit-testing";
 import {
   Timestamp,
+  addDoc,
   collection,
   deleteField,
   doc,
   getDoc,
   getDocs,
   query,
+  serverTimestamp,
   setDoc,
   updateDoc,
   where
@@ -535,6 +537,33 @@ test("uploaded private evidence metadata is accepted for the signed-in owner", a
       evidenceFileSize: 123456,
       evidenceUploadedAt: timestamp(4),
       evidenceUploadedByUid: OWNER_UID
+    })
+  ));
+});
+
+test("uploaded private evidence metadata is accepted with client server timestamp transforms", async () => {
+  await assertSucceeds(addDoc(
+    collection(ownerFirestore(), "placeNominations"),
+    validNomination({
+      title: "PR36 Phase13A live upload test 2026-07-03",
+      area: "Phase 13A preview test area",
+      condition: "Temporary test condition.",
+      communityUse: "Temporary test community use.",
+      sourceReference: "PR36 Phase13A live upload test 2026-07-03 test source reference.",
+      evidenceImageCaption: "PR36 Phase13A live upload test 2026-07-03 test image caption",
+      evidenceSourceCredit: "PR36 Phase13A live upload test 2026-07-03 test image credit",
+      evidenceRightsStatus: "own-work",
+      evidencePermissionConfirmed: true,
+      evidenceVisibility: "nomination-private",
+      evidenceStoragePath: `nomination-evidence/${OWNER_UID}/0449c66d-e115-46c6-9239-470d3936f236/a6cff275-f240-45df-8f43-a39fb8400967-AdobeStock_1513585232.jpeg`,
+      evidenceFileName: "AdobeStock_1513585232.jpeg",
+      evidenceFileContentType: "image/jpeg",
+      evidenceFileSize: 493406,
+      evidenceUploadedAt: serverTimestamp(),
+      evidenceUploadedByUid: OWNER_UID,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      submittedAt: serverTimestamp()
     })
   ));
 });
