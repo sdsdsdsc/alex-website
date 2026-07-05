@@ -8,7 +8,7 @@
   <title>Nominate a Community Place | Alex's Photo Board</title>
   <link rel="stylesheet" href="style.css">
   <script type="module" src="public-nav.js" defer></script>
-  <script type="module" src="nominate-place.js?v=2026-06-28-evidence-metadata-cleanup" defer></script>
+  <script type="module" src="nominate-place.js?v=2026-07-04-evidence-upload-timestamp-fix" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#nominatePlaceMain">Skip to nomination form</a>
@@ -49,7 +49,7 @@
       <section class="nomination-intro" aria-labelledby="beforeNominateTitle">
         <h3 id="beforeNominateTitle">What you can nominate</h3>
         <p>This form is for suggesting community-valued places such as public spaces, buildings, parks, streets, routes, landmarks, public art, industrial heritage, archaeological features, landscapes, or places connected to local memory.</p>
-        <p>Please explain the place clearly and provide evidence of its local significance where possible. Do not include private or sensitive personal information. Photo upload will be considered in a later phase.</p>
+        <p>Please explain the place clearly and provide evidence of its local significance where possible. Do not include private or sensitive personal information.</p>
       </section>
 
       <section class="nomination-auth-note nomination-auth-note--warning" id="nominationAuthRequired" aria-labelledby="nominationAuthRequiredTitle" hidden>
@@ -181,8 +181,18 @@
             <label for="nominationEvidenceImageUrl">Photo / evidence URL</label>
             <input id="nominationEvidenceImageUrl" name="evidenceImageUrl" type="url" maxlength="1000" placeholder="https://example.org/photo.jpg" aria-describedby="nominationEvidenceImageUrlHelp">
             <div class="nomination-upload-placeholder" role="note">
-              <strong>Photo upload will be added in a later phase.</strong>
-              <span id="nominationEvidenceImageUrlHelp">For now, you may provide an optional public HTTPS image URL. The site stores the URL only and does not fetch or upload the image.</span>
+              <strong>Evidence URL remains optional.</strong>
+              <span id="nominationEvidenceImageUrlHelp">You may provide a public HTTPS image URL. The URL is stored for review only unless a later approved workflow publishes it.</span>
+            </div>
+          </div>
+
+          <div class="nomination-field nomination-field--full">
+            <label for="nominationEvidenceFile">Upload local evidence image <span>(optional)</span></label>
+            <input id="nominationEvidenceFile" name="evidenceFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" aria-describedby="nominationEvidenceFileHelp nominationEvidenceUploadStatus">
+            <div class="nomination-upload-placeholder" role="note">
+              <strong>Private review upload.</strong>
+              <span id="nominationEvidenceFileHelp">Choose one JPEG, PNG, WebP, or GIF image up to 5 MB. Uploaded evidence is stored privately for admin review and is not displayed publicly.</span>
+              <span id="nominationEvidenceUploadStatus" class="nomination-upload-status" role="status" aria-live="polite">No file selected.</span>
             </div>
           </div>
 
@@ -216,12 +226,12 @@
           <div class="nomination-field nomination-field--full">
             <label class="public-auth-checkbox">
               <input id="nominationEvidencePermissionConfirmed" name="evidencePermissionConfirmed" type="checkbox">
-              <span>I understand I should only provide evidence links that I created, have permission to share, or can clearly cite as a public reference.</span>
+              <span>I understand I should only provide evidence files or links that I created, have permission to share, or can clearly cite as a public reference.</span>
             </label>
           </div>
 
           <div class="nomination-field nomination-field--full">
-            <p class="nomination-field__help">This URL is stored with the nomination for review. It is not uploaded by the site and is not included in the public open-data export unless a later approved workflow says so.</p>
+            <p class="nomination-field__help">Evidence is stored with the nomination for review. It is not included in the public open-data export unless a later approved workflow says so.</p>
           </div>
         </fieldset>
 

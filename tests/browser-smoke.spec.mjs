@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 const APP_ORIGIN = "http://127.0.0.1:4173";
+const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
 const SMOKE_PAGES = [
   {
     path: "/index.html",
@@ -86,3 +87,14 @@ for (const smokePage of SMOKE_PAGES) {
     expect(appConsoleErrors, `Unexpected console errors on ${smokePage.path}`).toEqual([]);
   });
 }
+
+test("nomination upload modules use the current cache-busting version", async ({ page }) => {
+  await page.goto("/nominate-place.html", { waitUntil: "domcontentloaded" });
+  const scriptSrc = await page.locator("script[src^='nominate-place.js']").getAttribute("src");
+  expect(scriptSrc).toBe(`nominate-place.js?v=${NOMINATION_UPLOAD_MODULE_VERSION}`);
+
+  const response = await page.request.get(`/nominate-place.js?v=${NOMINATION_UPLOAD_MODULE_VERSION}`);
+  expect(response.ok()).toBeTruthy();
+  const scriptText = await response.text();
+  expect(scriptText).toContain(`./heritage-engine/nominations.js?v=${NOMINATION_UPLOAD_MODULE_VERSION}`);
+});

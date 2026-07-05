@@ -26,6 +26,7 @@ const publicExport = await import(pathToFileURL(path.join(tempEngineRoot, "expor
 const {
   EVIDENCE_RIGHTS_STATUSES,
   NOMINATION_PRIVATE_EVIDENCE_VISIBILITY,
+  UPLOADED_EVIDENCE_FIELDS,
   buildNominationDebugSummary,
   buildNominationOwnershipMetadata,
   buildSubmittedNominationPayload,
@@ -119,6 +120,28 @@ function buildSubmittedEvidencePayload(overrides = {}, ownershipOverrides = {}) 
     evidenceSourceCredit: "Photo by nominator",
     evidenceRightsStatus: "public-web-reference",
     evidencePermissionConfirmed: true,
+    ...overrides
+  }), {
+    createdAt: "created",
+    updatedAt: "updated",
+    submittedAt: "submitted",
+    ownershipMetadata: buildSignedInOwnership(ownershipOverrides)
+  });
+}
+
+function buildSubmittedUploadedEvidencePayload(overrides = {}, ownershipOverrides = {}) {
+  return buildSubmittedNominationPayload(buildValidNominationValues({
+    evidenceImageCaption: "South elevation",
+    evidenceSourceCredit: "Photo by nominator",
+    evidenceRightsStatus: "permission-granted",
+    evidencePermissionConfirmed: true,
+    evidenceStoragePath: "nomination-evidence/public-user-1/draft-001/photo-001.webp",
+    evidenceFileName: "photo-001.webp",
+    evidenceFileContentType: "image/webp",
+    evidenceFileSize: 123456,
+    evidenceUploadedAt: "uploaded",
+    evidenceUploadedByUid: "public-user-1",
+    evidenceVisibility: "nomination-private",
     ...overrides
   }), {
     createdAt: "created",
@@ -229,6 +252,66 @@ test("builds an evidence-url payload without blank caption or source-credit fiel
   assert.equal(Object.prototype.hasOwnProperty.call(payload, "evidenceImageCaption"), false);
   assert.equal(Object.prototype.hasOwnProperty.call(payload, "evidenceSourceCredit"), false);
   assertNoUndefined(payload);
+});
+
+test("builds a private uploaded evidence metadata payload", () => {
+  const payload = buildSubmittedUploadedEvidencePayload();
+
+  assert.equal(payload.evidenceStoragePath, "nomination-evidence/public-user-1/draft-001/photo-001.webp");
+  assert.equal(payload.evidenceFileName, "photo-001.webp");
+  assert.equal(payload.evidenceFileContentType, "image/webp");
+  assert.equal(payload.evidenceFileSize, 123456);
+  assert.equal(payload.evidenceUploadedAt, "uploaded");
+  assert.equal(payload.evidenceUploadedByUid, "public-user-1");
+  assert.equal(payload.evidenceImageCaption, "South elevation");
+  assert.equal(payload.evidenceSourceCredit, "Photo by nominator");
+  assert.equal(payload.evidenceRightsStatus, "permission-granted");
+  assert.equal(payload.evidencePermissionConfirmed, true);
+  assert.equal(payload.evidenceVisibility, NOMINATION_PRIVATE_EVIDENCE_VISIBILITY);
+  assertNoUndefined(payload);
+});
+
+test("preserves uploaded evidence timestamp sentinel objects", () => {
+  class TimestampSentinel {
+    constructor() {
+      this._methodName = "serverTimestamp";
+    }
+  }
+
+  const uploadedAt = new TimestampSentinel();
+  const payload = buildSubmittedUploadedEvidencePayload({
+    evidenceUploadedAt: uploadedAt
+  });
+
+  assert.equal(payload.evidenceUploadedAt, uploadedAt);
+  assert.equal(payload.evidenceUploadedAt._methodName, "serverTimestamp");
+});
+
+test("rejects forged or unsafe uploaded evidence metadata", () => {
+  assert.throws(() => {
+    buildSubmittedUploadedEvidencePayload({
+      evidenceStoragePath: "nomination-evidence/another-user/draft-001/photo-001.webp",
+      evidenceUploadedByUid: "another-user"
+    });
+  }, /Uploaded evidence submitter must match the signed-in account\./);
+
+  assert.throws(() => {
+    buildSubmittedUploadedEvidencePayload({
+      evidenceFileContentType: "application/pdf"
+    });
+  }, /Uploaded evidence file type must be jpeg, png, webp, or gif\./);
+
+  assert.throws(() => {
+    buildSubmittedUploadedEvidencePayload({
+      evidenceFileSize: 6 * 1024 * 1024
+    });
+  }, /Uploaded evidence file size is invalid\./);
+
+  assert.throws(() => {
+    buildSubmittedUploadedEvidencePayload({
+      evidenceVisibility: "public"
+    });
+  }, /Uploaded evidence must stay private for nomination review\./);
 });
 
 test("nomination debug summary reports clean evidence payload keys and field types", () => {
@@ -520,6 +603,12 @@ test("public validation and export helpers recursively strip unsafe private fiel
     evidenceRightsStatus: "permission-granted",
     evidencePermissionConfirmed: true,
     evidenceVisibility: "nomination-private",
+    evidenceStoragePath: "nomination-evidence/public-user-1/draft-001/photo-001.webp",
+    evidenceFileName: "photo-001.webp",
+    evidenceFileContentType: "image/webp",
+    evidenceFileSize: 123456,
+    evidenceUploadedAt: "uploaded",
+    evidenceUploadedByUid: "public-user-1",
     adminHistoricInterest: true,
     adminArchitecturalInterest: true,
     adminCommunityValue: true,
@@ -559,6 +648,7 @@ test("public validation and export helpers recursively strip unsafe private fiel
     "evidenceRightsStatus",
     "evidencePermissionConfirmed",
     "evidenceVisibility",
+    ...UPLOADED_EVIDENCE_FIELDS,
     "submittedByUid",
     "submitterEmail",
     "submitterDisplayName",
@@ -602,6 +692,7 @@ test("unsafe public field list covers the Phase 14B regression boundary", () => 
     "evidenceRightsStatus",
     "evidencePermissionConfirmed",
     "evidenceVisibility",
+    ...UPLOADED_EVIDENCE_FIELDS,
     "submittedByUid",
     "submitterEmail",
     "submitterDisplayName",
