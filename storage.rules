@@ -18,12 +18,27 @@ service firebase.storage {
         && request.resource.contentType.matches('image/(jpeg|png|webp|gif)');
     }
 
+    function isAllowedContributionImage() {
+      return request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp|gif)');
+    }
+
     match /nomination-evidence/{uid}/{draftId}/{fileId} {
       allow create, update: if isSignedIn()
         && request.auth.uid == uid
         && isAllowedNominationEvidenceImage();
       allow read: if isAdmin();
       allow delete: if false;
+    }
+
+    match /place-contribution-images/{uid}/{contributionDraftId}/{fileId} {
+      allow create: if isSignedIn()
+        && request.auth.uid == uid
+        && isAllowedContributionImage();
+      allow read: if isAdmin();
+      allow update, delete: if false;
     }
 
     match /{allPaths=**} {
