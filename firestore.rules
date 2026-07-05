@@ -328,6 +328,13 @@ service cloud.firestore {
           'imageCredit',
           'imageRightsStatus',
           'imagePermissionConfirmed',
+          'imageStoragePath',
+          'imageFileName',
+          'imageFileContentType',
+          'imageFileSize',
+          'imageUploadedAt',
+          'imageUploadedByUid',
+          'imageUploadVisibility',
           'submittedByUid',
           'submitterEmail',
           'submitterDisplayName',
@@ -342,7 +349,49 @@ service cloud.firestore {
         ]);
     }
 
-    function hasContributionTextOrImageUrl() {
+    function hasUploadedContributionImageMetadataField() {
+      return request.resource.data.keys().hasAny([
+        'imageStoragePath',
+        'imageFileName',
+        'imageFileContentType',
+        'imageFileSize',
+        'imageUploadedAt',
+        'imageUploadedByUid',
+        'imageUploadVisibility'
+      ]);
+    }
+
+    function hasUploadedContributionImagePath() {
+      return hasField('imageStoragePath')
+        && request.resource.data.imageStoragePath is string
+        && request.resource.data.imageStoragePath.size() > 0;
+    }
+
+    function isValidUploadedContributionImageMetadata() {
+      return !hasUploadedContributionImageMetadataField()
+        || (
+          hasUploadedContributionImagePath()
+          && request.resource.data.imageStoragePath.size() <= 1000
+          && request.resource.data.imageStoragePath.matches('^place-contribution-images/' + request.auth.uid + '/[^/]+/[^/]+$')
+          && request.resource.data.imageFileName is string
+          && request.resource.data.imageFileName.size() > 0
+          && request.resource.data.imageFileName.size() <= 255
+          && request.resource.data.imageFileContentType in [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+            'image/gif'
+          ]
+          && request.resource.data.imageFileSize is int
+          && request.resource.data.imageFileSize > 0
+          && request.resource.data.imageFileSize <= 5 * 1024 * 1024
+          && request.resource.data.imageUploadedAt is timestamp
+          && request.resource.data.imageUploadedByUid == request.auth.uid
+          && request.resource.data.imageUploadVisibility == 'contribution-private'
+        );
+    }
+
+    function hasContributionTextOrImage() {
       return (
           hasField('contributionText')
           && request.resource.data.contributionText is string
@@ -352,6 +401,21 @@ service cloud.firestore {
           hasField('imageUrl')
           && request.resource.data.imageUrl is string
           && request.resource.data.imageUrl.size() > 0
+        )
+        || (
+          hasUploadedContributionImagePath()
+          && isValidUploadedContributionImageMetadata()
+        );
+    }
+
+    function requestHasPublicContributionTextOrImageUrl() {
+      return (
+          request.resource.data.get('contributionText', null) is string
+          && request.resource.data.get('contributionText', '').size() > 0
+        )
+        || (
+          request.resource.data.get('imageUrl', null) is string
+          && request.resource.data.get('imageUrl', '').size() > 0
         );
     }
 
@@ -361,7 +425,7 @@ service cloud.firestore {
         && isTrimmedString(request.resource.data.placeId, 160)
         && request.resource.data.submittedByUid == request.auth.uid
         && request.resource.data.contributionStatus == 'submitted'
-        && hasContributionTextOrImageUrl()
+        && hasContributionTextOrImage()
         && isOptionalString('placeTitleSnapshot', 160)
         && isOptionalString('contributionText', 5000)
         && isOptionalHttpsEvidenceUrl('imageUrl', 1000)
@@ -381,6 +445,7 @@ service cloud.firestore {
           || request.resource.data.imagePermissionConfirmed == null
           || request.resource.data.imagePermissionConfirmed is bool
         )
+        && isValidUploadedContributionImageMetadata()
         && isOptionalString('submitterDisplayName', 120)
         && (
           !hasField('submitterEmail')
@@ -398,7 +463,18 @@ service cloud.firestore {
           'contributionStatus',
           'reviewedAt',
           'updatedAt',
+          'imageUrl',
+          'imageCaption',
+          'imageCredit',
+          'imageRightsStatus',
           'imagePermissionConfirmed',
+          'imageStoragePath',
+          'imageFileName',
+          'imageFileContentType',
+          'imageFileSize',
+          'imageUploadedAt',
+          'imageUploadedByUid',
+          'imageUploadVisibility',
           'submittedByUid',
           'submitterEmail',
           'submitterDisplayName'
@@ -406,7 +482,21 @@ service cloud.firestore {
         && request.resource.data.contributionStatus == 'approved'
         && request.resource.data.reviewedAt is timestamp
         && request.resource.data.updatedAt is timestamp
-        && requestHasPublicPlaceContributionFields();
+        && requestHasPublicPlaceContributionFields()
+        && requestHasPublicContributionTextOrImageUrl()
+        && isOptionalString('contributionText', 5000)
+        && isOptionalHttpsEvidenceUrl('imageUrl', 1000)
+        && isOptionalString('imageCaption', 300)
+        && isOptionalString('imageCredit', 300)
+        && (
+          !hasField('imageRightsStatus')
+          || request.resource.data.imageRightsStatus == null
+          || (
+            request.resource.data.imageRightsStatus is string
+            && request.resource.data.imageRightsStatus.size() <= 64
+            && isAllowedContributionImageRightsStatus(request.resource.data.imageRightsStatus)
+          )
+        );
     }
 
     function isValidPlaceContributionRejectUpdate() {

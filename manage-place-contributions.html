@@ -173,6 +173,14 @@
       }
     }
 
+    function formatFileSize(value) {
+      const size = Number(value);
+      if (!Number.isFinite(size) || size <= 0) return "";
+      if (size < 1024) return `${size} bytes`;
+      if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
     function createCardMessage(message, type = "") {
       const status = document.createElement("p");
       status.className = type === "error"
@@ -252,6 +260,13 @@
         createDetailRow("Image credit", record.imageCredit),
         createDetailRow("Image rights status", getRightsStatusLabel(record.imageRightsStatus)),
         createDetailRow("Image permission confirmed", record.imagePermissionConfirmed === true ? "Confirmed by submitter" : ""),
+        createDetailRow("Uploaded image storage path", record.imageStoragePath),
+        createDetailRow("Uploaded image file name", record.imageFileName),
+        createDetailRow("Uploaded image file type", record.imageFileContentType),
+        createDetailRow("Uploaded image file size", formatFileSize(record.imageFileSize)),
+        createTimestampRow("Uploaded image timestamp", record.imageUploadedAt),
+        createDetailRow("Uploaded image owner UID", record.imageUploadedByUid),
+        createDetailRow("Uploaded image visibility", record.imageUploadVisibility),
         createDetailRow("Submitted by UID", record.submittedByUid),
         createDetailRow("Submitter email", record.submitterEmail),
         createDetailRow("Submitter display name", record.submitterDisplayName),
@@ -359,6 +374,13 @@
                 updatedAt: serverTimestamp()
               }),
               imagePermissionConfirmed: deleteField(),
+              imageStoragePath: deleteField(),
+              imageFileName: deleteField(),
+              imageFileContentType: deleteField(),
+              imageFileSize: deleteField(),
+              imageUploadedAt: deleteField(),
+              imageUploadedByUid: deleteField(),
+              imageUploadVisibility: deleteField(),
               submittedByUid: deleteField(),
               submitterEmail: deleteField(),
               submitterDisplayName: deleteField()

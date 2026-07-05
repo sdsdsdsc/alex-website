@@ -90,6 +90,19 @@ function validSubmittedPlaceContribution(overrides = {}) {
   };
 }
 
+function validContributionUploadedImageMetadata(overrides = {}) {
+  return {
+    imageStoragePath: `place-contribution-images/${OWNER_UID}/draft-123/front-view.webp`,
+    imageFileName: "front-view.webp",
+    imageFileContentType: "image/webp",
+    imageFileSize: 123456,
+    imageUploadedAt: timestamp(42),
+    imageUploadedByUid: OWNER_UID,
+    imageUploadVisibility: "contribution-private",
+    ...overrides
+  };
+}
+
 function ownerFirestore() {
   return testEnv.authenticatedContext(OWNER_UID, { email: OWNER_EMAIL }).firestore();
 }
@@ -233,6 +246,7 @@ test("approved place contributions with private fields cannot be read publicly",
     validPlaceContribution({
       submittedByUid: OWNER_UID,
       submitterEmail: OWNER_EMAIL,
+      ...validContributionUploadedImageMetadata(),
       adminNotes: "private moderation note",
       reviewHistory: [{ action: "approved" }]
     })
@@ -277,6 +291,40 @@ test("signed-in users can create submitted place contributions", async () => {
       imageCredit: "Photo by owner",
       imageRightsStatus: "permission-granted",
       imagePermissionConfirmed: true
+    })
+  ));
+});
+
+test("signed-in users can create submitted place contributions with private uploaded image metadata", async () => {
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeContributions", "signed-in-upload-create"),
+    validSubmittedPlaceContribution({
+      contributionText: "",
+      ...validContributionUploadedImageMetadata()
+    })
+  ));
+});
+
+test("signed-in users cannot forge uploaded contribution image ownership metadata", async () => {
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeContributions", "forged-upload-owner"),
+    validSubmittedPlaceContribution({
+      contributionText: "",
+      ...validContributionUploadedImageMetadata({
+        imageUploadedByUid: OTHER_UID
+      })
+    })
+  ));
+});
+
+test("signed-in users cannot create uploaded contribution image metadata with another UID path", async () => {
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeContributions", "forged-upload-path"),
+    validSubmittedPlaceContribution({
+      contributionText: "",
+      ...validContributionUploadedImageMetadata({
+        imageStoragePath: `place-contribution-images/${OTHER_UID}/draft-123/front-view.webp`
+      })
     })
   ));
 });
@@ -379,6 +427,66 @@ test("only admins can approve submitted place contributions into a public-safe s
   assert.equal(publicSnapshot.exists(), true);
   assert.equal(publicSnapshot.data().contributionStatus, "approved");
   assert.equal(Object.prototype.hasOwnProperty.call(publicSnapshot.data(), "submittedByUid"), false);
+});
+
+test("admin approval of uploaded-image contributions must remove private fields and leave public-safe output", async () => {
+  await seedDocument(
+    "placeContributions/admin-approve-upload",
+    validSubmittedPlaceContribution({
+      contributionText: "",
+      ...validContributionUploadedImageMetadata()
+    })
+  );
+
+  await assertFails(updateDoc(
+    doc(adminFirestore(), "placeContributions", "admin-approve-upload"),
+    {
+      contributionStatus: "approved",
+      reviewedAt: timestamp(60),
+      updatedAt: timestamp(61),
+      imagePermissionConfirmed: deleteField(),
+      imageStoragePath: deleteField(),
+      imageFileName: deleteField(),
+      imageFileContentType: deleteField(),
+      imageFileSize: deleteField(),
+      imageUploadedAt: deleteField(),
+      imageUploadedByUid: deleteField(),
+      imageUploadVisibility: deleteField(),
+      submittedByUid: deleteField(),
+      submitterEmail: deleteField(),
+      submitterDisplayName: deleteField()
+    }
+  ));
+
+  await assertSucceeds(updateDoc(
+    doc(adminFirestore(), "placeContributions", "admin-approve-upload"),
+    {
+      contributionStatus: "approved",
+      reviewedAt: timestamp(62),
+      updatedAt: timestamp(63),
+      imageUrl: "https://example.org/approved-uploaded-contribution.webp",
+      imageCaption: "Approved uploaded image",
+      imageCredit: "Photo by owner",
+      imageRightsStatus: "permission-granted",
+      imagePermissionConfirmed: deleteField(),
+      imageStoragePath: deleteField(),
+      imageFileName: deleteField(),
+      imageFileContentType: deleteField(),
+      imageFileSize: deleteField(),
+      imageUploadedAt: deleteField(),
+      imageUploadedByUid: deleteField(),
+      imageUploadVisibility: deleteField(),
+      submittedByUid: deleteField(),
+      submitterEmail: deleteField(),
+      submitterDisplayName: deleteField()
+    }
+  ));
+
+  const publicSnapshot = await assertSucceeds(getDoc(
+    doc(testEnv.unauthenticatedContext().firestore(), "placeContributions", "admin-approve-upload")
+  ));
+  assert.equal(publicSnapshot.data().imageUrl, "https://example.org/approved-uploaded-contribution.webp");
+  assert.equal(Object.prototype.hasOwnProperty.call(publicSnapshot.data(), "imageStoragePath"), false);
 });
 
 test("admins cannot approve place contributions while leaving private fields in the document", async () => {
