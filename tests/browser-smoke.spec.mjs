@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
+const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-05-13b-contribution-upload-ui";
 const SMOKE_PAGES = [
   {
     path: "/index.html",
@@ -97,4 +98,16 @@ test("nomination upload modules use the current cache-busting version", async ({
   expect(response.ok()).toBeTruthy();
   const scriptText = await response.text();
   expect(scriptText).toContain(`./heritage-engine/nominations.js?v=${NOMINATION_UPLOAD_MODULE_VERSION}`);
+});
+
+test("place contribution upload modules use the current cache-busting version", async ({ page }) => {
+  const response = await page.request.get("/place.html");
+  expect(response.ok()).toBeTruthy();
+  const pageHtml = await response.text();
+  expect(pageHtml).toContain(`place.js?v=${PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION}`);
+
+  const scriptResponse = await page.request.get(`/place.js?v=${PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION}`);
+  expect(scriptResponse.ok()).toBeTruthy();
+  const scriptText = await scriptResponse.text();
+  expect(scriptText).toContain(`./heritage-engine/place-contributions.js?v=${PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION}`);
 });

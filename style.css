@@ -3629,6 +3629,29 @@ footer {
   resize: vertical;
 }
 
+.place-contribution-form__upload-note {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  background: #eef5f6;
+  border-left: 5px solid #2f7a54;
+  color: #173b32;
+  line-height: 1.5;
+}
+
+.place-contribution-form__upload-status {
+  color: #17475b;
+  font-weight: 800;
+}
+
+.place-contribution-form__upload-status--success {
+  color: #17633c;
+}
+
+.place-contribution-form__upload-status--error {
+  color: #a21b1b;
+}
+
 .place-contribution-form__field input:focus-visible,
 .place-contribution-form__field select:focus-visible,
 .place-contribution-form__field textarea:focus-visible {

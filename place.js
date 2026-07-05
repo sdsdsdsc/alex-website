@@ -15,6 +15,12 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
+  deleteObject,
+  getStorage,
+  ref as storageRef,
+  uploadBytes
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+import {
   buildMapUrl,
   buildPlaceJsonLd,
   buildPublicPlaceSummary,
@@ -41,7 +47,7 @@ import {
 import {
   buildPlaceContributionCreatePayload,
   buildPublicPlaceContributionPayload
-} from "./heritage-engine/place-contributions.js?v=2026-06-30-11c-contributions-renderer";
+} from "./heritage-engine/place-contributions.js?v=2026-07-05-13b-contribution-upload-ui";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -55,6 +61,14 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
+const MAX_CONTRIBUTION_IMAGE_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_CONTRIBUTION_IMAGE_FILE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif"
+]);
 
 const els = {
   status: document.getElementById("placeRecordStatus"),
@@ -88,6 +102,8 @@ const els = {
   contributionForm: document.getElementById("placeContributionForm"),
   contributionText: document.getElementById("placeContributionText"),
   contributionImageUrl: document.getElementById("placeContributionImageUrl"),
+  contributionImageFile: document.getElementById("placeContributionImageFile"),
+  contributionImageUploadStatus: document.getElementById("placeContributionImageUploadStatus"),
   contributionImageCaption: document.getElementById("placeContributionImageCaption"),
   contributionImageCredit: document.getElementById("placeContributionImageCredit"),
   contributionImageRightsStatus: document.getElementById("placeContributionImageRightsStatus"),
@@ -121,6 +137,16 @@ function setContributionFormStatus(message, type = "") {
     : type === "success"
       ? "place-contribution-form__status admin-success"
       : "place-contribution-form__status";
+}
+
+function setContributionUploadStatus(message, type = "") {
+  if (!els.contributionImageUploadStatus) return;
+  els.contributionImageUploadStatus.textContent = message;
+  els.contributionImageUploadStatus.className = type === "error"
+    ? "place-contribution-form__upload-status place-contribution-form__upload-status--error"
+    : type === "success"
+      ? "place-contribution-form__upload-status place-contribution-form__upload-status--success"
+      : "place-contribution-form__upload-status";
 }
 
 function setContributionEntryState(user) {
@@ -172,6 +198,78 @@ function getContributionFormValues() {
 
 function resetContributionForm() {
   els.contributionForm?.reset();
+  setContributionUploadStatus("No file selected.");
+}
+
+function getSelectedContributionImageFile() {
+  return els.contributionImageFile?.files?.[0] || null;
+}
+
+function getRandomId() {
+  if (typeof crypto?.randomUUID === "function") return crypto.randomUUID();
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function getSafeContributionStorageFileId(file) {
+  const fallbackName = "contribution-image";
+  const safeName = cleanText(file?.name)
+    .replace(/[/\\?#%]+/g, "-")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-zA-Z0-9._-]/g, "")
+    .slice(0, 80) || fallbackName;
+  return `${getRandomId()}-${safeName}`;
+}
+
+function validateContributionImageFile(file) {
+  if (!file) return null;
+  if (!ALLOWED_CONTRIBUTION_IMAGE_FILE_TYPES.has(file.type)) {
+    return "Choose a JPEG, PNG, WebP, or GIF image.";
+  }
+  if (!Number.isFinite(file.size) || file.size <= 0 || file.size > MAX_CONTRIBUTION_IMAGE_FILE_SIZE) {
+    return "Choose an image file up to 5 MB.";
+  }
+  return null;
+}
+
+function buildUploadedContributionImageMetadata(user, file, storagePath, uploadedAt = serverTimestamp()) {
+  return {
+    imageStoragePath: storagePath,
+    imageFileName: cleanText(file.name),
+    imageFileContentType: cleanText(file.type),
+    imageFileSize: file.size,
+    imageUploadedAt: uploadedAt,
+    imageUploadedByUid: cleanText(user.uid),
+    imageUploadVisibility: "contribution-private"
+  };
+}
+
+function createContributionImageUploadPlan(user, file) {
+  const draftId = getRandomId();
+  const fileId = getSafeContributionStorageFileId(file);
+  const storagePath = `place-contribution-images/${cleanText(user.uid)}/${draftId}/${fileId}`;
+  return {
+    file,
+    storagePath,
+    metadata: buildUploadedContributionImageMetadata(user, file, storagePath)
+  };
+}
+
+async function uploadContributionImageFile(uploadPlan) {
+  const imageRef = storageRef(storage, uploadPlan.storagePath);
+  setContributionUploadStatus("Uploading selected image...");
+  await uploadBytes(imageRef, uploadPlan.file, {
+    contentType: uploadPlan.file.type,
+    customMetadata: {
+      uploadedByUid: cleanText(uploadPlan.metadata.imageUploadedByUid),
+      visibility: "contribution-private"
+    }
+  });
+  setContributionUploadStatus("Upload complete.", "success");
+}
+
+async function deleteUploadedContributionImageFile(uploadPlan) {
+  if (!uploadPlan?.storagePath) return;
+  await deleteObject(storageRef(storage, uploadPlan.storagePath));
 }
 
 function openContributionModal() {
@@ -218,15 +316,33 @@ async function handleContributionSubmit(event) {
     els.contributionSubmitButton.disabled = true;
   }
   setContributionFormStatus("Submitting your contribution for review...");
+  let uploadPlan = null;
+  let uploadComplete = false;
+  let uploadedImageMetadata = {};
 
   try {
+    const selectedImageFile = getSelectedContributionImageFile();
+    const fileError = validateContributionImageFile(selectedImageFile);
+    if (fileError) {
+      setContributionUploadStatus(fileError, "error");
+      throw new Error(fileError);
+    }
+
+    if (selectedImageFile) {
+      uploadPlan = createContributionImageUploadPlan(currentUser, selectedImageFile);
+      await uploadContributionImageFile(uploadPlan);
+      uploadComplete = true;
+      uploadedImageMetadata = uploadPlan.metadata;
+    }
+
     const payload = buildPlaceContributionCreatePayload({
       placeId: currentPlace.id,
       placeTitleSnapshot: getDisplayTitle(currentPlace),
       submittedByUid: currentUser.uid,
       submitterEmail: currentUser.email || "",
       submitterDisplayName: currentUser.displayName || "",
-      ...getContributionFormValues()
+      ...getContributionFormValues(),
+      ...uploadedImageMetadata
     }, {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -237,9 +353,22 @@ async function handleContributionSubmit(event) {
     setContributionFormStatus("Thank you. Your contribution has been submitted for review and will not appear publicly until it is approved.", "success");
   } catch (error) {
     console.error("Failed to submit place contribution:", error);
+    if (uploadComplete && uploadPlan?.storagePath) {
+      try {
+        await deleteUploadedContributionImageFile(uploadPlan);
+        setContributionUploadStatus("Upload failed. The uploaded file was cleaned up.", "error");
+      } catch (cleanupError) {
+        console.error("Failed to clean up uploaded contribution image after submission failure:", cleanupError);
+        setContributionUploadStatus("Upload failed. Could not clean up the uploaded file automatically.", "error");
+      }
+    } else if (uploadPlan?.storagePath) {
+      setContributionUploadStatus("Upload failed. No contribution record was created.", "error");
+    }
     if (error?.code === "permission-denied" || error?.code === "firestore/permission-denied") {
       setContributionFormStatus(
-        "Your contribution form is ready, but current Firestore rules still block place contribution submission. This client slice is in place first; the rules update will be handled separately inside this PR.",
+        uploadComplete
+          ? "Your image upload succeeded, but current Firestore rules blocked the contribution record. The uploaded file was cleaned up when possible."
+          : "Current Firestore rules blocked the contribution record.",
         "error"
       );
       return;
@@ -250,6 +379,20 @@ async function handleContributionSubmit(event) {
       els.contributionSubmitButton.disabled = false;
     }
   }
+}
+
+function handleContributionImageFileChange() {
+  const selectedImageFile = getSelectedContributionImageFile();
+  if (!selectedImageFile) {
+    setContributionUploadStatus("No file selected.");
+    return;
+  }
+  const fileError = validateContributionImageFile(selectedImageFile);
+  if (fileError) {
+    setContributionUploadStatus(fileError, "error");
+    return;
+  }
+  setContributionUploadStatus(`Selected ${selectedImageFile.name}.`, "success");
 }
 
 function handleContributionEntryButtonClick() {
@@ -898,6 +1041,7 @@ function setupContributionForm() {
   els.contributionModalBackdrop?.addEventListener("click", handleContributionModalBackdropClick);
   els.contributionModal?.addEventListener("keydown", handleContributionModalKeydown);
   els.contributionForm?.addEventListener("submit", handleContributionSubmit);
+  els.contributionImageFile?.addEventListener("change", handleContributionImageFileChange);
 
   onAuthStateChanged(auth, (user) => {
     setContributionEntryState(user);

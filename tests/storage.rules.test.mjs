@@ -210,9 +210,23 @@ test("admins can read contribution image files for review", async () => {
   assert.equal(bytes.byteLength, smallImageBytes().byteLength);
 });
 
-test("contribution image files cannot be deleted by public submitters", async () => {
-  const path = contributionImagePath(OWNER_UID, "no-delete.png");
+test("contribution image owners can delete files for failed-submission cleanup", async () => {
+  const path = contributionImagePath(OWNER_UID, "cleanup-delete.png");
   await seedStorageObject(path);
 
-  await assertFails(deleteObject(ref(ownerStorage(), path)));
+  await assertSucceeds(deleteObject(ref(ownerStorage(), path)));
+});
+
+test("other users cannot delete contribution image files", async () => {
+  const path = contributionImagePath(OWNER_UID, "wrong-user-delete.png");
+  await seedStorageObject(path);
+
+  await assertFails(deleteObject(ref(otherStorage(), path)));
+});
+
+test("signed-out users cannot delete contribution image files", async () => {
+  const path = contributionImagePath(OWNER_UID, "signed-out-delete.png");
+  await seedStorageObject(path);
+
+  await assertFails(deleteObject(ref(publicStorage(), path)));
 });

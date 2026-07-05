@@ -28,6 +28,11 @@
       where
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import {
+      getDownloadURL,
+      getStorage,
+      ref as storageRef
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+    import {
       buildApproveContributionUpdate,
       buildRejectContributionUpdate
     } from "./heritage-engine/place-contributions.js";
@@ -45,6 +50,7 @@
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const storage = getStorage(app);
     const authPersistenceReady = setPersistence(auth, browserLocalPersistence);
     let contributionRecords = [];
 
@@ -154,6 +160,13 @@
       } catch (error) {
         return false;
       }
+    }
+
+    async function getUploadedContributionImageDownloadUrl(record) {
+      const imageStoragePath = cleanText(record.imageStoragePath);
+      const imageFileContentType = cleanText(record.imageFileContentType);
+      if (!imageStoragePath || !imageFileContentType.startsWith("image/")) return "";
+      return getDownloadURL(storageRef(storage, imageStoragePath));
     }
 
     function getRightsStatusLabel(value) {
@@ -300,6 +313,44 @@
         details.appendChild(evidence);
       }
 
+      if (cleanText(record.imageStoragePath) && cleanText(record.imageFileContentType).startsWith("image/")) {
+        const uploadedEvidence = document.createElement("section");
+        uploadedEvidence.className = "manage-nominations-card__evidence";
+
+        const titleEl = document.createElement("h4");
+        titleEl.textContent = "Uploaded image preview";
+        uploadedEvidence.appendChild(titleEl);
+
+        const note = document.createElement("p");
+        note.className = "admin-help-note";
+        note.textContent = "This private uploaded image preview is for admin review only. It is not public unless this contribution is approved.";
+        uploadedEvidence.appendChild(note);
+
+        const previewStatus = document.createElement("p");
+        previewStatus.className = "admin-help-note";
+        previewStatus.textContent = "Loading private uploaded contribution image preview...";
+        uploadedEvidence.appendChild(previewStatus);
+
+        getUploadedContributionImageDownloadUrl(record)
+          .then((downloadUrl) => {
+            const preview = document.createElement("img");
+            preview.className = "manage-nominations-card__evidence-preview";
+            preview.src = downloadUrl;
+            preview.alt = cleanText(record.imageCaption) || cleanText(record.imageFileName) || "Uploaded contribution image preview";
+            preview.loading = "lazy";
+            previewStatus.replaceWith(preview);
+          })
+          .catch((err) => {
+            console.warn("Uploaded contribution image preview unavailable:", {
+              code: err?.code || "",
+              message: err?.message || ""
+            });
+            previewStatus.textContent = "Private uploaded contribution image preview is unavailable. Check admin sign-in and Storage rules.";
+          });
+
+        details.appendChild(uploadedEvidence);
+      }
+
       const reviewSection = document.createElement("section");
       reviewSection.className = "manage-nominations-card__review";
 
@@ -367,8 +418,15 @@
 
         try {
           const contributionRef = doc(db, "placeContributions", record.id);
-          const payload = action === "approve"
-            ? {
+          let payload = action === "reject"
+            ? buildRejectContributionUpdate({
+              reviewedByUid: ADMIN_UID,
+              adminNotes
+            }, {
+              reviewedAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            })
+            : {
               ...buildApproveContributionUpdate({}, {
                 reviewedAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
@@ -384,14 +442,15 @@
               submittedByUid: deleteField(),
               submitterEmail: deleteField(),
               submitterDisplayName: deleteField()
-            }
-            : buildRejectContributionUpdate({
-              reviewedByUid: ADMIN_UID,
-              adminNotes
-            }, {
-              reviewedAt: serverTimestamp(),
-              updatedAt: serverTimestamp()
-            });
+            };
+
+          if (action === "approve" && !isSafeHttpsUrl(record.imageUrl) && cleanText(record.imageStoragePath)) {
+            const downloadUrl = await getUploadedContributionImageDownloadUrl(record);
+            payload = {
+              ...payload,
+              imageUrl: downloadUrl
+            };
+          }
 
           await updateDoc(contributionRef, payload);
           contributionRecords = contributionRecords.filter((item) => item.id !== record.id);

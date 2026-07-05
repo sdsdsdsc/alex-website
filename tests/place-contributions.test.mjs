@@ -286,6 +286,26 @@ test("private submitter and admin fields do not appear in public payload", () =>
   });
 });
 
+test("approved uploaded image converted to imageUrl creates public payload", () => {
+  const publicPayload = buildPublicPlaceContributionPayload({
+    ...buildValidContribution({
+      contributionStatus: "approved",
+      contributionText: "",
+      imageUrl: "https://firebasestorage.googleapis.com/v0/b/example/o/place-contribution-images%2Fpublic-user-1%2Fdraft-123%2Ffront-view.webp?alt=media",
+      imageCaption: "Approved uploaded image",
+      imageCredit: "Photo by resident",
+      imageRightsStatus: "own-work"
+    }),
+    createdAt: "created",
+    updatedAt: "updated",
+    reviewedAt: "reviewed"
+  });
+
+  assert.equal(publicPayload.imageUrl.startsWith("https://firebasestorage.googleapis.com/"), true);
+  assert.equal(publicPayload.imageCaption, "Approved uploaded image");
+  assert.equal(Object.prototype.hasOwnProperty.call(publicPayload, "imageStoragePath"), false);
+});
+
 test("admin approve update payload is correct", () => {
   const payload = buildApproveContributionUpdate({
     adminNotes: "Approved for public display.",
