@@ -8,7 +8,7 @@ After every PR merge, do not assume production is fresh immediately.
 2. If Pages deploy is still building or has failed, do not run production smoke tests yet.
 3. If build, report, and verification jobs passed but only the Pages deploy failed with `Deployment failed, try again later,` treat it as a likely transient GitHub Pages deployment service issue.
 4. Inspect the deploy log before taking any further action.
-5. If safe, rerun only the failed deploy job or deploy path.
+5. If the failure is the transient `Deployment failed, try again later` case, use the actual recovery path for the configured GitHub Pages source. For repos with a rerunnable Pages deploy job or deploy path, rerun only that failed deploy step when it is safe to do so.
 6. Confirm GitHub Pages reports `built`.
 7. Fetch production files and confirm fresh phase markers are live.
 8. Only then run the production smoke test.
