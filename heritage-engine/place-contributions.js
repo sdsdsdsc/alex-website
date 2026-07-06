@@ -16,6 +16,14 @@ const IMAGE_RIGHTS_STATUSES = Object.freeze([
   "public-web-reference",
   "unknown-needs-review"
 ]);
+const CONTRIBUTION_IMAGE_UPLOAD_VISIBILITY = "contribution-private";
+const CONTRIBUTION_IMAGE_UPLOAD_CONTENT_TYPES = Object.freeze([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif"
+]);
+const MAX_CONTRIBUTION_IMAGE_FILE_SIZE = 5 * 1024 * 1024;
 const PUBLIC_PLACE_CONTRIBUTION_FIELDS = Object.freeze([
   "placeId",
   "placeTitleSnapshot",
@@ -36,7 +44,14 @@ const PRIVATE_PLACE_CONTRIBUTION_FIELDS = Object.freeze([
   "submitterDisplayName",
   "reviewedByUid",
   "adminNotes",
-  "reviewHistory"
+  "reviewHistory",
+  "imageStoragePath",
+  "imageFileName",
+  "imageFileContentType",
+  "imageFileSize",
+  "imageUploadedAt",
+  "imageUploadedByUid",
+  "imageUploadVisibility"
 ]);
 const FIELD_LIMITS = Object.freeze({
   placeId: 160,
@@ -46,6 +61,11 @@ const FIELD_LIMITS = Object.freeze({
   imageCaption: 300,
   imageCredit: 300,
   imageRightsStatus: 64,
+  imageStoragePath: 1000,
+  imageFileName: 255,
+  imageFileContentType: 64,
+  imageUploadedByUid: 120,
+  imageUploadVisibility: 64,
   submitterEmail: 254,
   submitterDisplayName: 120,
   reviewedByUid: 120,
@@ -67,6 +87,45 @@ function normalizeContributionStatus(status, fallback = "submitted") {
 function normalizeImageRightsStatus(status) {
   const cleanStatus = cleanText(status).toLowerCase();
   return IMAGE_RIGHTS_STATUSES.includes(cleanStatus) ? cleanStatus : "";
+}
+
+function escapeRegExp(value) {
+  return cleanText(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function isValidContributionImageStoragePath(storagePath, uid) {
+  const cleanPath = cleanText(storagePath);
+  const cleanUid = cleanText(uid);
+  if (!cleanPath || !cleanUid || cleanPath.length > FIELD_LIMITS.imageStoragePath) return false;
+  return new RegExp(`^place-contribution-images/${escapeRegExp(cleanUid)}/[^/]+/[^/]+$`).test(cleanPath);
+}
+
+function hasUploadedContributionImageMetadata(values = {}) {
+  return [
+    "imageStoragePath",
+    "imageFileName",
+    "imageFileContentType",
+    "imageFileSize",
+    "imageUploadedAt",
+    "imageUploadedByUid",
+    "imageUploadVisibility"
+  ].some((field) => values[field] !== undefined && values[field] !== null && values[field] !== "");
+}
+
+function hasValidUploadedContributionImage(values = {}) {
+  const normalized = normalizeContributionTextFields(values);
+  const fileSize = values.imageFileSize;
+
+  return isValidContributionImageStoragePath(normalized.imageStoragePath, values.submittedByUid)
+    && normalized.imageFileName.length > 0
+    && CONTRIBUTION_IMAGE_UPLOAD_CONTENT_TYPES.includes(normalized.imageFileContentType)
+    && Number.isInteger(fileSize)
+    && fileSize > 0
+    && fileSize <= MAX_CONTRIBUTION_IMAGE_FILE_SIZE
+    && values.imageUploadedAt !== undefined
+    && values.imageUploadedAt !== null
+    && normalized.imageUploadedByUid === cleanText(values.submittedByUid)
+    && normalized.imageUploadVisibility === CONTRIBUTION_IMAGE_UPLOAD_VISIBILITY;
 }
 
 function normalizeContributionTextFields(values = {}) {
@@ -95,8 +154,8 @@ function validatePlaceContributionRequiredFields(values = {}) {
     errors.push("Signed-in submitter UID is required.");
   }
 
-  if (!normalized.contributionText && !normalized.imageUrl) {
-    errors.push("Contribution must include text and/or an image URL.");
+  if (!normalized.contributionText && !normalized.imageUrl && !hasUploadedContributionImageMetadata(values)) {
+    errors.push("Contribution must include text and/or an image.");
   }
 
   if (normalized.submitterEmail && !isValidEmail(normalized.submitterEmail)) {
@@ -118,6 +177,10 @@ function validatePlaceContributionImageFields(values = {}) {
     errors.push("Image rights status is not recognised.");
   }
 
+  if (hasUploadedContributionImageMetadata(values) && !hasValidUploadedContributionImage(values)) {
+    errors.push("Uploaded image metadata is not valid.");
+  }
+
   return errors;
 }
 
@@ -135,6 +198,18 @@ function validatePlaceContributionSubmission(values = {}) {
 function addOptionalText(payload, field, value) {
   const cleanValue = cleanText(value);
   if (cleanValue) payload[field] = cleanValue;
+}
+
+function addUploadedContributionImageMetadata(payload, values = {}, normalized = {}) {
+  if (!hasValidUploadedContributionImage(values)) return;
+
+  payload.imageStoragePath = normalized.imageStoragePath;
+  payload.imageFileName = normalized.imageFileName;
+  payload.imageFileContentType = normalized.imageFileContentType;
+  payload.imageFileSize = values.imageFileSize;
+  payload.imageUploadedAt = values.imageUploadedAt;
+  payload.imageUploadedByUid = normalized.imageUploadedByUid;
+  payload.imageUploadVisibility = CONTRIBUTION_IMAGE_UPLOAD_VISIBILITY;
 }
 
 function buildPlaceContributionCreatePayload(values = {}, timestamps = {}) {
@@ -167,6 +242,8 @@ function buildPlaceContributionCreatePayload(values = {}, timestamps = {}) {
       payload.imagePermissionConfirmed = true;
     }
   }
+
+  addUploadedContributionImageMetadata(payload, values, normalized);
 
   addOptionalText(payload, "submitterEmail", normalized.submitterEmail);
   addOptionalText(payload, "submitterDisplayName", normalized.submitterDisplayName);
@@ -259,8 +336,11 @@ function buildRejectContributionUpdate(values = {}, timestamps = {}) {
 }
 
 export {
+  CONTRIBUTION_IMAGE_UPLOAD_CONTENT_TYPES,
+  CONTRIBUTION_IMAGE_UPLOAD_VISIBILITY,
   FIELD_LIMITS,
   IMAGE_RIGHTS_STATUSES,
+  MAX_CONTRIBUTION_IMAGE_FILE_SIZE,
   PLACE_CONTRIBUTION_STATUSES,
   PRIVATE_PLACE_CONTRIBUTION_FIELDS,
   PUBLIC_PLACE_CONTRIBUTION_FIELDS,
@@ -271,6 +351,8 @@ export {
   buildRejectContributionUpdate,
   getInitialContributionStatus,
   getPlaceContributionValidationErrors,
+  hasValidUploadedContributionImage,
+  isValidContributionImageStoragePath,
   normalizeContributionStatus,
   normalizeContributionTextFields,
   normalizeImageRightsStatus,

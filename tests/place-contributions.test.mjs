@@ -48,6 +48,19 @@ function buildValidContribution(overrides = {}) {
   };
 }
 
+function buildValidUploadedImageMetadata(overrides = {}) {
+  return {
+    imageStoragePath: "place-contribution-images/public-user-1/draft-123/front-view.webp",
+    imageFileName: "front-view.webp",
+    imageFileContentType: "image/webp",
+    imageFileSize: 123456,
+    imageUploadedAt: "uploaded",
+    imageUploadedByUid: "public-user-1",
+    imageUploadVisibility: "contribution-private",
+    ...overrides
+  };
+}
+
 test("valid text-only submitted contribution normalizes correctly", () => {
   const payload = buildPlaceContributionCreatePayload(buildValidContribution(), {
     createdAt: "created",
@@ -79,6 +92,25 @@ test("valid image URL contribution normalizes correctly", () => {
   assert.equal(payload.imageCredit, "Photo by resident");
   assert.equal(payload.imageRightsStatus, "permission-granted");
   assert.equal(payload.imagePermissionConfirmed, true);
+  assert.equal(Object.prototype.hasOwnProperty.call(payload, "contributionText"), false);
+});
+
+test("valid uploaded image contribution normalizes private metadata", () => {
+  const payload = buildPlaceContributionCreatePayload(buildValidContribution({
+    contributionText: "",
+    imageUrl: "",
+    ...buildValidUploadedImageMetadata()
+  }));
+
+  assert.equal(payload.imageStoragePath, "place-contribution-images/public-user-1/draft-123/front-view.webp");
+  assert.equal(payload.imageFileName, "front-view.webp");
+  assert.equal(payload.imageFileContentType, "image/webp");
+  assert.equal(payload.imageFileSize, 123456);
+  assert.equal(payload.imageUploadedAt, "uploaded");
+  assert.equal(payload.imageUploadedByUid, "public-user-1");
+  assert.equal(payload.imageUploadVisibility, "contribution-private");
+  assert.equal(payload.contributionStatus, "submitted");
+  assert.equal(Object.prototype.hasOwnProperty.call(payload, "imageUrl"), false);
   assert.equal(Object.prototype.hasOwnProperty.call(payload, "contributionText"), false);
 });
 
@@ -137,13 +169,48 @@ test("invalid non-HTTPS imageUrl is rejected", () => {
   assert.equal(errors.includes("Image URL must begin with https://."), true);
 });
 
+test("forged uploaded image UID and unsafe metadata are rejected", () => {
+  assert.throws(() => buildPlaceContributionCreatePayload(buildValidContribution({
+    contributionText: "",
+    imageUrl: "",
+    ...buildValidUploadedImageMetadata({
+      imageStoragePath: "place-contribution-images/other-user/draft-123/front-view.webp",
+      imageUploadedByUid: "other-user"
+    })
+  })), /Uploaded image metadata is not valid/);
+
+  assert.throws(() => buildPlaceContributionCreatePayload(buildValidContribution({
+    contributionText: "",
+    imageUrl: "",
+    ...buildValidUploadedImageMetadata({
+      imageFileContentType: "application/pdf"
+    })
+  })), /Uploaded image metadata is not valid/);
+
+  assert.throws(() => buildPlaceContributionCreatePayload(buildValidContribution({
+    contributionText: "",
+    imageUrl: "",
+    ...buildValidUploadedImageMetadata({
+      imageUploadVisibility: "public"
+    })
+  })), /Uploaded image metadata is not valid/);
+});
+
+test("partial uploaded image metadata is rejected", () => {
+  assert.throws(() => buildPlaceContributionCreatePayload(buildValidContribution({
+    contributionText: "",
+    imageUrl: "",
+    imageStoragePath: "place-contribution-images/public-user-1/draft-123/front-view.webp"
+  })), /Uploaded image metadata is not valid/);
+});
+
 test("blank contribution with no text and no image is invalid", () => {
   const errors = getPlaceContributionValidationErrors(buildValidContribution({
     contributionText: "",
     imageUrl: ""
   }));
 
-  assert.equal(errors.includes("Contribution must include text and/or an image URL."), true);
+  assert.equal(errors.includes("Contribution must include text and/or an image."), true);
 });
 
 test("public payload is returned only for approved contributions", () => {
@@ -195,6 +262,7 @@ test("private submitter and admin fields do not appear in public payload", () =>
       contributionStatus: "approved",
       imageUrl: "https://example.org/contribution-photo.jpg"
     }),
+    ...buildValidUploadedImageMetadata(),
     adminNotes: "private moderation note",
     reviewHistory: [{ action: "reviewed" }]
   });
@@ -204,11 +272,38 @@ test("private submitter and admin fields do not appear in public payload", () =>
     "submitterEmail",
     "submitterDisplayName",
     "imagePermissionConfirmed",
+    "imageStoragePath",
+    "imageFileName",
+    "imageFileContentType",
+    "imageFileSize",
+    "imageUploadedAt",
+    "imageUploadedByUid",
+    "imageUploadVisibility",
     "adminNotes",
     "reviewHistory"
   ].forEach((fieldName) => {
     assert.equal(Object.prototype.hasOwnProperty.call(publicPayload, fieldName), false, `${fieldName} should not be public`);
   });
+});
+
+test("approved uploaded image converted to imageUrl creates public payload", () => {
+  const publicPayload = buildPublicPlaceContributionPayload({
+    ...buildValidContribution({
+      contributionStatus: "approved",
+      contributionText: "",
+      imageUrl: "https://firebasestorage.googleapis.com/v0/b/example/o/place-contribution-images%2Fpublic-user-1%2Fdraft-123%2Ffront-view.webp?alt=media",
+      imageCaption: "Approved uploaded image",
+      imageCredit: "Photo by resident",
+      imageRightsStatus: "own-work"
+    }),
+    createdAt: "created",
+    updatedAt: "updated",
+    reviewedAt: "reviewed"
+  });
+
+  assert.equal(publicPayload.imageUrl.startsWith("https://firebasestorage.googleapis.com/"), true);
+  assert.equal(publicPayload.imageCaption, "Approved uploaded image");
+  assert.equal(Object.prototype.hasOwnProperty.call(publicPayload, "imageStoragePath"), false);
 });
 
 test("admin approve update payload is correct", () => {

@@ -36,6 +36,10 @@ function evidencePath(uid = OWNER_UID, fileId = "front-view.png") {
   return `nomination-evidence/${uid}/draft-123/${fileId}`;
 }
 
+function contributionImagePath(uid = OWNER_UID, fileId = "contribution-photo.png") {
+  return `place-contribution-images/${uid}/draft-456/${fileId}`;
+}
+
 function ownerStorage() {
   return testEnv.authenticatedContext(OWNER_UID).storage(BUCKET_URL);
 }
@@ -143,4 +147,86 @@ test("nomination evidence files cannot be deleted by public submitters", async (
   await seedStorageObject(path);
 
   await assertFails(deleteObject(ref(ownerStorage(), path)));
+});
+
+test("signed-in users can upload contribution images under their own UID path", async () => {
+  await assertSucceeds(uploadBytes(
+    ref(ownerStorage(), contributionImagePath(OWNER_UID, "allowed-contribution.gif")),
+    smallImageBytes(),
+    { contentType: "image/gif" }
+  ));
+});
+
+test("signed-out users cannot upload contribution images", async () => {
+  await assertFails(uploadBytes(
+    ref(publicStorage(), contributionImagePath()),
+    smallImageBytes(),
+    { contentType: "image/png" }
+  ));
+});
+
+test("signed-in users cannot upload contribution images under another UID path", async () => {
+  await assertFails(uploadBytes(
+    ref(otherStorage(), contributionImagePath(OWNER_UID, "wrong-owner.png")),
+    smallImageBytes(),
+    { contentType: "image/png" }
+  ));
+});
+
+test("contribution image uploads are image-only", async () => {
+  await assertSucceeds(uploadBytes(
+    ref(ownerStorage(), contributionImagePath(OWNER_UID, "allowed.jpeg")),
+    smallImageBytes(),
+    { contentType: "image/jpeg" }
+  ));
+
+  await assertFails(uploadBytes(
+    ref(ownerStorage(), contributionImagePath(OWNER_UID, "blocked.txt")),
+    new Uint8Array([1, 2, 3]),
+    { contentType: "text/plain" }
+  ));
+});
+
+test("contribution image uploads are capped at five megabytes", async () => {
+  await assertFails(uploadBytes(
+    ref(ownerStorage(), contributionImagePath(OWNER_UID, "too-large.png")),
+    oversizedImageBytes(),
+    { contentType: "image/png" }
+  ));
+});
+
+test("public users cannot read contribution image files", async () => {
+  const path = contributionImagePath(OWNER_UID, "private-review.png");
+  await seedStorageObject(path);
+
+  await assertFails(getBytes(ref(publicStorage(), path)));
+});
+
+test("admins can read contribution image files for review", async () => {
+  const path = contributionImagePath(OWNER_UID, "admin-review.webp");
+  await seedStorageObject(path, smallImageBytes(), { contentType: "image/webp" });
+
+  const bytes = await assertSucceeds(getBytes(ref(adminStorage(), path)));
+  assert.equal(bytes.byteLength, smallImageBytes().byteLength);
+});
+
+test("contribution image owners can delete files for failed-submission cleanup", async () => {
+  const path = contributionImagePath(OWNER_UID, "cleanup-delete.png");
+  await seedStorageObject(path);
+
+  await assertSucceeds(deleteObject(ref(ownerStorage(), path)));
+});
+
+test("other users cannot delete contribution image files", async () => {
+  const path = contributionImagePath(OWNER_UID, "wrong-user-delete.png");
+  await seedStorageObject(path);
+
+  await assertFails(deleteObject(ref(otherStorage(), path)));
+});
+
+test("signed-out users cannot delete contribution image files", async () => {
+  const path = contributionImagePath(OWNER_UID, "signed-out-delete.png");
+  await seedStorageObject(path);
+
+  await assertFails(deleteObject(ref(publicStorage(), path)));
 });

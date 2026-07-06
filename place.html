@@ -7,11 +7,11 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Community Place Record | Alex's Photo Board</title>
   <script id="place-jsonld" type="application/ld+json">{}</script>
-  <link rel="stylesheet" href="style.css?v=2026-07-01-11c-feed-renderer">
+  <link rel="stylesheet" href="style.css?v=2026-07-05-13b-contribution-upload-ui">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin"></script>
   <script type="module" src="public-nav.js" defer></script>
-  <script type="module" src="place.js?v=2026-07-01-11c-feed-renderer" defer></script>
+  <script type="module" src="place.js?v=2026-07-05-13b-contribution-upload-ui" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#placeRecordMain">Skip to record</a>
@@ -178,7 +178,7 @@
         <div>
           <p class="place-contribution-entry__eyebrow">Signed-in contribution</p>
           <h4 id="placeContributionEntryTitle">Add comments and photos</h4>
-          <p id="placeContributionEntryDescription" class="place-contribution-modal__description">Use this form for supplementary comments or a public HTTPS image URL connected to this existing place record. New submissions stay private until an admin review is complete.</p>
+          <p id="placeContributionEntryDescription" class="place-contribution-modal__description">Use this form for supplementary comments, a public HTTPS image URL, or one local image connected to this existing place record. New submissions stay private until an admin review is complete.</p>
         </div>
         <button id="placeContributionModalClose" type="button" class="place-contribution-modal__close" aria-label="Close contribution form">×</button>
       </div>
@@ -200,6 +200,16 @@
           <div class="place-contribution-form__field">
             <label for="placeContributionImageUrl">Image URL</label>
             <input id="placeContributionImageUrl" name="imageUrl" type="url" inputmode="url" placeholder="https://example.com/place-photo.jpg" />
+          </div>
+
+          <div class="place-contribution-form__field">
+            <label for="placeContributionImageFile">Upload local image <span>(optional)</span></label>
+            <input id="placeContributionImageFile" name="imageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" aria-describedby="placeContributionImageFileHelp placeContributionImageUploadStatus" />
+            <div class="place-contribution-form__upload-note" role="note">
+              <strong>Private review upload.</strong>
+              <span id="placeContributionImageFileHelp">Choose one JPEG, PNG, WebP, or GIF image up to 5 MB. Uploaded images stay private until an admin approves the contribution.</span>
+              <span id="placeContributionImageUploadStatus" class="place-contribution-form__upload-status" role="status" aria-live="polite">No file selected.</span>
+            </div>
           </div>
 
           <div class="place-contribution-form__grid">
@@ -228,7 +238,7 @@
 
           <label class="place-contribution-form__checkbox">
             <input id="placeContributionImagePermissionConfirmed" name="imagePermissionConfirmed" type="checkbox" />
-            <span>I confirm that any linked image is my own work, shared with permission, or provided as a review-only public web reference.</span>
+            <span>I confirm that any linked or uploaded image is my own work, shared with permission, or provided as a review-only public web reference.</span>
           </label>
 
           <div class="place-contribution-form__actions">
