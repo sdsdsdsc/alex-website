@@ -162,6 +162,77 @@ test("public collections are readable while nominations remain private", async (
   await assertFails(getDoc(doc(publicDb, "placeNominations", "private-nomination")));
 });
 
+test("contribution image promotion updates public place image fields by admin only", async () => {
+  await seedDocument("communityPlaces/promotion-target", {
+    title: "Promotion Target",
+    imageUrl: "https://example.org/original-place-image.jpg"
+  });
+
+  const promotionPayload = {
+    imageUrl: "https://example.org/approved-contribution-photo.jpg",
+    imageCaption: "South entrance",
+    imageCredit: "Photo by resident",
+    imageRightsStatus: "permission-granted",
+    promotedContributionId: "approved-contribution-1",
+    promotedContributionImageUrl: "https://example.org/approved-contribution-photo.jpg",
+    promotedContributionImageCaption: "South entrance",
+    promotedContributionImageCredit: "Photo by resident",
+    promotedContributionImageRightsStatus: "permission-granted",
+    promotedContributionImageAt: timestamp(22),
+    updatedAt: timestamp(23)
+  };
+
+  await assertSucceeds(updateDoc(
+    doc(adminFirestore(), "communityPlaces", "promotion-target"),
+    promotionPayload
+  ));
+
+  await assertFails(updateDoc(
+    doc(ownerFirestore(), "communityPlaces", "promotion-target"),
+    {
+      imageUrl: "https://example.org/not-admin.jpg",
+      promotedContributionId: "not-admin"
+    }
+  ));
+
+  const publicSnapshot = await assertSucceeds(getDoc(
+    doc(testEnv.unauthenticatedContext().firestore(), "communityPlaces", "promotion-target")
+  ));
+  assert.equal(publicSnapshot.data().imageUrl, "https://example.org/approved-contribution-photo.jpg");
+  assert.equal(publicSnapshot.data().promotedContributionId, "approved-contribution-1");
+});
+
+test("community place image promotion cannot write private contribution upload fields", async () => {
+  await seedDocument("communityPlaces/private-promotion-target", {
+    title: "Private Promotion Target",
+    imageUrl: "https://example.org/original-place-image.jpg"
+  });
+
+  for (const fieldName of [
+    "imageStoragePath",
+    "imageFileName",
+    "imageFileContentType",
+    "imageFileSize",
+    "imageUploadedAt",
+    "imageUploadedByUid",
+    "imageUploadVisibility",
+    "adminNotes",
+    "submittedByUid",
+    "submitterEmail",
+    "submitterDisplayName",
+    "reviewedByUid"
+  ]) {
+    await assertFails(updateDoc(
+      doc(adminFirestore(), "communityPlaces", "private-promotion-target"),
+      {
+        imageUrl: "https://example.org/approved-contribution-photo.jpg",
+        promotedContributionId: "approved-contribution-1",
+        [fieldName]: fieldName === "imageFileSize" ? 123 : "private"
+      }
+    ));
+  }
+});
+
 test("approved place contributions can be read publicly", async () => {
   await seedDocument(
     "placeContributions/approved-public-contribution",

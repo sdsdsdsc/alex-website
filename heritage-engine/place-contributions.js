@@ -37,6 +37,19 @@ const PUBLIC_PLACE_CONTRIBUTION_FIELDS = Object.freeze([
   "updatedAt",
   "reviewedAt"
 ]);
+const PUBLIC_PLACE_IMAGE_PROMOTION_FIELDS = Object.freeze([
+  "imageUrl",
+  "imageCaption",
+  "imageCredit",
+  "imageRightsStatus",
+  "promotedContributionId",
+  "promotedContributionImageUrl",
+  "promotedContributionImageCaption",
+  "promotedContributionImageCredit",
+  "promotedContributionImageRightsStatus",
+  "promotedContributionImageAt",
+  "updatedAt"
+]);
 const PRIVATE_PLACE_CONTRIBUTION_FIELDS = Object.freeze([
   "imagePermissionConfirmed",
   "submittedByUid",
@@ -297,6 +310,41 @@ function buildPublicPlaceContributionPayload(record = {}) {
   return payload;
 }
 
+function buildContributionImagePromotionPayload(record = {}, options = {}) {
+  const publicContribution = buildPublicPlaceContributionPayload(record);
+  const contributionId = cleanText(options.contributionId || record.id);
+
+  if (!publicContribution || !isHttpsUrl(publicContribution.imageUrl)) {
+    throw new Error("Only approved contribution images can be promoted.");
+  }
+
+  if (!contributionId) {
+    throw new Error("Contribution ID is required for image promotion.");
+  }
+
+  const payload = {
+    imageUrl: publicContribution.imageUrl,
+    promotedContributionId: contributionId,
+    promotedContributionImageUrl: publicContribution.imageUrl
+  };
+
+  addOptionalText(payload, "imageCaption", publicContribution.imageCaption);
+  addOptionalText(payload, "imageCredit", publicContribution.imageCredit);
+  addOptionalText(payload, "imageRightsStatus", publicContribution.imageRightsStatus);
+  addOptionalText(payload, "promotedContributionImageCaption", publicContribution.imageCaption);
+  addOptionalText(payload, "promotedContributionImageCredit", publicContribution.imageCredit);
+  addOptionalText(payload, "promotedContributionImageRightsStatus", publicContribution.imageRightsStatus);
+
+  if (options.promotedContributionImageAt !== undefined) {
+    payload.promotedContributionImageAt = options.promotedContributionImageAt;
+  }
+  if (options.updatedAt !== undefined) {
+    payload.updatedAt = options.updatedAt;
+  }
+
+  return payload;
+}
+
 function buildContributionReviewUpdatePayload(nextStatus, values = {}, timestamps = {}) {
   const normalizedStatus = normalizeContributionStatus(nextStatus);
   if (!["approved", "rejected"].includes(normalizedStatus)) {
@@ -343,9 +391,11 @@ export {
   MAX_CONTRIBUTION_IMAGE_FILE_SIZE,
   PLACE_CONTRIBUTION_STATUSES,
   PRIVATE_PLACE_CONTRIBUTION_FIELDS,
+  PUBLIC_PLACE_IMAGE_PROMOTION_FIELDS,
   PUBLIC_PLACE_CONTRIBUTION_FIELDS,
   buildApproveContributionUpdate,
   buildContributionReviewUpdatePayload,
+  buildContributionImagePromotionPayload,
   buildPlaceContributionCreatePayload,
   buildPublicPlaceContributionPayload,
   buildRejectContributionUpdate,

@@ -517,6 +517,23 @@ service cloud.firestore {
         && isOptionalString('adminNotes', 5000);
     }
 
+    function hasNoPrivateContributionImagePromotionFields() {
+      return !request.resource.data.keys().hasAny([
+        'imageStoragePath',
+        'imageFileName',
+        'imageFileContentType',
+        'imageFileSize',
+        'imageUploadedAt',
+        'imageUploadedByUid',
+        'imageUploadVisibility',
+        'adminNotes',
+        'submittedByUid',
+        'submitterEmail',
+        'submitterDisplayName',
+        'reviewedByUid'
+      ]);
+    }
+
     match /news/{doc=**} {
       allow read: if true;
       allow write: if isAdmin();
@@ -529,7 +546,8 @@ service cloud.firestore {
 
     match /communityPlaces/{doc=**} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create, update: if isAdmin() && hasNoPrivateContributionImagePromotionFields();
+      allow delete: if isAdmin();
     }
 
     match /placeContributions/{contributionId} {

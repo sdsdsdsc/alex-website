@@ -23,6 +23,7 @@ const placeContributions = await import(pathToFileURL(path.join(tempEngineRoot, 
 
 const {
   buildApproveContributionUpdate,
+  buildContributionImagePromotionPayload,
   buildPlaceContributionCreatePayload,
   buildPublicPlaceContributionPayload,
   buildRejectContributionUpdate,
@@ -304,6 +305,71 @@ test("approved uploaded image converted to imageUrl creates public payload", () 
   assert.equal(publicPayload.imageUrl.startsWith("https://firebasestorage.googleapis.com/"), true);
   assert.equal(publicPayload.imageCaption, "Approved uploaded image");
   assert.equal(Object.prototype.hasOwnProperty.call(publicPayload, "imageStoragePath"), false);
+});
+
+test("approved contribution image builds public-safe main image promotion payload", () => {
+  const payload = buildContributionImagePromotionPayload({
+    id: "approved-contribution-1",
+    ...buildValidContribution({
+      contributionStatus: "approved",
+      imageUrl: "https://example.org/contribution-photo.jpg",
+      imageCaption: "South entrance in summer",
+      imageCredit: "Photo by resident",
+      imageRightsStatus: "permission-granted"
+    }),
+    ...buildValidUploadedImageMetadata(),
+    submittedByUid: "public-user-1",
+    submitterEmail: "user@example.org",
+    adminNotes: "private moderation note"
+  }, {
+    promotedContributionImageAt: "promoted",
+    updatedAt: "updated"
+  });
+
+  assert.deepEqual(payload, {
+    imageUrl: "https://example.org/contribution-photo.jpg",
+    promotedContributionId: "approved-contribution-1",
+    promotedContributionImageUrl: "https://example.org/contribution-photo.jpg",
+    imageCaption: "South entrance in summer",
+    imageCredit: "Photo by resident",
+    imageRightsStatus: "permission-granted",
+    promotedContributionImageCaption: "South entrance in summer",
+    promotedContributionImageCredit: "Photo by resident",
+    promotedContributionImageRightsStatus: "permission-granted",
+    promotedContributionImageAt: "promoted",
+    updatedAt: "updated"
+  });
+
+  [
+    "imageStoragePath",
+    "imageFileName",
+    "imageFileContentType",
+    "imageFileSize",
+    "imageUploadedAt",
+    "imageUploadedByUid",
+    "imageUploadVisibility",
+    "submittedByUid",
+    "submitterEmail",
+    "adminNotes"
+  ].forEach((fieldName) => {
+    assert.equal(Object.prototype.hasOwnProperty.call(payload, fieldName), false, `${fieldName} should not be promoted`);
+  });
+});
+
+test("only approved contribution images can be promoted", () => {
+  assert.throws(() => buildContributionImagePromotionPayload(buildValidContribution({
+    contributionStatus: "submitted",
+    imageUrl: "https://example.org/submitted.jpg"
+  }), {
+    contributionId: "submitted-contribution"
+  }), /Only approved contribution images can be promoted/);
+
+  assert.throws(() => buildContributionImagePromotionPayload(buildValidContribution({
+    contributionStatus: "approved",
+    imageUrl: ""
+  }), {
+    contributionId: "approved-text-only"
+  }), /Only approved contribution images can be promoted/);
 });
 
 test("admin approve update payload is correct", () => {
