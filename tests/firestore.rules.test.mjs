@@ -103,6 +103,31 @@ function validContributionUploadedImageMetadata(overrides = {}) {
   };
 }
 
+function validSubmittedPlaceContributionReply(overrides = {}) {
+  return {
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-reply-parent",
+    replyText: "A signed-in community reply awaiting moderation.",
+    replyStatus: "submitted",
+    submittedAt: timestamp(70),
+    submittedByUid: OWNER_UID,
+    submittedByDisplayName: "Owner Example",
+    ...overrides
+  };
+}
+
+function validApprovedPlaceContributionReply(overrides = {}) {
+  return {
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-reply-parent",
+    replyText: "An approved public community reply.",
+    replyStatus: "approved",
+    submittedAt: timestamp(71),
+    approvedAt: timestamp(72),
+    ...overrides
+  };
+}
+
 function ownerFirestore() {
   return testEnv.authenticatedContext(OWNER_UID, { email: OWNER_EMAIL }).firestore();
 }
@@ -127,6 +152,13 @@ async function seedDocument(path, data) {
   await testEnv.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), path), data);
   });
+}
+
+async function seedApprovedReplyParent(overrides = {}) {
+  await seedDocument(
+    "placeContributions/approved-reply-parent",
+    validPlaceContribution(overrides)
+  );
 }
 
 before(async () => {
@@ -656,6 +688,198 @@ test("non-admin users cannot approve or reject submitted place contributions", a
       updatedAt: timestamp(59),
       adminNotes: "Not allowed."
     }
+  ));
+});
+
+test("signed-in users can create submitted replies to approved place contributions as themselves", async () => {
+  await seedApprovedReplyParent();
+
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeContributionReplies", "owner-submitted-reply"),
+    validSubmittedPlaceContributionReply()
+  ));
+});
+
+test("signed-out users cannot create place contribution replies", async () => {
+  await seedApprovedReplyParent();
+
+  await assertFails(setDoc(
+    doc(testEnv.unauthenticatedContext().firestore(), "placeContributionReplies", "signed-out-reply"),
+    validSubmittedPlaceContributionReply()
+  ));
+});
+
+test("signed-in users cannot forge another reply submitter UID", async () => {
+  await seedApprovedReplyParent();
+
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeContributionReplies", "forged-reply-owner"),
+    validSubmittedPlaceContributionReply({
+      submittedByUid: OTHER_UID
+    })
+  ));
+});
+
+test("signed-in users cannot create approved or rejected replies directly", async () => {
+  await seedApprovedReplyParent();
+
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeContributionReplies", "direct-approved-reply"),
+    validSubmittedPlaceContributionReply({
+      replyStatus: "approved",
+      approvedAt: timestamp(73)
+    })
+  ));
+
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeContributionReplies", "direct-rejected-reply"),
+    validSubmittedPlaceContributionReply({
+      replyStatus: "rejected",
+      rejectedAt: timestamp(74),
+      rejectedByUid: ADMIN_UID
+    })
+  ));
+});
+
+test("signed-in users cannot include reply moderation fields during create", async () => {
+  await seedApprovedReplyParent();
+
+  for (const [fieldName, value] of [
+    ["approvedAt", timestamp(75)],
+    ["approvedByUid", ADMIN_UID],
+    ["rejectedAt", timestamp(76)],
+    ["rejectedByUid", ADMIN_UID],
+    ["adminNotes", "Private reply moderation note"]
+  ]) {
+    await assertFails(setDoc(
+      doc(ownerFirestore(), "placeContributionReplies", `forbidden-reply-${fieldName}`),
+      validSubmittedPlaceContributionReply({
+        [fieldName]: value
+      })
+    ));
+  }
+});
+
+test("signed-in users cannot create replies for non-approved or mismatched parent contributions", async () => {
+  await seedDocument(
+    "placeContributions/submitted-reply-parent",
+    validSubmittedPlaceContribution({
+      placeId: "phase-11c-image-promotion-live-test-20260630024821"
+    })
+  );
+  await seedApprovedReplyParent({
+    placeId: "another-place"
+  });
+
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeContributionReplies", "submitted-parent-reply"),
+    validSubmittedPlaceContributionReply({
+      contributionId: "submitted-reply-parent"
+    })
+  ));
+
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeContributionReplies", "mismatched-parent-reply"),
+    validSubmittedPlaceContributionReply()
+  ));
+});
+
+test("public users can read approved place contribution replies with public-safe fields", async () => {
+  await seedDocument(
+    "placeContributionReplies/approved-public-reply",
+    validApprovedPlaceContributionReply()
+  );
+
+  const snapshot = await assertSucceeds(getDoc(
+    doc(testEnv.unauthenticatedContext().firestore(), "placeContributionReplies", "approved-public-reply")
+  ));
+
+  assert.equal(snapshot.exists(), true);
+  assert.equal(snapshot.data().replyStatus, "approved");
+  assert.equal(Object.prototype.hasOwnProperty.call(snapshot.data(), "submittedByUid"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(snapshot.data(), "adminNotes"), false);
+});
+
+test("public users cannot read submitted or rejected place contribution replies", async () => {
+  await seedDocument(
+    "placeContributionReplies/submitted-private-reply",
+    validSubmittedPlaceContributionReply()
+  );
+  await seedDocument(
+    "placeContributionReplies/rejected-private-reply",
+    validSubmittedPlaceContributionReply({
+      replyStatus: "rejected",
+      rejectedAt: timestamp(77),
+      rejectedByUid: ADMIN_UID,
+      adminNotes: "Reply rejected in moderation."
+    })
+  );
+
+  const publicDb = testEnv.unauthenticatedContext().firestore();
+  await assertFails(getDoc(
+    doc(publicDb, "placeContributionReplies", "submitted-private-reply")
+  ));
+  await assertFails(getDoc(
+    doc(publicDb, "placeContributionReplies", "rejected-private-reply")
+  ));
+});
+
+test("admins can read submitted place contribution replies for moderation", async () => {
+  await seedDocument(
+    "placeContributionReplies/admin-readable-submitted-reply",
+    validSubmittedPlaceContributionReply()
+  );
+
+  const snapshot = await assertSucceeds(getDoc(
+    doc(adminFirestore(), "placeContributionReplies", "admin-readable-submitted-reply")
+  ));
+
+  assert.equal(snapshot.data().replyStatus, "submitted");
+  assert.equal(snapshot.data().submittedByUid, OWNER_UID);
+});
+
+test("admins can approve submitted place contribution replies into a public-safe shape", async () => {
+  await seedDocument(
+    "placeContributionReplies/admin-approve-reply",
+    validSubmittedPlaceContributionReply()
+  );
+
+  await assertSucceeds(updateDoc(
+    doc(adminFirestore(), "placeContributionReplies", "admin-approve-reply"),
+    {
+      replyStatus: "approved",
+      approvedAt: timestamp(78),
+      submittedByUid: deleteField(),
+      submittedByDisplayName: deleteField()
+    }
+  ));
+
+  const publicSnapshot = await assertSucceeds(getDoc(
+    doc(testEnv.unauthenticatedContext().firestore(), "placeContributionReplies", "admin-approve-reply")
+  ));
+  assert.equal(publicSnapshot.data().replyStatus, "approved");
+  assert.equal(Object.prototype.hasOwnProperty.call(publicSnapshot.data(), "submittedByUid"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(publicSnapshot.data(), "submittedByDisplayName"), false);
+});
+
+test("admins can reject submitted place contribution replies while keeping them private", async () => {
+  await seedDocument(
+    "placeContributionReplies/admin-reject-reply",
+    validSubmittedPlaceContributionReply()
+  );
+
+  await assertSucceeds(updateDoc(
+    doc(adminFirestore(), "placeContributionReplies", "admin-reject-reply"),
+    {
+      replyStatus: "rejected",
+      rejectedAt: timestamp(79),
+      rejectedByUid: ADMIN_UID,
+      adminNotes: "Reply does not meet moderation guidelines."
+    }
+  ));
+
+  await assertFails(getDoc(
+    doc(testEnv.unauthenticatedContext().firestore(), "placeContributionReplies", "admin-reject-reply")
   ));
 });
 
