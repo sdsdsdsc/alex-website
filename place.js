@@ -46,7 +46,8 @@ import {
 } from "./heritage-engine/relationships.js?v=2026-06-19-12a";
 import {
   buildPlaceContributionCreatePayload,
-  buildPublicPlaceContributionPayload
+  buildPublicPlaceContributionPayload,
+  groupPublicPlaceContributionRepliesByContribution
 } from "./heritage-engine/place-contributions.js?v=2026-07-05-13b-contribution-upload-ui";
 
 const firebaseConfig = {
@@ -793,12 +794,64 @@ function renderContributionImage(contribution, card) {
   card.appendChild(figure);
 }
 
-function renderApprovedPlaceContributions(contributions) {
+function getReplySortTime(reply) {
+  const dateValue = reply?.approvedAt || reply?.submittedAt;
+  if (typeof dateValue?.toMillis === "function") return dateValue.toMillis();
+  if (typeof dateValue?.toDate === "function") return dateValue.toDate().getTime();
+  const parsed = Date.parse(cleanText(dateValue));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function renderContributionReplies(replies, footer) {
+  if (!Array.isArray(replies) || replies.length === 0 || !footer) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "place-contribution-card__replies";
+
+  const heading = document.createElement("p");
+  heading.className = "place-contribution-card__reply-heading";
+  heading.textContent = replies.length === 1 ? "1 approved reply" : `${replies.length} approved replies`;
+  wrapper.appendChild(heading);
+
+  const list = document.createElement("div");
+  list.className = "place-contribution-card__reply-list";
+
+  replies
+    .slice()
+    .sort((a, b) => getReplySortTime(a) - getReplySortTime(b))
+    .forEach((reply) => {
+      const item = document.createElement("article");
+      item.className = "place-contribution-card__reply-item";
+
+      const text = document.createElement("p");
+      text.className = "place-contribution-card__reply-text";
+      text.textContent = cleanText(reply.replyText) || "Approved reply";
+      item.appendChild(text);
+
+      const dateText = formatRecordDate(reply.approvedAt || reply.submittedAt);
+      if (dateText) {
+        const date = document.createElement("p");
+        date.className = "place-contribution-card__reply-date";
+        date.textContent = `Approved reply | ${dateText}`;
+        item.appendChild(date);
+      }
+
+      list.appendChild(item);
+    });
+
+  wrapper.appendChild(list);
+  footer.appendChild(wrapper);
+}
+
+function renderApprovedPlaceContributions(contributions, repliesByContribution = {}) {
   if (!els.contributionsList || !els.contributionsEmpty) return;
   els.contributionsList.textContent = "";
 
   const publicContributions = contributions
-    .map((contribution) => buildPublicPlaceContributionPayload(contribution))
+    .map((contribution) => {
+      const publicContribution = buildPublicPlaceContributionPayload(contribution);
+      return publicContribution ? { id: contribution.id, ...publicContribution } : null;
+    })
     .filter(Boolean)
     .sort((a, b) => getContributionSortTime(b) - getContributionSortTime(a));
 
@@ -863,10 +916,7 @@ function renderApprovedPlaceContributions(contributions) {
       : "Approved community contribution";
     footer.appendChild(meta);
 
-    const reply = document.createElement("p");
-    reply.className = "place-contribution-card__reply";
-    reply.textContent = "Replies and new contribution submission will be added later.";
-    footer.appendChild(reply);
+    renderContributionReplies(repliesByContribution[contribution.id] || [], footer);
 
     card.appendChild(footer);
 
@@ -887,11 +937,24 @@ async function loadApprovedPlaceContributions(placeId) {
       where("placeId", "==", placeId),
       where("contributionStatus", "==", "approved")
     );
-    const snapshot = await getDocs(contributionsQuery);
-    renderApprovedPlaceContributions(snapshot.docs.map((contributionDoc) => ({
-      id: contributionDoc.id,
-      ...contributionDoc.data()
-    })));
+    const repliesQuery = query(
+      collection(db, "placeContributionReplies"),
+      where("placeId", "==", placeId),
+      where("replyStatus", "==", "approved")
+    );
+    const [contributionSnapshot, replySnapshot] = await Promise.all([
+      getDocs(contributionsQuery),
+      getDocs(repliesQuery)
+    ]);
+    renderApprovedPlaceContributions(
+      contributionSnapshot.docs.map((contributionDoc) => ({
+        id: contributionDoc.id,
+        ...contributionDoc.data()
+      })),
+      groupPublicPlaceContributionRepliesByContribution(
+        replySnapshot.docs.map((replyDoc) => replyDoc.data())
+      )
+    );
     if (!els.contributionsEmpty.hidden) {
       els.contributionsEmpty.textContent = "No approved community comments or photos have been added yet. Approved community comments and photos will appear here after review.";
     }

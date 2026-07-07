@@ -3853,6 +3853,48 @@ footer {
   font-weight: 700;
 }
 
+.place-contribution-card__replies {
+  flex: 1 1 100%;
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(67, 94, 87, 0.18);
+}
+
+.place-contribution-card__reply-heading {
+  margin: 0;
+  color: #2f4c44;
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.place-contribution-card__reply-list {
+  display: grid;
+  gap: 10px;
+}
+
+.place-contribution-card__reply-item {
+  padding: 12px 14px;
+  background: #f3f8f5;
+  border-left: 3px solid #8fb89e;
+}
+
+.place-contribution-card__reply-text {
+  margin: 0;
+  color: #214238;
+  font-size: 0.96rem;
+  line-height: 1.55;
+}
+
+.place-contribution-card__reply-date {
+  margin: 6px 0 0;
+  color: #52615d;
+  font-size: 0.79rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .place-comments-panel__notice {
   padding: 22px 20px;
   background: #dff3ec;

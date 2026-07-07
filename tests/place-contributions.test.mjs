@@ -26,9 +26,11 @@ const {
   buildContributionImagePromotionPayload,
   buildPlaceContributionCreatePayload,
   buildPublicPlaceContributionPayload,
+  buildPublicPlaceContributionReplyPayload,
   buildRejectContributionUpdate,
   getInitialContributionStatus,
-  getPlaceContributionValidationErrors
+  getPlaceContributionValidationErrors,
+  groupPublicPlaceContributionRepliesByContribution
 } = placeContributions;
 
 function buildValidContribution(overrides = {}) {
@@ -58,6 +60,18 @@ function buildValidUploadedImageMetadata(overrides = {}) {
     imageUploadedAt: "uploaded",
     imageUploadedByUid: "public-user-1",
     imageUploadVisibility: "contribution-private",
+    ...overrides
+  };
+}
+
+function buildValidReply(overrides = {}) {
+  return {
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "A later resident reply adds more context.",
+    replyStatus: "approved",
+    submittedAt: "submitted",
+    approvedAt: "approved",
     ...overrides
   };
 }
@@ -305,6 +319,81 @@ test("approved uploaded image converted to imageUrl creates public payload", () 
   assert.equal(publicPayload.imageUrl.startsWith("https://firebasestorage.googleapis.com/"), true);
   assert.equal(publicPayload.imageCaption, "Approved uploaded image");
   assert.equal(Object.prototype.hasOwnProperty.call(publicPayload, "imageStoragePath"), false);
+});
+
+test("approved reply creates a public-safe payload", () => {
+  const publicPayload = buildPublicPlaceContributionReplyPayload({
+    ...buildValidReply(),
+    submittedByUid: "public-user-1",
+    submittedByDisplayName: "Resident One",
+    approvedByUid: "admin-user-1",
+    adminNotes: "private moderation note"
+  });
+
+  assert.deepEqual(publicPayload, {
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "A later resident reply adds more context.",
+    replyStatus: "approved",
+    submittedAt: "submitted",
+    approvedAt: "approved"
+  });
+});
+
+test("submitted and rejected replies do not create public payloads", () => {
+  assert.equal(buildPublicPlaceContributionReplyPayload(buildValidReply({
+    replyStatus: "submitted"
+  })), null);
+
+  assert.equal(buildPublicPlaceContributionReplyPayload(buildValidReply({
+    replyStatus: "rejected"
+  })), null);
+});
+
+test("approved replies are grouped under their matching contribution IDs", () => {
+  const groupedReplies = groupPublicPlaceContributionRepliesByContribution([
+    buildValidReply({
+      contributionId: "approved-contribution-2",
+      replyText: "Second contribution reply.",
+      approvedAt: "2026-07-08"
+    }),
+    buildValidReply({
+      contributionId: "approved-contribution-1",
+      replyText: "First contribution older reply.",
+      approvedAt: "2026-07-06"
+    }),
+    buildValidReply({
+      contributionId: "approved-contribution-1",
+      replyText: "First contribution newer reply.",
+      approvedAt: "2026-07-07",
+      submittedByUid: "should-not-leak"
+    }),
+    buildValidReply({
+      contributionId: "approved-contribution-1",
+      replyText: "Submitted reply should stay hidden.",
+      replyStatus: "submitted"
+    })
+  ]);
+
+  assert.deepEqual(Object.keys(groupedReplies).sort(), [
+    "approved-contribution-1",
+    "approved-contribution-2"
+  ]);
+  assert.deepEqual(
+    groupedReplies["approved-contribution-1"].map((reply) => reply.replyText),
+    [
+      "First contribution older reply.",
+      "First contribution newer reply."
+    ]
+  );
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(groupedReplies["approved-contribution-1"][1], "submittedByUid"),
+    false
+  );
+  assert.deepEqual(
+    groupedReplies["approved-contribution-2"].map((reply) => reply.replyText),
+    ["Second contribution reply."]
+  );
 });
 
 test("approved contribution image builds public-safe main image promotion payload", () => {

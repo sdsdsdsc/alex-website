@@ -37,6 +37,14 @@ const PUBLIC_PLACE_CONTRIBUTION_FIELDS = Object.freeze([
   "updatedAt",
   "reviewedAt"
 ]);
+const PUBLIC_PLACE_CONTRIBUTION_REPLY_FIELDS = Object.freeze([
+  "placeId",
+  "contributionId",
+  "replyText",
+  "replyStatus",
+  "submittedAt",
+  "approvedAt"
+]);
 const PUBLIC_PLACE_IMAGE_PROMOTION_FIELDS = Object.freeze([
   "imageUrl",
   "imageCaption",
@@ -66,10 +74,20 @@ const PRIVATE_PLACE_CONTRIBUTION_FIELDS = Object.freeze([
   "imageUploadedByUid",
   "imageUploadVisibility"
 ]);
+const PRIVATE_PLACE_CONTRIBUTION_REPLY_FIELDS = Object.freeze([
+  "submittedByUid",
+  "submittedByDisplayName",
+  "approvedByUid",
+  "rejectedAt",
+  "rejectedByUid",
+  "adminNotes"
+]);
 const FIELD_LIMITS = Object.freeze({
   placeId: 160,
   placeTitleSnapshot: 160,
   contributionText: 5000,
+  contributionId: 120,
+  replyText: 2000,
   imageUrl: 1000,
   imageCaption: 300,
   imageCredit: 300,
@@ -310,6 +328,68 @@ function buildPublicPlaceContributionPayload(record = {}) {
   return payload;
 }
 
+function stripPrivatePlaceContributionReplyFields(value) {
+  if (Array.isArray(value)) {
+    return value.map(stripPrivatePlaceContributionReplyFields);
+  }
+
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+
+  return Object.entries(value).reduce((clean, [key, entry]) => {
+    if (PRIVATE_PLACE_CONTRIBUTION_REPLY_FIELDS.includes(key)) {
+      return clean;
+    }
+    clean[key] = stripPrivatePlaceContributionReplyFields(entry);
+    return clean;
+  }, {});
+}
+
+function buildPublicPlaceContributionReplyPayload(record = {}) {
+  if (cleanText(record.replyStatus).toLowerCase() !== "approved") {
+    return null;
+  }
+
+  const stripped = stripPrivatePlaceContributionReplyFields(record);
+  const payload = {};
+
+  PUBLIC_PLACE_CONTRIBUTION_REPLY_FIELDS.forEach((field) => {
+    const value = stripped[field];
+    if (value === undefined || value === null || value === "") {
+      return;
+    }
+    payload[field] = value;
+  });
+
+  return payload;
+}
+
+function getReplySortTime(reply = {}) {
+  const dateValue = reply.approvedAt || reply.submittedAt;
+  if (typeof dateValue?.toMillis === "function") return dateValue.toMillis();
+  if (typeof dateValue?.toDate === "function") return dateValue.toDate().getTime();
+  const parsed = Date.parse(cleanText(dateValue));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function groupPublicPlaceContributionRepliesByContribution(records = []) {
+  return records.reduce((groups, record) => {
+    const publicReply = buildPublicPlaceContributionReplyPayload(record);
+    const contributionId = cleanText(publicReply?.contributionId);
+    if (!publicReply || !contributionId) {
+      return groups;
+    }
+
+    if (!groups[contributionId]) {
+      groups[contributionId] = [];
+    }
+    groups[contributionId].push(publicReply);
+    groups[contributionId].sort((a, b) => getReplySortTime(a) - getReplySortTime(b));
+    return groups;
+  }, {});
+}
+
 function buildContributionImagePromotionPayload(record = {}, options = {}) {
   const publicContribution = buildPublicPlaceContributionPayload(record);
   const contributionId = cleanText(options.contributionId || record.id);
@@ -391,14 +471,18 @@ export {
   MAX_CONTRIBUTION_IMAGE_FILE_SIZE,
   PLACE_CONTRIBUTION_STATUSES,
   PRIVATE_PLACE_CONTRIBUTION_FIELDS,
+  PRIVATE_PLACE_CONTRIBUTION_REPLY_FIELDS,
   PUBLIC_PLACE_IMAGE_PROMOTION_FIELDS,
   PUBLIC_PLACE_CONTRIBUTION_FIELDS,
+  PUBLIC_PLACE_CONTRIBUTION_REPLY_FIELDS,
   buildApproveContributionUpdate,
   buildContributionReviewUpdatePayload,
   buildContributionImagePromotionPayload,
   buildPlaceContributionCreatePayload,
   buildPublicPlaceContributionPayload,
+  buildPublicPlaceContributionReplyPayload,
   buildRejectContributionUpdate,
+  groupPublicPlaceContributionRepliesByContribution,
   getInitialContributionStatus,
   getPlaceContributionValidationErrors,
   hasValidUploadedContributionImage,
@@ -407,6 +491,7 @@ export {
   normalizeContributionTextFields,
   normalizeImageRightsStatus,
   stripPrivatePlaceContributionFields,
+  stripPrivatePlaceContributionReplyFields,
   validatePlaceContributionImageFields,
   validatePlaceContributionRequiredFields,
   validatePlaceContributionSubmission
