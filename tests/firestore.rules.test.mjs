@@ -862,6 +862,32 @@ test("admins can approve submitted place contribution replies into a public-safe
   assert.equal(Object.prototype.hasOwnProperty.call(publicSnapshot.data(), "submittedByDisplayName"), false);
 });
 
+test("non-admin users cannot approve or reject submitted place contribution replies", async () => {
+  await seedDocument(
+    "placeContributionReplies/non-admin-review-reply",
+    validSubmittedPlaceContributionReply()
+  );
+
+  await assertFails(updateDoc(
+    doc(ownerFirestore(), "placeContributionReplies", "non-admin-review-reply"),
+    {
+      replyStatus: "approved",
+      approvedAt: timestamp(80),
+      approvedByUid: OWNER_UID
+    }
+  ));
+
+  await assertFails(updateDoc(
+    doc(ownerFirestore(), "placeContributionReplies", "non-admin-review-reply"),
+    {
+      replyStatus: "rejected",
+      rejectedAt: timestamp(81),
+      rejectedByUid: OWNER_UID,
+      adminNotes: "Not allowed."
+    }
+  ));
+});
+
 test("admins can reject submitted place contribution replies while keeping them private", async () => {
   await seedDocument(
     "placeContributionReplies/admin-reject-reply",
@@ -881,6 +907,31 @@ test("admins can reject submitted place contribution replies while keeping them 
   await assertFails(getDoc(
     doc(testEnv.unauthenticatedContext().firestore(), "placeContributionReplies", "admin-reject-reply")
   ));
+});
+
+test("approved replies with private or moderation fields are not publicly readable", async () => {
+  for (const [fieldName, value] of [
+    ["submittedByUid", OWNER_UID],
+    ["submittedByDisplayName", "Owner Example"],
+    ["adminNotes", "Private moderation note"],
+    ["approvedByUid", ADMIN_UID],
+    ["rejectedByUid", ADMIN_UID]
+  ]) {
+    await seedDocument(
+      `placeContributionReplies/approved-private-reply-${fieldName}`,
+      validApprovedPlaceContributionReply({
+        [fieldName]: value
+      })
+    );
+
+    await assertFails(getDoc(
+      doc(
+        testEnv.unauthenticatedContext().firestore(),
+        "placeContributionReplies",
+        `approved-private-reply-${fieldName}`
+      )
+    ));
+  }
 });
 
 test("a signed-in owner can create a valid nomination", async () => {
