@@ -202,6 +202,25 @@ test("contribution image promotion updates public place image fields by admin on
   assert.equal(publicSnapshot.data().promotedContributionId, "approved-contribution-1");
 });
 
+test("contribution image promotion cannot rewrite unrelated place fields in the same update", async () => {
+  await seedDocument("communityPlaces/promotion-shape-target", {
+    title: "Promotion Shape Target",
+    imageUrl: "https://example.org/original-place-image.jpg"
+  });
+
+  await assertFails(updateDoc(
+    doc(adminFirestore(), "communityPlaces", "promotion-shape-target"),
+    {
+      imageUrl: "https://example.org/approved-contribution-photo.jpg",
+      promotedContributionId: "approved-contribution-1",
+      promotedContributionImageUrl: "https://example.org/approved-contribution-photo.jpg",
+      promotedContributionImageAt: timestamp(24),
+      updatedAt: timestamp(25),
+      title: "Should not be rewritten through the promotion path"
+    }
+  ));
+});
+
 test("community place image promotion cannot write private contribution upload fields", async () => {
   await seedDocument("communityPlaces/private-promotion-target", {
     title: "Private Promotion Target",
@@ -468,6 +487,11 @@ test("submitted place contributions must include text and or an HTTPS image URL"
 });
 
 test("only admins can approve submitted place contributions into a public-safe shape", async () => {
+  await seedDocument("communityPlaces/phase-11c-image-promotion-live-test-20260630024821", {
+    title: "Phase 11C Image Promotion Live Test 20260630024821",
+    imageUrl: "https://example.org/original-main-place-image.jpg"
+  });
+
   await seedDocument(
     "placeContributions/admin-approve",
     validSubmittedPlaceContribution({
@@ -498,6 +522,12 @@ test("only admins can approve submitted place contributions into a public-safe s
   assert.equal(publicSnapshot.exists(), true);
   assert.equal(publicSnapshot.data().contributionStatus, "approved");
   assert.equal(Object.prototype.hasOwnProperty.call(publicSnapshot.data(), "submittedByUid"), false);
+
+  const placeSnapshot = await assertSucceeds(getDoc(
+    doc(testEnv.unauthenticatedContext().firestore(), "communityPlaces", "phase-11c-image-promotion-live-test-20260630024821")
+  ));
+  assert.equal(placeSnapshot.data().imageUrl, "https://example.org/original-main-place-image.jpg");
+  assert.equal(Object.prototype.hasOwnProperty.call(placeSnapshot.data(), "promotedContributionId"), false);
 });
 
 test("admin approval of uploaded-image contributions must remove private fields and leave public-safe output", async () => {

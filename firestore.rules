@@ -534,6 +534,65 @@ service cloud.firestore {
       ]);
     }
 
+    function touchesCommunityPlacePromotionFields() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'imageUrl',
+        'imageCaption',
+        'imageCredit',
+        'imageRightsStatus',
+        'updatedAt',
+        'promotedContributionId',
+        'promotedContributionImageUrl',
+        'promotedContributionImageCaption',
+        'promotedContributionImageCredit',
+        'promotedContributionImageRightsStatus',
+        'promotedContributionImageAt'
+      ]);
+    }
+
+    function isValidCommunityPlacePromotionUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'imageUrl',
+          'imageCaption',
+          'imageCredit',
+          'imageRightsStatus',
+          'updatedAt',
+          'promotedContributionId',
+          'promotedContributionImageUrl',
+          'promotedContributionImageCaption',
+          'promotedContributionImageCredit',
+          'promotedContributionImageRightsStatus',
+          'promotedContributionImageAt'
+        ])
+        && hasNoPrivateContributionImagePromotionFields()
+        && isOptionalHttpsEvidenceUrl('imageUrl', 1000)
+        && isOptionalString('imageCaption', 300)
+        && isOptionalString('imageCredit', 300)
+        && (
+          !hasField('imageRightsStatus')
+          || request.resource.data.imageRightsStatus == null
+          || (
+            request.resource.data.imageRightsStatus is string
+            && request.resource.data.imageRightsStatus.size() <= 64
+            && isAllowedContributionImageRightsStatus(request.resource.data.imageRightsStatus)
+          )
+        )
+        && isTrimmedString(request.resource.data.promotedContributionId, 120)
+        && isOptionalHttpsEvidenceUrl('promotedContributionImageUrl', 1000)
+        && isOptionalString('promotedContributionImageCaption', 300)
+        && isOptionalString('promotedContributionImageCredit', 300)
+        && (
+          request.resource.data.get('promotedContributionImageRightsStatus', null) == null
+          || (
+            request.resource.data.promotedContributionImageRightsStatus is string
+            && request.resource.data.promotedContributionImageRightsStatus.size() <= 64
+            && isAllowedContributionImageRightsStatus(request.resource.data.promotedContributionImageRightsStatus)
+          )
+        )
+        && request.resource.data.promotedContributionImageAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+    }
+
     match /news/{doc=**} {
       allow read: if true;
       allow write: if isAdmin();
@@ -546,7 +605,14 @@ service cloud.firestore {
 
     match /communityPlaces/{doc=**} {
       allow read: if true;
-      allow create, update: if isAdmin() && hasNoPrivateContributionImagePromotionFields();
+      allow create: if isAdmin() && hasNoPrivateContributionImagePromotionFields();
+      allow update: if isAdmin() && (
+        isValidCommunityPlacePromotionUpdate()
+        || (
+          !touchesCommunityPlacePromotionFields()
+          && hasNoPrivateContributionImagePromotionFields()
+        )
+      );
       allow delete: if isAdmin();
     }
 

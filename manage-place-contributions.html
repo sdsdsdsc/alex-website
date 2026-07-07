@@ -593,14 +593,24 @@
       card.appendChild(promotionSection);
 
       getPlacePromotionState(record.placeId).then((place) => {
-        const isCurrent = cleanText(place?.promotedContributionId) === cleanText(record.id)
-          || (isSafeHttpsUrl(place?.imageUrl) && cleanText(place.imageUrl) === cleanText(record.imageUrl));
-        if (isCurrent) {
+        const promotedContributionId = cleanText(place?.promotedContributionId);
+        const isCurrentById = promotedContributionId && promotedContributionId === cleanText(record.id);
+        const isLegacyUrlMatch = !promotedContributionId
+          && isSafeHttpsUrl(place?.imageUrl)
+          && cleanText(place.imageUrl) === cleanText(record.imageUrl);
+
+        if (isCurrentById) {
           promoteButton.disabled = true;
           promoteButton.textContent = "Current main image";
           saveMessage.textContent = "This approved contribution image is currently used as the main public place image.";
           return;
         }
+
+        if (isLegacyUrlMatch) {
+          saveMessage.textContent = "The current main image URL matches this approved contribution, but the place record has no promoted contribution ID yet.";
+          return;
+        }
+
         saveMessage.textContent = "Ready to promote this approved image.";
       });
 
