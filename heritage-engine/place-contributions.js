@@ -400,6 +400,58 @@ function buildPlaceContributionReplyCreatePayload(values = {}, timestamps = {}) 
   return payload;
 }
 
+function buildApproveContributionReplyPayload(record = {}, timestamps = {}) {
+  const normalized = normalizeContributionTextFields(record);
+
+  if (cleanText(record.replyStatus).toLowerCase() !== "submitted") {
+    throw new Error("Only submitted replies can be approved.");
+  }
+  if (!normalized.placeId) {
+    throw new Error("Place ID is required.");
+  }
+  if (!normalized.contributionId) {
+    throw new Error("Contribution ID is required.");
+  }
+  if (!normalized.replyText) {
+    throw new Error("Reply text is required.");
+  }
+  if (record.submittedAt === undefined || record.submittedAt === null) {
+    throw new Error("Submitted timestamp is required.");
+  }
+  if (timestamps.approvedAt === undefined || timestamps.approvedAt === null) {
+    throw new Error("Approved timestamp is required.");
+  }
+
+  return {
+    placeId: normalized.placeId,
+    contributionId: normalized.contributionId,
+    replyText: normalized.replyText,
+    replyStatus: "approved",
+    submittedAt: record.submittedAt,
+    approvedAt: timestamps.approvedAt
+  };
+}
+
+function buildRejectContributionReplyUpdate(values = {}, timestamps = {}) {
+  const rejectedByUid = cleanText(values.rejectedByUid);
+  if (!rejectedByUid) {
+    throw new Error("Admin reviewer UID is required.");
+  }
+  if (timestamps.rejectedAt === undefined || timestamps.rejectedAt === null) {
+    throw new Error("Rejected timestamp is required.");
+  }
+
+  const normalized = normalizeContributionTextFields(values);
+  const payload = {
+    replyStatus: "rejected",
+    rejectedAt: timestamps.rejectedAt,
+    rejectedByUid
+  };
+
+  addOptionalText(payload, "adminNotes", normalized.adminNotes);
+  return payload;
+}
+
 function getReplySortTime(reply = {}) {
   const dateValue = reply.approvedAt || reply.submittedAt;
   if (typeof dateValue?.toMillis === "function") return dateValue.toMillis();
@@ -511,12 +563,14 @@ export {
   PUBLIC_PLACE_CONTRIBUTION_FIELDS,
   PUBLIC_PLACE_CONTRIBUTION_REPLY_FIELDS,
   buildApproveContributionUpdate,
+  buildApproveContributionReplyPayload,
   buildContributionReviewUpdatePayload,
   buildContributionImagePromotionPayload,
   buildPlaceContributionCreatePayload,
   buildPlaceContributionReplyCreatePayload,
   buildPublicPlaceContributionPayload,
   buildPublicPlaceContributionReplyPayload,
+  buildRejectContributionReplyUpdate,
   buildRejectContributionUpdate,
   groupPublicPlaceContributionRepliesByContribution,
   getInitialContributionStatus,

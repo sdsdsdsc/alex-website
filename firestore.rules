@@ -686,18 +686,16 @@ service cloud.firestore {
     function isValidPlaceContributionReplyApproveUpdate() {
       return isAdmin()
         && resource.data.replyStatus == 'submitted'
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'replyStatus',
-          'approvedAt',
-          'submittedByUid',
-          'submittedByDisplayName'
-        ])
         && request.resource.data.replyStatus == 'approved'
         && request.resource.data.approvedAt is timestamp
         && requestHasPublicPlaceContributionReplyFields()
         && isTrimmedString(request.resource.data.placeId, 160)
         && isTrimmedString(request.resource.data.contributionId, 120)
-        && isTrimmedString(request.resource.data.replyText, 2000);
+        && isTrimmedString(request.resource.data.replyText, 2000)
+        && request.resource.data.placeId == resource.data.placeId
+        && request.resource.data.contributionId == resource.data.contributionId
+        && request.resource.data.replyText == resource.data.replyText
+        && request.resource.data.submittedAt == resource.data.submittedAt;
     }
 
     function isValidPlaceContributionReplyRejectUpdate() {

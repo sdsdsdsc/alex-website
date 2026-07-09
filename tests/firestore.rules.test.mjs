@@ -862,6 +862,58 @@ test("admins can approve submitted place contribution replies into a public-safe
   assert.equal(Object.prototype.hasOwnProperty.call(publicSnapshot.data(), "submittedByDisplayName"), false);
 });
 
+test("admins can replace submitted place contribution replies with only public-safe approval fields", async () => {
+  await seedDocument(
+    "placeContributionReplies/admin-replace-approve-reply",
+    validSubmittedPlaceContributionReply({
+      submittedByDisplayName: "Owner Example"
+    })
+  );
+
+  await assertSucceeds(setDoc(
+    doc(adminFirestore(), "placeContributionReplies", "admin-replace-approve-reply"),
+    {
+      placeId: "phase-11c-image-promotion-live-test-20260630024821",
+      contributionId: "approved-reply-parent",
+      replyText: "A signed-in community reply awaiting moderation.",
+      replyStatus: "approved",
+      submittedAt: timestamp(70),
+      approvedAt: timestamp(82)
+    }
+  ));
+
+  const publicSnapshot = await assertSucceeds(getDoc(
+    doc(testEnv.unauthenticatedContext().firestore(), "placeContributionReplies", "admin-replace-approve-reply")
+  ));
+  assert.deepEqual(Object.keys(publicSnapshot.data()).sort(), [
+    "approvedAt",
+    "contributionId",
+    "placeId",
+    "replyStatus",
+    "replyText",
+    "submittedAt"
+  ]);
+});
+
+test("reply approval cannot rewrite submitted reply public content", async () => {
+  await seedDocument(
+    "placeContributionReplies/admin-approve-rewrite-reply",
+    validSubmittedPlaceContributionReply()
+  );
+
+  await assertFails(setDoc(
+    doc(adminFirestore(), "placeContributionReplies", "admin-approve-rewrite-reply"),
+    {
+      placeId: "phase-11c-image-promotion-live-test-20260630024821",
+      contributionId: "approved-reply-parent",
+      replyText: "Changed during approval.",
+      replyStatus: "approved",
+      submittedAt: timestamp(70),
+      approvedAt: timestamp(83)
+    }
+  ));
+});
+
 test("non-admin users cannot approve or reject submitted place contribution replies", async () => {
   await seedDocument(
     "placeContributionReplies/non-admin-review-reply",

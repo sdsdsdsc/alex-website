@@ -23,11 +23,13 @@ const placeContributions = await import(pathToFileURL(path.join(tempEngineRoot, 
 
 const {
   buildApproveContributionUpdate,
+  buildApproveContributionReplyPayload,
   buildContributionImagePromotionPayload,
   buildPlaceContributionCreatePayload,
   buildPlaceContributionReplyCreatePayload,
   buildPublicPlaceContributionPayload,
   buildPublicPlaceContributionReplyPayload,
+  buildRejectContributionReplyUpdate,
   buildRejectContributionUpdate,
   getInitialContributionStatus,
   getPlaceContributionValidationErrors,
@@ -476,6 +478,47 @@ test("submitted reply is not added to approved reply renderer groups immediately
   ]);
 
   assert.deepEqual(groupedReplies, {});
+});
+
+test("reply approval payload replaces submitted reply with public-safe fields only", () => {
+  const submittedAt = "submitted";
+  const payload = buildApproveContributionReplyPayload({
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "A reviewed reply.",
+    replyStatus: "submitted",
+    submittedAt,
+    submittedByUid: "public-user-1",
+    submittedByDisplayName: "Resident One",
+    adminNotes: "private note"
+  }, {
+    approvedAt: "approved"
+  });
+
+  assert.deepEqual(payload, {
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "A reviewed reply.",
+    replyStatus: "approved",
+    submittedAt,
+    approvedAt: "approved"
+  });
+});
+
+test("reply rejection update keeps moderation data private", () => {
+  const payload = buildRejectContributionReplyUpdate({
+    rejectedByUid: "admin-user-1",
+    adminNotes: "  Not appropriate for this contribution.  "
+  }, {
+    rejectedAt: "rejected"
+  });
+
+  assert.deepEqual(payload, {
+    replyStatus: "rejected",
+    rejectedAt: "rejected",
+    rejectedByUid: "admin-user-1",
+    adminNotes: "Not appropriate for this contribution."
+  });
 });
 
 test("approved contribution image builds public-safe main image promotion payload", () => {

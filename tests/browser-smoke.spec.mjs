@@ -26,6 +26,12 @@ const SMOKE_PAGES = [
     readySelector: "#adminLoginTitle"
   },
   {
+    path: "/manage-place-contributions.html",
+    finalPath: "/admin-login.html",
+    title: /Admin Sign In/,
+    readySelector: "#adminLoginTitle"
+  },
+  {
     path: "/export.html",
     title: /Heritage JSON Export/,
     readySelector: "#downloadBtn"
