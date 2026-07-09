@@ -25,6 +25,7 @@ const {
   buildApproveContributionUpdate,
   buildContributionImagePromotionPayload,
   buildPlaceContributionCreatePayload,
+  buildPlaceContributionReplyCreatePayload,
   buildPublicPlaceContributionPayload,
   buildPublicPlaceContributionReplyPayload,
   buildRejectContributionUpdate,
@@ -394,6 +395,87 @@ test("approved replies are grouped under their matching contribution IDs", () =>
     groupedReplies["approved-contribution-2"].map((reply) => reply.replyText),
     ["Second contribution reply."]
   );
+});
+
+test("valid submitted reply payload shape is public-review safe", () => {
+  const payload = buildPlaceContributionReplyCreatePayload({
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "  This reply should wait for review.  ",
+    submittedByUid: "public-user-1",
+    submittedByDisplayName: "Resident One",
+    replyStatus: "approved",
+    approvedAt: "forged",
+    approvedByUid: "admin-user-1",
+    rejectedAt: "forged",
+    rejectedByUid: "admin-user-1",
+    adminNotes: "private note"
+  }, {
+    submittedAt: "submitted"
+  });
+
+  assert.deepEqual(payload, {
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "This reply should wait for review.",
+    replyStatus: "submitted",
+    submittedAt: "submitted",
+    submittedByUid: "public-user-1",
+    submittedByDisplayName: "Resident One"
+  });
+});
+
+test("empty submitted reply text is rejected", () => {
+  assert.throws(() => buildPlaceContributionReplyCreatePayload({
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "   ",
+    submittedByUid: "public-user-1"
+  }, {
+    submittedAt: "submitted"
+  }), /Reply text is required/);
+});
+
+test("submitted reply payload omits moderation fields even when supplied", () => {
+  const payload = buildPlaceContributionReplyCreatePayload({
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "A reviewed reply later.",
+    submittedByUid: "public-user-1",
+    approvedAt: "forged",
+    approvedByUid: "admin-user-1",
+    rejectedAt: "forged",
+    rejectedByUid: "admin-user-1",
+    adminNotes: "private note"
+  }, {
+    submittedAt: "submitted"
+  });
+
+  [
+    "approvedAt",
+    "approvedByUid",
+    "rejectedAt",
+    "rejectedByUid",
+    "adminNotes"
+  ].forEach((fieldName) => {
+    assert.equal(Object.prototype.hasOwnProperty.call(payload, fieldName), false, `${fieldName} should not be written by the public client`);
+  });
+  assert.equal(payload.replyStatus, "submitted");
+});
+
+test("submitted reply is not added to approved reply renderer groups immediately", () => {
+  const groupedReplies = groupPublicPlaceContributionRepliesByContribution([
+    buildPlaceContributionReplyCreatePayload({
+      placeId: "phase-11c-image-promotion-live-test-20260630024821",
+      contributionId: "approved-contribution-1",
+      replyText: "This reply is still pending review.",
+      submittedByUid: "public-user-1"
+    }, {
+      submittedAt: "submitted"
+    })
+  ]);
+
+  assert.deepEqual(groupedReplies, {});
 });
 
 test("approved contribution image builds public-safe main image promotion payload", () => {

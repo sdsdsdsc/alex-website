@@ -3895,6 +3895,85 @@ footer {
   text-transform: uppercase;
 }
 
+.place-contribution-reply-entry {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(47, 122, 84, 0.18);
+}
+
+.place-contribution-reply-entry__signed-out {
+  margin: 0;
+  color: #435e57;
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.place-contribution-reply-entry__sign-in {
+  color: #1d6a4a;
+  font-weight: 900;
+}
+
+.place-contribution-reply-entry__signed-in {
+  display: grid;
+  gap: 10px;
+}
+
+.place-contribution-reply-entry__label {
+  display: grid;
+  gap: 7px;
+  color: #2f4c44;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.place-contribution-reply-entry__label textarea {
+  width: 100%;
+  min-height: 84px;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 11px 12px;
+  border: 1px solid #b8cbc3;
+  border-radius: 6px;
+  background: #fff;
+  color: #1f2d29;
+  font: inherit;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.place-contribution-reply-entry__label textarea:focus {
+  outline: 3px solid rgba(47, 122, 84, 0.22);
+  border-color: #2f7a54;
+}
+
+.place-contribution-reply-entry__actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.place-contribution-reply-entry__submit {
+  border: 0;
+  border-radius: 6px;
+  background: #2f7a54;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 900;
+  padding: 10px 14px;
+}
+
+.place-contribution-reply-entry__submit:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.place-contribution-reply-entry__status {
+  min-height: 1.2em;
+  margin: 0;
+  color: #435e57;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .place-comments-panel__notice {
   padding: 22px 20px;
   background: #dff3ec;

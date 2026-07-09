@@ -99,6 +99,7 @@ const FIELD_LIMITS = Object.freeze({
   imageUploadVisibility: 64,
   submitterEmail: 254,
   submitterDisplayName: 120,
+  submittedByDisplayName: 120,
   reviewedByUid: 120,
   adminNotes: 5000
 });
@@ -365,6 +366,40 @@ function buildPublicPlaceContributionReplyPayload(record = {}) {
   return payload;
 }
 
+function buildPlaceContributionReplyCreatePayload(values = {}, timestamps = {}) {
+  const normalized = normalizeContributionTextFields(values);
+  const submittedByUid = cleanText(values.submittedByUid);
+
+  if (!normalized.placeId) {
+    throw new Error("Place ID is required.");
+  }
+  if (!normalized.contributionId) {
+    throw new Error("Contribution ID is required.");
+  }
+  if (!normalized.replyText) {
+    throw new Error("Reply text is required.");
+  }
+  if (!submittedByUid) {
+    throw new Error("Signed-in submitter UID is required.");
+  }
+  if (timestamps.submittedAt === undefined || timestamps.submittedAt === null) {
+    throw new Error("Submitted timestamp is required.");
+  }
+
+  const payload = {
+    placeId: normalized.placeId,
+    contributionId: normalized.contributionId,
+    replyText: normalized.replyText,
+    replyStatus: "submitted",
+    submittedAt: timestamps.submittedAt,
+    submittedByUid
+  };
+
+  addOptionalText(payload, "submittedByDisplayName", normalized.submittedByDisplayName);
+
+  return payload;
+}
+
 function getReplySortTime(reply = {}) {
   const dateValue = reply.approvedAt || reply.submittedAt;
   if (typeof dateValue?.toMillis === "function") return dateValue.toMillis();
@@ -479,6 +514,7 @@ export {
   buildContributionReviewUpdatePayload,
   buildContributionImagePromotionPayload,
   buildPlaceContributionCreatePayload,
+  buildPlaceContributionReplyCreatePayload,
   buildPublicPlaceContributionPayload,
   buildPublicPlaceContributionReplyPayload,
   buildRejectContributionUpdate,

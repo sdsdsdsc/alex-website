@@ -46,6 +46,7 @@ import {
 } from "./heritage-engine/relationships.js?v=2026-06-19-12a";
 import {
   buildPlaceContributionCreatePayload,
+  buildPlaceContributionReplyCreatePayload,
   buildPublicPlaceContributionPayload,
   groupPublicPlaceContributionRepliesByContribution
 } from "./heritage-engine/place-contributions.js?v=2026-07-05-13b-contribution-upload-ui";
@@ -130,6 +131,19 @@ function buildContributionSignInHref() {
   return `public-auth.html?next=${encodeURIComponent(`${url.pathname}${url.search}${url.hash}`)}`;
 }
 
+function refreshReplyEntryStates() {
+  const isSignedIn = Boolean(currentUser);
+  document.querySelectorAll(".place-contribution-reply-entry").forEach((entry) => {
+    const signedInPanel = entry.querySelector(".place-contribution-reply-entry__signed-in");
+    const signedOutPanel = entry.querySelector(".place-contribution-reply-entry__signed-out");
+    const signInLink = entry.querySelector(".place-contribution-reply-entry__sign-in");
+
+    if (signedInPanel) signedInPanel.hidden = !isSignedIn;
+    if (signedOutPanel) signedOutPanel.hidden = isSignedIn;
+    if (signInLink) signInLink.href = buildContributionSignInHref();
+  });
+}
+
 function setContributionFormStatus(message, type = "") {
   if (!els.contributionFormStatus) return;
   els.contributionFormStatus.textContent = message;
@@ -153,6 +167,7 @@ function setContributionUploadStatus(message, type = "") {
 function setContributionEntryState(user) {
   currentUser = user || null;
   const isSignedIn = Boolean(user);
+  refreshReplyEntryStates();
 
   if (els.contributionSignedOut) {
     els.contributionSignedOut.hidden = isSignedIn;
@@ -413,6 +428,62 @@ function handleContributionModalBackdropClick(event) {
 function handleContributionModalKeydown(event) {
   if (event.key === "Escape") {
     closeContributionModal();
+  }
+}
+
+async function handleReplySubmit(event) {
+  event.preventDefault();
+
+  const form = event.currentTarget;
+  if (!(form instanceof HTMLFormElement)) return;
+
+  const status = form.querySelector(".place-contribution-reply-entry__status");
+  const submitButton = form.querySelector("button[type='submit']");
+  const textarea = form.querySelector("textarea[name='replyText']");
+  const contributionId = cleanText(form.dataset.contributionId);
+
+  function setStatus(message, type = "") {
+    if (!status) return;
+    status.textContent = message;
+    status.className = type === "error"
+      ? "place-contribution-reply-entry__status admin-error"
+      : type === "success"
+        ? "place-contribution-reply-entry__status admin-success"
+        : "place-contribution-reply-entry__status";
+  }
+
+  if (!currentUser) {
+    setStatus("Please sign in before replying.", "error");
+    return;
+  }
+
+  if (!currentPlace?.id || !contributionId) {
+    setStatus("This contribution is still loading. Please try again in a moment.", "error");
+    return;
+  }
+
+  try {
+    if (submitButton) submitButton.disabled = true;
+    setStatus("Submitting reply for review...");
+
+    const payload = buildPlaceContributionReplyCreatePayload({
+      placeId: currentPlace.id,
+      contributionId,
+      replyText: textarea?.value || "",
+      submittedByUid: currentUser.uid,
+      submittedByDisplayName: currentUser.displayName || ""
+    }, {
+      submittedAt: serverTimestamp()
+    });
+
+    await addDoc(collection(db, "placeContributionReplies"), payload);
+    form.reset();
+    setStatus("Reply submitted for review.", "success");
+  } catch (error) {
+    console.error("Failed to submit place contribution reply:", error);
+    setStatus(error?.message || "Could not submit your reply right now. Please try again.", "error");
+  } finally {
+    if (submitButton) submitButton.disabled = false;
   }
 }
 
@@ -843,6 +914,59 @@ function renderContributionReplies(replies, footer) {
   footer.appendChild(wrapper);
 }
 
+function renderContributionReplyEntry(contribution, card) {
+  const contributionId = cleanText(contribution?.id);
+  if (!contributionId || !card) return;
+
+  const entry = document.createElement("div");
+  entry.className = "place-contribution-reply-entry";
+
+  const signedOut = document.createElement("p");
+  signedOut.className = "place-contribution-reply-entry__signed-out";
+  signedOut.hidden = Boolean(currentUser);
+  const signInLink = document.createElement("a");
+  signInLink.className = "place-contribution-reply-entry__sign-in";
+  signInLink.href = buildContributionSignInHref();
+  signInLink.textContent = "Sign in to reply";
+  signedOut.appendChild(signInLink);
+  signedOut.append(" to this approved contribution.");
+
+  const form = document.createElement("form");
+  form.className = "place-contribution-reply-entry__signed-in";
+  form.dataset.contributionId = contributionId;
+  form.hidden = !currentUser;
+  form.noValidate = true;
+
+  const label = document.createElement("label");
+  label.className = "place-contribution-reply-entry__label";
+  label.textContent = "Add a reply";
+  const textarea = document.createElement("textarea");
+  textarea.name = "replyText";
+  textarea.rows = 3;
+  textarea.maxLength = 2000;
+  textarea.placeholder = "Add a short reply for admin review.";
+  label.appendChild(textarea);
+
+  const actions = document.createElement("div");
+  actions.className = "place-contribution-reply-entry__actions";
+  const button = document.createElement("button");
+  button.type = "submit";
+  button.className = "place-contribution-reply-entry__submit";
+  button.textContent = "Submit reply";
+  actions.appendChild(button);
+
+  const status = document.createElement("p");
+  status.className = "place-contribution-reply-entry__status";
+  status.setAttribute("role", "status");
+  status.setAttribute("aria-live", "polite");
+
+  form.append(label, actions, status);
+  form.addEventListener("submit", handleReplySubmit);
+
+  entry.append(signedOut, form);
+  card.appendChild(entry);
+}
+
 function renderApprovedPlaceContributions(contributions, repliesByContribution = {}) {
   if (!els.contributionsList || !els.contributionsEmpty) return;
   els.contributionsList.textContent = "";
@@ -919,6 +1043,8 @@ function renderApprovedPlaceContributions(contributions, repliesByContribution =
     renderContributionReplies(repliesByContribution[contribution.id] || [], footer);
 
     card.appendChild(footer);
+
+    renderContributionReplyEntry(contribution, card);
 
     els.contributionsList.appendChild(card);
   });
