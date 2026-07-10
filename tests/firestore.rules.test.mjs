@@ -234,7 +234,28 @@ test("contribution image promotion updates public place image fields by admin on
   assert.equal(publicSnapshot.data().promotedContributionId, "approved-contribution-1");
 });
 
-test("contribution image promotion cannot rewrite unrelated place fields in the same update", async () => {
+test("normal admin community place edits can update unrelated fields and updatedAt", async () => {
+  await seedDocument("communityPlaces/admin-edit-target", {
+    title: "Original Place Title",
+    category: "Historic building",
+    lat: 27.62,
+    lng: 113.85,
+    updatedAt: timestamp(23)
+  });
+
+  await assertSucceeds(updateDoc(
+    doc(adminFirestore(), "communityPlaces", "admin-edit-target"),
+    {
+      title: "Updated Place Title",
+      category: "Community landmark",
+      lat: 27.63,
+      lng: 113.86,
+      updatedAt: timestamp(24)
+    }
+  ));
+});
+
+test("normal admin community place edits cannot mix image fields with unrelated fields", async () => {
   await seedDocument("communityPlaces/promotion-shape-target", {
     title: "Promotion Shape Target",
     imageUrl: "https://example.org/original-place-image.jpg"
@@ -278,6 +299,9 @@ test("community place image promotion cannot write private contribution upload f
       {
         imageUrl: "https://example.org/approved-contribution-photo.jpg",
         promotedContributionId: "approved-contribution-1",
+        promotedContributionImageUrl: "https://example.org/approved-contribution-photo.jpg",
+        promotedContributionImageAt: timestamp(26),
+        updatedAt: timestamp(27),
         [fieldName]: fieldName === "imageFileSize" ? 123 : "private"
       }
     ));
