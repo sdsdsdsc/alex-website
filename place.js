@@ -49,7 +49,7 @@ import {
   buildPlaceContributionReplyCreatePayload,
   buildPublicPlaceContributionPayload,
   groupPublicPlaceContributionRepliesByContribution
-} from "./heritage-engine/place-contributions.js?v=2026-07-05-13b-contribution-upload-ui";
+} from "./heritage-engine/place-contributions.js?v=2026-07-11-13d-public-reply-query";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -1066,7 +1066,8 @@ async function loadApprovedPlaceContributions(placeId) {
     const repliesQuery = query(
       collection(db, "placeContributionReplies"),
       where("placeId", "==", placeId),
-      where("replyStatus", "==", "approved")
+      where("replyStatus", "==", "approved"),
+      where("publicSafe", "==", true)
     );
     const [contributionSnapshot, replySnapshot] = await Promise.all([
       getDocs(contributionsQuery),

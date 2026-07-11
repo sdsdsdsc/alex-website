@@ -599,16 +599,15 @@ service cloud.firestore {
           'replyText',
           'replyStatus',
           'submittedAt',
-          'approvedAt'
+          'approvedAt',
+          'publicSafe'
         ])
         && resource.data.keys().hasAll([
           'placeId',
-          'contributionId',
-          'replyText',
           'replyStatus',
-          'submittedAt',
-          'approvedAt'
-        ]);
+          'publicSafe'
+        ])
+        && resource.data.publicSafe == true;
     }
 
     function requestHasPublicPlaceContributionReplyFields() {
@@ -618,7 +617,8 @@ service cloud.firestore {
           'replyText',
           'replyStatus',
           'submittedAt',
-          'approvedAt'
+          'approvedAt',
+          'publicSafe'
         ])
         && request.resource.data.keys().hasAll([
           'placeId',
@@ -626,8 +626,10 @@ service cloud.firestore {
           'replyText',
           'replyStatus',
           'submittedAt',
-          'approvedAt'
-        ]);
+          'approvedAt',
+          'publicSafe'
+        ])
+        && request.resource.data.publicSafe == true;
     }
 
     function hasValidPlaceContributionReplyCreateFields() {

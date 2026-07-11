@@ -75,6 +75,7 @@ function buildValidReply(overrides = {}) {
     replyStatus: "approved",
     submittedAt: "submitted",
     approvedAt: "approved",
+    publicSafe: true,
     ...overrides
   };
 }
@@ -339,7 +340,8 @@ test("approved reply creates a public-safe payload", () => {
     replyText: "A later resident reply adds more context.",
     replyStatus: "approved",
     submittedAt: "submitted",
-    approvedAt: "approved"
+    approvedAt: "approved",
+    publicSafe: true
   });
 });
 
@@ -501,7 +503,8 @@ test("reply approval payload replaces submitted reply with public-safe fields on
     replyText: "A reviewed reply.",
     replyStatus: "approved",
     submittedAt,
-    approvedAt: "approved"
+    approvedAt: "approved",
+    publicSafe: true
   });
 });
 

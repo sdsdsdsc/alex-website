@@ -43,7 +43,8 @@ const PUBLIC_PLACE_CONTRIBUTION_REPLY_FIELDS = Object.freeze([
   "replyText",
   "replyStatus",
   "submittedAt",
-  "approvedAt"
+  "approvedAt",
+  "publicSafe"
 ]);
 const PUBLIC_PLACE_IMAGE_PROMOTION_FIELDS = Object.freeze([
   "imageUrl",
@@ -428,7 +429,8 @@ function buildApproveContributionReplyPayload(record = {}, timestamps = {}) {
     replyText: normalized.replyText,
     replyStatus: "approved",
     submittedAt: record.submittedAt,
-    approvedAt: timestamps.approvedAt
+    approvedAt: timestamps.approvedAt,
+    publicSafe: true
   };
 }
 

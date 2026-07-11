@@ -124,6 +124,7 @@ function validApprovedPlaceContributionReply(overrides = {}) {
     replyStatus: "approved",
     submittedAt: timestamp(71),
     approvedAt: timestamp(72),
+    publicSafe: true,
     ...overrides
   };
 }
@@ -824,6 +825,38 @@ test("public users can read approved place contribution replies with public-safe
   assert.equal(Object.prototype.hasOwnProperty.call(snapshot.data(), "adminNotes"), false);
 });
 
+test("approved place contribution replies query is public while non-approved replies stay hidden", async () => {
+  const placeId = "phase-13d-approved-replies-query";
+  await seedDocument(
+    "placeContributionReplies/approved-query-reply",
+    validApprovedPlaceContributionReply({ placeId })
+  );
+  await seedDocument(
+    "placeContributionReplies/submitted-query-reply",
+    validSubmittedPlaceContributionReply({ placeId })
+  );
+  await seedDocument(
+    "placeContributionReplies/rejected-query-reply",
+    validSubmittedPlaceContributionReply({
+      placeId,
+      replyStatus: "rejected",
+      rejectedAt: timestamp(73),
+      rejectedByUid: ADMIN_UID,
+      adminNotes: "Private rejection note"
+    })
+  );
+
+  const publicDb = testEnv.unauthenticatedContext().firestore();
+  const snapshot = await assertSucceeds(getDocs(query(
+    collection(publicDb, "placeContributionReplies"),
+    where("placeId", "==", placeId),
+    where("replyStatus", "==", "approved"),
+    where("publicSafe", "==", true)
+  )));
+
+  assert.deepEqual(snapshot.docs.map((replyDoc) => replyDoc.id), ["approved-query-reply"]);
+});
+
 test("public users cannot read submitted or rejected place contribution replies", async () => {
   await seedDocument(
     "placeContributionReplies/submitted-private-reply",
@@ -873,6 +906,7 @@ test("admins can approve submitted place contribution replies into a public-safe
     {
       replyStatus: "approved",
       approvedAt: timestamp(78),
+      publicSafe: true,
       submittedByUid: deleteField(),
       submittedByDisplayName: deleteField()
     }
@@ -902,7 +936,8 @@ test("admins can replace submitted place contribution replies with only public-s
       replyText: "A signed-in community reply awaiting moderation.",
       replyStatus: "approved",
       submittedAt: timestamp(70),
-      approvedAt: timestamp(82)
+      approvedAt: timestamp(82),
+      publicSafe: true
     }
   ));
 
@@ -913,6 +948,7 @@ test("admins can replace submitted place contribution replies with only public-s
     "approvedAt",
     "contributionId",
     "placeId",
+    "publicSafe",
     "replyStatus",
     "replyText",
     "submittedAt"
@@ -933,7 +969,29 @@ test("reply approval cannot rewrite submitted reply public content", async () =>
       replyText: "Changed during approval.",
       replyStatus: "approved",
       submittedAt: timestamp(70),
-      approvedAt: timestamp(83)
+      approvedAt: timestamp(83),
+      publicSafe: true
+    }
+  ));
+});
+
+test("reply approval cannot retain private fields while setting the public-safe marker", async () => {
+  await seedDocument(
+    "placeContributionReplies/admin-approve-private-reply",
+    validSubmittedPlaceContributionReply()
+  );
+
+  await assertFails(setDoc(
+    doc(adminFirestore(), "placeContributionReplies", "admin-approve-private-reply"),
+    {
+      placeId: "phase-11c-image-promotion-live-test-20260630024821",
+      contributionId: "approved-reply-parent",
+      replyText: "A signed-in community reply awaiting moderation.",
+      replyStatus: "approved",
+      submittedAt: timestamp(70),
+      approvedAt: timestamp(84),
+      publicSafe: true,
+      submittedByUid: OWNER_UID
     }
   ));
 });
@@ -1008,6 +1066,27 @@ test("approved replies with private or moderation fields are not publicly readab
       )
     ));
   }
+});
+
+test("approved replies query does not return a matching document that retains private fields", async () => {
+  const placeId = "phase-13d-private-reply-query";
+  const { publicSafe, ...legacyApprovedReply } = validApprovedPlaceContributionReply({
+    placeId,
+    submittedByUid: OWNER_UID
+  });
+  await seedDocument(
+    "placeContributionReplies/approved-private-query-reply",
+    legacyApprovedReply
+  );
+
+  const publicDb = testEnv.unauthenticatedContext().firestore();
+  const snapshot = await assertSucceeds(getDocs(query(
+    collection(publicDb, "placeContributionReplies"),
+    where("placeId", "==", placeId),
+    where("replyStatus", "==", "approved"),
+    where("publicSafe", "==", true)
+  )));
+  assert.deepEqual(snapshot.docs, []);
 });
 
 test("a signed-in owner can create a valid nomination", async () => {
