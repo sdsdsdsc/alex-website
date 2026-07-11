@@ -37,6 +37,28 @@ const PUBLIC_PLACE_CONTRIBUTION_FIELDS = Object.freeze([
   "updatedAt",
   "reviewedAt"
 ]);
+const PUBLIC_PLACE_CONTRIBUTION_REPLY_FIELDS = Object.freeze([
+  "placeId",
+  "contributionId",
+  "replyText",
+  "replyStatus",
+  "submittedAt",
+  "approvedAt",
+  "publicSafe"
+]);
+const PUBLIC_PLACE_IMAGE_PROMOTION_FIELDS = Object.freeze([
+  "imageUrl",
+  "imageCaption",
+  "imageCredit",
+  "imageRightsStatus",
+  "promotedContributionId",
+  "promotedContributionImageUrl",
+  "promotedContributionImageCaption",
+  "promotedContributionImageCredit",
+  "promotedContributionImageRightsStatus",
+  "promotedContributionImageAt",
+  "updatedAt"
+]);
 const PRIVATE_PLACE_CONTRIBUTION_FIELDS = Object.freeze([
   "imagePermissionConfirmed",
   "submittedByUid",
@@ -53,10 +75,20 @@ const PRIVATE_PLACE_CONTRIBUTION_FIELDS = Object.freeze([
   "imageUploadedByUid",
   "imageUploadVisibility"
 ]);
+const PRIVATE_PLACE_CONTRIBUTION_REPLY_FIELDS = Object.freeze([
+  "submittedByUid",
+  "submittedByDisplayName",
+  "approvedByUid",
+  "rejectedAt",
+  "rejectedByUid",
+  "adminNotes"
+]);
 const FIELD_LIMITS = Object.freeze({
   placeId: 160,
   placeTitleSnapshot: 160,
   contributionText: 5000,
+  contributionId: 120,
+  replyText: 2000,
   imageUrl: 1000,
   imageCaption: 300,
   imageCredit: 300,
@@ -68,6 +100,7 @@ const FIELD_LIMITS = Object.freeze({
   imageUploadVisibility: 64,
   submitterEmail: 254,
   submitterDisplayName: 120,
+  submittedByDisplayName: 120,
   reviewedByUid: 120,
   adminNotes: 5000
 });
@@ -297,6 +330,190 @@ function buildPublicPlaceContributionPayload(record = {}) {
   return payload;
 }
 
+function stripPrivatePlaceContributionReplyFields(value) {
+  if (Array.isArray(value)) {
+    return value.map(stripPrivatePlaceContributionReplyFields);
+  }
+
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+
+  return Object.entries(value).reduce((clean, [key, entry]) => {
+    if (PRIVATE_PLACE_CONTRIBUTION_REPLY_FIELDS.includes(key)) {
+      return clean;
+    }
+    clean[key] = stripPrivatePlaceContributionReplyFields(entry);
+    return clean;
+  }, {});
+}
+
+function buildPublicPlaceContributionReplyPayload(record = {}) {
+  if (cleanText(record.replyStatus).toLowerCase() !== "approved") {
+    return null;
+  }
+
+  const stripped = stripPrivatePlaceContributionReplyFields(record);
+  const payload = {};
+
+  PUBLIC_PLACE_CONTRIBUTION_REPLY_FIELDS.forEach((field) => {
+    const value = stripped[field];
+    if (value === undefined || value === null || value === "") {
+      return;
+    }
+    payload[field] = value;
+  });
+
+  return payload;
+}
+
+function buildPlaceContributionReplyCreatePayload(values = {}, timestamps = {}) {
+  const normalized = normalizeContributionTextFields(values);
+  const submittedByUid = cleanText(values.submittedByUid);
+
+  if (!normalized.placeId) {
+    throw new Error("Place ID is required.");
+  }
+  if (!normalized.contributionId) {
+    throw new Error("Contribution ID is required.");
+  }
+  if (!normalized.replyText) {
+    throw new Error("Reply text is required.");
+  }
+  if (!submittedByUid) {
+    throw new Error("Signed-in submitter UID is required.");
+  }
+  if (timestamps.submittedAt === undefined || timestamps.submittedAt === null) {
+    throw new Error("Submitted timestamp is required.");
+  }
+
+  const payload = {
+    placeId: normalized.placeId,
+    contributionId: normalized.contributionId,
+    replyText: normalized.replyText,
+    replyStatus: "submitted",
+    submittedAt: timestamps.submittedAt,
+    submittedByUid
+  };
+
+  addOptionalText(payload, "submittedByDisplayName", normalized.submittedByDisplayName);
+
+  return payload;
+}
+
+function buildApproveContributionReplyPayload(record = {}, timestamps = {}) {
+  const normalized = normalizeContributionTextFields(record);
+
+  if (cleanText(record.replyStatus).toLowerCase() !== "submitted") {
+    throw new Error("Only submitted replies can be approved.");
+  }
+  if (!normalized.placeId) {
+    throw new Error("Place ID is required.");
+  }
+  if (!normalized.contributionId) {
+    throw new Error("Contribution ID is required.");
+  }
+  if (!normalized.replyText) {
+    throw new Error("Reply text is required.");
+  }
+  if (record.submittedAt === undefined || record.submittedAt === null) {
+    throw new Error("Submitted timestamp is required.");
+  }
+  if (timestamps.approvedAt === undefined || timestamps.approvedAt === null) {
+    throw new Error("Approved timestamp is required.");
+  }
+
+  return {
+    placeId: normalized.placeId,
+    contributionId: normalized.contributionId,
+    replyText: normalized.replyText,
+    replyStatus: "approved",
+    submittedAt: record.submittedAt,
+    approvedAt: timestamps.approvedAt,
+    publicSafe: true
+  };
+}
+
+function buildRejectContributionReplyUpdate(values = {}, timestamps = {}) {
+  const rejectedByUid = cleanText(values.rejectedByUid);
+  if (!rejectedByUid) {
+    throw new Error("Admin reviewer UID is required.");
+  }
+  if (timestamps.rejectedAt === undefined || timestamps.rejectedAt === null) {
+    throw new Error("Rejected timestamp is required.");
+  }
+
+  const normalized = normalizeContributionTextFields(values);
+  const payload = {
+    replyStatus: "rejected",
+    rejectedAt: timestamps.rejectedAt,
+    rejectedByUid
+  };
+
+  addOptionalText(payload, "adminNotes", normalized.adminNotes);
+  return payload;
+}
+
+function getReplySortTime(reply = {}) {
+  const dateValue = reply.approvedAt || reply.submittedAt;
+  if (typeof dateValue?.toMillis === "function") return dateValue.toMillis();
+  if (typeof dateValue?.toDate === "function") return dateValue.toDate().getTime();
+  const parsed = Date.parse(cleanText(dateValue));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function groupPublicPlaceContributionRepliesByContribution(records = []) {
+  return records.reduce((groups, record) => {
+    const publicReply = buildPublicPlaceContributionReplyPayload(record);
+    const contributionId = cleanText(publicReply?.contributionId);
+    if (!publicReply || !contributionId) {
+      return groups;
+    }
+
+    if (!groups[contributionId]) {
+      groups[contributionId] = [];
+    }
+    groups[contributionId].push(publicReply);
+    groups[contributionId].sort((a, b) => getReplySortTime(a) - getReplySortTime(b));
+    return groups;
+  }, {});
+}
+
+function buildContributionImagePromotionPayload(record = {}, options = {}) {
+  const publicContribution = buildPublicPlaceContributionPayload(record);
+  const contributionId = cleanText(options.contributionId || record.id);
+
+  if (!publicContribution || !isHttpsUrl(publicContribution.imageUrl)) {
+    throw new Error("Only approved contribution images can be promoted.");
+  }
+
+  if (!contributionId) {
+    throw new Error("Contribution ID is required for image promotion.");
+  }
+
+  const payload = {
+    imageUrl: publicContribution.imageUrl,
+    promotedContributionId: contributionId,
+    promotedContributionImageUrl: publicContribution.imageUrl
+  };
+
+  addOptionalText(payload, "imageCaption", publicContribution.imageCaption);
+  addOptionalText(payload, "imageCredit", publicContribution.imageCredit);
+  addOptionalText(payload, "imageRightsStatus", publicContribution.imageRightsStatus);
+  addOptionalText(payload, "promotedContributionImageCaption", publicContribution.imageCaption);
+  addOptionalText(payload, "promotedContributionImageCredit", publicContribution.imageCredit);
+  addOptionalText(payload, "promotedContributionImageRightsStatus", publicContribution.imageRightsStatus);
+
+  if (options.promotedContributionImageAt !== undefined) {
+    payload.promotedContributionImageAt = options.promotedContributionImageAt;
+  }
+  if (options.updatedAt !== undefined) {
+    payload.updatedAt = options.updatedAt;
+  }
+
+  return payload;
+}
+
 function buildContributionReviewUpdatePayload(nextStatus, values = {}, timestamps = {}) {
   const normalizedStatus = normalizeContributionStatus(nextStatus);
   if (!["approved", "rejected"].includes(normalizedStatus)) {
@@ -343,12 +560,21 @@ export {
   MAX_CONTRIBUTION_IMAGE_FILE_SIZE,
   PLACE_CONTRIBUTION_STATUSES,
   PRIVATE_PLACE_CONTRIBUTION_FIELDS,
+  PRIVATE_PLACE_CONTRIBUTION_REPLY_FIELDS,
+  PUBLIC_PLACE_IMAGE_PROMOTION_FIELDS,
   PUBLIC_PLACE_CONTRIBUTION_FIELDS,
+  PUBLIC_PLACE_CONTRIBUTION_REPLY_FIELDS,
   buildApproveContributionUpdate,
+  buildApproveContributionReplyPayload,
   buildContributionReviewUpdatePayload,
+  buildContributionImagePromotionPayload,
   buildPlaceContributionCreatePayload,
+  buildPlaceContributionReplyCreatePayload,
   buildPublicPlaceContributionPayload,
+  buildPublicPlaceContributionReplyPayload,
+  buildRejectContributionReplyUpdate,
   buildRejectContributionUpdate,
+  groupPublicPlaceContributionRepliesByContribution,
   getInitialContributionStatus,
   getPlaceContributionValidationErrors,
   hasValidUploadedContributionImage,
@@ -357,6 +583,7 @@ export {
   normalizeContributionTextFields,
   normalizeImageRightsStatus,
   stripPrivatePlaceContributionFields,
+  stripPrivatePlaceContributionReplyFields,
   validatePlaceContributionImageFields,
   validatePlaceContributionRequiredFields,
   validatePlaceContributionSubmission

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
-const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-05-13b-contribution-upload-ui";
+const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
 const SMOKE_PAGES = [
   {
     path: "/index.html",
@@ -21,6 +21,12 @@ const SMOKE_PAGES = [
   },
   {
     path: "/manage-nominations.html",
+    finalPath: "/admin-login.html",
+    title: /Admin Sign In/,
+    readySelector: "#adminLoginTitle"
+  },
+  {
+    path: "/manage-place-contributions.html",
     finalPath: "/admin-login.html",
     title: /Admin Sign In/,
     readySelector: "#adminLoginTitle"

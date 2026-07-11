@@ -23,11 +23,17 @@ const placeContributions = await import(pathToFileURL(path.join(tempEngineRoot, 
 
 const {
   buildApproveContributionUpdate,
+  buildApproveContributionReplyPayload,
+  buildContributionImagePromotionPayload,
   buildPlaceContributionCreatePayload,
+  buildPlaceContributionReplyCreatePayload,
   buildPublicPlaceContributionPayload,
+  buildPublicPlaceContributionReplyPayload,
+  buildRejectContributionReplyUpdate,
   buildRejectContributionUpdate,
   getInitialContributionStatus,
-  getPlaceContributionValidationErrors
+  getPlaceContributionValidationErrors,
+  groupPublicPlaceContributionRepliesByContribution
 } = placeContributions;
 
 function buildValidContribution(overrides = {}) {
@@ -57,6 +63,19 @@ function buildValidUploadedImageMetadata(overrides = {}) {
     imageUploadedAt: "uploaded",
     imageUploadedByUid: "public-user-1",
     imageUploadVisibility: "contribution-private",
+    ...overrides
+  };
+}
+
+function buildValidReply(overrides = {}) {
+  return {
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "A later resident reply adds more context.",
+    replyStatus: "approved",
+    submittedAt: "submitted",
+    approvedAt: "approved",
+    publicSafe: true,
     ...overrides
   };
 }
@@ -304,6 +323,270 @@ test("approved uploaded image converted to imageUrl creates public payload", () 
   assert.equal(publicPayload.imageUrl.startsWith("https://firebasestorage.googleapis.com/"), true);
   assert.equal(publicPayload.imageCaption, "Approved uploaded image");
   assert.equal(Object.prototype.hasOwnProperty.call(publicPayload, "imageStoragePath"), false);
+});
+
+test("approved reply creates a public-safe payload", () => {
+  const publicPayload = buildPublicPlaceContributionReplyPayload({
+    ...buildValidReply(),
+    submittedByUid: "public-user-1",
+    submittedByDisplayName: "Resident One",
+    approvedByUid: "admin-user-1",
+    adminNotes: "private moderation note"
+  });
+
+  assert.deepEqual(publicPayload, {
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "A later resident reply adds more context.",
+    replyStatus: "approved",
+    submittedAt: "submitted",
+    approvedAt: "approved",
+    publicSafe: true
+  });
+});
+
+test("submitted and rejected replies do not create public payloads", () => {
+  assert.equal(buildPublicPlaceContributionReplyPayload(buildValidReply({
+    replyStatus: "submitted"
+  })), null);
+
+  assert.equal(buildPublicPlaceContributionReplyPayload(buildValidReply({
+    replyStatus: "rejected"
+  })), null);
+});
+
+test("approved replies are grouped under their matching contribution IDs", () => {
+  const groupedReplies = groupPublicPlaceContributionRepliesByContribution([
+    buildValidReply({
+      contributionId: "approved-contribution-2",
+      replyText: "Second contribution reply.",
+      approvedAt: "2026-07-08"
+    }),
+    buildValidReply({
+      contributionId: "approved-contribution-1",
+      replyText: "First contribution older reply.",
+      approvedAt: "2026-07-06"
+    }),
+    buildValidReply({
+      contributionId: "approved-contribution-1",
+      replyText: "First contribution newer reply.",
+      approvedAt: "2026-07-07",
+      submittedByUid: "should-not-leak"
+    }),
+    buildValidReply({
+      contributionId: "approved-contribution-1",
+      replyText: "Submitted reply should stay hidden.",
+      replyStatus: "submitted"
+    })
+  ]);
+
+  assert.deepEqual(Object.keys(groupedReplies).sort(), [
+    "approved-contribution-1",
+    "approved-contribution-2"
+  ]);
+  assert.deepEqual(
+    groupedReplies["approved-contribution-1"].map((reply) => reply.replyText),
+    [
+      "First contribution older reply.",
+      "First contribution newer reply."
+    ]
+  );
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(groupedReplies["approved-contribution-1"][1], "submittedByUid"),
+    false
+  );
+  assert.deepEqual(
+    groupedReplies["approved-contribution-2"].map((reply) => reply.replyText),
+    ["Second contribution reply."]
+  );
+});
+
+test("valid submitted reply payload shape is public-review safe", () => {
+  const payload = buildPlaceContributionReplyCreatePayload({
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "  This reply should wait for review.  ",
+    submittedByUid: "public-user-1",
+    submittedByDisplayName: "Resident One",
+    replyStatus: "approved",
+    approvedAt: "forged",
+    approvedByUid: "admin-user-1",
+    rejectedAt: "forged",
+    rejectedByUid: "admin-user-1",
+    adminNotes: "private note"
+  }, {
+    submittedAt: "submitted"
+  });
+
+  assert.deepEqual(payload, {
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "This reply should wait for review.",
+    replyStatus: "submitted",
+    submittedAt: "submitted",
+    submittedByUid: "public-user-1",
+    submittedByDisplayName: "Resident One"
+  });
+});
+
+test("empty submitted reply text is rejected", () => {
+  assert.throws(() => buildPlaceContributionReplyCreatePayload({
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "   ",
+    submittedByUid: "public-user-1"
+  }, {
+    submittedAt: "submitted"
+  }), /Reply text is required/);
+});
+
+test("submitted reply payload omits moderation fields even when supplied", () => {
+  const payload = buildPlaceContributionReplyCreatePayload({
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "A reviewed reply later.",
+    submittedByUid: "public-user-1",
+    approvedAt: "forged",
+    approvedByUid: "admin-user-1",
+    rejectedAt: "forged",
+    rejectedByUid: "admin-user-1",
+    adminNotes: "private note"
+  }, {
+    submittedAt: "submitted"
+  });
+
+  [
+    "approvedAt",
+    "approvedByUid",
+    "rejectedAt",
+    "rejectedByUid",
+    "adminNotes"
+  ].forEach((fieldName) => {
+    assert.equal(Object.prototype.hasOwnProperty.call(payload, fieldName), false, `${fieldName} should not be written by the public client`);
+  });
+  assert.equal(payload.replyStatus, "submitted");
+});
+
+test("submitted reply is not added to approved reply renderer groups immediately", () => {
+  const groupedReplies = groupPublicPlaceContributionRepliesByContribution([
+    buildPlaceContributionReplyCreatePayload({
+      placeId: "phase-11c-image-promotion-live-test-20260630024821",
+      contributionId: "approved-contribution-1",
+      replyText: "This reply is still pending review.",
+      submittedByUid: "public-user-1"
+    }, {
+      submittedAt: "submitted"
+    })
+  ]);
+
+  assert.deepEqual(groupedReplies, {});
+});
+
+test("reply approval payload replaces submitted reply with public-safe fields only", () => {
+  const submittedAt = "submitted";
+  const payload = buildApproveContributionReplyPayload({
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "A reviewed reply.",
+    replyStatus: "submitted",
+    submittedAt,
+    submittedByUid: "public-user-1",
+    submittedByDisplayName: "Resident One",
+    adminNotes: "private note"
+  }, {
+    approvedAt: "approved"
+  });
+
+  assert.deepEqual(payload, {
+    placeId: "phase-11c-image-promotion-live-test-20260630024821",
+    contributionId: "approved-contribution-1",
+    replyText: "A reviewed reply.",
+    replyStatus: "approved",
+    submittedAt,
+    approvedAt: "approved",
+    publicSafe: true
+  });
+});
+
+test("reply rejection update keeps moderation data private", () => {
+  const payload = buildRejectContributionReplyUpdate({
+    rejectedByUid: "admin-user-1",
+    adminNotes: "  Not appropriate for this contribution.  "
+  }, {
+    rejectedAt: "rejected"
+  });
+
+  assert.deepEqual(payload, {
+    replyStatus: "rejected",
+    rejectedAt: "rejected",
+    rejectedByUid: "admin-user-1",
+    adminNotes: "Not appropriate for this contribution."
+  });
+});
+
+test("approved contribution image builds public-safe main image promotion payload", () => {
+  const payload = buildContributionImagePromotionPayload({
+    id: "approved-contribution-1",
+    ...buildValidContribution({
+      contributionStatus: "approved",
+      imageUrl: "https://example.org/contribution-photo.jpg",
+      imageCaption: "South entrance in summer",
+      imageCredit: "Photo by resident",
+      imageRightsStatus: "permission-granted"
+    }),
+    ...buildValidUploadedImageMetadata(),
+    submittedByUid: "public-user-1",
+    submitterEmail: "user@example.org",
+    adminNotes: "private moderation note"
+  }, {
+    promotedContributionImageAt: "promoted",
+    updatedAt: "updated"
+  });
+
+  assert.deepEqual(payload, {
+    imageUrl: "https://example.org/contribution-photo.jpg",
+    promotedContributionId: "approved-contribution-1",
+    promotedContributionImageUrl: "https://example.org/contribution-photo.jpg",
+    imageCaption: "South entrance in summer",
+    imageCredit: "Photo by resident",
+    imageRightsStatus: "permission-granted",
+    promotedContributionImageCaption: "South entrance in summer",
+    promotedContributionImageCredit: "Photo by resident",
+    promotedContributionImageRightsStatus: "permission-granted",
+    promotedContributionImageAt: "promoted",
+    updatedAt: "updated"
+  });
+
+  [
+    "imageStoragePath",
+    "imageFileName",
+    "imageFileContentType",
+    "imageFileSize",
+    "imageUploadedAt",
+    "imageUploadedByUid",
+    "imageUploadVisibility",
+    "submittedByUid",
+    "submitterEmail",
+    "adminNotes"
+  ].forEach((fieldName) => {
+    assert.equal(Object.prototype.hasOwnProperty.call(payload, fieldName), false, `${fieldName} should not be promoted`);
+  });
+});
+
+test("only approved contribution images can be promoted", () => {
+  assert.throws(() => buildContributionImagePromotionPayload(buildValidContribution({
+    contributionStatus: "submitted",
+    imageUrl: "https://example.org/submitted.jpg"
+  }), {
+    contributionId: "submitted-contribution"
+  }), /Only approved contribution images can be promoted/);
+
+  assert.throws(() => buildContributionImagePromotionPayload(buildValidContribution({
+    contributionStatus: "approved",
+    imageUrl: ""
+  }), {
+    contributionId: "approved-text-only"
+  }), /Only approved contribution images can be promoted/);
 });
 
 test("admin approve update payload is correct", () => {

@@ -20,10 +20,12 @@
       collection,
       deleteField,
       doc,
+      getDoc,
       getDocs,
       getFirestore,
       query,
       serverTimestamp,
+      setDoc,
       updateDoc,
       where
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -34,6 +36,9 @@
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
     import {
       buildApproveContributionUpdate,
+      buildApproveContributionReplyPayload,
+      buildContributionImagePromotionPayload,
+      buildRejectContributionReplyUpdate,
       buildRejectContributionUpdate
     } from "./heritage-engine/place-contributions.js";
 
@@ -53,6 +58,9 @@
     const storage = getStorage(app);
     const authPersistenceReady = setPersistence(auth, browserLocalPersistence);
     let contributionRecords = [];
+    let approvedImageContributionRecords = [];
+    let replyRecords = [];
+    const placeImagePromotionState = new Map();
 
     function buildLoginUrl() {
       const loginUrl = new URL("admin-login.html", window.location.href);
@@ -88,7 +96,7 @@
     }
 
     function getSortTimestamp(record) {
-      const source = record.createdAt || record.updatedAt || null;
+      const source = record.createdAt || record.updatedAt || record.submittedAt || null;
       if (!source) return 0;
       if (typeof source?.toMillis === "function") return source.toMillis();
       if (source?.seconds) return source.seconds * 1000;
@@ -210,6 +218,34 @@
       chip.className = `manage-nominations-card__chip${className ? ` ${className}` : ""}`;
       chip.textContent = text;
       return chip;
+    }
+
+    function isPromotableApprovedImageContribution(record) {
+      return cleanText(record.contributionStatus) === "approved" && isSafeHttpsUrl(record.imageUrl);
+    }
+
+    async function getContributionContext(contributionId) {
+      const cleanContributionId = cleanText(contributionId);
+      if (!cleanContributionId) return null;
+
+      const existingRecord = [
+        ...contributionRecords,
+        ...approvedImageContributionRecords
+      ].find((record) => cleanText(record.id) === cleanContributionId);
+      if (existingRecord) return existingRecord;
+
+      try {
+        const snapshot = await getDoc(doc(db, "placeContributions", cleanContributionId));
+        return snapshot.exists()
+          ? {
+            id: snapshot.id,
+            ...snapshot.data()
+          }
+          : null;
+      } catch (error) {
+        console.warn("Could not load contribution context for reply:", error);
+        return null;
+      }
     }
 
     function createContributionCard(record) {
@@ -475,6 +511,171 @@
       return card;
     }
 
+    async function getPlacePromotionState(placeId) {
+      const cleanPlaceId = cleanText(placeId);
+      if (!cleanPlaceId) return null;
+      if (placeImagePromotionState.has(cleanPlaceId)) {
+        return placeImagePromotionState.get(cleanPlaceId);
+      }
+
+      try {
+        const snapshot = await getDoc(doc(db, "communityPlaces", cleanPlaceId));
+        const state = snapshot.exists()
+          ? {
+            id: snapshot.id,
+            ...snapshot.data()
+          }
+          : null;
+        placeImagePromotionState.set(cleanPlaceId, state);
+        return state;
+      } catch (error) {
+        console.warn("Could not load place promotion state:", error);
+        placeImagePromotionState.set(cleanPlaceId, null);
+        return null;
+      }
+    }
+
+    function createApprovedImagePromotionCard(record) {
+      const card = document.createElement("article");
+      card.className = "manage-nominations-card";
+      card.dataset.contributionId = record.id;
+
+      const summary = document.createElement("div");
+      summary.className = "manage-nominations-card__summary";
+
+      const heading = document.createElement("div");
+      heading.className = "manage-nominations-card__heading";
+
+      const title = document.createElement("h3");
+      title.textContent = cleanText(record.placeTitleSnapshot) || cleanText(record.placeId) || "Approved image contribution";
+      heading.appendChild(title);
+
+      const chips = document.createElement("div");
+      chips.className = "manage-nominations-card__chips";
+      chips.appendChild(createSummaryChip("Approved image", "manage-nominations-card__chip--status"));
+      if (cleanText(record.placeId)) chips.appendChild(createSummaryChip(cleanText(record.placeId)));
+      heading.appendChild(chips);
+      summary.appendChild(heading);
+
+      if (cleanText(record.contributionText)) {
+        const contributionText = document.createElement("p");
+        contributionText.className = "my-nominations-summary";
+        contributionText.textContent = cleanText(record.contributionText);
+        summary.appendChild(contributionText);
+      }
+
+      card.appendChild(summary);
+
+      const details = document.createElement("dl");
+      details.className = "manage-nominations-card__detail-grid";
+      [
+        createDetailRow("Place ID", record.placeId),
+        createLinkRow("Approved image URL", record.imageUrl),
+        createDetailRow("Image caption", record.imageCaption),
+        createDetailRow("Image credit", record.imageCredit),
+        createDetailRow("Image rights status", getRightsStatusLabel(record.imageRightsStatus)),
+        createTimestampRow("Approved at", record.reviewedAt)
+      ].forEach((row) => {
+        if (row) details.appendChild(row);
+      });
+      card.appendChild(details);
+
+      const evidence = document.createElement("section");
+      evidence.className = "manage-nominations-card__evidence";
+
+      const evidenceTitle = document.createElement("h4");
+      evidenceTitle.textContent = "Approved image preview";
+      evidence.appendChild(evidenceTitle);
+
+      const note = document.createElement("p");
+      note.className = "admin-help-note";
+      note.textContent = "Only this public-safe approved image URL is used for promotion. Private upload metadata is not copied to the place record.";
+      evidence.appendChild(note);
+
+      const preview = document.createElement("img");
+      preview.className = "manage-nominations-card__evidence-preview";
+      preview.src = cleanText(record.imageUrl);
+      preview.alt = cleanText(record.imageCaption) || "Approved contribution image preview";
+      preview.loading = "lazy";
+      evidence.appendChild(preview);
+      card.appendChild(evidence);
+
+      const promotionSection = document.createElement("section");
+      promotionSection.className = "manage-nominations-card__review";
+
+      const promotionTitle = document.createElement("h4");
+      promotionTitle.textContent = "Main image promotion";
+      promotionSection.appendChild(promotionTitle);
+
+      const promotionHelp = document.createElement("p");
+      promotionHelp.className = "admin-help-note";
+      promotionHelp.textContent = "Promotion is explicit and updates only public place image fields. The approved contribution remains in Comments and Photos.";
+      promotionSection.appendChild(promotionHelp);
+
+      const promoteButton = document.createElement("button");
+      promoteButton.type = "button";
+      promoteButton.textContent = "Use as main image";
+
+      const saveMessage = createCardMessage("Checking current main image...");
+      promotionSection.append(promoteButton, saveMessage);
+      card.appendChild(promotionSection);
+
+      getPlacePromotionState(record.placeId).then((place) => {
+        const promotedContributionId = cleanText(place?.promotedContributionId);
+        const isCurrentById = promotedContributionId && promotedContributionId === cleanText(record.id);
+        const isLegacyUrlMatch = !promotedContributionId
+          && isSafeHttpsUrl(place?.imageUrl)
+          && cleanText(place.imageUrl) === cleanText(record.imageUrl);
+
+        if (isCurrentById) {
+          promoteButton.disabled = true;
+          promoteButton.textContent = "Current main image";
+          saveMessage.textContent = "This approved contribution image is currently used as the main public place image.";
+          return;
+        }
+
+        if (isLegacyUrlMatch) {
+          saveMessage.textContent = "The current main image URL matches this approved contribution, but the place record has no promoted contribution ID yet.";
+          return;
+        }
+
+        saveMessage.textContent = "Ready to promote this approved image.";
+      });
+
+      promoteButton.addEventListener("click", async () => {
+        promoteButton.disabled = true;
+        const originalText = promoteButton.textContent;
+        promoteButton.textContent = "Promoting...";
+        saveMessage.className = "manage-nominations-card__save-message";
+        saveMessage.textContent = "";
+
+        try {
+          const payload = buildContributionImagePromotionPayload(record, {
+            contributionId: record.id,
+            promotedContributionImageAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+          await updateDoc(doc(db, "communityPlaces", cleanText(record.placeId)), payload);
+          placeImagePromotionState.set(cleanText(record.placeId), {
+            ...(placeImagePromotionState.get(cleanText(record.placeId)) || {}),
+            ...payload,
+            promotedContributionId: record.id,
+            imageUrl: cleanText(record.imageUrl)
+          });
+          renderApprovedImageContributionList();
+          setStatus("Approved contribution image promoted as the main public place image.");
+        } catch (error) {
+          console.error("Failed to promote contribution image:", error);
+          saveMessage.className = "manage-nominations-card__save-message admin-error";
+          saveMessage.textContent = "Could not promote this image. Check admin sign-in and Firestore rules.";
+          promoteButton.disabled = false;
+          promoteButton.textContent = originalText;
+        }
+      });
+
+      return card;
+    }
+
     function renderContributionList() {
       const container = document.getElementById("managePlaceContributionsList");
       if (!container) return;
@@ -490,6 +691,207 @@
 
       contributionRecords.forEach((record) => {
         container.appendChild(createContributionCard(record));
+      });
+    }
+
+    function renderApprovedImageContributionList() {
+      const container = document.getElementById("managePlaceContributionImagePromotionList");
+      if (!container) return;
+      container.textContent = "";
+
+      const promotableRecords = approvedImageContributionRecords.filter(isPromotableApprovedImageContribution);
+      if (promotableRecords.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "admin-empty-state";
+        empty.textContent = "No approved contribution images are eligible for main image promotion yet.";
+        container.appendChild(empty);
+        return;
+      }
+
+      promotableRecords.forEach((record) => {
+        container.appendChild(createApprovedImagePromotionCard(record));
+      });
+    }
+
+    function createReplyModerationCard(record) {
+      const card = document.createElement("article");
+      card.className = "manage-nominations-card";
+      card.dataset.replyId = record.id;
+
+      const summary = document.createElement("div");
+      summary.className = "manage-nominations-card__summary";
+
+      const heading = document.createElement("div");
+      heading.className = "manage-nominations-card__heading";
+
+      const title = document.createElement("h3");
+      title.textContent = "Submitted reply";
+      heading.appendChild(title);
+
+      const chips = document.createElement("div");
+      chips.className = "manage-nominations-card__chips";
+      chips.appendChild(createSummaryChip("Submitted", "manage-nominations-card__chip--status"));
+      if (cleanText(record.placeId)) chips.appendChild(createSummaryChip(cleanText(record.placeId)));
+      heading.appendChild(chips);
+      summary.appendChild(heading);
+
+      if (cleanText(record.replyText)) {
+        const replyText = document.createElement("p");
+        replyText.className = "my-nominations-summary";
+        replyText.textContent = cleanText(record.replyText);
+        summary.appendChild(replyText);
+      }
+
+      card.appendChild(summary);
+
+      const details = document.createElement("dl");
+      details.className = "manage-nominations-card__detail-grid";
+      [
+        createDetailRow("Reply status", record.replyStatus),
+        createDetailRow("Place ID", record.placeId),
+        createDetailRow("Contribution ID", record.contributionId),
+        createDetailRow("Reply text", record.replyText),
+        createTimestampRow("Submitted at", record.submittedAt),
+        createDetailRow("Submitted by UID", record.submittedByUid),
+        createDetailRow("Submitted display name", record.submittedByDisplayName)
+      ].forEach((row) => {
+        if (row) details.appendChild(row);
+      });
+      card.appendChild(details);
+
+      const context = document.createElement("section");
+      context.className = "manage-nominations-card__review";
+
+      const contextTitle = document.createElement("h4");
+      contextTitle.textContent = "Related contribution";
+      context.appendChild(contextTitle);
+
+      const contextMessage = createCardMessage("Loading related contribution context...");
+      context.appendChild(contextMessage);
+      card.appendChild(context);
+
+      getContributionContext(record.contributionId).then((contribution) => {
+        contextMessage.textContent = contribution
+          ? `${cleanText(contribution.placeTitleSnapshot) || cleanText(contribution.placeId) || "Approved contribution"} | ${cleanText(contribution.contributionText) || cleanText(contribution.imageCaption) || cleanText(contribution.imageUrl) || "No contribution summary text"}`
+          : "Related contribution could not be loaded. Verify the contribution ID before reviewing.";
+      });
+
+      const reviewSection = document.createElement("section");
+      reviewSection.className = "manage-nominations-card__review";
+
+      const reviewTitle = document.createElement("h4");
+      reviewTitle.textContent = "Reply review";
+      reviewSection.appendChild(reviewTitle);
+
+      const reviewHelp = document.createElement("p");
+      reviewHelp.className = "admin-help-note";
+      reviewHelp.textContent = "Approve replaces this reply with a public-safe document. Reject keeps it hidden from public reads.";
+      reviewSection.appendChild(reviewHelp);
+
+      const reviewForm = document.createElement("form");
+      reviewForm.className = "manage-nominations-card__review-form";
+
+      const notesLabel = document.createElement("label");
+      notesLabel.textContent = "Private admin notes (saved on reject only)";
+      const notesInput = document.createElement("textarea");
+      notesInput.name = "adminNotes";
+      notesInput.rows = 4;
+      notesInput.maxLength = 5000;
+      notesLabel.appendChild(notesInput);
+
+      const actions = document.createElement("div");
+      actions.className = "admin-record-actions";
+
+      const approveButton = document.createElement("button");
+      approveButton.type = "submit";
+      approveButton.name = "reviewAction";
+      approveButton.value = "approve";
+      approveButton.textContent = "Approve reply";
+
+      const rejectButton = document.createElement("button");
+      rejectButton.type = "submit";
+      rejectButton.name = "reviewAction";
+      rejectButton.value = "reject";
+      rejectButton.textContent = "Reject reply";
+
+      actions.append(approveButton, rejectButton);
+
+      const saveMessage = createCardMessage("");
+      reviewForm.append(notesLabel, actions, saveMessage);
+      reviewSection.appendChild(reviewForm);
+      card.appendChild(reviewSection);
+
+      reviewForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const submitter = event.submitter;
+        const action = submitter?.value;
+        const adminNotes = cleanText(notesInput.value);
+        saveMessage.textContent = "";
+        saveMessage.className = "manage-nominations-card__save-message";
+
+        if (!["approve", "reject"].includes(action)) {
+          saveMessage.className = "manage-nominations-card__save-message admin-error";
+          saveMessage.textContent = "Choose a valid reply review action.";
+          return;
+        }
+
+        approveButton.disabled = true;
+        rejectButton.disabled = true;
+        const originalApproveText = approveButton.textContent;
+        const originalRejectText = rejectButton.textContent;
+        submitter.textContent = action === "approve" ? "Approving..." : "Rejecting...";
+
+        try {
+          const replyRef = doc(db, "placeContributionReplies", record.id);
+          if (action === "approve") {
+            await setDoc(replyRef, buildApproveContributionReplyPayload(record, {
+              approvedAt: serverTimestamp()
+            }));
+          } else {
+            await updateDoc(replyRef, buildRejectContributionReplyUpdate({
+              rejectedByUid: ADMIN_UID,
+              adminNotes
+            }, {
+              rejectedAt: serverTimestamp()
+            }));
+          }
+
+          replyRecords = replyRecords.filter((item) => item.id !== record.id);
+          renderReplyModerationList();
+          setStatus(action === "approve"
+            ? "Reply approved. It is now eligible for the public place page."
+            : "Reply rejected and kept hidden from public display."
+          );
+        } catch (error) {
+          console.error("Failed to review place contribution reply:", error);
+          saveMessage.className = "manage-nominations-card__save-message admin-error";
+          saveMessage.textContent = "Could not save the reply review update. Check admin sign-in and Firestore rules.";
+        } finally {
+          approveButton.disabled = false;
+          rejectButton.disabled = false;
+          approveButton.textContent = originalApproveText;
+          rejectButton.textContent = originalRejectText;
+        }
+      });
+
+      return card;
+    }
+
+    function renderReplyModerationList() {
+      const container = document.getElementById("managePlaceContributionRepliesList");
+      if (!container) return;
+      container.textContent = "";
+
+      if (replyRecords.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "admin-empty-state";
+        empty.textContent = "No submitted place contribution replies are waiting for review right now.";
+        container.appendChild(empty);
+        return;
+      }
+
+      replyRecords.forEach((record) => {
+        container.appendChild(createReplyModerationCard(record));
       });
     }
 
@@ -523,6 +925,53 @@
       }
     }
 
+    async function loadApprovedImageContributions() {
+      try {
+        const snapshot = await getDocs(query(
+          collection(db, "placeContributions"),
+          where("contributionStatus", "==", "approved")
+        ));
+
+        approvedImageContributionRecords = snapshot.docs
+          .map((docSnap) => ({
+            id: docSnap.id,
+            ...docSnap.data()
+          }))
+          .filter(isPromotableApprovedImageContribution)
+          .sort((a, b) => getSortTimestamp(b) - getSortTimestamp(a));
+
+        renderApprovedImageContributionList();
+      } catch (error) {
+        console.error("Failed to load approved image contributions:", error);
+        approvedImageContributionRecords = [];
+        renderApprovedImageContributionList();
+        setStatus("Could not load approved image contributions for promotion. Check admin sign-in and Firestore rules.", "error");
+      }
+    }
+
+    async function loadSubmittedReplies() {
+      try {
+        const snapshot = await getDocs(query(
+          collection(db, "placeContributionReplies"),
+          where("replyStatus", "==", "submitted")
+        ));
+
+        replyRecords = snapshot.docs
+          .map((docSnap) => ({
+            id: docSnap.id,
+            ...docSnap.data()
+          }))
+          .sort((a, b) => getSortTimestamp(b) - getSortTimestamp(a));
+
+        renderReplyModerationList();
+      } catch (error) {
+        console.error("Failed to load submitted place contribution replies:", error);
+        replyRecords = [];
+        renderReplyModerationList();
+        setStatus("Could not load submitted place contribution replies. Check admin sign-in and Firestore rules.", "error");
+      }
+    }
+
     async function handleSignedInUser(user) {
       const page = document.getElementById("managePlaceContributionsPage");
 
@@ -542,6 +991,8 @@
 
       if (page) page.hidden = false;
       await loadSubmittedContributions();
+      await loadSubmittedReplies();
+      await loadApprovedImageContributions();
     }
 
     window.addEventListener("DOMContentLoaded", () => {
@@ -596,7 +1047,14 @@
 
       <h2 id="managePlaceContributionsTitle">Manage Place Contributions</h2>
       <p class="admin-readonly-note">This review page is for signed-in comments and photo submissions tied to existing public place records. Submitted and rejected records stay hidden publicly. Approval converts the record into the public-safe shape already used by the place page.</p>
+      <h3>Submitted contributions</h3>
       <div id="managePlaceContributionsList" class="my-nominations-list" aria-live="polite"></div>
+      <h3>Submitted replies</h3>
+      <p class="admin-readonly-note">Review signed-in replies to approved place contributions. Approved replies are rewritten to the public-safe reply shape before they can appear on place pages.</p>
+      <div id="managePlaceContributionRepliesList" class="my-nominations-list" aria-live="polite"></div>
+      <h3>Approved contribution images</h3>
+      <p class="admin-readonly-note">Use this section to explicitly promote an already-approved contribution image as the main public place image. Promotion does not remove the image from the Comments and Photos feed.</p>
+      <div id="managePlaceContributionImagePromotionList" class="my-nominations-list" aria-live="polite"></div>
     </section>
   </main>
 </body>

@@ -517,6 +517,203 @@ service cloud.firestore {
         && isOptionalString('adminNotes', 5000);
     }
 
+    function hasNoPrivateContributionImagePromotionFields() {
+      return !request.resource.data.keys().hasAny([
+        'imageStoragePath',
+        'imageFileName',
+        'imageFileContentType',
+        'imageFileSize',
+        'imageUploadedAt',
+        'imageUploadedByUid',
+        'imageUploadVisibility',
+        'adminNotes',
+        'submittedByUid',
+        'submitterEmail',
+        'submitterDisplayName',
+        'reviewedByUid'
+      ]);
+    }
+
+    function touchesCommunityPlacePromotionFields() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'imageUrl',
+        'imageCaption',
+        'imageCredit',
+        'imageRightsStatus',
+        'promotedContributionId',
+        'promotedContributionImageUrl',
+        'promotedContributionImageCaption',
+        'promotedContributionImageCredit',
+        'promotedContributionImageRightsStatus',
+        'promotedContributionImageAt'
+      ]);
+    }
+
+    function isValidCommunityPlacePromotionUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'imageUrl',
+          'imageCaption',
+          'imageCredit',
+          'imageRightsStatus',
+          'updatedAt',
+          'promotedContributionId',
+          'promotedContributionImageUrl',
+          'promotedContributionImageCaption',
+          'promotedContributionImageCredit',
+          'promotedContributionImageRightsStatus',
+          'promotedContributionImageAt'
+        ])
+        && hasNoPrivateContributionImagePromotionFields()
+        && isOptionalHttpsEvidenceUrl('imageUrl', 1000)
+        && isOptionalString('imageCaption', 300)
+        && isOptionalString('imageCredit', 300)
+        && (
+          !hasField('imageRightsStatus')
+          || request.resource.data.imageRightsStatus == null
+          || (
+            request.resource.data.imageRightsStatus is string
+            && request.resource.data.imageRightsStatus.size() <= 64
+            && isAllowedContributionImageRightsStatus(request.resource.data.imageRightsStatus)
+          )
+        )
+        && isTrimmedString(request.resource.data.promotedContributionId, 120)
+        && isOptionalHttpsEvidenceUrl('promotedContributionImageUrl', 1000)
+        && isOptionalString('promotedContributionImageCaption', 300)
+        && isOptionalString('promotedContributionImageCredit', 300)
+        && (
+          request.resource.data.get('promotedContributionImageRightsStatus', null) == null
+          || (
+            request.resource.data.promotedContributionImageRightsStatus is string
+            && request.resource.data.promotedContributionImageRightsStatus.size() <= 64
+            && isAllowedContributionImageRightsStatus(request.resource.data.promotedContributionImageRightsStatus)
+          )
+        )
+        && request.resource.data.promotedContributionImageAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+    }
+
+    function hasPublicPlaceContributionReplyFields() {
+      return resource.data.keys().hasOnly([
+          'placeId',
+          'contributionId',
+          'replyText',
+          'replyStatus',
+          'submittedAt',
+          'approvedAt',
+          'publicSafe'
+        ])
+        && resource.data.keys().hasAll([
+          'placeId',
+          'replyStatus',
+          'publicSafe'
+        ])
+        && resource.data.publicSafe == true;
+    }
+
+    function requestHasPublicPlaceContributionReplyFields() {
+      return request.resource.data.keys().hasOnly([
+          'placeId',
+          'contributionId',
+          'replyText',
+          'replyStatus',
+          'submittedAt',
+          'approvedAt',
+          'publicSafe'
+        ])
+        && request.resource.data.keys().hasAll([
+          'placeId',
+          'contributionId',
+          'replyText',
+          'replyStatus',
+          'submittedAt',
+          'approvedAt',
+          'publicSafe'
+        ])
+        && request.resource.data.publicSafe == true;
+    }
+
+    function hasValidPlaceContributionReplyCreateFields() {
+      return request.resource.data.keys().hasOnly([
+          'placeId',
+          'contributionId',
+          'replyText',
+          'replyStatus',
+          'submittedAt',
+          'submittedByUid',
+          'submittedByDisplayName'
+        ])
+        && request.resource.data.keys().hasAll([
+          'placeId',
+          'contributionId',
+          'replyText',
+          'replyStatus',
+          'submittedAt',
+          'submittedByUid'
+        ]);
+    }
+
+    function hasApprovedParentContributionForReply() {
+      return exists(/databases/$(database)/documents/placeContributions/$(request.resource.data.contributionId))
+        && get(/databases/$(database)/documents/placeContributions/$(request.resource.data.contributionId)).data.placeId == request.resource.data.placeId
+        && get(/databases/$(database)/documents/placeContributions/$(request.resource.data.contributionId)).data.contributionStatus == 'approved'
+        && get(/databases/$(database)/documents/placeContributions/$(request.resource.data.contributionId)).data.keys().hasOnly([
+          'placeId',
+          'placeTitleSnapshot',
+          'contributionText',
+          'imageUrl',
+          'imageCaption',
+          'imageCredit',
+          'imageRightsStatus',
+          'contributionStatus',
+          'createdAt',
+          'updatedAt',
+          'reviewedAt'
+        ]);
+    }
+
+    function isValidPlaceContributionReplyCreate() {
+      return request.auth != null
+        && hasValidPlaceContributionReplyCreateFields()
+        && isTrimmedString(request.resource.data.placeId, 160)
+        && isTrimmedString(request.resource.data.contributionId, 120)
+        && isTrimmedString(request.resource.data.replyText, 2000)
+        && request.resource.data.replyStatus == 'submitted'
+        && request.resource.data.submittedByUid == request.auth.uid
+        && isOptionalString('submittedByDisplayName', 120)
+        && request.resource.data.submittedAt is timestamp
+        && hasApprovedParentContributionForReply();
+    }
+
+    function isValidPlaceContributionReplyApproveUpdate() {
+      return isAdmin()
+        && resource.data.replyStatus == 'submitted'
+        && request.resource.data.replyStatus == 'approved'
+        && request.resource.data.approvedAt is timestamp
+        && requestHasPublicPlaceContributionReplyFields()
+        && isTrimmedString(request.resource.data.placeId, 160)
+        && isTrimmedString(request.resource.data.contributionId, 120)
+        && isTrimmedString(request.resource.data.replyText, 2000)
+        && request.resource.data.placeId == resource.data.placeId
+        && request.resource.data.contributionId == resource.data.contributionId
+        && request.resource.data.replyText == resource.data.replyText
+        && request.resource.data.submittedAt == resource.data.submittedAt;
+    }
+
+    function isValidPlaceContributionReplyRejectUpdate() {
+      return isAdmin()
+        && resource.data.replyStatus == 'submitted'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'replyStatus',
+          'rejectedAt',
+          'rejectedByUid',
+          'adminNotes'
+        ])
+        && request.resource.data.replyStatus == 'rejected'
+        && request.resource.data.rejectedAt is timestamp
+        && request.resource.data.rejectedByUid == request.auth.uid
+        && isOptionalString('adminNotes', 5000);
+    }
+
     match /news/{doc=**} {
       allow read: if true;
       allow write: if isAdmin();
@@ -529,7 +726,15 @@ service cloud.firestore {
 
     match /communityPlaces/{doc=**} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create: if isAdmin() && hasNoPrivateContributionImagePromotionFields();
+      allow update: if isAdmin() && (
+        isValidCommunityPlacePromotionUpdate()
+        || (
+          !touchesCommunityPlacePromotionFields()
+          && hasNoPrivateContributionImagePromotionFields()
+        )
+      );
+      allow delete: if isAdmin();
     }
 
     match /placeContributions/{contributionId} {
@@ -537,11 +742,23 @@ service cloud.firestore {
         && hasPublicPlaceContributionFields()
         || (
           isAdmin()
-          && resource.data.contributionStatus in ['submitted', 'rejected']
+          && resource.data.contributionStatus in ['submitted', 'rejected', 'approved']
         );
       allow create: if isValidPlaceContributionCreate();
       allow update: if isValidPlaceContributionApproveUpdate()
         || isValidPlaceContributionRejectUpdate();
+      allow delete: if false;
+    }
+
+    match /placeContributionReplies/{replyId} {
+      allow read: if (
+          resource.data.replyStatus == 'approved'
+          && hasPublicPlaceContributionReplyFields()
+        )
+        || isAdmin();
+      allow create: if isValidPlaceContributionReplyCreate();
+      allow update: if isValidPlaceContributionReplyApproveUpdate()
+        || isValidPlaceContributionReplyRejectUpdate();
       allow delete: if false;
     }
 
