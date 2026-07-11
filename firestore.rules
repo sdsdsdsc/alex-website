@@ -742,7 +742,7 @@ service cloud.firestore {
         && hasPublicPlaceContributionFields()
         || (
           isAdmin()
-          && resource.data.contributionStatus in ['submitted', 'rejected']
+          && resource.data.contributionStatus in ['submitted', 'rejected', 'approved']
         );
       allow create: if isValidPlaceContributionCreate();
       allow update: if isValidPlaceContributionApproveUpdate()

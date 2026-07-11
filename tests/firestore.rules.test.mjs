@@ -350,7 +350,7 @@ test("submitted and rejected place contributions cannot be read publicly", async
   ));
 });
 
-test("admins can read submitted and rejected place contributions for moderation", async () => {
+test("admins can read submitted, rejected, and approved place contributions for moderation", async () => {
   await seedDocument(
     "placeContributions/admin-readable-submitted-contribution",
     validSubmittedPlaceContribution()
@@ -364,6 +364,10 @@ test("admins can read submitted and rejected place contributions for moderation"
       adminNotes: "Needs a clearer image source."
     })
   );
+  await seedDocument(
+    "placeContributions/admin-readable-approved-contribution",
+    validPlaceContribution()
+  );
 
   const submittedSnapshot = await assertSucceeds(getDoc(
     doc(adminFirestore(), "placeContributions", "admin-readable-submitted-contribution")
@@ -371,9 +375,30 @@ test("admins can read submitted and rejected place contributions for moderation"
   const rejectedSnapshot = await assertSucceeds(getDoc(
     doc(adminFirestore(), "placeContributions", "admin-readable-rejected-contribution")
   ));
+  const approvedSnapshot = await assertSucceeds(getDoc(
+    doc(adminFirestore(), "placeContributions", "admin-readable-approved-contribution")
+  ));
 
   assert.equal(submittedSnapshot.data().contributionStatus, "submitted");
   assert.equal(rejectedSnapshot.data().contributionStatus, "rejected");
+  assert.equal(approvedSnapshot.data().contributionStatus, "approved");
+});
+
+test("admins can query approved place contributions collection-wide for image promotion", async () => {
+  await seedDocument(
+    "placeContributions/admin-query-approved-contribution",
+    validPlaceContribution()
+  );
+
+  const snapshot = await assertSucceeds(getDocs(query(
+    collection(adminFirestore(), "placeContributions"),
+    where("contributionStatus", "==", "approved")
+  )));
+
+  assert.deepEqual(
+    snapshot.docs.map((contributionDoc) => contributionDoc.id),
+    ["admin-query-approved-contribution"]
+  );
 });
 
 test("signed-in non-admin users cannot read submitted place contributions", async () => {
