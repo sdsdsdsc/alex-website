@@ -78,15 +78,9 @@ Workflow covered:
 
 ## Non-Admin User Verification
 
-The production smoke test used a real non-admin public user:
+Production smoke testing used a verified non-admin test account.
 
-- Email: `laua16911@gmail.com`
-- Display name: `lau`
-- UID: `wZad2dhcfdTnIsyurS2NwTr8q0o2`
-
-This UID was confirmed not to match the configured admin UID:
-
-- Admin UID: `VT3I9KMktMXsdJeyYBye54Sgnqu2`
+The account was confirmed not to match the configured admin account, which validated the non-admin submission and reply paths without storing personal identifiers in this permanent verification record.
 
 ## Phase 13D Results
 
