@@ -156,7 +156,12 @@
 
   <script type="module">
     import {
+      buildMapUrl as buildDiscoveryMapUrl,
+      getAssetType,
+      getMatchingPublicRecords,
       getSearchText,
+      hasMapCoordinates,
+      isPublicRecord,
       placeMatchesFilters,
       placeMatchesSearch,
       sortPlaces
@@ -395,6 +400,52 @@
       );
       assertEqual(sortPlaces(samplePlaces, "", "title")[0].title, "Alpha Community Square", "Search Helpers", "sort by title returns expected order");
       assertEqual(sortPlaces(samplePlaces, "", "newest")[0].title, "Alpha Community Square", "Search Helpers", "sort by newest returns expected order");
+    }
+
+    function runSharedDiscoveryTests() {
+      const fixtures = [
+        ...samplePlaces,
+        {
+          id: "gamma-garden",
+          title: "Gamma Memory Garden",
+          city: "Fenyi",
+          district: "Fenyi County",
+          category: "Park",
+          description: "Oral history gathering garden",
+          heritageCriteria: ["Historic interest"],
+          recordStatus: "published"
+        },
+        {
+          id: "invalid-coordinate",
+          title: "Invalid Coordinate Hall",
+          city: "Pingxiang",
+          district: "Anyuan",
+          category: "Building",
+          assetType: "Hall",
+          heritageCriteria: ["Historic interest"],
+          recordStatus: "published",
+          lat: 120,
+          lng: 113.9
+        },
+        { id: "private-place", title: "Private Memory", category: "Park", recordStatus: "private", lat: 27.6, lng: 113.8 },
+        { id: "rejected-place", title: "Rejected Memory", category: "Park", recordStatus: "rejected", lat: 27.6, lng: 113.8 }
+      ];
+      const ids = (filters) => getMatchingPublicRecords(fixtures, filters).map((place) => place.id).join("|");
+
+      assertEqual(ids({ query: "ORAL HISTORY" }), "gamma-garden", "Shared Discovery", "keyword matching is normalized and shared");
+      assertEqual(ids({ categories: ["park"] }), "gamma-garden", "Shared Discovery", "category matching is normalized and shared");
+      assertEqual(ids({ city: "fenyi" }), "gamma-garden", "Shared Discovery", "city matching is normalized and shared");
+      assertEqual(ids({ district: "fenyi county" }), "gamma-garden", "Shared Discovery", "district matching is normalized and shared");
+      assertEqual(ids({ assetType: "park" }), "gamma-garden", "Shared Discovery", "asset type falls back to category consistently");
+      assertEqual(ids({ heritageCriteria: "historic interest" }), "beta-hall|gamma-garden|invalid-coordinate", "Shared Discovery", "heritage criteria matching is normalized and shared");
+      assert(isPublicRecord(fixtures[0]) && !isPublicRecord(fixtures[4]) && !isPublicRecord(fixtures[5]), "Shared Discovery", "public and non-public eligibility is unchanged");
+      assertEqual(getAssetType(fixtures[2]), "Park", "Shared Discovery", "missing asset type uses category fallback");
+      assert(ids({ query: "gamma" }).includes("gamma-garden"), "Shared Discovery", "coordinate-less public record remains discoverable");
+      assertEqual(buildDiscoveryMapUrl(fixtures[2]), "", "Shared Discovery", "coordinate-less record has map-unavailable state");
+      assert(hasMapCoordinates(fixtures[0]), "Shared Discovery", "valid-coordinate public record remains marker-renderable");
+      assert(!hasMapCoordinates(fixtures[3]), "Shared Discovery", "invalid-coordinate record is not marker-renderable");
+      assertEqual(buildDiscoveryMapUrl(fixtures[0]), "map.html?lat=27.622&lng=113.885", "Shared Discovery", "valid-coordinate record keeps its map link");
+      assertEqual(getMatchingPublicRecords(fixtures).length, 4, "Shared Discovery", "public discovery excludes private and rejected records without using coordinates");
     }
 
     function runMapTests() {
@@ -1267,6 +1318,7 @@
 
     try {
       runSearchTests();
+      runSharedDiscoveryTests();
       runMapTests();
       runPlaceTests();
       runExportTests();

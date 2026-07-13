@@ -35,6 +35,16 @@ const SMOKE_PAGES = [
     path: "/export.html",
     title: /Heritage JSON Export/,
     readySelector: "#downloadBtn"
+  },
+  {
+    path: "/search.html",
+    title: /Community Places/,
+    readySelector: "#communitySearchForm"
+  },
+  {
+    path: "/map.html",
+    title: /Community Map/,
+    readySelector: "#mapSearchForm"
   }
 ];
 
@@ -56,6 +66,15 @@ test.beforeEach(async ({ page }) => {
   await page.route("**/favicon.ico", async (route) => {
     await route.fulfill({ status: 204, body: "" });
   });
+});
+
+test("heritage engine helper harness passes", async ({ page }) => {
+  await page.goto("/engine-test.html", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#totalCount")).not.toHaveText("0");
+  const sharedDiscovery = page.locator(".test-card", { has: page.locator("h2", { hasText: "Shared Discovery" }) });
+  await expect(sharedDiscovery.locator(".result")).toHaveCount(14);
+  const failures = await sharedDiscovery.locator(".result:has(.badge--fail)").allTextContents();
+  expect(failures).toEqual([]);
 });
 
 for (const smokePage of SMOKE_PAGES) {

@@ -12,12 +12,16 @@ import {
   escapeHTML,
   getCommunityDisplayLocation,
   hasValidCoordinates,
-  normalizeCoordinate,
-  normalizeSearchValue
+  normalizeCoordinate
 } from "./heritage-engine/maps.js?v=2026-06-20-releasepolish";
 import {
-  getHeritageCriteria,
-  isPublicRecord
+  getAssetType,
+  getMatchingPublicRecords,
+  getOptionCount,
+  getUniqueCriteria,
+  getUniqueValues,
+  isPublicRecord,
+  normalizeSearchText
 } from "./heritage-engine/search.js";
 
 const firebaseConfig = {
@@ -31,68 +35,6 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const TOWN_AREA_BLOCKLIST = /\b(province|district|county|street|road|route|lane|avenue|close|park|square|community|neighbou?rhood|village committee|residential committee)\b/i;
-const SPLIT_PATTERN = /[|,/;]+|\s+-\s+/;
-
-function toTitleCase(value) {
-  const text = cleanText(value);
-  if (!text) return "";
-  return text.replace(/\b([a-z])([a-z]*)/gi, (_, first, rest) => `${first.toUpperCase()}${rest.toLowerCase()}`);
-}
-
-function truncateText(value, maxLength = 110) {
-  const text = cleanText(value);
-  if (!text || text.length <= maxLength) return text;
-  return `${text.slice(0, maxLength).trimEnd()}...`;
-}
-
-function normalizeTownAreaCandidate(value) {
-  return toTitleCase(cleanText(value).replace(/\s+/g, " "));
-}
-
-function isUsefulTownAreaCandidate(value) {
-  const text = normalizeTownAreaCandidate(value);
-  if (!text) return false;
-  if (text.length < 2 || text.length > 40) return false;
-  if (/\d/.test(text)) return false;
-  if (/^jiangxi$/i.test(text) || /^jiangxi province$/i.test(text) || /^china$/i.test(text)) return false;
-  return !TOWN_AREA_BLOCKLIST.test(text);
-}
-
-function extractBroaderTownAreaCandidates(value) {
-  const segments = cleanText(value)
-    .split(SPLIT_PATTERN)
-    .map(normalizeTownAreaCandidate)
-    .filter(Boolean);
-
-  if (segments.length === 0) return [];
-
-  const usefulSegments = segments.filter((segment) => isUsefulTownAreaCandidate(segment));
-  if (segments.length === 1) {
-    return usefulSegments;
-  }
-
-  const preferredSegment = [...segments]
-    .reverse()
-    .find((segment) => isUsefulTownAreaCandidate(segment));
-
-  return preferredSegment ? [preferredSegment] : usefulSegments;
-}
-
-function getTownAreaValues(record) {
-  return [
-    cleanText(record.city),
-    cleanText(record.area),
-    cleanText(record.location),
-    cleanText(record.locality),
-    cleanText(record.address),
-    getCommunityDisplayLocation(record)
-  ]
-    .flatMap((value) => extractBroaderTownAreaCandidates(value))
-    .filter(Boolean)
-    .filter((value, index, values) => values.indexOf(value) === index);
-}
-
 function makeBluePinIcon() {
   return L.divIcon({
     className: "community-map-pin",
@@ -145,7 +87,7 @@ function buildCommunityPlacePopupHtml(record) {
   const safeTitle = escapeHTML(cleanText(record.title) || "Untitled community place");
   const safeAssetType = escapeHTML(cleanText(record.assetType) || cleanText(record.category) || "Not specified");
   const safeLocation = escapeHTML(getCommunityDisplayLocation(record) || "Not specified");
-  const safeArea = escapeHTML(record.townAreaValues[0] || cleanText(record.area) || cleanText(record.city) || "Not specified");
+  const safeArea = escapeHTML(cleanText(record.district) || cleanText(record.city) || cleanText(record.area) || "Not specified");
   const safeDescription = escapeHTML(
     cleanText(record.localSignificanceSummary)
       || cleanText(record.description)
@@ -189,8 +131,6 @@ function initCommunityMap({
   const searchForm = document.getElementById(searchFormId);
   const searchInput = document.getElementById(searchInputId);
   const statusEl = document.getElementById(statusId);
-  const areaFilterGroup = document.getElementById("mapAreaFilterGroup");
-  const criteriaFilterGroup = document.getElementById("mapCriteriaFilterGroup");
   const resetButton = document.getElementById("mapFilterReset");
   const toolButtons = Array.from(document.querySelectorAll(".map-tool-index__button"));
   const toolPanels = Array.from(document.querySelectorAll("[data-tool-panel]"));
@@ -221,12 +161,14 @@ function initCommunityMap({
   const baseLayers = createBaseLayers();
   const markersById = new Map();
   const pendingFilters = {
+    category: "",
+    city: "",
+    district: "",
     assetType: "",
-    area: "",
     heritageCriteria: ""
   };
 
-  let allMapPoints = [];
+  let allPublicRecords = [];
   let hasFocusedRequestedLocation = false;
   let isNominationPickMode = false;
 
@@ -388,107 +330,17 @@ function initCommunityMap({
     }
   }
 
-  function matchesFilters(record) {
-    const assetTypeMatches = !pendingFilters.assetType
-      || cleanText(record.assetType) === pendingFilters.assetType;
-    const areaMatches = !pendingFilters.area
-      || record.townAreaValues.includes(pendingFilters.area);
-    const criteriaMatches = !pendingFilters.heritageCriteria
-      || getHeritageCriteria(record).includes(pendingFilters.heritageCriteria);
-    return assetTypeMatches && areaMatches && criteriaMatches;
-  }
-
-  function matchesFilterContext(record, excludedKey, normalizedTerm) {
-    const searchMatches = matchesSearch(record, normalizedTerm);
-    const assetTypeMatches = excludedKey === "assetType"
-      || !pendingFilters.assetType
-      || cleanText(record.assetType) === pendingFilters.assetType;
-    const areaMatches = excludedKey === "area"
-      || !pendingFilters.area
-      || record.townAreaValues.includes(pendingFilters.area);
-    const criteriaMatches = excludedKey === "heritageCriteria"
-      || !pendingFilters.heritageCriteria
-      || getHeritageCriteria(record).includes(pendingFilters.heritageCriteria);
-    return searchMatches && assetTypeMatches && areaMatches && criteriaMatches;
-  }
-
-  function matchesSearch(record, term) {
-    if (!term) return true;
-
-    const searchText = [
-      record.title,
-      record.address,
-      record.description,
-      record.localSignificanceSummary,
-      record.area,
-      record.locationName,
-      record.location,
-      record.locality,
-      record.community,
-      record.neighbourhood,
-      record.city,
-      record.district,
-      record.assetType,
-      record.category,
-      ...getHeritageCriteria(record)
-    ].filter(Boolean).join(" ").toLowerCase();
-
-    return searchText.includes(term);
-  }
-
-  function getContextRecords(excludedKey, normalizedTerm) {
-    return allMapPoints.filter((record) => matchesFilterContext(record, excludedKey, normalizedTerm));
-  }
-
-  function buildFilterOptions(key, normalizedTerm) {
-    const source = getContextRecords(key, normalizedTerm);
-    if (key === "assetType") {
-      const counts = new Map();
-      source.forEach((record) => {
-        const value = cleanText(record.assetType);
-        if (!value) return;
-        counts.set(value, (counts.get(value) || 0) + 1);
-      });
-      return {
-        totalCount: source.length,
-        options: [...counts.entries()]
-          .map(([value, count]) => ({ value, count }))
-          .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
-      };
-    }
-
-    if (key === "area") {
-      const counts = new Map();
-      source.forEach((record) => {
-        record.townAreaValues.forEach((value) => {
-          counts.set(value, (counts.get(value) || 0) + 1);
-        });
-      });
-      return {
-        totalCount: source.length,
-        options: [...counts.entries()]
-          .map(([value, count]) => ({ value, count }))
-          .filter((option) => option.count > 0)
-          .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
-      };
-    }
-
-    if (key === "heritageCriteria") {
-      const counts = new Map();
-      source.forEach((record) => {
-        getHeritageCriteria(record).forEach((value) => {
-          counts.set(value, (counts.get(value) || 0) + 1);
-        });
-      });
-      return {
-        totalCount: source.length,
-        options: [...counts.entries()]
-          .map(([value, count]) => ({ value, count }))
-          .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
-      };
-    }
-
-    return { totalCount: source.length, options: [] };
+  function buildFilterOptions(key) {
+    const values = key === "heritageCriteria"
+      ? getUniqueCriteria(allPublicRecords)
+      : getUniqueValues(key, allPublicRecords);
+    return {
+      totalCount: allPublicRecords.length,
+      options: values.map((value) => ({
+        value,
+        count: getOptionCount(key, value, allPublicRecords)
+      }))
+    };
   }
 
   function populateCustomFilter(key, config) {
@@ -535,35 +387,28 @@ function initCommunityMap({
   }
 
   function renderFilterOptions() {
-    const normalizedTerm = normalizeSearchValue(searchInput?.value || "");
-    const assetTypes = buildFilterOptions("assetType", normalizedTerm);
-    const areas = buildFilterOptions("area", normalizedTerm);
-    const criteria = buildFilterOptions("heritageCriteria", normalizedTerm);
-
-    populateCustomFilter("assetType", assetTypes);
-    populateCustomFilter("area", areas);
-    populateCustomFilter("heritageCriteria", criteria);
-
-    if (areaFilterGroup) {
-      areaFilterGroup.hidden = areas.options.length === 0;
-    }
-    if (criteriaFilterGroup) {
-      criteriaFilterGroup.hidden = criteria.options.length === 0;
-    }
-    const assetTypeGroup = getCustomFilter("assetType")?.closest(".map-filter-group");
-    if (assetTypeGroup) {
-      assetTypeGroup.hidden = assetTypes.options.length === 0;
-    }
+    Object.keys(pendingFilters).forEach((key) => {
+      populateCustomFilter(key, buildFilterOptions(key));
+    });
   }
 
   function renderMapFeatures(searchTerm = "") {
-    const normalizedTerm = normalizeSearchValue(searchTerm);
+    const normalizedTerm = normalizeSearchText(searchTerm);
     pointLayer.clearLayers();
     focusLayer.clearLayers();
     markersById.clear();
 
-    const matchingPoints = allMapPoints
-      .filter((record) => matchesFilters(record) && matchesSearch(record, normalizedTerm))
+    const filters = {
+      query: normalizedTerm,
+      categories: pendingFilters.category ? [pendingFilters.category] : [],
+      city: pendingFilters.city,
+      district: pendingFilters.district,
+      assetType: pendingFilters.assetType,
+      heritageCriteria: pendingFilters.heritageCriteria
+    };
+    const matchingRecords = getMatchingPublicRecords(allPublicRecords, filters);
+    const matchingPoints = matchingRecords
+      .filter(hasValidCoordinates)
       .sort((a, b) => cleanText(a.title).localeCompare(cleanText(b.title)));
 
     const boundsItems = [];
@@ -579,14 +424,15 @@ function initCommunityMap({
     });
 
     renderFilterOptions();
-    const hasFocusControls = Boolean(normalizedTerm || pendingFilters.assetType || pendingFilters.area || pendingFilters.heritageCriteria);
-    setStatus(
-      matchingPoints.length === 0
-        ? "No records match this search."
-        : hasFocusControls
-          ? `${matchingPoints.length} ${matchingPoints.length === 1 ? "record" : "records"} on map.`
-          : `${matchingPoints.length} ${matchingPoints.length === 1 ? "record" : "records"} on map. Search or filter to focus the map.`
-    );
+    const unavailableCount = matchingRecords.length - matchingPoints.length;
+    const matchingLabel = `${matchingRecords.length} matching ${matchingRecords.length === 1 ? "record" : "records"}`;
+    const mapLabel = `${matchingPoints.length} on map`;
+    const unavailableLabel = unavailableCount > 0
+      ? `; ${unavailableCount} ${unavailableCount === 1 ? "has" : "have"} no map location and ${unavailableCount === 1 ? "remains" : "remain"} available in Places`
+      : "";
+    setStatus(matchingRecords.length === 0
+      ? "No community places match this search or filter."
+      : `${matchingLabel}; ${mapLabel}${unavailableLabel}.`);
 
     fitMapToLayers(map, boundsItems, fallbackCenter);
 
@@ -623,14 +469,15 @@ function initCommunityMap({
   async function loadMarkers() {
     try {
       const snapshot = await getDocs(query(collection(db, "communityPlaces")));
-      allMapPoints = [];
+      allPublicRecords = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
         const record = {
+          ...data,
           id: docSnap.id,
           title: cleanText(data.title),
           category: cleanText(data.category),
-          assetType: cleanText(data.assetType || data.category),
+          assetType: getAssetType(data),
           area: cleanText(data.area),
           address: cleanText(data.address),
           description: cleanText(data.description),
@@ -649,9 +496,8 @@ function initCommunityMap({
           recordStatus: cleanText(data.recordStatus)
         };
 
-        if (!hasValidCoordinates(record) || !isPublicRecord(record)) return;
-        record.townAreaValues = getTownAreaValues(record);
-        allMapPoints.push(record);
+        if (!isPublicRecord(record)) return;
+        allPublicRecords.push(record);
       });
     } catch (err) {
       console.error("Error loading map records:", err);

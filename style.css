@@ -2974,6 +2974,14 @@ footer {
   text-decoration: none;
 }
 
+.community-result-card__map-unavailable {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  color: #5b6268;
+  font-weight: 700;
+}
+
 .community-result-card__actions a:first-child,
 .place-actions a:first-child {
   background: #17475b;

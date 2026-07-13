@@ -7,14 +7,15 @@ import {
 import {
   buildMapUrl,
   cleanText,
+  getAssetType,
   getDisplayLocation,
+  getMatchingPublicRecords,
   getOptionCount as getEngineOptionCount,
   getUniqueCriteria,
   getUniqueValues,
   isPublicRecord,
   normalizeCoordinate,
   normalizeSearchText,
-  placeMatchesFilters,
   sortPlaces
 } from "./heritage-engine/search.js";
 
@@ -37,6 +38,7 @@ const els = {
   count: document.getElementById("communitySearchCount"),
   results: document.getElementById("communitySearchResults"),
   empty: document.getElementById("communitySearchEmpty"),
+  categoryOptions: document.getElementById("communityCategoryOptions"),
   customFilters: Array.from(document.querySelectorAll(".community-custom-filter")),
   clearFilters: document.getElementById("communitySearchClearFilters"),
   listView: document.getElementById("communityListView"),
@@ -233,10 +235,19 @@ function makeResultCard(place) {
   const recordLink = document.createElement("a");
   recordLink.href = `place.html?id=${encodeURIComponent(place.id)}`;
   recordLink.textContent = "View record";
-  const mapLink = document.createElement("a");
-  mapLink.href = buildMapUrl(place);
-  mapLink.textContent = "View on map";
-  actions.append(recordLink, mapLink);
+  const mapUrl = buildMapUrl(place);
+  actions.appendChild(recordLink);
+  if (mapUrl) {
+    const mapLink = document.createElement("a");
+    mapLink.href = mapUrl;
+    mapLink.textContent = "View on map";
+    actions.appendChild(mapLink);
+  } else {
+    const mapUnavailable = document.createElement("span");
+    mapUnavailable.className = "community-result-card__map-unavailable";
+    mapUnavailable.textContent = "Map location unavailable";
+    actions.appendChild(mapUnavailable);
+  }
 
   body.append(meta, title, summary);
   card.append(media, body);
@@ -288,7 +299,7 @@ function renderResults() {
     return;
   }
 
-  const filtered = publicPlaces.filter((place) => placeMatchesFilters(place, filters));
+  const filtered = getMatchingPublicRecords(allPlaces, filters);
   const sorted = sortPlaces(filtered, query, els.sort?.value || "relevance");
 
   renderPlaceCount(sorted.length, publicPlaces.length);
@@ -341,6 +352,19 @@ function populateCustomFilter(key, values) {
 
 function renderFilterOptions() {
   const publicPlaces = allPlaces.filter(isPublicRecord);
+  if (els.categoryOptions) {
+    els.categoryOptions.textContent = "";
+    getUniqueValues("category", publicPlaces).forEach((value) => {
+      const label = document.createElement("label");
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.name = "category";
+      input.value = value;
+      input.addEventListener("change", renderResults);
+      label.append(input, ` ${value} (${getOptionCount("category", value)})`);
+      els.categoryOptions.appendChild(label);
+    });
+  }
   populateCustomFilter("city", getUniqueValues("city", publicPlaces));
   populateCustomFilter("district", getUniqueValues("district", publicPlaces));
   populateCustomFilter("assetType", getUniqueValues("assetType", publicPlaces));
@@ -402,10 +426,11 @@ async function loadCommunityPlaces() {
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       allPlaces.push({
+        ...data,
         id: docSnap.id,
         title: cleanText(data.title),
         category: cleanText(data.category),
-        assetType: cleanText(data.assetType),
+        assetType: getAssetType(data),
         area: cleanText(data.area),
         province: cleanText(data.province),
         city: cleanText(data.city),
