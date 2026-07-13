@@ -98,6 +98,23 @@ test("map exposes a complete state-preserving non-map alternative", async ({ pag
   await expect(page.locator(".map-search-heading__alternative")).toContainText("records without map coordinates");
 });
 
+test("map to Places round-trips every shared discovery parameter", async ({ page }) => {
+  await page.goto(
+    "/map.html?q=memory&category=Building&category=Park&city=Pingxiang&district=Anyuan&assetType=Hall&heritageCriteria=Historic%20interest",
+    { waitUntil: "domcontentloaded" }
+  );
+  const listLink = page.locator("#mapViewResultsList");
+  await expect(listLink).toHaveAttribute("href", /search\.html\?q=memory/);
+  const listUrl = new URL(await listLink.getAttribute("href"), APP_ORIGIN);
+  expect(listUrl.pathname).toBe("/search.html");
+  expect(listUrl.searchParams.get("q")).toBe("memory");
+  expect(listUrl.searchParams.getAll("category")).toEqual(["Building", "Park"]);
+  expect(listUrl.searchParams.get("city")).toBe("Pingxiang");
+  expect(listUrl.searchParams.get("district")).toBe("Anyuan");
+  expect(listUrl.searchParams.get("assetType")).toBe("Hall");
+  expect(listUrl.searchParams.get("heritageCriteria")).toBe("Historic interest");
+});
+
 test("map skip link and region provide an accessible workspace entry", async ({ page }) => {
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   const skipLink = page.locator(".skip-link");
