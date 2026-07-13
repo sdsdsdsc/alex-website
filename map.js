@@ -15,13 +15,17 @@ import {
   normalizeCoordinate
 } from "./heritage-engine/maps.js?v=2026-06-20-releasepolish";
 import {
+  buildDiscoveryUrl,
   getAssetType,
   getMatchingPublicRecords,
   getOptionCount,
+  getPublicRecordById,
   getUniqueCriteria,
   getUniqueValues,
   isPublicRecord,
-  normalizeSearchText
+  normalizeSearchText,
+  parseSharedDiscoveryState,
+  writeSharedDiscoveryState
 } from "./heritage-engine/search.js";
 
 const firebaseConfig = {
@@ -131,24 +135,14 @@ function initCommunityMap({
   const searchForm = document.getElementById(searchFormId);
   const searchInput = document.getElementById(searchInputId);
   const statusEl = document.getElementById(statusId);
+  const focusStatusEl = document.getElementById("mapFocusStatus");
+  const listLink = document.getElementById("mapViewResultsList");
   const resetButton = document.getElementById("mapFilterReset");
   const toolButtons = Array.from(document.querySelectorAll(".map-tool-index__button"));
   const toolPanels = Array.from(document.querySelectorAll("[data-tool-panel]"));
   const urlParams = new URLSearchParams(window.location.search);
-  const requestedLatParam = urlParams.get("lat");
-  const requestedLngParam = urlParams.get("lng");
-  const hasRequestedLatLng = requestedLatParam !== null
-    && requestedLngParam !== null
-    && requestedLatParam.trim() !== ""
-    && requestedLngParam.trim() !== "";
-  const requestedLat = hasRequestedLatLng ? Number(requestedLatParam) : NaN;
-  const requestedLng = hasRequestedLatLng ? Number(requestedLngParam) : NaN;
-  const requestedLocation = hasRequestedLatLng
-    && Number.isFinite(requestedLat)
-    && Number.isFinite(requestedLng)
-    ? [requestedLat, requestedLng]
-    : null;
-  const initialSearchTerm = urlParams.get("search") || "";
+  const initialDiscoveryState = parseSharedDiscoveryState(urlParams);
+  const requestedPlaceId = cleanText(urlParams.get("place"));
   const fallbackCenter = [27.6202, 113.8825];
   const customFilters = Array.from(document.querySelectorAll(".map-custom-filter"));
   const mapNominationToggle = document.getElementById("mapNominationToggle");
@@ -156,20 +150,18 @@ function initCommunityMap({
 
   const map = L.map(containerId).setView(fallbackCenter, 13);
   const pointLayer = L.layerGroup().addTo(map);
-  const focusLayer = L.layerGroup().addTo(map);
   const bluePinIcon = makeBluePinIcon();
   const baseLayers = createBaseLayers();
   const markersById = new Map();
   const pendingFilters = {
-    category: "",
-    city: "",
-    district: "",
-    assetType: "",
-    heritageCriteria: ""
+    category: initialDiscoveryState.categories,
+    city: initialDiscoveryState.city,
+    district: initialDiscoveryState.district,
+    assetType: initialDiscoveryState.assetType,
+    heritageCriteria: initialDiscoveryState.heritageCriteria
   };
 
   let allPublicRecords = [];
-  let hasFocusedRequestedLocation = false;
   let isNominationPickMode = false;
 
   baseLayers.osm.addTo(map);
@@ -188,20 +180,31 @@ function initCommunityMap({
     }).addTo(map);
   }
 
-  if (searchInput && initialSearchTerm) {
-    searchInput.value = initialSearchTerm;
+  if (searchInput && initialDiscoveryState.q) {
+    searchInput.value = initialDiscoveryState.q;
   }
 
-  function updateUrlSearch(term) {
+  function getCurrentDiscoveryState(term = searchInput?.value || "") {
+    return {
+      q: cleanText(term),
+      categories: pendingFilters.category,
+      city: pendingFilters.city,
+      district: pendingFilters.district,
+      assetType: pendingFilters.assetType,
+      heritageCriteria: pendingFilters.heritageCriteria
+    };
+  }
+
+  function updateDiscoveryLinks(term) {
+    const state = getCurrentDiscoveryState(term);
     const url = new URL(window.location.href);
+    writeSharedDiscoveryState(url, state);
+    url.searchParams.delete("search");
     url.searchParams.delete("lat");
     url.searchParams.delete("lng");
-    if (term) {
-      url.searchParams.set("search", term);
-    } else {
-      url.searchParams.delete("search");
-    }
+    if (requestedPlaceId) url.searchParams.set("place", requestedPlaceId);
     window.history.replaceState({}, "", url);
+    if (listLink) listLink.href = buildDiscoveryUrl("search.html", state);
   }
 
   function setStatus(message) {
@@ -304,11 +307,16 @@ function initCommunityMap({
     if (!filter) return;
     const key = filter.dataset.filterKey;
     const selectedValue = pendingFilters[key] || "";
+    const selectedValues = key === "category" ? selectedValue : [selectedValue];
     const { valueLabel } = getCustomFilterParts(filter);
-    if (valueLabel) valueLabel.textContent = selectedValue || "Show all";
+    if (valueLabel) valueLabel.textContent = key === "category"
+      ? selectedValues.join(", ") || "Show all"
+      : selectedValue || "Show all";
 
     getOptionButtons(filter).forEach((option) => {
-      const isSelected = option.dataset.value === selectedValue;
+      const isSelected = option.dataset.value
+        ? selectedValues.includes(option.dataset.value)
+        : selectedValues.length === 0 || !selectedValues[0];
       option.classList.toggle("is-selected", isSelected);
       option.setAttribute("aria-selected", String(isSelected));
     });
@@ -331,9 +339,13 @@ function initCommunityMap({
   }
 
   function buildFilterOptions(key) {
-    const values = key === "heritageCriteria"
+    const storedValues = key === "heritageCriteria"
       ? getUniqueCriteria(allPublicRecords)
       : getUniqueValues(key, allPublicRecords);
+    const selectedValues = key === "category"
+      ? pendingFilters.category
+      : [pendingFilters[key]].filter(Boolean);
+    const values = [...new Set([...storedValues, ...selectedValues])].sort((a, b) => a.localeCompare(b));
     return {
       totalCount: allPublicRecords.length,
       options: values.map((value) => ({
@@ -348,10 +360,6 @@ function initCommunityMap({
     const { panel } = getCustomFilterParts(filter);
     if (!filter || !panel) return;
     const options = config.options || [];
-
-    if (pendingFilters[key] && !options.some((option) => option.value === pendingFilters[key])) {
-      pendingFilters[key] = "";
-    }
 
     panel.textContent = "";
     const totalCount = config.totalCount || 0;
@@ -374,7 +382,7 @@ function initCommunityMap({
       option.append(label, count);
       option.addEventListener("click", (event) => {
         event.stopPropagation();
-        pendingFilters[key] = value;
+        pendingFilters[key] = key === "category" ? (value ? [value] : []) : value;
         updateCustomFilterSelection(filter);
         closeCustomFilter(filter, true);
         renderMapFeatures(searchInput?.value || "");
@@ -392,15 +400,58 @@ function initCommunityMap({
     });
   }
 
+  function appendFocusLink(label, href) {
+    if (!focusStatusEl) return;
+    const link = document.createElement("a");
+    link.href = href;
+    link.textContent = label;
+    focusStatusEl.append(" ", link);
+  }
+
+  function renderRequestedPlaceFocus(matchingRecords) {
+    if (!focusStatusEl) return;
+    focusStatusEl.textContent = "";
+    focusStatusEl.hidden = !requestedPlaceId;
+    if (!requestedPlaceId) return;
+
+    const record = getPublicRecordById(allPublicRecords, requestedPlaceId);
+    if (!record) {
+      focusStatusEl.append("The requested public place could not be found.");
+      appendFocusLink("View preserved Places results", buildDiscoveryUrl("search.html", getCurrentDiscoveryState()));
+      return;
+    }
+
+    const recordUrl = buildPlaceRecordUrl(record.id);
+    if (!hasValidCoordinates(record)) {
+      focusStatusEl.append(`${cleanText(record.title) || "This public place"} has no map location yet.`);
+      appendFocusLink("View its public record", recordUrl);
+      appendFocusLink("View preserved Places results", buildDiscoveryUrl("search.html", getCurrentDiscoveryState()));
+      return;
+    }
+
+    const marker = markersById.get(record.id);
+    if (!marker || !matchingRecords.some((place) => place.id === record.id)) {
+      focusStatusEl.append(`${cleanText(record.title) || "The requested place"} does not match the active discovery filters.`);
+      appendFocusLink("View its public record", recordUrl);
+      appendFocusLink("View preserved Places results", buildDiscoveryUrl("search.html", getCurrentDiscoveryState()));
+      return;
+    }
+
+    marker.setZIndexOffset(1000);
+    marker.openPopup();
+    map.setView(marker.getLatLng(), Math.max(map.getZoom(), 15));
+    focusStatusEl.append(`Focused on ${cleanText(record.title) || "the requested public place"}.`);
+    appendFocusLink("View its public record", recordUrl);
+  }
+
   function renderMapFeatures(searchTerm = "") {
     const normalizedTerm = normalizeSearchText(searchTerm);
     pointLayer.clearLayers();
-    focusLayer.clearLayers();
     markersById.clear();
 
     const filters = {
       query: normalizedTerm,
-      categories: pendingFilters.category ? [pendingFilters.category] : [],
+      categories: pendingFilters.category,
       city: pendingFilters.city,
       district: pendingFilters.district,
       assetType: pendingFilters.assetType,
@@ -436,21 +487,8 @@ function initCommunityMap({
 
     fitMapToLayers(map, boundsItems, fallbackCenter);
 
-    if (mode === "full" && requestedLocation && !hasFocusedRequestedLocation && !normalizedTerm) {
-      hasFocusedRequestedLocation = true;
-      L.circleMarker(requestedLocation, {
-        radius: 9,
-        color: "#1d3557",
-        fillColor: "#fcbf49",
-        fillOpacity: 0.95,
-        weight: 3
-      }).addTo(focusLayer).bindPopup("Selected community place");
-      map.setView(requestedLocation, Math.max(map.getZoom(), 15));
-      const cleanUrl = new URL(window.location.href);
-      cleanUrl.searchParams.delete("lat");
-      cleanUrl.searchParams.delete("lng");
-      window.history.replaceState({}, "", cleanUrl);
-    }
+    renderRequestedPlaceFocus(matchingRecords);
+    updateDiscoveryLinks(searchTerm);
 
     setTimeout(() => map.invalidateSize(), 0);
   }
@@ -461,7 +499,7 @@ function initCommunityMap({
       searchInput.value = searchTerm;
     }
     if (mode === "full") {
-      updateUrlSearch(searchTerm);
+      updateDiscoveryLinks(searchTerm);
     }
     renderMapFeatures(searchTerm);
   }
@@ -515,7 +553,7 @@ function initCommunityMap({
       searchInput.value = "";
     }
     Object.keys(pendingFilters).forEach((key) => {
-      pendingFilters[key] = "";
+      pendingFilters[key] = key === "category" ? [] : "";
       updateCustomFilterSelection(getCustomFilter(key));
     });
     closeAllCustomFilters();
@@ -583,7 +621,7 @@ function initCommunityMap({
 
   loadMarkers().then(() => {
     setActiveToolPanel("search");
-    runSearch(searchInput?.value || initialSearchTerm);
+    runSearch(searchInput?.value || initialDiscoveryState.q);
   });
 
   return map;

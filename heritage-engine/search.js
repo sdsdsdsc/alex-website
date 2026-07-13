@@ -17,6 +17,65 @@ function normalizeTextList(value) {
   return cleanText(value).split(/[\n,;]+/).map(cleanText).filter(Boolean);
 }
 
+const SHARED_DISCOVERY_PARAMS = [
+  "q",
+  "category",
+  "city",
+  "district",
+  "assetType",
+  "heritageCriteria"
+];
+
+function toSearchParams(value) {
+  if (value instanceof URLSearchParams) return new URLSearchParams(value);
+  if (value instanceof URL) return new URLSearchParams(value.search);
+  const text = cleanText(value);
+  if (!text) return new URLSearchParams();
+  if (!text.includes("://")) {
+    const queryIndex = text.indexOf("?");
+    return new URLSearchParams(queryIndex >= 0 ? text.slice(queryIndex + 1) : text);
+  }
+  return new URL(text).searchParams;
+}
+
+function parseSharedDiscoveryState(value = "") {
+  const params = toSearchParams(value);
+  return {
+    q: cleanText(params.get("q")),
+    categories: [...new Set(params.getAll("category").map(cleanText).filter(Boolean))],
+    city: cleanText(params.get("city")),
+    district: cleanText(params.get("district")),
+    assetType: cleanText(params.get("assetType")),
+    heritageCriteria: cleanText(params.get("heritageCriteria"))
+  };
+}
+
+function writeSharedDiscoveryState(url, state = {}) {
+  SHARED_DISCOVERY_PARAMS.forEach((key) => url.searchParams.delete(key));
+  const q = cleanText(state.q);
+  if (q) url.searchParams.set("q", q);
+  [...new Set((state.categories || []).map(cleanText).filter(Boolean))]
+    .forEach((category) => url.searchParams.append("category", category));
+  ["city", "district", "assetType", "heritageCriteria"].forEach((key) => {
+    const value = cleanText(state[key]);
+    if (value) url.searchParams.set(key, value);
+  });
+  return url;
+}
+
+function getDefaultBaseHref() {
+  return typeof window === "undefined" ? "http://localhost/" : window.location.href;
+}
+
+function buildDiscoveryUrl(path, state = {}, options = {}) {
+  const url = new URL(path, options.baseHref || getDefaultBaseHref());
+  writeSharedDiscoveryState(url, state);
+  url.searchParams.delete("place");
+  const placeId = cleanText(options.place);
+  if (placeId) url.searchParams.set("place", placeId);
+  return `${url.pathname}${url.search}`;
+}
+
 function createdAtMillis(place) {
   const seconds = place?.createdAt?.seconds;
   return Number.isFinite(seconds) ? seconds * 1000 : 0;
@@ -145,6 +204,12 @@ function getMatchingPublicRecords(source = [], filters = {}) {
   }));
 }
 
+function getPublicRecordById(source = [], id = "") {
+  const cleanId = cleanText(id);
+  if (!cleanId) return null;
+  return source.find((place) => cleanText(place?.id) === cleanId && isPublicRecord(place)) || null;
+}
+
 function getDisplayLocation(place) {
   return [
     cleanText(place.district),
@@ -162,9 +227,9 @@ function hasMapCoordinates(place) {
     && place.lng <= 180;
 }
 
-function buildMapUrl(place) {
-  if (hasMapCoordinates(place)) {
-    return `map.html?lat=${encodeURIComponent(place.lat)}&lng=${encodeURIComponent(place.lng)}`;
+function buildMapUrl(place, state = {}) {
+  if (hasMapCoordinates(place) && cleanText(place?.id)) {
+    return buildDiscoveryUrl("map.html", state, { place: place.id });
   }
   return "";
 }
@@ -194,6 +259,8 @@ function getOptionCount(key, value, source = []) {
 }
 
 export {
+  SHARED_DISCOVERY_PARAMS,
+  buildDiscoveryUrl,
   buildMapUrl,
   cleanText,
   getAssetType,
@@ -201,6 +268,7 @@ export {
   getHeritageCriteria,
   getMatchingPublicRecords,
   getOptionCount,
+  getPublicRecordById,
   getSearchText,
   getUniqueCriteria,
   getUniqueValues,
@@ -209,7 +277,9 @@ export {
   normalizeCoordinate,
   normalizeSearchText,
   normalizeTextList,
+  parseSharedDiscoveryState,
   placeMatchesFilters,
   placeMatchesSearch,
-  sortPlaces
+  sortPlaces,
+  writeSharedDiscoveryState
 };

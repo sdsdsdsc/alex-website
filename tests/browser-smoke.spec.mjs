@@ -75,6 +75,19 @@ test("heritage engine helper harness passes", async ({ page }) => {
   await expect(sharedDiscovery.locator(".result")).toHaveCount(14);
   const failures = await sharedDiscovery.locator(".result:has(.badge--fail)").allTextContents();
   expect(failures).toEqual([]);
+
+  const sharedUrlAndFocus = page.locator(".test-card", { has: page.locator("h2", { hasText: "Shared URL and Focus" }) });
+  await expect(sharedUrlAndFocus.locator(".result")).toHaveCount(16);
+  const urlAndFocusFailures = await sharedUrlAndFocus.locator(".result:has(.badge--fail)").allTextContents();
+  expect(urlAndFocusFailures).toEqual([]);
+});
+
+test("map restores shared URL state and fails safely for an unknown place ID", async ({ page }) => {
+  await page.goto("/map.html?q=memory&category=Building&city=Pingxiang&place=definitely-missing", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#mapSearchInput")).toHaveValue("memory");
+  await expect(page.locator("#mapFocusStatus")).toContainText("requested public place could not be found");
+  await expect(page.locator("#mapViewResultsList")).toHaveAttribute("href", /search\.html\?q=memory.*category=Building.*city=Pingxiang/);
+  await expect(page).toHaveURL(/place=definitely-missing/);
 });
 
 for (const smokePage of SMOKE_PAGES) {

@@ -156,12 +156,15 @@
 
   <script type="module">
     import {
+      buildDiscoveryUrl,
       buildMapUrl as buildDiscoveryMapUrl,
       getAssetType,
       getMatchingPublicRecords,
+      getPublicRecordById,
       getSearchText,
       hasMapCoordinates,
       isPublicRecord,
+      parseSharedDiscoveryState,
       placeMatchesFilters,
       placeMatchesSearch,
       sortPlaces
@@ -444,8 +447,57 @@
       assertEqual(buildDiscoveryMapUrl(fixtures[2]), "", "Shared Discovery", "coordinate-less record has map-unavailable state");
       assert(hasMapCoordinates(fixtures[0]), "Shared Discovery", "valid-coordinate public record remains marker-renderable");
       assert(!hasMapCoordinates(fixtures[3]), "Shared Discovery", "invalid-coordinate record is not marker-renderable");
-      assertEqual(buildDiscoveryMapUrl(fixtures[0]), "map.html?lat=27.622&lng=113.885", "Shared Discovery", "valid-coordinate record keeps its map link");
+      assertEqual(buildDiscoveryMapUrl(fixtures[0]), "/map.html?place=alpha-square", "Shared Discovery", "valid-coordinate record keeps its ID-based map link");
       assertEqual(getMatchingPublicRecords(fixtures).length, 4, "Shared Discovery", "public discovery excludes private and rejected records without using coordinates");
+    }
+
+    function runSharedUrlAndFocusTests() {
+      const state = {
+        q: "memory hall",
+        categories: ["Building", "Park"],
+        city: "Pingxiang",
+        district: "Anyuan",
+        assetType: "Hall",
+        heritageCriteria: "Historic interest"
+      };
+      const mapUrl = buildDiscoveryUrl("map.html", state, {
+        place: "beta-hall",
+        baseHref: "http://localhost/search.html"
+      });
+      const parsed = parseSharedDiscoveryState(mapUrl);
+
+      assertEqual(parsed.q, state.q, "Shared URL and Focus", "shared URL round-trips q");
+      assertEqual(parsed.categories.join("|"), state.categories.join("|"), "Shared URL and Focus", "shared URL round-trips category");
+      assertEqual(parsed.city, state.city, "Shared URL and Focus", "shared URL round-trips city");
+      assertEqual(parsed.district, state.district, "Shared URL and Focus", "shared URL round-trips district");
+      assertEqual(parsed.assetType, state.assetType, "Shared URL and Focus", "shared URL round-trips assetType");
+      assertEqual(parsed.heritageCriteria, state.heritageCriteria, "Shared URL and Focus", "shared URL round-trips heritageCriteria");
+      assert(mapUrl.includes("q=memory+hall") && mapUrl.includes("place=beta-hall"), "Shared URL and Focus", "Places to Map preserves shared state and record focus");
+
+      const listUrl = buildDiscoveryUrl("search.html", parsed, { baseHref: `http://localhost${mapUrl}` });
+      const listState = parseSharedDiscoveryState(listUrl);
+      assertEqual(JSON.stringify(listState), JSON.stringify(parsed), "Shared URL and Focus", "Map to Places preserves all shared state");
+      assertEqual(new URL(mapUrl, "http://localhost").searchParams.get("place"), "beta-hall", "Shared URL and Focus", "refresh and copy retain record focus");
+
+      const duplicateCoordinateRecords = [
+        { ...samplePlaces[0], id: "first-id", lat: 27.6, lng: 113.8 },
+        { ...samplePlaces[1], id: "intended-id", lat: 27.6, lng: 113.8 },
+        { id: "no-map-id", title: "No Map Place", recordStatus: "published" },
+        { id: "private-id", title: "Private Place", recordStatus: "private", lat: 27.6, lng: 113.8 }
+      ];
+      const focused = getPublicRecordById(duplicateCoordinateRecords, "intended-id");
+      assertEqual(focused?.id, "intended-id", "Shared URL and Focus", "place ID focuses the exact intended record");
+      assertEqual(focused?.title, "Beta Workers Hall", "Shared URL and Focus", "duplicate coordinates do not change ID focus");
+      assertEqual(getPublicRecordById(duplicateCoordinateRecords, "missing-id"), null, "Shared URL and Focus", "unknown ID fails safely");
+      assertEqual(getPublicRecordById(duplicateCoordinateRecords, "private-id"), null, "Shared URL and Focus", "non-public ID is not exposed or focused");
+      assert(!hasMapCoordinates(getPublicRecordById(duplicateCoordinateRecords, "no-map-id")), "Shared URL and Focus", "public coordinate-less ID produces map-unavailable fallback state");
+      assertEqual(buildPlaceRecordUrl("intended-id"), "place.html?id=intended-id", "Shared URL and Focus", "public record links remain ID-based");
+      assertEqual(
+        buildNominationUrlFromCoordinates(27.622, 113.885, "http://localhost/map.html"),
+        "/nominate-place.html?lat=27.622&lng=113.885",
+        "Shared URL and Focus",
+        "nomination coordinate handoff remains unchanged"
+      );
     }
 
     function runMapTests() {
@@ -515,7 +567,7 @@
       );
       assertEqual(getHeritageCriteria(alpha).length, 2, "Place Helpers", "getHeritageCriteria returns criteria safely");
       assertEqual(formatCriteriaList(alpha)[0], "Social or communal value", "Place Helpers", "formatCriteriaList returns criteria");
-      assertEqual(buildMapUrl(alpha), "map.html?lat=27.622&lng=113.885", "Place Helpers", "buildMapUrl returns coordinate link");
+      assertEqual(buildMapUrl(alpha), "map.html?place=alpha-square", "Place Helpers", "buildMapUrl returns document ID focus link");
       assertEqual(optionalValuePlace.associatedType, "Workers' hall", "Place Helpers", "optional associated type values remain available when present");
       assertEqual(optionalValuePlace.period, "20th century", "Place Helpers", "optional period values remain available when present");
       assertEqual(optionalValuePlace.grade, "Local interest", "Place Helpers", "optional grade values remain available when present");
@@ -1319,6 +1371,7 @@
     try {
       runSearchTests();
       runSharedDiscoveryTests();
+      runSharedUrlAndFocusTests();
       runMapTests();
       runPlaceTests();
       runExportTests();

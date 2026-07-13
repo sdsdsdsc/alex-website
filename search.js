@@ -16,6 +16,8 @@ import {
   isPublicRecord,
   normalizeCoordinate,
   normalizeSearchText,
+  parseSharedDiscoveryState,
+  writeSharedDiscoveryState,
   sortPlaces
 } from "./heritage-engine/search.js";
 
@@ -47,6 +49,7 @@ const els = {
 
 let allPlaces = [];
 let currentView = "list";
+const initialDiscoveryState = parseSharedDiscoveryState(window.location.search);
 const filterValues = {
   city: "",
   district: "",
@@ -158,13 +161,21 @@ function handleOptionKeydown(event, filter, option) {
   }
 }
 
-function updateUrl(query) {
+function getCurrentDiscoveryState() {
+  return {
+    q: cleanText(els.input?.value || ""),
+    categories: getSelectedValues("category"),
+    city: filterValues.city,
+    district: filterValues.district,
+    assetType: filterValues.assetType,
+    heritageCriteria: filterValues.heritageCriteria
+  };
+}
+
+function updateUrl(state) {
   const url = new URL(window.location.href);
-  if (query) {
-    url.searchParams.set("q", query);
-  } else {
-    url.searchParams.delete("q");
-  }
+  writeSharedDiscoveryState(url, state);
+  url.searchParams.delete("place");
   window.history.replaceState({}, "", url);
 }
 
@@ -235,7 +246,7 @@ function makeResultCard(place) {
   const recordLink = document.createElement("a");
   recordLink.href = `place.html?id=${encodeURIComponent(place.id)}`;
   recordLink.textContent = "View record";
-  const mapUrl = buildMapUrl(place);
+  const mapUrl = buildMapUrl(place, getCurrentDiscoveryState());
   actions.appendChild(recordLink);
   if (mapUrl) {
     const mapLink = document.createElement("a");
@@ -290,7 +301,7 @@ function renderResults() {
     heritageCriteria: filterValues.heritageCriteria
   };
 
-  updateUrl(rawQuery);
+  updateUrl(getCurrentDiscoveryState());
   els.results.textContent = "";
 
   if (publicPlaces.length === 0) {
@@ -316,13 +327,11 @@ function populateCustomFilter(key, values) {
   const filter = getCustomFilter(key);
   const { panel } = getCustomFilterParts(filter);
   if (!filter || !panel) return;
-
-  if (filterValues[key] && !values.includes(filterValues[key])) {
-    filterValues[key] = "";
-  }
+  const availableValues = [...new Set([...values, filterValues[key]].filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b));
 
   panel.textContent = "";
-  ["", ...values].forEach((value) => {
+  ["", ...availableValues].forEach((value) => {
     const option = document.createElement("button");
     option.className = "community-custom-filter__option";
     option.type = "button";
@@ -354,16 +363,19 @@ function renderFilterOptions() {
   const publicPlaces = allPlaces.filter(isPublicRecord);
   if (els.categoryOptions) {
     els.categoryOptions.textContent = "";
-    getUniqueValues("category", publicPlaces).forEach((value) => {
-      const label = document.createElement("label");
-      const input = document.createElement("input");
-      input.type = "checkbox";
-      input.name = "category";
-      input.value = value;
-      input.addEventListener("change", renderResults);
-      label.append(input, ` ${value} (${getOptionCount("category", value)})`);
-      els.categoryOptions.appendChild(label);
-    });
+    [...new Set([...getUniqueValues("category", publicPlaces), ...initialDiscoveryState.categories])]
+      .sort((a, b) => a.localeCompare(b))
+      .forEach((value) => {
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.name = "category";
+        input.value = value;
+        input.checked = initialDiscoveryState.categories.includes(value);
+        input.addEventListener("change", renderResults);
+        label.append(input, ` ${value} (${getOptionCount("category", value)})`);
+        els.categoryOptions.appendChild(label);
+      });
   }
   populateCustomFilter("city", getUniqueValues("city", publicPlaces));
   populateCustomFilter("district", getUniqueValues("district", publicPlaces));
@@ -417,8 +429,11 @@ function bindEvents() {
 async function loadCommunityPlaces() {
   if (!els.results) return;
   bindEvents();
-  const initialQuery = new URLSearchParams(window.location.search).get("q") || "";
-  if (els.input) els.input.value = initialQuery;
+  if (els.input) els.input.value = initialDiscoveryState.q;
+  filterValues.city = initialDiscoveryState.city;
+  filterValues.district = initialDiscoveryState.district;
+  filterValues.assetType = initialDiscoveryState.assetType;
+  filterValues.heritageCriteria = initialDiscoveryState.heritageCriteria;
 
   try {
     const snapshot = await getDocs(collection(db, "communityPlaces"));

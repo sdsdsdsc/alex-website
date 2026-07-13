@@ -157,11 +157,8 @@ function getRecordStatusLabel(place) {
 }
 
 function buildMapUrl(place) {
-  const title = cleanText(place?.title);
-  if (hasValidCoordinates(place)) {
-    return `map.html?lat=${encodeURIComponent(place.lat)}&lng=${encodeURIComponent(place.lng)}`;
-  }
-  return `map.html?search=${encodeURIComponent(title)}`;
+  const id = cleanText(place?.id);
+  return id ? `map.html?place=${encodeURIComponent(id)}` : "map.html";
 }
 
 function getHeritageCriteria(place) {

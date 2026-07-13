@@ -1104,7 +1104,7 @@ function renderLocation(place) {
     const fallbackLink = document.createElement("a");
     fallbackLink.className = "place-location__button";
     fallbackLink.href = buildMapUrl(place);
-    fallbackLink.textContent = "Search on full map";
+    fallbackLink.textContent = "Open map availability details";
 
     els.locationContent.append(message, fallbackLink);
     return;
