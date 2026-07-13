@@ -40,7 +40,6 @@ const els = {
   count: document.getElementById("communitySearchCount"),
   results: document.getElementById("communitySearchResults"),
   empty: document.getElementById("communitySearchEmpty"),
-  categoryOptions: document.getElementById("communityCategoryOptions"),
   customFilters: Array.from(document.querySelectorAll(".community-custom-filter")),
   clearFilters: document.getElementById("communitySearchClearFilters"),
   listView: document.getElementById("communityListView"),
@@ -51,8 +50,6 @@ let allPlaces = [];
 let currentView = "list";
 const initialDiscoveryState = parseSharedDiscoveryState(window.location.search);
 const filterValues = {
-  city: "",
-  district: "",
   assetType: "",
   heritageCriteria: ""
 };
@@ -68,10 +65,6 @@ function toSafeUrl(value) {
     console.warn("Invalid URL skipped:", value);
   }
   return "";
-}
-
-function getSelectedValues(name) {
-  return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map((input) => input.value);
 }
 
 function getCustomFilter(key) {
@@ -164,18 +157,15 @@ function handleOptionKeydown(event, filter, option) {
 function getCurrentDiscoveryState() {
   return {
     q: cleanText(els.input?.value || ""),
-    categories: getSelectedValues("category"),
-    city: filterValues.city,
-    district: filterValues.district,
     assetType: filterValues.assetType,
-    heritageCriteria: filterValues.heritageCriteria
+    heritageCriteria: filterValues.heritageCriteria,
+    place: initialDiscoveryState.place
   };
 }
 
 function updateUrl(state) {
   const url = new URL(window.location.href);
   writeSharedDiscoveryState(url, state);
-  url.searchParams.delete("place");
   window.history.replaceState({}, "", url);
 }
 
@@ -274,9 +264,6 @@ function renderPlaceCount(shownCount, totalCount) {
 function clearPlaceFilters() {
   if (els.input) els.input.value = "";
   if (els.sort) els.sort.value = "relevance";
-  document.querySelectorAll('.community-search-filters input[name="category"]').forEach((input) => {
-    input.checked = false;
-  });
   Object.keys(filterValues).forEach((key) => {
     filterValues[key] = "";
     updateCustomFilterSelection(getCustomFilter(key));
@@ -290,13 +277,9 @@ function renderResults() {
 
   const rawQuery = cleanText(els.input?.value || "");
   const query = normalizeSearchText(rawQuery);
-  const selectedCategories = getSelectedValues("category");
   const publicPlaces = allPlaces.filter(isPublicRecord);
   const filters = {
     query,
-    categories: selectedCategories,
-    city: filterValues.city,
-    district: filterValues.district,
     assetType: filterValues.assetType,
     heritageCriteria: filterValues.heritageCriteria
   };
@@ -361,24 +344,6 @@ function populateCustomFilter(key, values) {
 
 function renderFilterOptions() {
   const publicPlaces = allPlaces.filter(isPublicRecord);
-  if (els.categoryOptions) {
-    els.categoryOptions.textContent = "";
-    [...new Set([...getUniqueValues("category", publicPlaces), ...initialDiscoveryState.categories])]
-      .sort((a, b) => a.localeCompare(b))
-      .forEach((value) => {
-        const label = document.createElement("label");
-        const input = document.createElement("input");
-        input.type = "checkbox";
-        input.name = "category";
-        input.value = value;
-        input.checked = initialDiscoveryState.categories.includes(value);
-        input.addEventListener("change", renderResults);
-        label.append(input, ` ${value} (${getOptionCount("category", value)})`);
-        els.categoryOptions.appendChild(label);
-      });
-  }
-  populateCustomFilter("city", getUniqueValues("city", publicPlaces));
-  populateCustomFilter("district", getUniqueValues("district", publicPlaces));
   populateCustomFilter("assetType", getUniqueValues("assetType", publicPlaces));
   populateCustomFilter("heritageCriteria", getUniqueCriteria(publicPlaces));
 }
@@ -387,10 +352,6 @@ function bindEvents() {
   els.form?.addEventListener("submit", (event) => {
     event.preventDefault();
     renderResults();
-  });
-
-  document.querySelectorAll('input[name="category"]').forEach((input) => {
-    input.addEventListener("change", renderResults);
   });
 
   els.customFilters.forEach((filter) => {
@@ -430,8 +391,6 @@ async function loadCommunityPlaces() {
   if (!els.results) return;
   bindEvents();
   if (els.input) els.input.value = initialDiscoveryState.q;
-  filterValues.city = initialDiscoveryState.city;
-  filterValues.district = initialDiscoveryState.district;
   filterValues.assetType = initialDiscoveryState.assetType;
   filterValues.heritageCriteria = initialDiscoveryState.heritageCriteria;
 

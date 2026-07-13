@@ -87,6 +87,13 @@ function buildPromotedPlace(overrides = {}) {
   });
 }
 
+test("preserves asset type without synthesizing category", () => {
+  const payload = buildPromotedPlace();
+
+  assert.equal(payload.assetType, "Square");
+  assert.equal(Object.prototype.hasOwnProperty.call(payload, "category"), false);
+});
+
 test("promotes safe approved nomination evidence into public image fields", () => {
   const payload = buildPromotedPlace();
   const serialized = JSON.stringify(payload);

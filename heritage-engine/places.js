@@ -68,6 +68,14 @@ function getAssetType(place) {
   return cleanText(place?.assetType || place?.category) || "Community place";
 }
 
+function getDistinctCategory(place) {
+  const category = cleanText(place?.category);
+  if (!category) return "";
+  const normalizedCategory = category.toLowerCase().replace(/\s+/g, " ");
+  const normalizedAssetType = getAssetType(place).toLowerCase().replace(/\s+/g, " ");
+  return normalizedCategory === normalizedAssetType ? "" : category;
+}
+
 function getDisplayLocation(place) {
   const parts = [
     cleanText(place?.city),
@@ -296,6 +304,7 @@ export {
   getAssetType,
   getAreaAddress,
   getCoordinateDisplay,
+  getDistinctCategory,
   getDisplayLocation,
   getDisplayTitle,
   getHeritageCriteria,

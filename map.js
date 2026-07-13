@@ -155,9 +155,6 @@ function initCommunityMap({
   const baseLayers = createBaseLayers();
   const markersById = new Map();
   const pendingFilters = {
-    category: initialDiscoveryState.categories,
-    city: initialDiscoveryState.city,
-    district: initialDiscoveryState.district,
     assetType: initialDiscoveryState.assetType,
     heritageCriteria: initialDiscoveryState.heritageCriteria
   };
@@ -189,11 +186,9 @@ function initCommunityMap({
   function getCurrentDiscoveryState(term = searchInput?.value || "") {
     return {
       q: cleanText(term),
-      categories: pendingFilters.category,
-      city: pendingFilters.city,
-      district: pendingFilters.district,
       assetType: pendingFilters.assetType,
-      heritageCriteria: pendingFilters.heritageCriteria
+      heritageCriteria: pendingFilters.heritageCriteria,
+      place: requestedPlaceId
     };
   }
 
@@ -327,11 +322,9 @@ function initCommunityMap({
     if (!filter) return;
     const key = filter.dataset.filterKey;
     const selectedValue = pendingFilters[key] || "";
-    const selectedValues = key === "category" ? selectedValue : [selectedValue];
+    const selectedValues = [selectedValue];
     const { valueLabel } = getCustomFilterParts(filter);
-    if (valueLabel) valueLabel.textContent = key === "category"
-      ? selectedValues.join(", ") || "Show all"
-      : selectedValue || "Show all";
+    if (valueLabel) valueLabel.textContent = selectedValue || "Show all";
 
     getOptionButtons(filter).forEach((option) => {
       const isSelected = option.dataset.value
@@ -362,9 +355,7 @@ function initCommunityMap({
     const storedValues = key === "heritageCriteria"
       ? getUniqueCriteria(allPublicRecords)
       : getUniqueValues(key, allPublicRecords);
-    const selectedValues = key === "category"
-      ? pendingFilters.category
-      : [pendingFilters[key]].filter(Boolean);
+    const selectedValues = [pendingFilters[key]].filter(Boolean);
     const values = [...new Set([...storedValues, ...selectedValues])].sort((a, b) => a.localeCompare(b));
     return {
       totalCount: allPublicRecords.length,
@@ -402,7 +393,7 @@ function initCommunityMap({
       option.append(label, count);
       option.addEventListener("click", (event) => {
         event.stopPropagation();
-        pendingFilters[key] = key === "category" ? (value ? [value] : []) : value;
+        pendingFilters[key] = value;
         updateCustomFilterSelection(filter);
         closeCustomFilter(filter, true);
         renderMapFeatures(searchInput?.value || "");
@@ -471,9 +462,6 @@ function initCommunityMap({
 
     const filters = {
       query: normalizedTerm,
-      categories: pendingFilters.category,
-      city: pendingFilters.city,
-      district: pendingFilters.district,
       assetType: pendingFilters.assetType,
       heritageCriteria: pendingFilters.heritageCriteria
     };
@@ -582,7 +570,7 @@ function initCommunityMap({
       searchInput.value = "";
     }
     Object.keys(pendingFilters).forEach((key) => {
-      pendingFilters[key] = key === "category" ? [] : "";
+      pendingFilters[key] = "";
       updateCustomFilterSelection(getCustomFilter(key));
     });
     closeAllCustomFilters();

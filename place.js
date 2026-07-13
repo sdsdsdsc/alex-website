@@ -29,6 +29,7 @@ import {
   formatRecordDate,
   getAssetType,
   getCoordinateDisplay,
+  getDistinctCategory,
   getDisplayTitle,
   getHeritageCriteria,
   getPublicDescription,
@@ -1163,7 +1164,7 @@ function renderPlace(place) {
   currentPlace = place;
   const summary = buildPublicPlaceSummary(place);
   const title = getDisplayTitle(place);
-  const category = summary.category;
+  const category = getDistinctCategory(place);
   const publicDescription = getPublicDescription(place);
   document.title = `${title} | Alex's Photo Board`;
   if (els.title) els.title.textContent = title;
@@ -1172,7 +1173,7 @@ function renderPlace(place) {
 
   if (els.metadata) {
     els.metadata.textContent = "";
-    appendMetadata("Category", category);
+    appendMetadata("Category", category, "", { hideIfEmpty: true });
     appendMetadata("Asset type", getAssetType(place), "No asset type recorded yet.");
     appendMetadata("Location / Address", formatPlaceLocationAddress(place), "No location/address recorded yet.");
     appendMetadata("Coordinates", summary.coordinates, "Location coordinates are not available yet.");

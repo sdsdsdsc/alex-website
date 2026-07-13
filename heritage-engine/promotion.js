@@ -193,7 +193,6 @@ function buildPublicPlacePayloadFromNomination(source = {}, options = {}) {
   const payload = {
     id: placeId,
     title: normalized.title,
-    category: normalized.assetType || cleanText(source.category) || "Community Place",
     recordStatus: cleanText(options.recordStatus) || getDefaultPromotedRecordStatus()
   };
 

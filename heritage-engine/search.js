@@ -19,12 +19,11 @@ function normalizeTextList(value) {
 
 const SHARED_DISCOVERY_PARAMS = [
   "q",
-  "category",
-  "city",
-  "district",
   "assetType",
-  "heritageCriteria"
+  "heritageCriteria",
+  "place"
 ];
+const OBSOLETE_DISCOVERY_PARAMS = ["category", "city", "district"];
 
 function toSearchParams(value) {
   if (value instanceof URLSearchParams) return new URLSearchParams(value);
@@ -42,21 +41,18 @@ function parseSharedDiscoveryState(value = "") {
   const params = toSearchParams(value);
   return {
     q: cleanText(params.get("q")),
-    categories: [...new Set(params.getAll("category").map(cleanText).filter(Boolean))],
-    city: cleanText(params.get("city")),
-    district: cleanText(params.get("district")),
     assetType: cleanText(params.get("assetType")),
-    heritageCriteria: cleanText(params.get("heritageCriteria"))
+    heritageCriteria: cleanText(params.get("heritageCriteria")),
+    place: cleanText(params.get("place"))
   };
 }
 
 function writeSharedDiscoveryState(url, state = {}) {
-  SHARED_DISCOVERY_PARAMS.forEach((key) => url.searchParams.delete(key));
+  [...SHARED_DISCOVERY_PARAMS, ...OBSOLETE_DISCOVERY_PARAMS]
+    .forEach((key) => url.searchParams.delete(key));
   const q = cleanText(state.q);
   if (q) url.searchParams.set("q", q);
-  [...new Set((state.categories || []).map(cleanText).filter(Boolean))]
-    .forEach((category) => url.searchParams.append("category", category));
-  ["city", "district", "assetType", "heritageCriteria"].forEach((key) => {
+  ["assetType", "heritageCriteria", "place"].forEach((key) => {
     const value = cleanText(state[key]);
     if (value) url.searchParams.set(key, value);
   });
@@ -70,9 +66,11 @@ function getDefaultBaseHref() {
 function buildDiscoveryUrl(path, state = {}, options = {}) {
   const url = new URL(path, options.baseHref || getDefaultBaseHref());
   writeSharedDiscoveryState(url, state);
-  url.searchParams.delete("place");
-  const placeId = cleanText(options.place);
-  if (placeId) url.searchParams.set("place", placeId);
+  if (Object.prototype.hasOwnProperty.call(options, "place")) {
+    url.searchParams.delete("place");
+    const placeId = cleanText(options.place);
+    if (placeId) url.searchParams.set("place", placeId);
+  }
   return `${url.pathname}${url.search}`;
 }
 
@@ -144,26 +142,15 @@ function isPublicRecord(place) {
 function placeMatchesFilters(place, filters) {
   const {
     query,
-    categories,
-    city,
-    district,
     assetType,
     heritageCriteria
   } = filters;
 
-  const normalizedCategories = (categories || []).map(normalizeSearchText);
-  const categoryMatches = normalizedCategories.length === 0
-    || normalizedCategories.includes(normalizeSearchText(place.category));
-  const cityMatches = !city || normalizeSearchText(place.city) === normalizeSearchText(city);
-  const districtMatches = !district || normalizeSearchText(place.district) === normalizeSearchText(district);
   const assetTypeMatches = !assetType || normalizeSearchText(getAssetType(place)) === normalizeSearchText(assetType);
   const heritageCriteriaMatches = !heritageCriteria
     || getHeritageCriteria(place).map(normalizeSearchText).includes(normalizeSearchText(heritageCriteria));
 
   return placeMatchesSearch(place, query)
-    && categoryMatches
-    && cityMatches
-    && districtMatches
     && assetTypeMatches
     && heritageCriteriaMatches;
 }
@@ -195,9 +182,6 @@ function sortPlaces(places, query, sortMode = "relevance") {
 function getMatchingPublicRecords(source = [], filters = {}) {
   return source.filter(isPublicRecord).filter((place) => placeMatchesFilters(place, {
     query: "",
-    categories: [],
-    city: "",
-    district: "",
     assetType: "",
     heritageCriteria: "",
     ...filters

@@ -72,7 +72,7 @@ test("heritage engine helper harness passes", async ({ page }) => {
   await page.goto("/engine-test.html", { waitUntil: "domcontentloaded" });
   await expect(page.locator("#totalCount")).not.toHaveText("0");
   const sharedDiscovery = page.locator(".test-card", { has: page.locator("h2", { hasText: "Shared Discovery" }) });
-  await expect(sharedDiscovery.locator(".result")).toHaveCount(14);
+  await expect(sharedDiscovery.locator(".result")).toHaveCount(12);
   const failures = await sharedDiscovery.locator(".result:has(.badge--fail)").allTextContents();
   expect(failures).toEqual([]);
 
@@ -86,21 +86,24 @@ test("map restores shared URL state and fails safely for an unknown place ID", a
   await page.goto("/map.html?q=memory&category=Building&city=Pingxiang&place=definitely-missing", { waitUntil: "domcontentloaded" });
   await expect(page.locator("#mapSearchInput")).toHaveValue("memory");
   await expect(page.locator("#mapFocusStatus")).toContainText("requested public place could not be found");
-  await expect(page.locator("#mapViewResultsList")).toHaveAttribute("href", /search\.html\?q=memory.*category=Building.*city=Pingxiang/);
+  await expect(page.locator("#mapViewResultsList")).toHaveAttribute("href", /search\.html\?q=memory&place=definitely-missing$/);
   await expect(page).toHaveURL(/place=definitely-missing/);
+  const normalizedUrl = new URL(page.url());
+  expect(normalizedUrl.searchParams.has("category")).toBe(false);
+  expect(normalizedUrl.searchParams.has("city")).toBe(false);
 });
 
 test("map exposes a complete state-preserving non-map alternative", async ({ page }) => {
-  await page.goto("/map.html?q=memory&category=Building&city=Pingxiang", { waitUntil: "domcontentloaded" });
+  await page.goto("/map.html?q=memory&assetType=Building&heritageCriteria=Historic%20interest", { waitUntil: "domcontentloaded" });
   const listLink = page.locator("#mapViewResultsList");
   await expect(listLink).toBeVisible();
-  await expect(listLink).toHaveAttribute("href", /search\.html\?q=memory.*category=Building.*city=Pingxiang/);
+  await expect(listLink).toHaveAttribute("href", /search\.html\?q=memory.*assetType=Building.*heritageCriteria=Historic\+interest/);
   await expect(page.locator(".map-search-heading__alternative")).toContainText("records without map coordinates");
 });
 
 test("map to Places round-trips every shared discovery parameter", async ({ page }) => {
   await page.goto(
-    "/map.html?q=memory&category=Building&category=Park&city=Pingxiang&district=Anyuan&assetType=Hall&heritageCriteria=Historic%20interest",
+    "/map.html?q=memory&category=Building&category=Park&city=Pingxiang&district=Anyuan&assetType=Hall&heritageCriteria=Historic%20interest&place=beta-hall",
     { waitUntil: "domcontentloaded" }
   );
   const listLink = page.locator("#mapViewResultsList");
@@ -108,11 +111,50 @@ test("map to Places round-trips every shared discovery parameter", async ({ page
   const listUrl = new URL(await listLink.getAttribute("href"), APP_ORIGIN);
   expect(listUrl.pathname).toBe("/search.html");
   expect(listUrl.searchParams.get("q")).toBe("memory");
-  expect(listUrl.searchParams.getAll("category")).toEqual(["Building", "Park"]);
-  expect(listUrl.searchParams.get("city")).toBe("Pingxiang");
-  expect(listUrl.searchParams.get("district")).toBe("Anyuan");
+  expect(listUrl.searchParams.has("category")).toBe(false);
+  expect(listUrl.searchParams.has("city")).toBe(false);
+  expect(listUrl.searchParams.has("district")).toBe(false);
   expect(listUrl.searchParams.get("assetType")).toBe("Hall");
   expect(listUrl.searchParams.get("heritageCriteria")).toBe("Historic interest");
+  expect(listUrl.searchParams.get("place")).toBe("beta-hall");
+});
+
+test("Map and Places expose only the supported structured discovery filters", async ({ page }) => {
+  await page.goto("/search.html", { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".community-search-filters .community-custom-filter")).toHaveCount(2);
+  await expect(page.locator('.community-search-filters [data-filter-key="assetType"]')).toHaveCount(1);
+  await expect(page.locator('.community-search-filters [data-filter-key="heritageCriteria"]')).toHaveCount(1);
+  await expect(page.locator('.community-search-filters [data-filter-key="category"], .community-search-filters [data-filter-key="city"], .community-search-filters [data-filter-key="district"]')).toHaveCount(0);
+  await expect(page.locator("#communitySearchInput")).toBeVisible();
+
+  const mapFilterKeys = await page.evaluate(async () => {
+    const html = await (await fetch("/map.html")).text();
+    const documentNode = new DOMParser().parseFromString(html, "text/html");
+    return Array.from(documentNode.querySelectorAll(".map-custom-filter"), (filter) => filter.getAttribute("data-filter-key"));
+  });
+  expect(mapFilterKeys).toEqual(["assetType", "heritageCriteria"]);
+});
+
+test("place Key facts keeps classification compatibility without changing heritage rows", async ({ page }) => {
+  await page.goto("/place.html", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "Key facts", includeHidden: true })).toHaveCount(1);
+  await expect(page.getByRole("heading", { name: "Why this place matters", includeHidden: true })).toHaveCount(1);
+
+  const placeSource = await page.evaluate(async () => (await fetch("/place.js")).text());
+  [
+    "Local significance",
+    "Community heritage criteria",
+    "Criteria explanation",
+    "Heritage value",
+    "Condition",
+    "Community use",
+    "Date added",
+    "Last reviewed",
+    "Record status"
+  ].forEach((label) => expect(placeSource).toContain(label));
+  expect(placeSource).not.toContain('appendMetadata("Heritage criteria"');
+  expect(placeSource).toContain('appendMetadata("Category", category, "", { hideIfEmpty: true })');
+  expect(placeSource).toContain('appendMetadata("Asset type", getAssetType(place)');
 });
 
 test("map skip link and region provide an accessible workspace entry", async ({ page }) => {
