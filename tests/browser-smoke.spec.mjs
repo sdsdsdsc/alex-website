@@ -77,7 +77,7 @@ test("heritage engine helper harness passes", async ({ page }) => {
   expect(failures).toEqual([]);
 
   const sharedUrlAndFocus = page.locator(".test-card", { has: page.locator("h2", { hasText: "Shared URL and Focus" }) });
-  await expect(sharedUrlAndFocus.locator(".result")).toHaveCount(16);
+  await expect(sharedUrlAndFocus.locator(".result")).toHaveCount(17);
   const urlAndFocusFailures = await sharedUrlAndFocus.locator(".result:has(.badge--fail)").allTextContents();
   expect(urlAndFocusFailures).toEqual([]);
 });
@@ -88,6 +88,80 @@ test("map restores shared URL state and fails safely for an unknown place ID", a
   await expect(page.locator("#mapFocusStatus")).toContainText("requested public place could not be found");
   await expect(page.locator("#mapViewResultsList")).toHaveAttribute("href", /search\.html\?q=memory.*category=Building.*city=Pingxiang/);
   await expect(page).toHaveURL(/place=definitely-missing/);
+});
+
+test("map exposes a complete state-preserving non-map alternative", async ({ page }) => {
+  await page.goto("/map.html?q=memory&category=Building&city=Pingxiang", { waitUntil: "domcontentloaded" });
+  const listLink = page.locator("#mapViewResultsList");
+  await expect(listLink).toBeVisible();
+  await expect(listLink).toHaveAttribute("href", /search\.html\?q=memory.*category=Building.*city=Pingxiang/);
+  await expect(page.locator(".map-search-heading__alternative")).toContainText("records without map coordinates");
+});
+
+test("map skip link and region provide an accessible workspace entry", async ({ page }) => {
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  const skipLink = page.locator(".skip-link");
+  await skipLink.focus();
+  await expect(skipLink).toBeFocused();
+  await skipLink.press("Enter");
+  await expect(page.locator("#mapWorkspace")).toBeFocused();
+  await expect(page.locator("#map")).toHaveAttribute("role", "region");
+  await expect(page.locator("#map")).toHaveAttribute("aria-labelledby", "mapSearchTitle");
+  await expect(page.locator("#map")).toHaveAttribute("aria-describedby", "mapAccessibleDescription");
+});
+
+test("map tool panels move focus, close with Escape, and restore trigger focus", async ({ page }) => {
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  const filtersButton = page.getByRole("button", { name: "Filters" });
+  await expect(filtersButton).toHaveAttribute("aria-controls", "mapFiltersToolPanel");
+  await filtersButton.click();
+  await expect(filtersButton).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator("#mapFilterReset")).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(filtersButton).toHaveAttribute("aria-expanded", "false");
+  await expect(filtersButton).toBeFocused();
+  await expect(page.locator("#mapFiltersToolPanel")).toBeHidden();
+});
+
+test("map offers a keyboard-accessible nomination path without map picking", async ({ page }) => {
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Info" }).click();
+  const fallback = page.getByRole("link", { name: "Open the nomination form without choosing a map point" });
+  await expect(fallback).toBeVisible();
+  await expect(fallback).toHaveAttribute("href", "nominate-place.html");
+  await expect(page.locator("#mapInfoToolPanel")).toContainText("Keyboard users can describe the location manually");
+});
+
+for (const viewport of [
+  { width: 320, height: 720 },
+  { width: 375, height: 812 },
+  { width: 768, height: 1024 },
+  { width: 1280, height: 800 },
+  { width: 844, height: 390 }
+]) {
+  test(`map workspace fits ${viewport.width}x${viewport.height} without page-level horizontal overflow`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#mapViewResultsList")).toBeVisible();
+    const dimensions = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth
+    }));
+    expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
+  });
+}
+
+test("map workspace remains usable at 200 percent zoom", async ({ page }) => {
+  await page.setViewportSize({ width: 640, height: 720 });
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#mapViewResultsList")).toBeVisible();
+  await expect(page.getByLabel("Map tools").getByRole("button", { name: "Search" })).toBeVisible();
+  await expect(page.locator("#map")).toBeVisible();
+  const dimensions = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth
+  }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
 });
 
 for (const smokePage of SMOKE_PAGES) {

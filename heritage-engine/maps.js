@@ -37,6 +37,10 @@ function getTitle(record) {
   return record?.name || record?.title || "Untitled";
 }
 
+function buildMarkerAccessibleName(record) {
+  return `Open map record: ${cleanText(getTitle(record)) || "Untitled"}`;
+}
+
 function getDescription(record) {
   return record?.desc || record?.description || "";
 }
@@ -189,6 +193,7 @@ function buildMapStatusText(totalMatches, hasSearchTerm, publicCommunityMode = t
 }
 
 export {
+  buildMarkerAccessibleName,
   buildFullMapUrl,
   buildMapStatusText,
   buildNominationUrlFromCoordinates,

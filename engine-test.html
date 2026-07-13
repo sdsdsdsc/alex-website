@@ -170,6 +170,7 @@
       sortPlaces
     } from "./heritage-engine/search.js";
     import {
+      buildMarkerAccessibleName,
       buildNominationUrlFromCoordinates,
       buildPlaceRecordUrl,
       getCommunityDisplayLocation,
@@ -492,6 +493,7 @@
       assertEqual(getPublicRecordById(duplicateCoordinateRecords, "private-id"), null, "Shared URL and Focus", "non-public ID is not exposed or focused");
       assert(!hasMapCoordinates(getPublicRecordById(duplicateCoordinateRecords, "no-map-id")), "Shared URL and Focus", "public coordinate-less ID produces map-unavailable fallback state");
       assertEqual(buildPlaceRecordUrl("intended-id"), "place.html?id=intended-id", "Shared URL and Focus", "public record links remain ID-based");
+      assertEqual(buildMarkerAccessibleName(focused), "Open map record: Beta Workers Hall", "Shared URL and Focus", "map markers expose record-specific accessible names");
       assertEqual(
         buildNominationUrlFromCoordinates(27.622, 113.885, "http://localhost/map.html"),
         "/nominate-place.html?lat=27.622&lng=113.885",

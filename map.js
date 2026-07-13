@@ -7,6 +7,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import {
   buildNominationUrlFromCoordinates,
+  buildMarkerAccessibleName,
   buildPlaceRecordUrl,
   cleanText,
   escapeHTML,
@@ -163,6 +164,7 @@ function initCommunityMap({
 
   let allPublicRecords = [];
   let isNominationPickMode = false;
+  let activeToolKey = "search";
 
   baseLayers.osm.addTo(map);
   map.whenReady(() => {
@@ -213,7 +215,21 @@ function initCommunityMap({
     }
   }
 
-  function setActiveToolPanel(panelKey) {
+  function closeActiveToolPanel({ restoreFocus = false } = {}) {
+    const activeButton = toolButtons.find((button) => button.dataset.toolTarget === activeToolKey);
+    toolButtons.forEach((button) => {
+      button.classList.remove("is-active");
+      button.setAttribute("aria-expanded", "false");
+    });
+    toolPanels.forEach((panel) => {
+      panel.classList.remove("is-active");
+      panel.hidden = true;
+    });
+    if (restoreFocus) activeButton?.focus();
+  }
+
+  function setActiveToolPanel(panelKey, { moveFocus = true } = {}) {
+    activeToolKey = panelKey;
     toolButtons.forEach((button) => {
       const isActive = button.dataset.toolTarget === panelKey;
       button.classList.toggle("is-active", isActive);
@@ -224,6 +240,10 @@ function initCommunityMap({
       const isActive = panel.dataset.toolPanel === panelKey;
       panel.classList.toggle("is-active", isActive);
       panel.hidden = !isActive;
+      if (isActive && moveFocus) {
+        const focusTarget = panel.querySelector("input, button, a[href]") || panel;
+        focusTarget.focus();
+      }
     });
   }
 
@@ -464,7 +484,16 @@ function initCommunityMap({
 
     const boundsItems = [];
     matchingPoints.forEach((point) => {
-      const marker = L.marker([point.lat, point.lng], { icon: bluePinIcon }).addTo(pointLayer);
+      const markerName = buildMarkerAccessibleName(point);
+      const marker = L.marker([point.lat, point.lng], {
+        icon: bluePinIcon,
+        title: markerName,
+        alt: markerName,
+        keyboard: true,
+        riseOnFocus: true
+      }).addTo(pointLayer);
+      const markerElement = marker.getElement();
+      markerElement?.setAttribute("aria-label", markerName);
       marker.bindPopup(buildCommunityPlacePopupHtml(point), {
         className: "community-map-popup",
         closeButton: true,
@@ -582,7 +611,12 @@ function initCommunityMap({
 
   toolButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      setActiveToolPanel(button.dataset.toolTarget || "search");
+      const panelKey = button.dataset.toolTarget || "search";
+      if (button.getAttribute("aria-expanded") === "true") {
+        closeActiveToolPanel({ restoreFocus: true });
+        return;
+      }
+      setActiveToolPanel(panelKey);
     });
   });
 
@@ -601,6 +635,9 @@ function initCommunityMap({
       }
       closeAllCustomFilters();
       map.closePopup();
+      if (toolButtons.some((button) => button.getAttribute("aria-expanded") === "true")) {
+        closeActiveToolPanel({ restoreFocus: true });
+      }
     }
   });
 
@@ -620,7 +657,7 @@ function initCommunityMap({
   });
 
   loadMarkers().then(() => {
-    setActiveToolPanel("search");
+    setActiveToolPanel("search", { moveFocus: false });
     runSearch(searchInput?.value || initialDiscoveryState.q);
   });
 
