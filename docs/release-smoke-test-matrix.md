@@ -115,17 +115,17 @@ Use this concise matrix after merge and against the deployed production files. I
 
 | View / scenario | Manual check | Expected result | Pass | Fail | Evidence / notes |
 | --- | --- | --- | --- | --- | --- |
-| Desktop | Open Map and Places at a desktop width with several filters active. | Both remain usable; Map and Places show consistent public discovery state. | [ ] | [ ] | |
-| Tablet | Verify Map at approximately 768px wide. | Tools, panels, map controls, popups, and list alternative remain usable without meaningful horizontal overflow. | [ ] | [ ] | |
-| Mobile | Verify Map and Places at 375px wide. | Controls remain reachable, labels wrap safely, and the state-preserving list link remains visible. | [ ] | [ ] | |
-| Narrow mobile | Verify Map and Places at 320px wide. | No meaningful page-level horizontal overflow; tool triggers and map controls do not overlap important content. | [ ] | [ ] | |
-| 200% zoom | Use real browser zoom at 200% on Map and Places. | Important content, tool panels, focus indicators, list alternative, and popups remain operable. | [ ] | [ ] | |
-| Valid-coordinate record | Open a known public Places record, then activate its Map link. | `place=<id>` focuses and opens the exact record marker; its accessible name includes the record title. | [ ] | [ ] | Record ID: |
-| Coordinate-less record | Open a known public record without valid coordinates. | Record remains available in Places and Map presents a useful unavailable-location fallback with record/list links. | [ ] | [ ] | Record ID: |
-| Duplicate coordinates | If two public records share coordinates, open each record's Map link separately. | Each `place=<id>` focuses the intended record rather than whichever marker shares its coordinates. | [ ] | [ ] | Record IDs: |
-| Copied filtered URLs | Copy and reopen Map and Places URLs containing q, assetType, heritageCriteria, and place where applicable. Also open an old URL containing category, city, and district. | Supported parameters round-trip through Map ↔ Places; obsolete parameters are ignored and normalized away without errors. | [ ] | [ ] | URLs: |
-| Keyboard and screen reader | Use the skip link, map region, Search/Filters/Info triggers, marker names, Escape, and nomination fallback. | Announcements are understandable; panel state and focus restoration are clear; no map pointer action is required to reach records or nomination. | [ ] | [ ] | Browser/AT: |
-| Production freshness | After an approved merge/deploy, load production with cache disabled and compare the deployed commit/assets. | Production serves the approved Slice 1–4 files; no stale HTML, JS, or CSS is observed. | [ ] | [ ] | Commit/time: |
+| Desktop | Open Map and Places at a desktop width with several filters active. | Both remain usable; Map and Places show consistent public discovery state. | [x] | [ ] | Production Chromium smoke passed: 7 public records, 5 markers, 2 coordinate-less records, and consistent Option C filters/state. |
+| Tablet | Verify Map at approximately 768px wide. | Tools, panels, map controls, popups, and list alternative remain usable without meaningful horizontal overflow. | [x] | [ ] | Merge-SHA verification browser suite passed its 768 × 1024 viewport check. |
+| Mobile | Verify Map and Places at 375px wide. | Controls remain reachable, labels wrap safely, and the state-preserving list link remains visible. | [x] | [ ] | Merge-SHA verification browser suite passed its 375 × 812 viewport check. |
+| Narrow mobile | Verify Map and Places at 320px wide. | No meaningful page-level horizontal overflow; tool triggers and map controls do not overlap important content. | [x] | [ ] | Merge-SHA verification browser suite passed its 320 × 720 viewport check. |
+| 200% zoom | Use real browser zoom at 200% on Map and Places. | Important content, tool panels, focus indicators, list alternative, and popups remain operable. | [x] | [ ] | Merge-SHA verification browser suite passed the automated 200% zoom check; preview was also reviewed manually. |
+| Valid-coordinate record | Open a known public Places record, then activate its Map link. | `place=<id>` focuses and opens the exact record marker; its accessible name includes the record title. | [x] | [ ] | Production focus passed for `jiangxi-test-community-square`. |
+| Coordinate-less record | Open a known public record without valid coordinates. | Record remains available in Places and Map presents a useful unavailable-location fallback with record/list links. | [x] | [ ] | Production fallback passed for `test-nomination-place`; record and preserved Places links remained available. |
+| Duplicate coordinates | If two public records share coordinates, open each record's Map link separately. | Each `place=<id>` focuses the intended record rather than whichever marker shares its coordinates. | [x] | [ ] | No live duplicate pair was available; exact document-ID behavior passed the merge-SHA duplicate-coordinate engine/browser fixture. |
+| Copied filtered URLs | Copy and reopen Map and Places URLs containing q, assetType, heritageCriteria, and place where applicable. Also open an old URL containing category, city, and district. | Supported parameters round-trip through Map ↔ Places; obsolete parameters are ignored and normalized away without errors. | [x] | [ ] | Production Map ↔ Places state, legacy `search=` adoption, `q` precedence, and obsolete `category`/`city`/`district` normalization all passed. |
+| Keyboard and screen reader | Use the skip link, map region, Search/Filters/Info triggers, marker names, Escape, and nomination fallback. | Announcements are understandable; panel state and focus restoration are clear; no map pointer action is required to reach records or nomination. | [x] | [ ] | Automated Chromium checks passed for the skip link, labelled region, panels, Escape focus restoration, and nomination fallback. No human screen-reader session was performed. |
+| Production freshness | After an approved merge/deploy, load production with cache disabled and compare the deployed commit/assets. | Production serves the approved Slice 1–4 files; no stale HTML, JS, or CSS is observed. | [x] | [ ] | Commit `4049a392adea2c0ca0b609677e221733047f2552`; 13 cache-busted files matched byte-for-byte; HTTP 200; Last-Modified `Tue, 14 Jul 2026 06:58:52 GMT`. |
 
 Phase 11D-R does not require authenticated production mutation tests, Firebase rules/index deployment, or official GIS datasets.
 
@@ -145,16 +145,24 @@ Record each smoke-test run here.
 
 | Field | Value |
 | --- | --- |
-| Tester | |
-| Date | |
-| Branch | |
-| Commit | |
-| Browser | |
-| Firebase project | |
-| Firebase rules version / deployment note | |
-| Environment | |
-| Notes | |
-| Screenshot / evidence links | |
+| Tester | Codex-assisted verification |
+| Date | July 14, 2026 |
+| Branch | `main` |
+| Commit | `4049a392adea2c0ca0b609677e221733047f2552` |
+| Browser | Chromium automated smoke plus manual preview review |
+| Firebase project | `alexs-community-efcd8` |
+| Firebase rules version / deployment note | No rules deployment in this phase. |
+| Environment | Production GitHub Pages |
+| Notes | Phase 11D-R production verified; 32/32 read-only checks passed; no production writes occurred. |
+| Screenshot / evidence links | [Verification run 29313005929](https://github.com/sdsdsdsc/alex-website/actions/runs/29313005929); [GitHub Pages run 29313005119](https://github.com/sdsdsdsc/alex-website/actions/runs/29313005119); [production site](https://sdsdsdsc.github.io/alex-website/) |
+
+### Phase 11D-R Production Verification Evidence
+
+- Workflow results: Alex Photo Board Verification run `29313005929` and verify job `87020728294` succeeded. GitHub Pages run `29313005119` succeeded, including build job `87020728844`, report-build-status job `87020803592`, and deploy job `87020803595`.
+- Production freshness: `main` and production matched merge commit `4049a392adea2c0ca0b609677e221733047f2552`. Thirteen cache-busted production files matched the merged source byte-for-byte. Production served `map.js?v=2026-07-14-pr41-review-fixes` and `heritage-engine/maps.js?v=2026-07-14-pr41-review-fixes`; all checked responses returned HTTP 200 with Last-Modified `Tue, 14 Jul 2026 06:58:52 GMT`. No stale HTML, JavaScript, helper module, or CSS was found.
+- Production smoke: 32/32 read-only checks passed. Map and Places loaded 7 public records, including 5 map markers and 2 coordinate-less records. Keyword, Asset type, and Heritage criteria behavior passed; Category, City, and District controls were absent. Legacy `search=` normalization, `q` precedence, exact place focus, safe unknown-ID and coordinate-less fallbacks, Map ↔ Places state preservation, all nine “Why this place matters” rows, equivalent-Category hiding, and category-only Asset type fallback passed.
+- Privacy and regression: public `communityPlaces` access returned HTTP 200 with 7 records; signed-out `placeNominations` access returned HTTP 403 `PERMISSION_DENIED`. No private/admin fields appeared. Public export loaded and matched the merged source. Nomination latitude/longitude handoff passed. No production writes occurred.
+- Known limitations: the existing `frame-ancestors` meta-CSP browser diagnostic remains. No live record currently has meaningfully distinct Category and Asset type values. No human screen-reader session was performed.
 
 ## 10. Release Assurance 2 Candidates
 
