@@ -14,7 +14,7 @@ import {
   getCommunityDisplayLocation,
   hasValidCoordinates,
   normalizeCoordinate
-} from "./heritage-engine/maps.js?v=2026-06-20-releasepolish";
+} from "./heritage-engine/maps.js?v=2026-07-14-pr41-review-fixes";
 import {
   buildDiscoveryUrl,
   getAssetType,

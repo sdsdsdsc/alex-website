@@ -170,6 +170,7 @@
       sortPlaces
     } from "./heritage-engine/search.js";
     import {
+      buildFullMapUrl,
       buildMarkerAccessibleName,
       buildNominationUrlFromCoordinates,
       buildPlaceRecordUrl,
@@ -177,7 +178,7 @@
       hasValidCoordinates as mapHasValidCoordinates,
       isValidLatitude,
       isValidLongitude
-    } from "./heritage-engine/maps.js?v=2026-06-20-releasepolish";
+    } from "./heritage-engine/maps.js?v=2026-07-14-pr41-review-fixes";
     import {
       buildMapUrl,
       formatCriteriaList,
@@ -485,6 +486,16 @@
       const oldUrl = "http://localhost/map.html?q=memory&category=Building&city=Pingxiang&district=Anyuan&assetType=Hall";
       const normalizedOldUrl = buildDiscoveryUrl("search.html", parseSharedDiscoveryState(oldUrl), { baseHref: oldUrl });
       assert(!normalizedOldUrl.includes("category=") && !normalizedOldUrl.includes("city=") && !normalizedOldUrl.includes("district="), "Shared URL and Focus", "obsolete discovery parameters normalize away safely");
+
+      const legacySearchUrl = "http://localhost/map.html?search=fenyi&assetType=Hall&heritageCriteria=Historic%20interest&place=beta-hall";
+      const adoptedLegacyState = parseSharedDiscoveryState(legacySearchUrl);
+      assertEqual(adoptedLegacyState.q, "fenyi", "Shared URL and Focus", "legacy search parameter is adopted when q is absent");
+      assertEqual(parseSharedDiscoveryState("?q=modern&search=legacy").q, "modern", "Shared URL and Focus", "q remains authoritative when legacy search is also present");
+      const normalizedLegacyUrl = buildDiscoveryUrl("map.html", adoptedLegacyState, { baseHref: legacySearchUrl });
+      assert(normalizedLegacyUrl.includes("q=fenyi") && !normalizedLegacyUrl.includes("search="), "Shared URL and Focus", "legacy search URL normalizes to q without losing its value");
+      const legacyListUrl = buildDiscoveryUrl("search.html", adoptedLegacyState, { baseHref: legacySearchUrl });
+      assertEqual(parseSharedDiscoveryState(legacyListUrl).q, "fenyi", "Shared URL and Focus", "Map to Places preserves the adopted legacy query");
+      assertEqual(buildFullMapUrl("fenyi", "http://localhost/search.html"), "/map.html?q=fenyi", "Shared URL and Focus", "full-map URL generator emits q instead of legacy search");
 
       const duplicateCoordinateRecords = [
         { ...samplePlaces[0], id: "first-id", lat: 27.6, lng: 113.8 },

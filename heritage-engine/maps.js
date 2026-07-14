@@ -169,7 +169,7 @@ function buildFullMapUrl(searchTerm = "", baseHref = getDefaultBaseHref()) {
   const url = new URL("map.html", baseHref);
   const cleanTerm = cleanText(searchTerm);
   if (cleanTerm) {
-    url.searchParams.set("search", cleanTerm);
+    url.searchParams.set("q", cleanTerm);
   }
   return `${url.pathname}${url.search}`;
 }

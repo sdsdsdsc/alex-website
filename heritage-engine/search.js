@@ -23,7 +23,7 @@ const SHARED_DISCOVERY_PARAMS = [
   "heritageCriteria",
   "place"
 ];
-const OBSOLETE_DISCOVERY_PARAMS = ["category", "city", "district"];
+const OBSOLETE_DISCOVERY_PARAMS = ["search", "category", "city", "district"];
 
 function toSearchParams(value) {
   if (value instanceof URLSearchParams) return new URLSearchParams(value);
@@ -40,7 +40,7 @@ function toSearchParams(value) {
 function parseSharedDiscoveryState(value = "") {
   const params = toSearchParams(value);
   return {
-    q: cleanText(params.get("q")),
+    q: cleanText(params.has("q") ? params.get("q") : params.get("search")),
     assetType: cleanText(params.get("assetType")),
     heritageCriteria: cleanText(params.get("heritageCriteria")),
     place: cleanText(params.get("place"))

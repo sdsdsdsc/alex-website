@@ -77,9 +77,27 @@ test("heritage engine helper harness passes", async ({ page }) => {
   expect(failures).toEqual([]);
 
   const sharedUrlAndFocus = page.locator(".test-card", { has: page.locator("h2", { hasText: "Shared URL and Focus" }) });
-  await expect(sharedUrlAndFocus.locator(".result")).toHaveCount(17);
+  await expect(sharedUrlAndFocus.locator(".result")).toHaveCount(22);
   const urlAndFocusFailures = await sharedUrlAndFocus.locator(".result:has(.badge--fail)").allTextContents();
   expect(urlAndFocusFailures).toEqual([]);
+});
+
+test("map adopts legacy search URLs and keeps q authoritative", async ({ page }) => {
+  await page.goto("/map.html?search=fenyi&assetType=Hall&heritageCriteria=Historic%20interest&place=beta-hall", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#mapSearchInput")).toHaveValue("fenyi");
+  await expect(page).toHaveURL(/q=fenyi/);
+  const normalizedLegacyUrl = new URL(page.url());
+  expect(normalizedLegacyUrl.searchParams.has("search")).toBe(false);
+  expect(normalizedLegacyUrl.searchParams.get("assetType")).toBe("Hall");
+  expect(normalizedLegacyUrl.searchParams.get("heritageCriteria")).toBe("Historic interest");
+  expect(normalizedLegacyUrl.searchParams.get("place")).toBe("beta-hall");
+  const listUrl = new URL(await page.locator("#mapViewResultsList").getAttribute("href"), APP_ORIGIN);
+  expect(listUrl.searchParams.get("q")).toBe("fenyi");
+
+  await page.goto("/map.html?q=modern&search=legacy", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#mapSearchInput")).toHaveValue("modern");
+  await expect(page).toHaveURL(/q=modern/);
+  await expect.poll(() => new URL(page.url()).searchParams.has("search")).toBe(false);
 });
 
 test("map restores shared URL state and fails safely for an unknown place ID", async ({ page }) => {
@@ -133,6 +151,15 @@ test("Map and Places expose only the supported structured discovery filters", as
     return Array.from(documentNode.querySelectorAll(".map-custom-filter"), (filter) => filter.getAttribute("data-filter-key"));
   });
   expect(mapFilterKeys).toEqual(["assetType", "heritageCriteria"]);
+
+  const cacheVersions = await page.evaluate(async () => {
+    const mapHtml = await (await fetch("/map.html")).text();
+    const mapSource = await (await fetch("/map.js")).text();
+    return { mapHtml, mapSource };
+  });
+  expect(cacheVersions.mapHtml).toContain('map.js?v=2026-07-14-pr41-review-fixes');
+  expect(cacheVersions.mapSource).toContain('./heritage-engine/maps.js?v=2026-07-14-pr41-review-fixes');
+  expect(cacheVersions.mapSource).not.toContain('./heritage-engine/maps.js?v=2026-06-20-releasepolish');
 });
 
 test("place Key facts keeps classification compatibility without changing heritage rows", async ({ page }) => {
