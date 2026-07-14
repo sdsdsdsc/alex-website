@@ -17,15 +17,16 @@
   <!-- Firebase -->
   <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="script.js" defer></script>
-  <script type="module" src="map.js?v=2026-06-24-16a-rev3" defer></script>
+  <script type="module" src="map.js?v=2026-07-14-pr41-review-fixes" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#mapWorkspace">Skip to map and list alternatives</a>
   <header>
     <h1><a href="index.html" class="home-link">📸 Alex's Photo Board</a></h1>
     <div id="public-nav"></div>
   </header>
 
-  <main class="map-search-page">
+  <main class="map-search-page" id="mapWorkspace" tabindex="-1">
     <div class="map-search-layout">
       <aside class="map-search-sidebar map-explorer-panel" aria-label="Heritage map explorer">
         <div class="map-explorer-panel__intro">
@@ -37,13 +38,13 @@
         </div>
 
         <nav class="map-tool-index" aria-label="Map tools">
-          <button class="map-tool-index__button is-active" type="button" data-tool-target="search" aria-expanded="true">Search</button>
-          <button class="map-tool-index__button" type="button" data-tool-target="filters" aria-expanded="false">Filters</button>
-          <button class="map-tool-index__button" type="button" data-tool-target="help" aria-expanded="false">Info</button>
+          <button class="map-tool-index__button is-active" type="button" data-tool-target="search" aria-expanded="true" aria-controls="mapSearchToolPanel">Search</button>
+          <button class="map-tool-index__button" type="button" data-tool-target="filters" aria-expanded="false" aria-controls="mapFiltersToolPanel">Filters</button>
+          <button class="map-tool-index__button" type="button" data-tool-target="help" aria-expanded="false" aria-controls="mapInfoToolPanel">Info</button>
         </nav>
 
         <div class="map-explorer-panel__body">
-          <section class="map-explorer-section map-explorer-section--search is-active" data-tool-panel="search" aria-labelledby="mapSearchPanelTitle">
+          <section class="map-explorer-section map-explorer-section--search is-active" id="mapSearchToolPanel" data-tool-panel="search" aria-labelledby="mapSearchPanelTitle" tabindex="-1">
             <h3 id="mapSearchPanelTitle">Find a place</h3>
             <p class="map-explorer-section__text">Search by title, address, street, story, or keyword.</p>
             <form class="map-search-form" id="mapSearchForm">
@@ -60,9 +61,10 @@
               </div>
             </form>
             <p class="map-search-status map-search-status--panel" id="mapSearchStatus" role="status" aria-live="polite"></p>
+            <p class="map-search-status map-focus-status" id="mapFocusStatus" role="status" aria-live="polite" hidden></p>
           </section>
 
-          <section class="map-explorer-section" data-tool-panel="filters" aria-labelledby="mapFilterTitle" hidden>
+          <section class="map-explorer-section" id="mapFiltersToolPanel" data-tool-panel="filters" aria-labelledby="mapFilterTitle" tabindex="-1" hidden>
             <div class="map-explorer-section__heading">
               <h3 id="mapFilterTitle">Filter records</h3>
               <button class="map-filter-panel__reset" id="mapFilterReset" type="button">Reset</button>
@@ -71,7 +73,7 @@
             <div class="map-filter-panel map-filter-panel--sidebar" id="mapFilterPanel">
               <div class="map-filter-panel__body map-filter-panel__body--sidebar">
                 <fieldset class="map-filter-group">
-                  <legend>Record type</legend>
+                  <legend>Discovery filters</legend>
                   <div class="map-filter-field">
                     <span class="map-filter-field__label" id="mapAssetTypeFilterLabel">Asset type</span>
                     <div class="community-custom-filter map-custom-filter" data-filter-key="assetType">
@@ -89,31 +91,6 @@
                       <div class="community-custom-filter__panel" id="mapAssetTypeFilterPanel" role="listbox" aria-labelledby="mapAssetTypeFilterLabel" hidden></div>
                     </div>
                   </div>
-                </fieldset>
-
-                <fieldset class="map-filter-group" id="mapAreaFilterGroup" hidden>
-                  <legend class="visually-hidden">Location filter</legend>
-                  <div class="map-filter-field">
-                    <span class="map-filter-field__label" id="mapAreaFilterLabel">Town / area</span>
-                    <div class="community-custom-filter map-custom-filter" data-filter-key="area">
-                      <button
-                        class="community-custom-filter__trigger"
-                        type="button"
-                        aria-haspopup="listbox"
-                        aria-expanded="false"
-                        aria-labelledby="mapAreaFilterLabel"
-                        aria-controls="mapAreaFilterPanel"
-                      >
-                        <span class="community-custom-filter__value">Show all</span>
-                        <span class="community-custom-filter__chevron" aria-hidden="true"></span>
-                      </button>
-                      <div class="community-custom-filter__panel" id="mapAreaFilterPanel" role="listbox" aria-labelledby="mapAreaFilterLabel" hidden></div>
-                    </div>
-                  </div>
-                </fieldset>
-
-                <fieldset class="map-filter-group" id="mapCriteriaFilterGroup" hidden>
-                  <legend>Significance</legend>
                   <div class="map-filter-field">
                     <span class="map-filter-field__label" id="mapCriteriaFilterLabel">Heritage criteria</span>
                     <div class="community-custom-filter map-custom-filter" data-filter-key="heritageCriteria">
@@ -136,16 +113,18 @@
             </div>
           </section>
 
-          <section class="map-explorer-section map-explorer-section--info" data-tool-panel="help" aria-labelledby="mapHelpTitle" hidden>
+          <section class="map-explorer-section map-explorer-section--info" id="mapInfoToolPanel" data-tool-panel="help" aria-labelledby="mapHelpTitle" tabindex="-1" hidden>
             <h3 id="mapHelpTitle">Map guide</h3>
             <p class="map-explorer-section__text">Use the search and filters to focus the map, then open a place record for full details.</p>
 
             <div class="map-explorer-cta" aria-labelledby="mapNominationTitle">
               <h3 id="mapNominationTitle">Nominate a place</h3>
-              <p>Know a community place that should be recorded? Submit it for review.</p>
+              <p>Choose coordinates by activating the button and then clicking or tapping the map.</p>
               <button class="map-nomination-entry__button" id="mapNominationToggle" type="button" aria-pressed="false">
                 Nominate a place
               </button>
+              <a class="map-nomination-entry__link" href="nominate-place.html">Open the nomination form without choosing a map point</a>
+              <p class="map-explorer-section__text">Keyboard users can describe the location manually in the form.</p>
               <p class="map-nomination-entry__status" id="mapNominationStatus" role="status" aria-live="polite" hidden></p>
             </div>
           </section>
@@ -158,10 +137,15 @@
           <p>
             Browse published records on the map and open a place record for more detail.
           </p>
+          <p class="map-search-heading__alternative">
+            <a id="mapViewResultsList" href="search.html">View all matching records as a list</a>.
+            The Places list includes records without map coordinates.
+          </p>
         </header>
 
         <div class="map-stage">
-          <div id="map" class="map-canvas map-search-canvas"></div>
+          <div id="map" class="map-canvas map-search-canvas" role="region" aria-labelledby="mapSearchTitle" aria-describedby="mapAccessibleDescription"></div>
+          <p class="visually-hidden" id="mapAccessibleDescription">Interactive community heritage map. Keyboard-accessible markers open record summaries. Every matching public record is also available through the Places list above.</p>
         </div>
       </section>
     </div>

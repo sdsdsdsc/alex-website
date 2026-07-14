@@ -7,14 +7,17 @@ import {
 import {
   buildMapUrl,
   cleanText,
+  getAssetType,
   getDisplayLocation,
+  getMatchingPublicRecords,
   getOptionCount as getEngineOptionCount,
   getUniqueCriteria,
   getUniqueValues,
   isPublicRecord,
   normalizeCoordinate,
   normalizeSearchText,
-  placeMatchesFilters,
+  parseSharedDiscoveryState,
+  writeSharedDiscoveryState,
   sortPlaces
 } from "./heritage-engine/search.js";
 
@@ -45,9 +48,8 @@ const els = {
 
 let allPlaces = [];
 let currentView = "list";
+const initialDiscoveryState = parseSharedDiscoveryState(window.location.search);
 const filterValues = {
-  city: "",
-  district: "",
   assetType: "",
   heritageCriteria: ""
 };
@@ -63,10 +65,6 @@ function toSafeUrl(value) {
     console.warn("Invalid URL skipped:", value);
   }
   return "";
-}
-
-function getSelectedValues(name) {
-  return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map((input) => input.value);
 }
 
 function getCustomFilter(key) {
@@ -156,13 +154,18 @@ function handleOptionKeydown(event, filter, option) {
   }
 }
 
-function updateUrl(query) {
+function getCurrentDiscoveryState() {
+  return {
+    q: cleanText(els.input?.value || ""),
+    assetType: filterValues.assetType,
+    heritageCriteria: filterValues.heritageCriteria,
+    place: initialDiscoveryState.place
+  };
+}
+
+function updateUrl(state) {
   const url = new URL(window.location.href);
-  if (query) {
-    url.searchParams.set("q", query);
-  } else {
-    url.searchParams.delete("q");
-  }
+  writeSharedDiscoveryState(url, state);
   window.history.replaceState({}, "", url);
 }
 
@@ -233,10 +236,19 @@ function makeResultCard(place) {
   const recordLink = document.createElement("a");
   recordLink.href = `place.html?id=${encodeURIComponent(place.id)}`;
   recordLink.textContent = "View record";
-  const mapLink = document.createElement("a");
-  mapLink.href = buildMapUrl(place);
-  mapLink.textContent = "View on map";
-  actions.append(recordLink, mapLink);
+  const mapUrl = buildMapUrl(place, getCurrentDiscoveryState());
+  actions.appendChild(recordLink);
+  if (mapUrl) {
+    const mapLink = document.createElement("a");
+    mapLink.href = mapUrl;
+    mapLink.textContent = "View on map";
+    actions.appendChild(mapLink);
+  } else {
+    const mapUnavailable = document.createElement("span");
+    mapUnavailable.className = "community-result-card__map-unavailable";
+    mapUnavailable.textContent = "Map location unavailable";
+    actions.appendChild(mapUnavailable);
+  }
 
   body.append(meta, title, summary);
   card.append(media, body);
@@ -252,9 +264,6 @@ function renderPlaceCount(shownCount, totalCount) {
 function clearPlaceFilters() {
   if (els.input) els.input.value = "";
   if (els.sort) els.sort.value = "relevance";
-  document.querySelectorAll('.community-search-filters input[name="category"]').forEach((input) => {
-    input.checked = false;
-  });
   Object.keys(filterValues).forEach((key) => {
     filterValues[key] = "";
     updateCustomFilterSelection(getCustomFilter(key));
@@ -268,18 +277,14 @@ function renderResults() {
 
   const rawQuery = cleanText(els.input?.value || "");
   const query = normalizeSearchText(rawQuery);
-  const selectedCategories = getSelectedValues("category");
   const publicPlaces = allPlaces.filter(isPublicRecord);
   const filters = {
     query,
-    categories: selectedCategories,
-    city: filterValues.city,
-    district: filterValues.district,
     assetType: filterValues.assetType,
     heritageCriteria: filterValues.heritageCriteria
   };
 
-  updateUrl(rawQuery);
+  updateUrl(getCurrentDiscoveryState());
   els.results.textContent = "";
 
   if (publicPlaces.length === 0) {
@@ -288,7 +293,7 @@ function renderResults() {
     return;
   }
 
-  const filtered = publicPlaces.filter((place) => placeMatchesFilters(place, filters));
+  const filtered = getMatchingPublicRecords(allPlaces, filters);
   const sorted = sortPlaces(filtered, query, els.sort?.value || "relevance");
 
   renderPlaceCount(sorted.length, publicPlaces.length);
@@ -305,13 +310,11 @@ function populateCustomFilter(key, values) {
   const filter = getCustomFilter(key);
   const { panel } = getCustomFilterParts(filter);
   if (!filter || !panel) return;
-
-  if (filterValues[key] && !values.includes(filterValues[key])) {
-    filterValues[key] = "";
-  }
+  const availableValues = [...new Set([...values, filterValues[key]].filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b));
 
   panel.textContent = "";
-  ["", ...values].forEach((value) => {
+  ["", ...availableValues].forEach((value) => {
     const option = document.createElement("button");
     option.className = "community-custom-filter__option";
     option.type = "button";
@@ -341,8 +344,6 @@ function populateCustomFilter(key, values) {
 
 function renderFilterOptions() {
   const publicPlaces = allPlaces.filter(isPublicRecord);
-  populateCustomFilter("city", getUniqueValues("city", publicPlaces));
-  populateCustomFilter("district", getUniqueValues("district", publicPlaces));
   populateCustomFilter("assetType", getUniqueValues("assetType", publicPlaces));
   populateCustomFilter("heritageCriteria", getUniqueCriteria(publicPlaces));
 }
@@ -351,10 +352,6 @@ function bindEvents() {
   els.form?.addEventListener("submit", (event) => {
     event.preventDefault();
     renderResults();
-  });
-
-  document.querySelectorAll('input[name="category"]').forEach((input) => {
-    input.addEventListener("change", renderResults);
   });
 
   els.customFilters.forEach((filter) => {
@@ -393,8 +390,9 @@ function bindEvents() {
 async function loadCommunityPlaces() {
   if (!els.results) return;
   bindEvents();
-  const initialQuery = new URLSearchParams(window.location.search).get("q") || "";
-  if (els.input) els.input.value = initialQuery;
+  if (els.input) els.input.value = initialDiscoveryState.q;
+  filterValues.assetType = initialDiscoveryState.assetType;
+  filterValues.heritageCriteria = initialDiscoveryState.heritageCriteria;
 
   try {
     const snapshot = await getDocs(collection(db, "communityPlaces"));
@@ -402,10 +400,11 @@ async function loadCommunityPlaces() {
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       allPlaces.push({
+        ...data,
         id: docSnap.id,
         title: cleanText(data.title),
         category: cleanText(data.category),
-        assetType: cleanText(data.assetType),
+        assetType: getAssetType(data),
         area: cleanText(data.area),
         province: cleanText(data.province),
         city: cleanText(data.city),

@@ -109,6 +109,26 @@ These are expected checks for emulator testing or controlled deployed verificati
 | Admin/private fields excluded | `heritage.json` output | Signed out | `adminNotes`, `reviewHistory`, admin assessment fields are absent. | Public export only | [ ] | [ ] | |
 | `nominatorEmail` excluded | `heritage.json` output | Signed out | Private nominator email is absent. | Public export only | [ ] | [ ] | |
 
+## Phase 11D-R Public Discovery Release Matrix
+
+Use this concise matrix after merge and against the deployed production files. It complements the automated browser suite; it does not authorize production writes or deployment.
+
+| View / scenario | Manual check | Expected result | Pass | Fail | Evidence / notes |
+| --- | --- | --- | --- | --- | --- |
+| Desktop | Open Map and Places at a desktop width with several filters active. | Both remain usable; Map and Places show consistent public discovery state. | [ ] | [ ] | |
+| Tablet | Verify Map at approximately 768px wide. | Tools, panels, map controls, popups, and list alternative remain usable without meaningful horizontal overflow. | [ ] | [ ] | |
+| Mobile | Verify Map and Places at 375px wide. | Controls remain reachable, labels wrap safely, and the state-preserving list link remains visible. | [ ] | [ ] | |
+| Narrow mobile | Verify Map and Places at 320px wide. | No meaningful page-level horizontal overflow; tool triggers and map controls do not overlap important content. | [ ] | [ ] | |
+| 200% zoom | Use real browser zoom at 200% on Map and Places. | Important content, tool panels, focus indicators, list alternative, and popups remain operable. | [ ] | [ ] | |
+| Valid-coordinate record | Open a known public Places record, then activate its Map link. | `place=<id>` focuses and opens the exact record marker; its accessible name includes the record title. | [ ] | [ ] | Record ID: |
+| Coordinate-less record | Open a known public record without valid coordinates. | Record remains available in Places and Map presents a useful unavailable-location fallback with record/list links. | [ ] | [ ] | Record ID: |
+| Duplicate coordinates | If two public records share coordinates, open each record's Map link separately. | Each `place=<id>` focuses the intended record rather than whichever marker shares its coordinates. | [ ] | [ ] | Record IDs: |
+| Copied filtered URLs | Copy and reopen Map and Places URLs containing q, assetType, heritageCriteria, and place where applicable. Also open an old URL containing category, city, and district. | Supported parameters round-trip through Map ↔ Places; obsolete parameters are ignored and normalized away without errors. | [ ] | [ ] | URLs: |
+| Keyboard and screen reader | Use the skip link, map region, Search/Filters/Info triggers, marker names, Escape, and nomination fallback. | Announcements are understandable; panel state and focus restoration are clear; no map pointer action is required to reach records or nomination. | [ ] | [ ] | Browser/AT: |
+| Production freshness | After an approved merge/deploy, load production with cache disabled and compare the deployed commit/assets. | Production serves the approved Slice 1–4 files; no stale HTML, JS, or CSS is observed. | [ ] | [ ] | Commit/time: |
+
+Phase 11D-R does not require authenticated production mutation tests, Firebase rules/index deployment, or official GIS datasets.
+
 ## 8. Rollback Notes
 
 Before any release or Firebase rules deployment, have the following ready:

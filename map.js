@@ -7,17 +7,26 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import {
   buildNominationUrlFromCoordinates,
+  buildMarkerAccessibleName,
   buildPlaceRecordUrl,
   cleanText,
   escapeHTML,
   getCommunityDisplayLocation,
   hasValidCoordinates,
-  normalizeCoordinate,
-  normalizeSearchValue
-} from "./heritage-engine/maps.js?v=2026-06-20-releasepolish";
+  normalizeCoordinate
+} from "./heritage-engine/maps.js?v=2026-07-14-pr41-review-fixes";
 import {
-  getHeritageCriteria,
-  isPublicRecord
+  buildDiscoveryUrl,
+  getAssetType,
+  getMatchingPublicRecords,
+  getOptionCount,
+  getPublicRecordById,
+  getUniqueCriteria,
+  getUniqueValues,
+  isPublicRecord,
+  normalizeSearchText,
+  parseSharedDiscoveryState,
+  writeSharedDiscoveryState
 } from "./heritage-engine/search.js";
 
 const firebaseConfig = {
@@ -31,68 +40,6 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const TOWN_AREA_BLOCKLIST = /\b(province|district|county|street|road|route|lane|avenue|close|park|square|community|neighbou?rhood|village committee|residential committee)\b/i;
-const SPLIT_PATTERN = /[|,/;]+|\s+-\s+/;
-
-function toTitleCase(value) {
-  const text = cleanText(value);
-  if (!text) return "";
-  return text.replace(/\b([a-z])([a-z]*)/gi, (_, first, rest) => `${first.toUpperCase()}${rest.toLowerCase()}`);
-}
-
-function truncateText(value, maxLength = 110) {
-  const text = cleanText(value);
-  if (!text || text.length <= maxLength) return text;
-  return `${text.slice(0, maxLength).trimEnd()}...`;
-}
-
-function normalizeTownAreaCandidate(value) {
-  return toTitleCase(cleanText(value).replace(/\s+/g, " "));
-}
-
-function isUsefulTownAreaCandidate(value) {
-  const text = normalizeTownAreaCandidate(value);
-  if (!text) return false;
-  if (text.length < 2 || text.length > 40) return false;
-  if (/\d/.test(text)) return false;
-  if (/^jiangxi$/i.test(text) || /^jiangxi province$/i.test(text) || /^china$/i.test(text)) return false;
-  return !TOWN_AREA_BLOCKLIST.test(text);
-}
-
-function extractBroaderTownAreaCandidates(value) {
-  const segments = cleanText(value)
-    .split(SPLIT_PATTERN)
-    .map(normalizeTownAreaCandidate)
-    .filter(Boolean);
-
-  if (segments.length === 0) return [];
-
-  const usefulSegments = segments.filter((segment) => isUsefulTownAreaCandidate(segment));
-  if (segments.length === 1) {
-    return usefulSegments;
-  }
-
-  const preferredSegment = [...segments]
-    .reverse()
-    .find((segment) => isUsefulTownAreaCandidate(segment));
-
-  return preferredSegment ? [preferredSegment] : usefulSegments;
-}
-
-function getTownAreaValues(record) {
-  return [
-    cleanText(record.city),
-    cleanText(record.area),
-    cleanText(record.location),
-    cleanText(record.locality),
-    cleanText(record.address),
-    getCommunityDisplayLocation(record)
-  ]
-    .flatMap((value) => extractBroaderTownAreaCandidates(value))
-    .filter(Boolean)
-    .filter((value, index, values) => values.indexOf(value) === index);
-}
-
 function makeBluePinIcon() {
   return L.divIcon({
     className: "community-map-pin",
@@ -145,7 +92,7 @@ function buildCommunityPlacePopupHtml(record) {
   const safeTitle = escapeHTML(cleanText(record.title) || "Untitled community place");
   const safeAssetType = escapeHTML(cleanText(record.assetType) || cleanText(record.category) || "Not specified");
   const safeLocation = escapeHTML(getCommunityDisplayLocation(record) || "Not specified");
-  const safeArea = escapeHTML(record.townAreaValues[0] || cleanText(record.area) || cleanText(record.city) || "Not specified");
+  const safeArea = escapeHTML(cleanText(record.district) || cleanText(record.city) || cleanText(record.area) || "Not specified");
   const safeDescription = escapeHTML(
     cleanText(record.localSignificanceSummary)
       || cleanText(record.description)
@@ -189,26 +136,14 @@ function initCommunityMap({
   const searchForm = document.getElementById(searchFormId);
   const searchInput = document.getElementById(searchInputId);
   const statusEl = document.getElementById(statusId);
-  const areaFilterGroup = document.getElementById("mapAreaFilterGroup");
-  const criteriaFilterGroup = document.getElementById("mapCriteriaFilterGroup");
+  const focusStatusEl = document.getElementById("mapFocusStatus");
+  const listLink = document.getElementById("mapViewResultsList");
   const resetButton = document.getElementById("mapFilterReset");
   const toolButtons = Array.from(document.querySelectorAll(".map-tool-index__button"));
   const toolPanels = Array.from(document.querySelectorAll("[data-tool-panel]"));
   const urlParams = new URLSearchParams(window.location.search);
-  const requestedLatParam = urlParams.get("lat");
-  const requestedLngParam = urlParams.get("lng");
-  const hasRequestedLatLng = requestedLatParam !== null
-    && requestedLngParam !== null
-    && requestedLatParam.trim() !== ""
-    && requestedLngParam.trim() !== "";
-  const requestedLat = hasRequestedLatLng ? Number(requestedLatParam) : NaN;
-  const requestedLng = hasRequestedLatLng ? Number(requestedLngParam) : NaN;
-  const requestedLocation = hasRequestedLatLng
-    && Number.isFinite(requestedLat)
-    && Number.isFinite(requestedLng)
-    ? [requestedLat, requestedLng]
-    : null;
-  const initialSearchTerm = urlParams.get("search") || "";
+  const initialDiscoveryState = parseSharedDiscoveryState(urlParams);
+  const requestedPlaceId = cleanText(urlParams.get("place"));
   const fallbackCenter = [27.6202, 113.8825];
   const customFilters = Array.from(document.querySelectorAll(".map-custom-filter"));
   const mapNominationToggle = document.getElementById("mapNominationToggle");
@@ -216,19 +151,17 @@ function initCommunityMap({
 
   const map = L.map(containerId).setView(fallbackCenter, 13);
   const pointLayer = L.layerGroup().addTo(map);
-  const focusLayer = L.layerGroup().addTo(map);
   const bluePinIcon = makeBluePinIcon();
   const baseLayers = createBaseLayers();
   const markersById = new Map();
   const pendingFilters = {
-    assetType: "",
-    area: "",
-    heritageCriteria: ""
+    assetType: initialDiscoveryState.assetType,
+    heritageCriteria: initialDiscoveryState.heritageCriteria
   };
 
-  let allMapPoints = [];
-  let hasFocusedRequestedLocation = false;
+  let allPublicRecords = [];
   let isNominationPickMode = false;
+  let activeToolKey = "search";
 
   baseLayers.osm.addTo(map);
   map.whenReady(() => {
@@ -246,20 +179,29 @@ function initCommunityMap({
     }).addTo(map);
   }
 
-  if (searchInput && initialSearchTerm) {
-    searchInput.value = initialSearchTerm;
+  if (searchInput && initialDiscoveryState.q) {
+    searchInput.value = initialDiscoveryState.q;
   }
 
-  function updateUrlSearch(term) {
+  function getCurrentDiscoveryState(term = searchInput?.value || "") {
+    return {
+      q: cleanText(term),
+      assetType: pendingFilters.assetType,
+      heritageCriteria: pendingFilters.heritageCriteria,
+      place: requestedPlaceId
+    };
+  }
+
+  function updateDiscoveryLinks(term) {
+    const state = getCurrentDiscoveryState(term);
     const url = new URL(window.location.href);
+    writeSharedDiscoveryState(url, state);
+    url.searchParams.delete("search");
     url.searchParams.delete("lat");
     url.searchParams.delete("lng");
-    if (term) {
-      url.searchParams.set("search", term);
-    } else {
-      url.searchParams.delete("search");
-    }
+    if (requestedPlaceId) url.searchParams.set("place", requestedPlaceId);
     window.history.replaceState({}, "", url);
+    if (listLink) listLink.href = buildDiscoveryUrl("search.html", state);
   }
 
   function setStatus(message) {
@@ -268,7 +210,21 @@ function initCommunityMap({
     }
   }
 
-  function setActiveToolPanel(panelKey) {
+  function closeActiveToolPanel({ restoreFocus = false } = {}) {
+    const activeButton = toolButtons.find((button) => button.dataset.toolTarget === activeToolKey);
+    toolButtons.forEach((button) => {
+      button.classList.remove("is-active");
+      button.setAttribute("aria-expanded", "false");
+    });
+    toolPanels.forEach((panel) => {
+      panel.classList.remove("is-active");
+      panel.hidden = true;
+    });
+    if (restoreFocus) activeButton?.focus();
+  }
+
+  function setActiveToolPanel(panelKey, { moveFocus = true } = {}) {
+    activeToolKey = panelKey;
     toolButtons.forEach((button) => {
       const isActive = button.dataset.toolTarget === panelKey;
       button.classList.toggle("is-active", isActive);
@@ -279,6 +235,10 @@ function initCommunityMap({
       const isActive = panel.dataset.toolPanel === panelKey;
       panel.classList.toggle("is-active", isActive);
       panel.hidden = !isActive;
+      if (isActive && moveFocus) {
+        const focusTarget = panel.querySelector("input, button, a[href]") || panel;
+        focusTarget.focus();
+      }
     });
   }
 
@@ -362,11 +322,14 @@ function initCommunityMap({
     if (!filter) return;
     const key = filter.dataset.filterKey;
     const selectedValue = pendingFilters[key] || "";
+    const selectedValues = [selectedValue];
     const { valueLabel } = getCustomFilterParts(filter);
     if (valueLabel) valueLabel.textContent = selectedValue || "Show all";
 
     getOptionButtons(filter).forEach((option) => {
-      const isSelected = option.dataset.value === selectedValue;
+      const isSelected = option.dataset.value
+        ? selectedValues.includes(option.dataset.value)
+        : selectedValues.length === 0 || !selectedValues[0];
       option.classList.toggle("is-selected", isSelected);
       option.setAttribute("aria-selected", String(isSelected));
     });
@@ -388,107 +351,19 @@ function initCommunityMap({
     }
   }
 
-  function matchesFilters(record) {
-    const assetTypeMatches = !pendingFilters.assetType
-      || cleanText(record.assetType) === pendingFilters.assetType;
-    const areaMatches = !pendingFilters.area
-      || record.townAreaValues.includes(pendingFilters.area);
-    const criteriaMatches = !pendingFilters.heritageCriteria
-      || getHeritageCriteria(record).includes(pendingFilters.heritageCriteria);
-    return assetTypeMatches && areaMatches && criteriaMatches;
-  }
-
-  function matchesFilterContext(record, excludedKey, normalizedTerm) {
-    const searchMatches = matchesSearch(record, normalizedTerm);
-    const assetTypeMatches = excludedKey === "assetType"
-      || !pendingFilters.assetType
-      || cleanText(record.assetType) === pendingFilters.assetType;
-    const areaMatches = excludedKey === "area"
-      || !pendingFilters.area
-      || record.townAreaValues.includes(pendingFilters.area);
-    const criteriaMatches = excludedKey === "heritageCriteria"
-      || !pendingFilters.heritageCriteria
-      || getHeritageCriteria(record).includes(pendingFilters.heritageCriteria);
-    return searchMatches && assetTypeMatches && areaMatches && criteriaMatches;
-  }
-
-  function matchesSearch(record, term) {
-    if (!term) return true;
-
-    const searchText = [
-      record.title,
-      record.address,
-      record.description,
-      record.localSignificanceSummary,
-      record.area,
-      record.locationName,
-      record.location,
-      record.locality,
-      record.community,
-      record.neighbourhood,
-      record.city,
-      record.district,
-      record.assetType,
-      record.category,
-      ...getHeritageCriteria(record)
-    ].filter(Boolean).join(" ").toLowerCase();
-
-    return searchText.includes(term);
-  }
-
-  function getContextRecords(excludedKey, normalizedTerm) {
-    return allMapPoints.filter((record) => matchesFilterContext(record, excludedKey, normalizedTerm));
-  }
-
-  function buildFilterOptions(key, normalizedTerm) {
-    const source = getContextRecords(key, normalizedTerm);
-    if (key === "assetType") {
-      const counts = new Map();
-      source.forEach((record) => {
-        const value = cleanText(record.assetType);
-        if (!value) return;
-        counts.set(value, (counts.get(value) || 0) + 1);
-      });
-      return {
-        totalCount: source.length,
-        options: [...counts.entries()]
-          .map(([value, count]) => ({ value, count }))
-          .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
-      };
-    }
-
-    if (key === "area") {
-      const counts = new Map();
-      source.forEach((record) => {
-        record.townAreaValues.forEach((value) => {
-          counts.set(value, (counts.get(value) || 0) + 1);
-        });
-      });
-      return {
-        totalCount: source.length,
-        options: [...counts.entries()]
-          .map(([value, count]) => ({ value, count }))
-          .filter((option) => option.count > 0)
-          .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
-      };
-    }
-
-    if (key === "heritageCriteria") {
-      const counts = new Map();
-      source.forEach((record) => {
-        getHeritageCriteria(record).forEach((value) => {
-          counts.set(value, (counts.get(value) || 0) + 1);
-        });
-      });
-      return {
-        totalCount: source.length,
-        options: [...counts.entries()]
-          .map(([value, count]) => ({ value, count }))
-          .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
-      };
-    }
-
-    return { totalCount: source.length, options: [] };
+  function buildFilterOptions(key) {
+    const storedValues = key === "heritageCriteria"
+      ? getUniqueCriteria(allPublicRecords)
+      : getUniqueValues(key, allPublicRecords);
+    const selectedValues = [pendingFilters[key]].filter(Boolean);
+    const values = [...new Set([...storedValues, ...selectedValues])].sort((a, b) => a.localeCompare(b));
+    return {
+      totalCount: allPublicRecords.length,
+      options: values.map((value) => ({
+        value,
+        count: getOptionCount(key, value, allPublicRecords)
+      }))
+    };
   }
 
   function populateCustomFilter(key, config) {
@@ -496,10 +371,6 @@ function initCommunityMap({
     const { panel } = getCustomFilterParts(filter);
     if (!filter || !panel) return;
     const options = config.options || [];
-
-    if (pendingFilters[key] && !options.some((option) => option.value === pendingFilters[key])) {
-      pendingFilters[key] = "";
-    }
 
     panel.textContent = "";
     const totalCount = config.totalCount || 0;
@@ -535,40 +406,82 @@ function initCommunityMap({
   }
 
   function renderFilterOptions() {
-    const normalizedTerm = normalizeSearchValue(searchInput?.value || "");
-    const assetTypes = buildFilterOptions("assetType", normalizedTerm);
-    const areas = buildFilterOptions("area", normalizedTerm);
-    const criteria = buildFilterOptions("heritageCriteria", normalizedTerm);
+    Object.keys(pendingFilters).forEach((key) => {
+      populateCustomFilter(key, buildFilterOptions(key));
+    });
+  }
 
-    populateCustomFilter("assetType", assetTypes);
-    populateCustomFilter("area", areas);
-    populateCustomFilter("heritageCriteria", criteria);
+  function appendFocusLink(label, href) {
+    if (!focusStatusEl) return;
+    const link = document.createElement("a");
+    link.href = href;
+    link.textContent = label;
+    focusStatusEl.append(" ", link);
+  }
 
-    if (areaFilterGroup) {
-      areaFilterGroup.hidden = areas.options.length === 0;
+  function renderRequestedPlaceFocus(matchingRecords) {
+    if (!focusStatusEl) return;
+    focusStatusEl.textContent = "";
+    focusStatusEl.hidden = !requestedPlaceId;
+    if (!requestedPlaceId) return;
+
+    const record = getPublicRecordById(allPublicRecords, requestedPlaceId);
+    if (!record) {
+      focusStatusEl.append("The requested public place could not be found.");
+      appendFocusLink("View preserved Places results", buildDiscoveryUrl("search.html", getCurrentDiscoveryState()));
+      return;
     }
-    if (criteriaFilterGroup) {
-      criteriaFilterGroup.hidden = criteria.options.length === 0;
+
+    const recordUrl = buildPlaceRecordUrl(record.id);
+    if (!hasValidCoordinates(record)) {
+      focusStatusEl.append(`${cleanText(record.title) || "This public place"} has no map location yet.`);
+      appendFocusLink("View its public record", recordUrl);
+      appendFocusLink("View preserved Places results", buildDiscoveryUrl("search.html", getCurrentDiscoveryState()));
+      return;
     }
-    const assetTypeGroup = getCustomFilter("assetType")?.closest(".map-filter-group");
-    if (assetTypeGroup) {
-      assetTypeGroup.hidden = assetTypes.options.length === 0;
+
+    const marker = markersById.get(record.id);
+    if (!marker || !matchingRecords.some((place) => place.id === record.id)) {
+      focusStatusEl.append(`${cleanText(record.title) || "The requested place"} does not match the active discovery filters.`);
+      appendFocusLink("View its public record", recordUrl);
+      appendFocusLink("View preserved Places results", buildDiscoveryUrl("search.html", getCurrentDiscoveryState()));
+      return;
     }
+
+    marker.setZIndexOffset(1000);
+    marker.openPopup();
+    map.setView(marker.getLatLng(), Math.max(map.getZoom(), 15));
+    focusStatusEl.append(`Focused on ${cleanText(record.title) || "the requested public place"}.`);
+    appendFocusLink("View its public record", recordUrl);
   }
 
   function renderMapFeatures(searchTerm = "") {
-    const normalizedTerm = normalizeSearchValue(searchTerm);
+    const normalizedTerm = normalizeSearchText(searchTerm);
     pointLayer.clearLayers();
-    focusLayer.clearLayers();
     markersById.clear();
 
-    const matchingPoints = allMapPoints
-      .filter((record) => matchesFilters(record) && matchesSearch(record, normalizedTerm))
+    const filters = {
+      query: normalizedTerm,
+      assetType: pendingFilters.assetType,
+      heritageCriteria: pendingFilters.heritageCriteria
+    };
+    const matchingRecords = getMatchingPublicRecords(allPublicRecords, filters);
+    const matchingPoints = matchingRecords
+      .filter(hasValidCoordinates)
       .sort((a, b) => cleanText(a.title).localeCompare(cleanText(b.title)));
 
     const boundsItems = [];
     matchingPoints.forEach((point) => {
-      const marker = L.marker([point.lat, point.lng], { icon: bluePinIcon }).addTo(pointLayer);
+      const markerName = buildMarkerAccessibleName(point);
+      const marker = L.marker([point.lat, point.lng], {
+        icon: bluePinIcon,
+        title: markerName,
+        alt: markerName,
+        keyboard: true,
+        riseOnFocus: true
+      }).addTo(pointLayer);
+      const markerElement = marker.getElement();
+      markerElement?.setAttribute("aria-label", markerName);
       marker.bindPopup(buildCommunityPlacePopupHtml(point), {
         className: "community-map-popup",
         closeButton: true,
@@ -579,32 +492,20 @@ function initCommunityMap({
     });
 
     renderFilterOptions();
-    const hasFocusControls = Boolean(normalizedTerm || pendingFilters.assetType || pendingFilters.area || pendingFilters.heritageCriteria);
-    setStatus(
-      matchingPoints.length === 0
-        ? "No records match this search."
-        : hasFocusControls
-          ? `${matchingPoints.length} ${matchingPoints.length === 1 ? "record" : "records"} on map.`
-          : `${matchingPoints.length} ${matchingPoints.length === 1 ? "record" : "records"} on map. Search or filter to focus the map.`
-    );
+    const unavailableCount = matchingRecords.length - matchingPoints.length;
+    const matchingLabel = `${matchingRecords.length} matching ${matchingRecords.length === 1 ? "record" : "records"}`;
+    const mapLabel = `${matchingPoints.length} on map`;
+    const unavailableLabel = unavailableCount > 0
+      ? `; ${unavailableCount} ${unavailableCount === 1 ? "has" : "have"} no map location and ${unavailableCount === 1 ? "remains" : "remain"} available in Places`
+      : "";
+    setStatus(matchingRecords.length === 0
+      ? "No community places match this search or filter."
+      : `${matchingLabel}; ${mapLabel}${unavailableLabel}.`);
 
     fitMapToLayers(map, boundsItems, fallbackCenter);
 
-    if (mode === "full" && requestedLocation && !hasFocusedRequestedLocation && !normalizedTerm) {
-      hasFocusedRequestedLocation = true;
-      L.circleMarker(requestedLocation, {
-        radius: 9,
-        color: "#1d3557",
-        fillColor: "#fcbf49",
-        fillOpacity: 0.95,
-        weight: 3
-      }).addTo(focusLayer).bindPopup("Selected community place");
-      map.setView(requestedLocation, Math.max(map.getZoom(), 15));
-      const cleanUrl = new URL(window.location.href);
-      cleanUrl.searchParams.delete("lat");
-      cleanUrl.searchParams.delete("lng");
-      window.history.replaceState({}, "", cleanUrl);
-    }
+    renderRequestedPlaceFocus(matchingRecords);
+    updateDiscoveryLinks(searchTerm);
 
     setTimeout(() => map.invalidateSize(), 0);
   }
@@ -615,7 +516,7 @@ function initCommunityMap({
       searchInput.value = searchTerm;
     }
     if (mode === "full") {
-      updateUrlSearch(searchTerm);
+      updateDiscoveryLinks(searchTerm);
     }
     renderMapFeatures(searchTerm);
   }
@@ -623,14 +524,15 @@ function initCommunityMap({
   async function loadMarkers() {
     try {
       const snapshot = await getDocs(query(collection(db, "communityPlaces")));
-      allMapPoints = [];
+      allPublicRecords = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
         const record = {
+          ...data,
           id: docSnap.id,
           title: cleanText(data.title),
           category: cleanText(data.category),
-          assetType: cleanText(data.assetType || data.category),
+          assetType: getAssetType(data),
           area: cleanText(data.area),
           address: cleanText(data.address),
           description: cleanText(data.description),
@@ -649,9 +551,8 @@ function initCommunityMap({
           recordStatus: cleanText(data.recordStatus)
         };
 
-        if (!hasValidCoordinates(record) || !isPublicRecord(record)) return;
-        record.townAreaValues = getTownAreaValues(record);
-        allMapPoints.push(record);
+        if (!isPublicRecord(record)) return;
+        allPublicRecords.push(record);
       });
     } catch (err) {
       console.error("Error loading map records:", err);
@@ -698,7 +599,12 @@ function initCommunityMap({
 
   toolButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      setActiveToolPanel(button.dataset.toolTarget || "search");
+      const panelKey = button.dataset.toolTarget || "search";
+      if (button.getAttribute("aria-expanded") === "true") {
+        closeActiveToolPanel({ restoreFocus: true });
+        return;
+      }
+      setActiveToolPanel(panelKey);
     });
   });
 
@@ -717,6 +623,9 @@ function initCommunityMap({
       }
       closeAllCustomFilters();
       map.closePopup();
+      if (toolButtons.some((button) => button.getAttribute("aria-expanded") === "true")) {
+        closeActiveToolPanel({ restoreFocus: true });
+      }
     }
   });
 
@@ -736,8 +645,8 @@ function initCommunityMap({
   });
 
   loadMarkers().then(() => {
-    setActiveToolPanel("search");
-    runSearch(searchInput?.value || initialSearchTerm);
+    setActiveToolPanel("search", { moveFocus: false });
+    runSearch(searchInput?.value || initialDiscoveryState.q);
   });
 
   return map;

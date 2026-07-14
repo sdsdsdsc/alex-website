@@ -48,7 +48,7 @@ Future public and admin wording should use terms such as "community heritage rec
 | Page | Purpose | Collection read/write | Main outgoing links |
 | --- | --- | --- | --- |
 | `index.html` | Homepage and entry point for places, news, and history. | Reads `news` and `history` through `script.js`; also reads external Drupal JSON:API news. | `search.html`, `map.html`, `news.html`, `history.html`, `article.html` |
-| `search.html` | Public search and filtering for community place records. | Reads `communityPlaces`. | `place.html?id={id}`, `map.html?lat={lat}&lng={lng}`, `map.html?search={title}` |
+| `search.html` | Public search and filtering for community place records. | Reads `communityPlaces`. | `place.html?id={id}`, `map.html?lat={lat}&lng={lng}`, `map.html?q={title}` |
 | `map.html` | Public map for community places. Legacy map admin editing behind `map.html?admin=true` has been retired. | Reads `communityPlaces`; old `mapPoints` and `mapPolygons` records are no longer part of the active public/admin workflow. | `place.html?id={id}`, `search.html`, `export.html`, page anchors |
 | `place.html` | Official public detail page for one community place record. | Reads one `communityPlaces` document. | `map.html`, `search.html`, optional related article URL |
 | `news.html` | Public news listing. | Reads `news` through `script.js`; also reads external Drupal JSON:API news. | `article.html?id={id}&type=news`, `article.html?id={id}&type=drupal` |

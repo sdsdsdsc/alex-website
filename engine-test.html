@@ -156,23 +156,35 @@
 
   <script type="module">
     import {
+      buildDiscoveryUrl,
+      buildMapUrl as buildDiscoveryMapUrl,
+      getAssetType,
+      getMatchingPublicRecords,
+      getPublicRecordById,
       getSearchText,
+      hasMapCoordinates,
+      isPublicRecord,
+      parseSharedDiscoveryState,
       placeMatchesFilters,
       placeMatchesSearch,
       sortPlaces
     } from "./heritage-engine/search.js";
     import {
+      buildFullMapUrl,
+      buildMarkerAccessibleName,
       buildNominationUrlFromCoordinates,
       buildPlaceRecordUrl,
       getCommunityDisplayLocation,
       hasValidCoordinates as mapHasValidCoordinates,
       isValidLatitude,
       isValidLongitude
-    } from "./heritage-engine/maps.js?v=2026-06-20-releasepolish";
+    } from "./heritage-engine/maps.js?v=2026-07-14-pr41-review-fixes";
     import {
       buildMapUrl,
       formatCriteriaList,
       formatPlaceLocationAddress,
+      getAssetType as getPlaceAssetType,
+      getDistinctCategory,
       getDisplayLocation,
       getDisplayTitle,
       getHeritageCriteria
@@ -381,6 +393,11 @@
       assert(placeMatchesSearch(alpha, query), "Search Helpers", "keyword matches by title", searchText);
       assert(placeMatchesSearch(alpha, "old town"), "Search Helpers", "keyword matches by area");
       assert(placeMatchesSearch(alpha, "memory lane"), "Search Helpers", "keyword matches by address");
+      assert(placeMatchesSearch(alpha, "pingxiang"), "Search Helpers", "keyword matches by city");
+      assert(placeMatchesSearch(alpha, "anyuan"), "Search Helpers", "keyword matches by district");
+      assert(placeMatchesSearch(alpha, "public space"), "Search Helpers", "keyword matches by category");
+      assert(placeMatchesSearch(alpha, "square"), "Search Helpers", "keyword matches by asset type");
+      assert(placeMatchesSearch(alpha, "landmark or streetscape value"), "Search Helpers", "keyword matches by heritage criteria");
       assert(
         placeMatchesFilters(alpha, {
           query: "gathering",
@@ -395,6 +412,111 @@
       );
       assertEqual(sortPlaces(samplePlaces, "", "title")[0].title, "Alpha Community Square", "Search Helpers", "sort by title returns expected order");
       assertEqual(sortPlaces(samplePlaces, "", "newest")[0].title, "Alpha Community Square", "Search Helpers", "sort by newest returns expected order");
+    }
+
+    function runSharedDiscoveryTests() {
+      const fixtures = [
+        ...samplePlaces,
+        {
+          id: "gamma-garden",
+          title: "Gamma Memory Garden",
+          city: "Fenyi",
+          district: "Fenyi County",
+          category: "Park",
+          description: "Oral history gathering garden",
+          heritageCriteria: ["Historic interest"],
+          recordStatus: "published"
+        },
+        {
+          id: "invalid-coordinate",
+          title: "Invalid Coordinate Hall",
+          city: "Pingxiang",
+          district: "Anyuan",
+          category: "Building",
+          assetType: "Hall",
+          heritageCriteria: ["Historic interest"],
+          recordStatus: "published",
+          lat: 120,
+          lng: 113.9
+        },
+        { id: "private-place", title: "Private Memory", category: "Park", recordStatus: "private", lat: 27.6, lng: 113.8 },
+        { id: "rejected-place", title: "Rejected Memory", category: "Park", recordStatus: "rejected", lat: 27.6, lng: 113.8 }
+      ];
+      const ids = (filters) => getMatchingPublicRecords(fixtures, filters).map((place) => place.id).join("|");
+
+      assertEqual(ids({ query: "ORAL HISTORY" }), "gamma-garden", "Shared Discovery", "keyword matching is normalized and shared");
+      assertEqual(ids({ categories: ["park"], city: "fenyi", district: "fenyi county" }), "alpha-square|beta-hall|gamma-garden|invalid-coordinate", "Shared Discovery", "obsolete structured filters are ignored safely");
+      assertEqual(ids({ assetType: "park" }), "gamma-garden", "Shared Discovery", "asset type falls back to category consistently");
+      assertEqual(ids({ heritageCriteria: "historic interest" }), "beta-hall|gamma-garden|invalid-coordinate", "Shared Discovery", "heritage criteria matching is normalized and shared");
+      assert(isPublicRecord(fixtures[0]) && !isPublicRecord(fixtures[4]) && !isPublicRecord(fixtures[5]), "Shared Discovery", "public and non-public eligibility is unchanged");
+      assertEqual(getAssetType(fixtures[2]), "Park", "Shared Discovery", "missing asset type uses category fallback");
+      assert(ids({ query: "gamma" }).includes("gamma-garden"), "Shared Discovery", "coordinate-less public record remains discoverable");
+      assertEqual(buildDiscoveryMapUrl(fixtures[2]), "", "Shared Discovery", "coordinate-less record has map-unavailable state");
+      assert(hasMapCoordinates(fixtures[0]), "Shared Discovery", "valid-coordinate public record remains marker-renderable");
+      assert(!hasMapCoordinates(fixtures[3]), "Shared Discovery", "invalid-coordinate record is not marker-renderable");
+      assertEqual(buildDiscoveryMapUrl(fixtures[0]), "/map.html?place=alpha-square", "Shared Discovery", "valid-coordinate record keeps its ID-based map link");
+      assertEqual(getMatchingPublicRecords(fixtures).length, 4, "Shared Discovery", "public discovery excludes private and rejected records without using coordinates");
+    }
+
+    function runSharedUrlAndFocusTests() {
+      const state = {
+        q: "memory hall",
+        assetType: "Hall",
+        heritageCriteria: "Historic interest",
+        place: "beta-hall"
+      };
+      const mapUrl = buildDiscoveryUrl("map.html", state, {
+        place: "beta-hall",
+        baseHref: "http://localhost/search.html"
+      });
+      const parsed = parseSharedDiscoveryState(mapUrl);
+
+      assertEqual(parsed.q, state.q, "Shared URL and Focus", "shared URL round-trips q");
+      assertEqual(parsed.assetType, state.assetType, "Shared URL and Focus", "shared URL round-trips assetType");
+      assertEqual(parsed.heritageCriteria, state.heritageCriteria, "Shared URL and Focus", "shared URL round-trips heritageCriteria");
+      assertEqual(parsed.place, state.place, "Shared URL and Focus", "shared URL round-trips place focus");
+      assert(mapUrl.includes("q=memory+hall") && mapUrl.includes("place=beta-hall"), "Shared URL and Focus", "Places to Map preserves shared state and record focus");
+
+      const listUrl = buildDiscoveryUrl("search.html", parsed, { baseHref: `http://localhost${mapUrl}` });
+      const listState = parseSharedDiscoveryState(listUrl);
+      assertEqual(JSON.stringify(listState), JSON.stringify(parsed), "Shared URL and Focus", "Map to Places preserves all shared state");
+      assertEqual(new URL(listUrl, "http://localhost").searchParams.get("place"), "beta-hall", "Shared URL and Focus", "Map to Places preserves record focus");
+      assertEqual(new URL(mapUrl, "http://localhost").searchParams.get("place"), "beta-hall", "Shared URL and Focus", "refresh and copy retain record focus");
+
+      const oldUrl = "http://localhost/map.html?q=memory&category=Building&city=Pingxiang&district=Anyuan&assetType=Hall";
+      const normalizedOldUrl = buildDiscoveryUrl("search.html", parseSharedDiscoveryState(oldUrl), { baseHref: oldUrl });
+      assert(!normalizedOldUrl.includes("category=") && !normalizedOldUrl.includes("city=") && !normalizedOldUrl.includes("district="), "Shared URL and Focus", "obsolete discovery parameters normalize away safely");
+
+      const legacySearchUrl = "http://localhost/map.html?search=fenyi&assetType=Hall&heritageCriteria=Historic%20interest&place=beta-hall";
+      const adoptedLegacyState = parseSharedDiscoveryState(legacySearchUrl);
+      assertEqual(adoptedLegacyState.q, "fenyi", "Shared URL and Focus", "legacy search parameter is adopted when q is absent");
+      assertEqual(parseSharedDiscoveryState("?q=modern&search=legacy").q, "modern", "Shared URL and Focus", "q remains authoritative when legacy search is also present");
+      const normalizedLegacyUrl = buildDiscoveryUrl("map.html", adoptedLegacyState, { baseHref: legacySearchUrl });
+      assert(normalizedLegacyUrl.includes("q=fenyi") && !normalizedLegacyUrl.includes("search="), "Shared URL and Focus", "legacy search URL normalizes to q without losing its value");
+      const legacyListUrl = buildDiscoveryUrl("search.html", adoptedLegacyState, { baseHref: legacySearchUrl });
+      assertEqual(parseSharedDiscoveryState(legacyListUrl).q, "fenyi", "Shared URL and Focus", "Map to Places preserves the adopted legacy query");
+      assertEqual(buildFullMapUrl("fenyi", "http://localhost/search.html"), "/map.html?q=fenyi", "Shared URL and Focus", "full-map URL generator emits q instead of legacy search");
+
+      const duplicateCoordinateRecords = [
+        { ...samplePlaces[0], id: "first-id", lat: 27.6, lng: 113.8 },
+        { ...samplePlaces[1], id: "intended-id", lat: 27.6, lng: 113.8 },
+        { id: "no-map-id", title: "No Map Place", recordStatus: "published" },
+        { id: "private-id", title: "Private Place", recordStatus: "private", lat: 27.6, lng: 113.8 }
+      ];
+      const focused = getPublicRecordById(duplicateCoordinateRecords, "intended-id");
+      assertEqual(focused?.id, "intended-id", "Shared URL and Focus", "place ID focuses the exact intended record");
+      assertEqual(focused?.title, "Beta Workers Hall", "Shared URL and Focus", "duplicate coordinates do not change ID focus");
+      assertEqual(getPublicRecordById(duplicateCoordinateRecords, "missing-id"), null, "Shared URL and Focus", "unknown ID fails safely");
+      assertEqual(getPublicRecordById(duplicateCoordinateRecords, "private-id"), null, "Shared URL and Focus", "non-public ID is not exposed or focused");
+      assert(!hasMapCoordinates(getPublicRecordById(duplicateCoordinateRecords, "no-map-id")), "Shared URL and Focus", "public coordinate-less ID produces map-unavailable fallback state");
+      assertEqual(buildPlaceRecordUrl("intended-id"), "place.html?id=intended-id", "Shared URL and Focus", "public record links remain ID-based");
+      assertEqual(buildMarkerAccessibleName(focused), "Open map record: Beta Workers Hall", "Shared URL and Focus", "map markers expose record-specific accessible names");
+      assertEqual(
+        buildNominationUrlFromCoordinates(27.622, 113.885, "http://localhost/map.html"),
+        "/nominate-place.html?lat=27.622&lng=113.885",
+        "Shared URL and Focus",
+        "nomination coordinate handoff remains unchanged"
+      );
     }
 
     function runMapTests() {
@@ -464,7 +586,11 @@
       );
       assertEqual(getHeritageCriteria(alpha).length, 2, "Place Helpers", "getHeritageCriteria returns criteria safely");
       assertEqual(formatCriteriaList(alpha)[0], "Social or communal value", "Place Helpers", "formatCriteriaList returns criteria");
-      assertEqual(buildMapUrl(alpha), "map.html?lat=27.622&lng=113.885", "Place Helpers", "buildMapUrl returns coordinate link");
+      assertEqual(getDistinctCategory({ category: "", assetType: "School" }), "", "Place Helpers", "empty category stays hidden");
+      assertEqual(getDistinctCategory({ category: "  LANDMARK ", assetType: "Landmark" }), "", "Place Helpers", "category identical to asset type is hidden after normalization");
+      assertEqual(getDistinctCategory({ category: "Built heritage", assetType: "School" }), "Built heritage", "Place Helpers", "distinct legacy category remains visible");
+      assertEqual(getPlaceAssetType({ category: "Park" }), "Park", "Place Helpers", "category-only legacy record retains asset type fallback");
+      assertEqual(buildMapUrl(alpha), "map.html?place=alpha-square", "Place Helpers", "buildMapUrl returns document ID focus link");
       assertEqual(optionalValuePlace.associatedType, "Workers' hall", "Place Helpers", "optional associated type values remain available when present");
       assertEqual(optionalValuePlace.period, "20th century", "Place Helpers", "optional period values remain available when present");
       assertEqual(optionalValuePlace.grade, "Local interest", "Place Helpers", "optional grade values remain available when present");
@@ -1086,7 +1212,7 @@
       assertEqual(publicPlacePayload.city, "Pingxiang", "Promotion Helpers", "public payload includes city");
       assertEqual(publicPlacePayload.district, "Anyuan", "Promotion Helpers", "public payload includes district");
       assertEqual(publicPlacePayload.province, "Jiangxi", "Promotion Helpers", "public payload includes province");
-      assertEqual(publicPlacePayload.category, "Square", "Promotion Helpers", "public payload uses asset type as category");
+      assert(!("category" in publicPlacePayload), "Promotion Helpers", "public payload does not synthesize category from asset type");
       assertEqual(publicPlacePayload.assetType, "Square", "Promotion Helpers", "public payload includes assetType");
       assertEqual(publicPlacePayload.description, "A public place nominated by the community.", "Promotion Helpers", "public payload includes description");
       assertEqual(publicPlacePayload.localSignificanceSummary, "A locally valued gathering space.", "Promotion Helpers", "public payload includes local significance");
@@ -1267,6 +1393,8 @@
 
     try {
       runSearchTests();
+      runSharedDiscoveryTests();
+      runSharedUrlAndFocusTests();
       runMapTests();
       runPlaceTests();
       runExportTests();
