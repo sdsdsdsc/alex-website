@@ -7,6 +7,7 @@ This page is the current Markdown map for Alex's Photo Board. It separates activ
 - [docs/current-project-state-and-doc-cleanup-audit.md](./current-project-state-and-doc-cleanup-audit.md): Broad current-state audit and documentation cleanup reference. Status: active.
 - [docs/project-status-checkpoint.md](./project-status-checkpoint.md): Source-based project status map and current practical phase summary. Status: active.
 - [docs/site-structure.md](./site-structure.md): Page, collection, and workflow structure map. Status: active.
+- [docs/phase-15a-provincial-protected-heritage-pilot-readiness.md](./phase-15a-provincial-protected-heritage-pilot-readiness.md): Phase 15A architecture, provenance, confidence, accessibility, testing, and rollback decisions for a future provincial protected heritage pilot. This is separate from the older Firebase-rules Phase 15A record. Status: active.
 - [docs/phase-13c-source-verification-note.md](./phase-13c-source-verification-note.md): Phase 13C source verification note. Status: active.
 - [docs/phase-13c-ui-live-rules-readiness-note.md](./phase-13c-ui-live-rules-readiness-note.md): Phase 13C UI, live-test, and rules readiness note. Status: active.
 
@@ -40,6 +41,7 @@ This page is the current Markdown map for Alex's Photo Board. It separates activ
 - [docs/phase-13b-storage-backup-media-audit-plan.md](./phase-13b-storage-backup-media-audit-plan.md): Phase 13B storage and backup plan. Status: reference.
 - [docs/phase-13c-media-rights-metadata-completion-note.md](./phase-13c-media-rights-metadata-completion-note.md): Phase 13C implementation note. Status: active.
 - [docs/retired-page-navigation-cleanup-plan.md](./retired-page-navigation-cleanup-plan.md): Navigation cleanup planning record. Status: reference.
+- [docs/phase-15a-firebase-rules-sync-readiness.md](./phase-15a-firebase-rules-sync-readiness.md): Older Phase 15A readiness record for Firebase rules synchronization only; it is not the provincial protected heritage pilot plan. Status: historical reference.
 
 ## Archived Phase Records
 
