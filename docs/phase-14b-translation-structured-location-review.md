@@ -2,9 +2,9 @@
 
 ## 1. Status and scope
 
-This document is a human-review record for the ten-record provincial protected heritage pilot. The authoritative Chinese source facts remain in Phase 14A. All pinyin and English wording here is Alex’s Photo Board project work, and all structured Chinese location fields are project-derived interpretations. None of the English wording is an official Jiangxi government translation.
+This document records the approved project review for the ten-record provincial protected heritage pilot. The authoritative Chinese source facts remain in Phase 14A. All pinyin is Alex’s Photo Board project romanization, all English wording is project translation, and all structured Chinese location fields are project-derived interpretations. None of the English wording is an official Jiangxi government translation.
 
-This review makes no coordinate or GIS claim. It contains no runtime dataset, latitude, longitude, geometry, GeoJSON, mapping confidence, Map integration, Firebase data, public display, or export behavior. Every interpretation remains under bilingual review.
+This review makes no coordinate or GIS claim. It contains no runtime dataset, latitude, longitude, geometry, GeoJSON, mapping confidence, Map integration, Firebase data, public display, or export behavior. The approved values were finalized through the documented project review. A `reviewed` value is approved project wording or romanization; it does not imply official-name status. Any future claim that an English name is authoritative or locally established requires a separately cited source.
 
 ## 2. Source relationship
 
@@ -19,9 +19,11 @@ This document does not duplicate or modify the authoritative Chinese source tabl
 - Join syllables within one lexical component.
 - Use apostrophes where normal pinyin orthography requires disambiguation.
 - Romanize the heritage-site name only; do not create a full-location pinyin field.
-- Use an established English name only when a reliable source documents it.
+- Use an established English name only when a reliable source documents it; otherwise identify the value as project wording.
 - Do not guess an ambiguous pronunciation. Mark unresolved readings for review rather than silently fixing them.
-- Treat every proposed pinyin value as project romanization with `translationStatus` set to `draft`.
+- Treat every approved pinyin value as project romanization, not as a claim of an official locally published spelling.
+
+The approved pinyin values intentionally separate distinguishable geographic proper-name and generic-name components in `Dagu Ling`, `Dayin Shan`, `Qiaomai Ling`, `Luoma Qiao`, and `Guanyin Ge`. The heritage-site name uses `Qiaomai Ling`, while the natural-village location uses the joined form `Qiaomailing`.
 
 ## 4. Controlled project English vocabulary
 
@@ -39,19 +41,21 @@ This document does not duplicate or modify the authoritative Chinese source tabl
 | 宋至清 | Song to Qing dynasties |
 | 明清 | Ming and Qing dynasties |
 | 遗址 | Site |
-| 遗址群 | Site Group |
+| 遗址群 | Archaeological Site Group |
 | 窑址 | Kiln Site |
 | 古城墙 | Ancient City Wall |
 
 These are controlled project renderings. They do not claim statutory equivalence with another country’s heritage system.
 
-The following wording remains explicitly under bilingual review:
+The final project decisions for the reviewed high-judgment wording are:
 
-- `Site Group` versus `Archaeological Site Complex`;
-- `Ancient City Wall`;
-- `Natural Village` or `natural village settlement`;
-- `Hongguang Porcelain Factory`;
-- `Imperial Kiln Factory`.
+- `遗址群`: `Archaeological Site Group`;
+- `袁州古城墙`: `Yuanzhou Ancient City Wall`;
+- `荞麦岭自然村庄`: `Qiaomailing natural village settlement`;
+- `红光瓷厂`: `Hongguang Ceramics Works`;
+- `御窑厂西窑址`: `Yuyaochang West Kiln Site`.
+
+`Hongguang Ceramics Works` is an evidence-informed project rendering, not an official Jiangxi-government English name. `Imperial Kiln` is established contextual English terminology for Jingdezhen, but no exact official English designation is claimed for record 010. `Yuyaochang West Kiln Site` is therefore the approved concise project name.
 
 ## 5. Structured-location model
 
@@ -79,11 +83,10 @@ The authoritative full Chinese location remains only in Phase 14A as `officialLo
 
 `translationStatus` uses this vocabulary:
 
-- `draft`: project wording awaiting manual bilingual review.
-- `reviewed`: wording separately approved after manual bilingual review.
-- `unresolved`: a reading or translation cannot safely be proposed.
+- `reviewed`: approved project wording or romanization after documented project-owner or named bilingual review.
+- `unresolved`: a reading or translation remains unsafe to finalize.
 
-All ten records remain `draft` in this review. None is marked `reviewed`.
+All ten records are `reviewed` through the documented project review. This status does not mean that an English value is an official government name or that a pinyin value is an official locally published spelling.
 
 ## 7. Ten-record structured-location table
 
@@ -102,42 +105,54 @@ All ten records remain `draft` in this review. None is marked `reviewed`.
 
 Records 004 and 006 remain one record each. `componentLocationsZh` must never be interpreted as separate designated records.
 
+The `componentLocationsZh` values are retained here as documentary human-review interpretations, but the field is not approved as part of a future machine-readable contract. Its machine-data status is deferred to the later data-contract phase. The authoritative components remain in Phase 14A `remarksZh`, and their English wording remains in `projectRemarksEn`. No child records, component geometry, or component GeoJSON features are approved.
+
+If a later data-contract phase approves a machine representation, it should use a list on the parent record with source provenance and must expressly prohibit treating list entries as independently designated heritage records.
+
 ## 8. Ten-record translation review table
 
 Chinese names in this table are read-only references copied solely to support human comparison with Phase 14A.
 
 | recordId | officialNameZh — read-only reference | namePinyin | projectNameEn | projectProtectionLevelEn | projectCategoryEn | projectPeriodEn | projectLocationTextEn | projectRemarksEn | translationStatus | translationNote |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| JX-PCH-7-001 | 打鼓岭遗址 | Dagu Ling Yizhi | Dagu Ling Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Paleolithic | Xinyu City, Yushui District, Luofang Town, Zhushan Village, Kengkou Villagers’ Group | null | draft | Proper name retained in pinyin; heritage type translated. |
-| JX-PCH-7-002 | 大印山遗址群 | Dayin Shan Yizhiqun | Dayin Shan Site Group | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Neolithic to Shang dynasty | Yichun City, Fengcheng City, Taosha Town, Qianfang Village (Jinqiao Reservoir) | null | draft | Site Group is a conservative project rendering of 遗址群 and remains under review against Archaeological Site Complex. |
-| JX-PCH-7-003 | 荞麦岭遗址 | Qiaomai Ling Yizhi | Qiaomai Ling Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Xia and Shang dynasties | Jiujiang City, Chaisang District, Mahuiling Town, Fumin Village, Qiaomailing Natural Village | null | draft | Natural Village is a project rendering of the unusual source wording 自然村庄 and remains under bilingual review. |
-| JX-PCH-7-004 | 袁州古城墙 | Yuanzhou Guchengqiang | Yuanzhou Ancient City Wall | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Late Tang dynasty and Five Dynasties period to Republican period | Yichun City, Yuanzhou District, Lingquanchi Park, Gaoshi South Road, Wangzi Lane, and Majiayuan | Includes the Lingquanchi, Gaoshi South Road, Wangzi Lane, and Majiayuan sections. | draft | Ancient City Wall is judgment-based. All wall sections remain one designated record. |
-| JX-PCH-7-005 | 南市街窑址 | Nanshijie Yaozhi | Nanshijie Kiln Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Five Dynasties period to Yuan dynasty | Jingdezhen City, Fuliang County, Shou’an Town, Nanshijie Village | null | draft | Nanshijie is treated as one proper-name component and is not interpreted as a generic street reference. |
-| JX-PCH-7-006 | 南坑窑址 | Nankeng Yaozhi | Nankeng Kiln Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Song and Yuan dynasties | Pingxiang City, Luxi County, Nankeng Town, Yaoxia Village | Includes Fenghuangpo, Anzipo, and Wazi’ao. | draft | Included components remain subordinate to one designated record. |
-| JX-PCH-7-007 | 兴源马家窑址 | Xingyuan Majia Yaozhi | Xingyuan Majia Kiln Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Song and Yuan dynasties | Yichun City, Tonggu County, Yongning Town, Xingyuan Village | null | draft | Xingyuan and Majia remain in pinyin. |
-| JX-PCH-7-008 | 落马桥窑址 | Luoma Qiao Yaozhi | Luoma Qiao Kiln Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Song dynasty to Republican period | Jingdezhen City, Zhushan District, within the Hongguang Porcelain Factory compound on Zhonghua South Road | null | draft | Factory-compound wording is a natural-English project rendering and remains under bilingual review. |
-| JX-PCH-7-009 | 观音阁窑址 | Guanyin Ge Yaozhi | Guanyin Ge Kiln Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Song to Qing dynasties | Jingdezhen City, Zhushan District, Jingcheng Town, Changjiang Village | null | draft | Guanyin Ge remains in pinyin rather than being translated semantically. |
-| JX-PCH-7-010 | 御窑厂西窑址 | Yuyaochang Xi Yaozhi | West Kiln Site of the Imperial Kiln Factory | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Ming and Qing dynasties | Jingdezhen City, Zhushan District | null | draft | This is the highest-judgment name translation. Imperial Kiln Factory versus retaining Yuyaochang remains under bilingual review. |
+| JX-PCH-7-001 | 打鼓岭遗址 | Dagu Ling Yizhi | Dagu Ling Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Paleolithic | Xinyu City, Yushui District, Luofang Town, Zhushan Village, Kengkou Villagers’ Group | null | reviewed | Project romanization separates the geographic generic Ling; heritage type translated. |
+| JX-PCH-7-002 | 大印山遗址群 | Dayin Shan Yizhiqun | Dayin Shan Archaeological Site Group | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Neolithic to Shang dynasty | Yichun City, Fengcheng City, Taosha Town, Qianfang Village (Jinqiao Reservoir) | null | reviewed | Archaeological Site Group identifies multiple related remains without asserting a formally bounded complex. |
+| JX-PCH-7-003 | 荞麦岭遗址 | Qiaomai Ling Yizhi | Qiaomai Ling Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Xia and Shang dynasties | Jiujiang City, Chaisang District, Mahuiling Town, Fumin Village, Qiaomailing natural village settlement | null | reviewed | The location wording avoids assigning an unsupported formal administrative status. |
+| JX-PCH-7-004 | 袁州古城墙 | Yuanzhou Guchengqiang | Yuanzhou Ancient City Wall | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Late Tang dynasty and Five Dynasties period to Republican period | Yichun City, Yuanzhou District, Lingquanchi Park, Gaoshi South Road, Wangzi Lane, and Majiayuan | Includes the Lingquanchi, Gaoshi South Road, Wangzi Lane, and Majiayuan sections. | reviewed | One designated wall record comprising the four source-listed sections; no completeness claim is added. |
+| JX-PCH-7-005 | 南市街窑址 | Nanshijie Yaozhi | Nanshijie Kiln Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Five Dynasties period to Yuan dynasty | Jingdezhen City, Fuliang County, Shou’an Town, Nanshijie Village | null | reviewed | Nanshijie remains the village-derived proper name, not a translated street reference. |
+| JX-PCH-7-006 | 南坑窑址 | Nankeng Yaozhi | Nankeng Kiln Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Song and Yuan dynasties | Pingxiang City, Luxi County, Nankeng Town, Yaoxia Village | Includes Fenghuangpo, Anzipo, and Wazi’ao. | reviewed | The three components remain subordinate to one designated record. |
+| JX-PCH-7-007 | 兴源马家窑址 | Xingyuan Majia Yaozhi | Xingyuan Majia Kiln Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Song and Yuan dynasties | Yichun City, Tonggu County, Yongning Town, Xingyuan Village | null | reviewed | Both proper-name components remain in project pinyin. |
+| JX-PCH-7-008 | 落马桥窑址 | Luoma Qiao Yaozhi | Luoma Qiao Kiln Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Song dynasty to Republican period | Jingdezhen City, Zhushan District, within the Hongguang Ceramics Works compound on Zhonghua South Road | null | reviewed | Hongguang Ceramics Works is an evidence-informed project rendering, not an official government translation. |
+| JX-PCH-7-009 | 观音阁窑址 | Guanyin Ge Yaozhi | Guanyin Ge Kiln Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Song to Qing dynasties | Jingdezhen City, Zhushan District, Jingcheng Town, Changjiang Village | null | reviewed | Guanyin Ge remains in pinyin rather than receiving a semantic translation. |
+| JX-PCH-7-010 | 御窑厂西窑址 | Yuyaochang Xi Yaozhi | Yuyaochang West Kiln Site | Jiangxi Provincial Cultural Heritage Site | Archaeological Site | Ming and Qing dynasties | Jingdezhen City, Zhushan District | null | reviewed | Concise hybrid project name; Imperial Kiln is documented contextually, but no exact official English name is claimed. |
 
-## 9. Unresolved bilingual-review items
+## 9. Decision history
 
-The following decisions remain unresolved and must not be silently finalized:
+The documented project review superseded these alternatives:
 
-- pinyin segmentation for `Dagu Ling`, `Dayin Shan`, `Qiaomai Ling`, `Luoma Qiao`, and `Guanyin Ge`;
-- `Site Group` versus `Archaeological Site Complex`;
-- `Ancient City Wall`;
-- `Natural Village` as the rendering of 自然村庄;
-- `Hongguang Porcelain Factory`;
-- `Imperial Kiln Factory` versus `Yuyaochang`;
-- availability of authoritative locally established English names;
-- whether `componentLocationsZh` should later become a machine-data field.
+- `Site Group` was less explicit than `Archaeological Site Group`, while `Archaeological Site Complex` risked implying a formally bounded complex.
+- `Remains of the Yuanzhou City Wall` added an unsupported condition or completeness implication.
+- `Natural Village` risked suggesting a formal administrative rank, while describing `natural village settlement` as a rank would create the same problem.
+- `Hongguang Porcelain Factory` was superseded by the evidence-informed project rendering `Hongguang Ceramics Works`.
+- `Imperial Kiln Factory` and `West Kiln Site of the Imperial Kiln Factory` risked suggesting an exact official English designation, so the concise project name `Yuyaochang West Kiln Site` was selected.
 
-## 10. Integrity summary
+## 10. Remaining limitations
+
+- No authoritative exact English names were established for records 001–007 or 009; their English values remain approved project translations.
+- Record 008 uses an evidence-informed project rendering, not an official Jiangxi-government English name.
+- UNESCO contextual terminology for Jingdezhen does not establish record 010’s exact English designation.
+- Phase 14A document-number verification remains pending and is outside this phase.
+- Any future claim that an English name is authoritative or locally established requires a cited source.
+- The machine-data status of `componentLocationsZh` remains deferred to the later data-contract phase.
+
+## 11. Integrity summary
 
 - Exactly ten structured-location rows and ten translation-review rows are present.
 - Every record ID corresponds to one Phase 14A record ID, with no duplicates.
-- Every translation status remains `draft`.
+- Every translation status is `reviewed` through the documented project review and does not imply official-name status.
 - Unsupported hierarchy uses the literal value `null`.
 - Records 004 and 006 remain single designated records.
-- Phase 14A remains unchanged and authoritative.
+- Phase 14A remains byte-for-byte unchanged and authoritative.
+- `componentLocationsZh` remains deferred from machine-data approval.
 - No coordinate, geometry, GeoJSON, confidence, mapping, Firebase, runtime, or export field is introduced.
+- No application or public-display field or behavior is introduced.
