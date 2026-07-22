@@ -8,6 +8,7 @@ This page is the current Markdown map for Alex's Photo Board. It separates activ
 - [docs/project-status-checkpoint.md](./project-status-checkpoint.md): Source-based project status map and current practical phase summary. Status: active.
 - [docs/site-structure.md](./site-structure.md): Page, collection, and workflow structure map. Status: active.
 - [docs/phase-15a-provincial-protected-heritage-pilot-readiness.md](./phase-15a-provincial-protected-heritage-pilot-readiness.md): Phase 15A architecture, provenance, confidence, accessibility, testing, and rollback decisions for a future provincial protected heritage pilot. This is separate from the older Firebase-rules Phase 15A record. Status: active.
+- [docs/phase-14a-ten-record-official-chinese-source-table.md](./phase-14a-ten-record-official-chinese-source-table.md): Phase 14A source transcription and provenance record for the first ten official Chinese provincial protected heritage entries; no translation, coordinates, GeoJSON, or Map integration. Status: active.
 - [docs/phase-13c-source-verification-note.md](./phase-13c-source-verification-note.md): Phase 13C source verification note. Status: active.
 - [docs/phase-13c-ui-live-rules-readiness-note.md](./phase-13c-ui-live-rules-readiness-note.md): Phase 13C UI, live-test, and rules readiness note. Status: active.
 
