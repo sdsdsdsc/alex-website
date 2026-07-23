@@ -333,7 +333,8 @@ test("provincial preview renders a synthetic exact Point without changing commun
   );
   const afterEnable = await getRenderedMapState(page);
   expect(afterEnable).toEqual(beforeEnable);
-  await marker.click();
+  await marker.focus();
+  await marker.press("Enter");
   await expect(page.locator(".provincial-heritage-map-popup")).toContainText("Test Archaeological Site");
   await expect(page.locator(".provincial-heritage-map-popup [lang='zh']")).toHaveText("测试遗址");
   await expect(page.locator(".provincial-heritage-map-popup")).toContainText("not an official designation coordinate");
@@ -355,7 +356,8 @@ test("provincial preview labels a synthetic approximate Point", async ({ page })
   await setOverlayChecked(page, "Provincial protected heritage pilot", true);
   const marker = page.locator(".provincial-heritage-map-marker");
   await expect(marker).toHaveAttribute("aria-label", /approximate location$/);
-  await marker.click();
+  await marker.focus();
+  await marker.press("Enter");
   await expect(page.locator(".provincial-heritage-map-popup")).toContainText("Approximate location");
   await expect(page.locator(".provincial-heritage-map-popup")).toContainText("Medium");
 });
