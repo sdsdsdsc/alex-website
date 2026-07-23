@@ -82,22 +82,23 @@ No numeric coordinate candidate was created. The “500 metres east” statement
 | candidateId | null — no numeric candidate |
 | evidenceId | JX-PCH-7-001-NC-E01 |
 | sourceTier | Tier 3 — reputable provincial news report |
-| sourceTitle | 新余市一处遗址获评省级文物保护单位 |
-| sourceUrl | https://tt.jxnews.com.cn/news/2769144 |
-| sourceDate | 2025 |
-| accessDate | 2026-07-23 |
-| sourceOwner | Jiangxi News |
-| sourceSummary | Places the site about 500 metres east of Kengkou village, describes it as a Palaeolithic settlement on a small hilly slope, and reports its 1989 discovery by national, provincial, and municipal archaeological institutions. |
-| relationshipToCandidate | Supports a broad relative locality only; it does not define a point candidate. |
-| coordinateTextAsPublished | No numeric coordinate; relative text is “坑口村东面500米”. |
+| coordinateSourceTitle | 新余市一处遗址获评省级文物保护单位 |
+| coordinateSourceUrl | https://tt.jxnews.com.cn/news/2769144 |
+| coordinateSourceDate | 2025 |
+| coordinateAccessedDate | 2026-07-23 |
+| coordinateSourcePublisher | Jiangxi News |
+| coordinateSourceType | Reputable provincial news report |
+| evidenceQuoteOrSummary | Places the site about 500 metres east of Kengkou village, describes it as a Palaeolithic settlement on a small hilly slope, and reports its 1989 discovery by national, provincial, and municipal archaeological institutions. |
+| placeMatchEvidence | Supports a broad relative locality only; it does not define a point candidate. |
+| coordinateDerivationNote | No numeric coordinate; relative text is “坑口村东面500米”. |
 | sourceCRS | Not stated; no coordinate supplied. |
 | derivedWGS84 | null |
-| derivationOrTransformationMethod | None. No village-centre offset, geocoding, or map measurement was performed. |
+| coordinateTransformationMethod | None. No village-centre offset, geocoding, or map measurement was performed. |
 | precision | Relative distance from a village, without a defined origin point or azimuth. |
 | estimatedUncertaintyMeters | null — a unique point cannot be reconstructed from the text. |
 | accessibility | Public news webpage at access date. |
-| independence | Independent reporting with archaeological discovery context, not a direct copy of the Phase 14A row. |
-| limitations | No site boundary, source point, bearing definition, coordinate, CRS, or surveyed uncertainty. Same-name sites elsewhere create a material false-match risk. |
+| independentCrossCheck | Independent reporting with archaeological discovery context, not a direct copy of the Phase 14A row. |
+| evidenceLimitations | No site boundary, source point, bearing definition, coordinate, CRS, or surveyed uncertainty. Same-name sites elsewhere create a material false-match risk. |
 | rightsAndReuse | Citation and factual summary only; no media or map content is republished. |
 
 #### E. Candidate assessment
@@ -229,22 +230,23 @@ No numeric coordinate candidate was created. A natural-village centre, excavatio
 | candidateId | null — no numeric candidate |
 | evidenceId | JX-PCH-7-003-NC-E01 |
 | sourceTier | Tier 1 host / Tier 3 report — district-government republication of provincial reporting with archaeologist attribution |
-| sourceTitle | 江西日报民生版头条｜撩开荞麦岭遗址的神秘面纱 |
-| sourceUrl | https://www.chaisang.gov.cn/zwgk/zfxxgk/bmxxgk/wgxlj/zdgk_148401/ggwhly_1/202311/t20231128_6305366.html |
-| sourceDate | 2023-11-16 |
-| accessDate | 2026-07-23 |
-| sourceOwner | Chaisang District People’s Government; originating report by Jiangxi Daily |
-| sourceSummary | Identifies the site in Qiaomailing natural village, gives an approximate area of 50,000 square metres, and documents rescue excavation by the Jiangxi archaeological institute and local heritage authorities from 2013 to 2014. |
-| relationshipToCandidate | Strong site-identity and extent evidence, but no representative point is selected or published. |
-| coordinateTextAsPublished | No numeric coordinate published. |
+| coordinateSourceTitle | 江西日报民生版头条｜撩开荞麦岭遗址的神秘面纱 |
+| coordinateSourceUrl | https://www.chaisang.gov.cn/zwgk/zfxxgk/bmxxgk/wgxlj/zdgk_148401/ggwhly_1/202311/t20231128_6305366.html |
+| coordinateSourceDate | 2023-11-16 |
+| coordinateAccessedDate | 2026-07-23 |
+| coordinateSourcePublisher | Chaisang District People’s Government; originating report by Jiangxi Daily |
+| coordinateSourceType | District-government republication of provincial reporting with archaeologist attribution |
+| evidenceQuoteOrSummary | Identifies the site in Qiaomailing natural village, gives an approximate area of 50,000 square metres, and documents rescue excavation by the Jiangxi archaeological institute and local heritage authorities from 2013 to 2014. |
+| placeMatchEvidence | Strong site-identity and extent evidence, but no representative point is selected or published. |
+| coordinateDerivationNote | No numeric coordinate published. |
 | sourceCRS | Not stated; no coordinate supplied. |
 | derivedWGS84 | null |
-| derivationOrTransformationMethod | None. No centroid, village geocode, or image-based extraction was performed. |
+| coordinateTransformationMethod | None. No centroid, village geocode, or image-based extraction was performed. |
 | precision | Named natural village plus approximate 50,000-square-metre site extent. |
 | estimatedUncertaintyMeters | null — no source point exists and the extent cannot be reduced to a point without a policy decision. |
 | accessibility | Public district-government webpage at access date. |
-| independence | Government-hosted feature drawing on excavation history and named archaeological staff; distinct from the Phase 14A source. |
-| limitations | Reporting rather than a survey record; no coordinate, CRS, plan control point, site boundary, or approved public-location policy. |
+| independentCrossCheck | Government-hosted feature drawing on excavation history and named archaeological staff; distinct from the Phase 14A source. |
+| evidenceLimitations | Reporting rather than a survey record; no coordinate, CRS, plan control point, site boundary, or approved public-location policy. |
 | rightsAndReuse | Citation and factual summary only; article images and text are not republished as data. |
 
 #### E. Candidate assessment
@@ -416,22 +418,23 @@ No numeric coordinate candidate was created. A village centre, Shou’an Town ce
 | candidateId | null — no numeric candidate |
 | evidenceId | JX-PCH-7-005-NC-E01 |
 | sourceTier | Tier 2 — direct scholarly/institutional research |
-| sourceTitle | 文化遗存保护传承的当代价值与现实路径——基于景德镇青白瓷遗址群的调查 |
-| sourceUrl | https://yangtze.silkroadinfo.org.cn/2023/5/20230505164845754%E6%96%87%E5%8C%96%E9%81%97%E5%AD%98%E4%BF%9D%E6%8A%A4%E4%BC%A0%E6%89%BF%E7%9A%84%E5%BD%93%E4%BB%A3%E4%BB%B7%E5%80%BC%E4%B8%8E%E7%8E%B0%E5%AE%9E%E8%B7%AF%E5%BE%84%E2%80%94%E2%80%94%E5%9F%BA%E4%BA%8E%E6%99%AF%E5%BE%B7%E9%95%87%E9%9D%92%E7%99%BD%E7%93%B7%E9%81%97%E5%9D%80%E7%BE%A4%E7%9A%84%E8%B0%83%E6%9F%A5.pdf |
-| sourceDate | 2023 |
-| accessDate | 2026-07-23 |
-| sourceOwner | Yangtze River Civilization and Maritime Silk Road Research Center-hosted scholarly article |
-| sourceSummary | Identifies the site in Nanshijie natural village of Zhuxi administrative village, Shou’an Town; places it at the south end of the village; estimates about 60,000 square metres; and reports no formal excavation at publication. |
-| relationshipToCandidate | Supports broad-locality identification only; it does not support a selected point. |
-| coordinateTextAsPublished | No numeric coordinate published. |
+| coordinateSourceTitle | 文化遗存保护传承的当代价值与现实路径——基于景德镇青白瓷遗址群的调查 |
+| coordinateSourceUrl | https://yangtze.silkroadinfo.org.cn/2023/5/20230505164845754%E6%96%87%E5%8C%96%E9%81%97%E5%AD%98%E4%BF%9D%E6%8A%A4%E4%BC%A0%E6%89%BF%E7%9A%84%E5%BD%93%E4%BB%A3%E4%BB%B7%E5%80%BC%E4%B8%8E%E7%8E%B0%E5%AE%9E%E8%B7%AF%E5%BE%84%E2%80%94%E2%80%94%E5%9F%BA%E4%BA%8E%E6%99%AF%E5%BE%B7%E9%95%87%E9%9D%92%E7%99%BD%E7%93%B7%E9%81%97%E5%9D%80%E7%BE%A4%E7%9A%84%E8%B0%83%E6%9F%A5.pdf |
+| coordinateSourceDate | 2023 |
+| coordinateAccessedDate | 2026-07-23 |
+| coordinateSourcePublisher | Yangtze River Civilization and Maritime Silk Road Research Center-hosted scholarly article |
+| coordinateSourceType | Scholarly heritage survey article |
+| evidenceQuoteOrSummary | Identifies the site in Nanshijie natural village of Zhuxi administrative village, Shou’an Town; places it at the south end of the village; estimates about 60,000 square metres; and reports no formal excavation at publication. |
+| placeMatchEvidence | Supports broad-locality identification only; it does not support a selected point. |
+| coordinateDerivationNote | No numeric coordinate published. |
 | sourceCRS | Not stated; no coordinate supplied. |
 | derivedWGS84 | null |
-| derivationOrTransformationMethod | None. No coordinate was inferred or transformed. |
+| coordinateTransformationMethod | None. No coordinate was inferred or transformed. |
 | precision | Site extent and relative village position only. |
 | estimatedUncertaintyMeters | null — the source does not define a point from which uncertainty can be measured. |
 | accessibility | Public direct PDF at access date. |
-| independence | Independent scholarly investigation; not merely a copy of the Phase 14A source-table row. |
-| limitations | The site is extensive, the relative phrase “south end” is not a point, and no source CRS or surveyed coordinate is supplied. |
+| independentCrossCheck | Independent scholarly investigation; not merely a copy of the Phase 14A source-table row. |
+| evidenceLimitations | The site is extensive, the relative phrase “south end” is not a point, and no source CRS or surveyed coordinate is supplied. |
 | rightsAndReuse | Used as documentary evidence with citation only; no text, map, or imagery is republished as project data. |
 
 #### E. Candidate assessment
@@ -583,22 +586,23 @@ No numeric coordinate candidate was created. Xingyuan Village, Yongning Town, si
 | candidateId | null — no numeric candidate |
 | evidenceId | JX-PCH-7-007-NC-E01 |
 | sourceTier | Tier 3 — contemporaneous report reproducing the municipal protection list |
-| sourceTitle | 宜春市新增156处市级文物保护单位～快来看看有你家乡的吗 |
-| sourceUrl | https://www.sohu.com/a/280394306_476983 |
-| sourceDate | 2018 |
-| accessDate | 2026-07-23 |
-| sourceOwner | Sohu-hosted local report reproducing the Yichun municipal list |
-| sourceSummary | Lists 兴源马家窑址 as a Song-to-Yuan kiln site in Yongning Town and corroborates its municipal designation before the provincial listing. |
-| relationshipToCandidate | Identity and broad administrative-location corroboration only; no coordinate candidate is supplied. |
-| coordinateTextAsPublished | No numeric coordinate published. |
+| coordinateSourceTitle | 宜春市新增156处市级文物保护单位～快来看看有你家乡的吗 |
+| coordinateSourceUrl | https://www.sohu.com/a/280394306_476983 |
+| coordinateSourceDate | 2018 |
+| coordinateAccessedDate | 2026-07-23 |
+| coordinateSourcePublisher | Sohu-hosted local report reproducing the Yichun municipal list |
+| coordinateSourceType | Local report reproducing a municipal protection list |
+| evidenceQuoteOrSummary | Lists 兴源马家窑址 as a Song-to-Yuan kiln site in Yongning Town and corroborates its municipal designation before the provincial listing. |
+| placeMatchEvidence | Identity and broad administrative-location corroboration only; no coordinate candidate is supplied. |
+| coordinateDerivationNote | No numeric coordinate published. |
 | sourceCRS | Not stated; no coordinate supplied. |
 | derivedWGS84 | null |
-| derivationOrTransformationMethod | None. |
+| coordinateTransformationMethod | None. |
 | precision | Town-level in this source; the later official source table provides village level. |
 | estimatedUncertaintyMeters | null |
 | accessibility | Public article at access date. |
-| independence | Earlier designation report, but not a direct archaeological field source. |
-| limitations | Reproduced list rather than primary survey evidence; no exact locality, coordinate, CRS, extent, or point-selection rationale. |
+| independentCrossCheck | Earlier designation report, but not a direct archaeological field source. |
+| evidenceLimitations | Reproduced list rather than primary survey evidence; no exact locality, coordinate, CRS, extent, or point-selection rationale. |
 | rightsAndReuse | Citation and factual summary only. |
 
 #### E. Candidate assessment
@@ -659,22 +663,23 @@ No numeric coordinate candidate was created. A street-address geocode, factory-c
 | candidateId | null — no numeric candidate |
 | evidenceId | JX-PCH-7-008-NC-E01 |
 | sourceTier | Tier 2 — direct institutional excavation-report record |
-| sourceTitle | 江西景德镇落马桥红光瓷厂窑址明清遗存发掘简报 |
-| sourceUrl | https://ir.pku.edu.cn/handle/20.500.11897/599054 |
-| sourceDate | 2020-11-25 |
-| accessDate | 2026-07-23 |
-| sourceOwner | Peking University institutional repository; report by Jingdezhen Ceramic Archaeological Institute, Peking University, and Jiangxi Provincial Institute of Cultural Relics and Archaeology |
-| sourceSummary | Records rescue excavations at the Luomaqiao Hongguang Ceramics Works kiln site from 2012 to 2017 and describes continuous deposits from the Northern Song to late Qing. |
-| relationshipToCandidate | Strong identity and compound-level location evidence; no numeric point candidate is supplied. |
-| coordinateTextAsPublished | No numeric coordinate published in the accessible record. |
+| coordinateSourceTitle | 江西景德镇落马桥红光瓷厂窑址明清遗存发掘简报 |
+| coordinateSourceUrl | https://ir.pku.edu.cn/handle/20.500.11897/599054 |
+| coordinateSourceDate | 2020-11-25 |
+| coordinateAccessedDate | 2026-07-23 |
+| coordinateSourcePublisher | Peking University institutional repository; report by Jingdezhen Ceramic Archaeological Institute, Peking University, and Jiangxi Provincial Institute of Cultural Relics and Archaeology |
+| coordinateSourceType | Direct excavation-report institutional record |
+| evidenceQuoteOrSummary | Records rescue excavations at the Luomaqiao Hongguang Ceramics Works kiln site from 2012 to 2017 and describes continuous deposits from the Northern Song to late Qing. |
+| placeMatchEvidence | Strong identity and compound-level location evidence; no numeric point candidate is supplied. |
+| coordinateDerivationNote | No numeric coordinate published in the accessible record. |
 | sourceCRS | Not stated; no coordinate supplied. |
 | derivedWGS84 | null |
-| derivationOrTransformationMethod | None. No address geocoding or map extraction was performed. |
+| coordinateTransformationMethod | None. No address geocoding or map extraction was performed. |
 | precision | Named industrial compound/site only. |
 | estimatedUncertaintyMeters | null — there is no published point and the archaeological remains extend within a compound. |
 | accessibility | Public institutional metadata and abstract at access date. |
-| independence | Direct excavation publication record, independent of the Phase 14A county republication. |
-| limitations | The accessible record does not provide a coordinate, CRS, surveyed plan control point, or reusable geometry. |
+| independentCrossCheck | Direct excavation publication record, independent of the Phase 14A county republication. |
+| evidenceLimitations | The accessible record does not provide a coordinate, CRS, surveyed plan control point, or reusable geometry. |
 | rightsAndReuse | Bibliographic facts and a short evidence summary are cited; the report and figures are not copied into project data. |
 
 ##### JX-PCH-7-008-NC-E02
@@ -684,22 +689,23 @@ No numeric coordinate candidate was created. A street-address geocode, factory-c
 | candidateId | null — no numeric candidate |
 | evidenceId | JX-PCH-7-008-NC-E02 |
 | sourceTier | Tier 1 — official municipal excavation summary |
-| sourceTitle | 2024年景德镇市文物考古研究所业务工作综述 |
-| sourceUrl | https://jdz.gov.cn/zwzx/jrcd/t1012741.shtml |
-| sourceDate | 2025-02-20 |
-| accessDate | 2026-07-23 |
-| sourceOwner | Jingdezhen Municipal People’s Government |
-| sourceSummary | Lists Luomaqiao among the nationally approved archaeological excavation projects undertaken in 2024, corroborating the official identity and continuing archaeological treatment of the site. |
-| relationshipToCandidate | Corroborates the protected-place identity but does not supply or validate a numeric coordinate. |
-| coordinateTextAsPublished | No numeric coordinate published. |
+| coordinateSourceTitle | 2024年景德镇市文物考古研究所业务工作综述 |
+| coordinateSourceUrl | https://jdz.gov.cn/zwzx/jrcd/t1012741.shtml |
+| coordinateSourceDate | 2025-02-20 |
+| coordinateAccessedDate | 2026-07-23 |
+| coordinateSourcePublisher | Jingdezhen Municipal People’s Government |
+| coordinateSourceType | Official municipal archaeological-work summary |
+| evidenceQuoteOrSummary | Lists Luomaqiao among the nationally approved archaeological excavation projects undertaken in 2024, corroborating the official identity and continuing archaeological treatment of the site. |
+| placeMatchEvidence | Corroborates the protected-place identity but does not supply or validate a numeric coordinate. |
+| coordinateDerivationNote | No numeric coordinate published. |
 | sourceCRS | Not stated; no coordinate supplied. |
 | derivedWGS84 | null |
-| derivationOrTransformationMethod | None. |
+| coordinateTransformationMethod | None. |
 | precision | Named site only. |
 | estimatedUncertaintyMeters | null |
 | accessibility | Public government webpage at access date. |
-| independence | Official current-work summary distinct from the excavation report and Phase 14A source. |
-| limitations | No coordinate, plan, CRS, precision statement, or site boundary is supplied. |
+| independentCrossCheck | Official current-work summary distinct from the excavation report and Phase 14A source. |
+| evidenceLimitations | No coordinate, plan, CRS, precision statement, or site boundary is supplied. |
 | rightsAndReuse | Citation and factual summary only. |
 
 #### E. Candidate assessment
@@ -760,22 +766,23 @@ No numeric coordinate candidate was created. The Guanyinge locality, Changjiang 
 | candidateId | null — no numeric candidate |
 | evidenceId | JX-PCH-7-009-NC-E01 |
 | sourceTier | Tier 2 — direct archaeological excavation report |
-| sourceTitle | 江西景德镇观音阁窑址2022年发掘简报 |
-| sourceUrl | https://www.dpm.org.cn/Uploads/File/2024/11/26/u6745900f41cb4.pdf |
-| sourceDate | 2024 |
-| accessDate | 2026-07-23 |
-| sourceOwner | Palace Museum-hosted report by the National Centre for Archaeology, Jiangxi Provincial Institute of Cultural Relics and Archaeology, and Jingdezhen Ceramic Archaeological Institute |
-| sourceSummary | Describes the site extent in Changjiang Village: north of Qingtang Road toward Fuliang, centred on Guanyinge and Dongwangmiao, with the Changjiang east bank to the west and named localities and slopes to the south and east. |
-| relationshipToCandidate | Directly supports site identity and broad extent, but not a selected representative point. |
-| coordinateTextAsPublished | No numeric coordinate identified in the report text used for this audit. |
+| coordinateSourceTitle | 江西景德镇观音阁窑址2022年发掘简报 |
+| coordinateSourceUrl | https://www.dpm.org.cn/Uploads/File/2024/11/26/u6745900f41cb4.pdf |
+| coordinateSourceDate | 2024 |
+| coordinateAccessedDate | 2026-07-23 |
+| coordinateSourcePublisher | Palace Museum-hosted report by the National Centre for Archaeology, Jiangxi Provincial Institute of Cultural Relics and Archaeology, and Jingdezhen Ceramic Archaeological Institute |
+| coordinateSourceType | Direct archaeological excavation report |
+| evidenceQuoteOrSummary | Describes the site extent in Changjiang Village: north of Qingtang Road toward Fuliang, centred on Guanyinge and Dongwangmiao, with the Changjiang east bank to the west and named localities and slopes to the south and east. |
+| placeMatchEvidence | Directly supports site identity and broad extent, but not a selected representative point. |
+| coordinateDerivationNote | No numeric coordinate identified in the report text used for this audit. |
 | sourceCRS | Not stated; no coordinate supplied. |
 | derivedWGS84 | null |
-| derivationOrTransformationMethod | None. No map pixel extraction, geocoding, or centroid calculation was performed. |
+| coordinateTransformationMethod | None. No map pixel extraction, geocoding, or centroid calculation was performed. |
 | precision | Broad archaeological distribution area described by local boundaries. |
 | estimatedUncertaintyMeters | null — no source point exists and the described area is spatially extensive. |
 | accessibility | Public direct PDF at access date. |
-| independence | Direct multi-institution excavation report, independent of the Phase 14A source-table republication. |
-| limitations | The narrative extent cannot be converted to a point without inference; no CRS, surveyed point, or reusable geometry is supplied. |
+| independentCrossCheck | Direct multi-institution excavation report, independent of the Phase 14A source-table republication. |
+| evidenceLimitations | The narrative extent cannot be converted to a point without inference; no CRS, surveyed point, or reusable geometry is supplied. |
 | rightsAndReuse | Citation and factual summary only; report text and figures are not republished as data. |
 
 ##### JX-PCH-7-009-NC-E02
@@ -785,22 +792,23 @@ No numeric coordinate candidate was created. The Guanyinge locality, Changjiang 
 | candidateId | null — no numeric candidate |
 | evidenceId | JX-PCH-7-009-NC-E02 |
 | sourceTier | Tier 1 — official municipal excavation summary |
-| sourceTitle | 2024年景德镇市文物考古研究所业务工作综述 |
-| sourceUrl | https://jdz.gov.cn/zwzx/jrcd/t1012741.shtml |
-| sourceDate | 2025-02-20 |
-| accessDate | 2026-07-23 |
-| sourceOwner | Jingdezhen Municipal People’s Government |
-| sourceSummary | Lists Guanyinge among nationally approved archaeological excavation projects conducted in 2024. |
-| relationshipToCandidate | Independently corroborates official site identity and active research; supplies no coordinate candidate. |
-| coordinateTextAsPublished | No numeric coordinate published. |
+| coordinateSourceTitle | 2024年景德镇市文物考古研究所业务工作综述 |
+| coordinateSourceUrl | https://jdz.gov.cn/zwzx/jrcd/t1012741.shtml |
+| coordinateSourceDate | 2025-02-20 |
+| coordinateAccessedDate | 2026-07-23 |
+| coordinateSourcePublisher | Jingdezhen Municipal People’s Government |
+| coordinateSourceType | Official municipal archaeological-work summary |
+| evidenceQuoteOrSummary | Lists Guanyinge among nationally approved archaeological excavation projects conducted in 2024. |
+| placeMatchEvidence | Independently corroborates official site identity and active research; supplies no coordinate candidate. |
+| coordinateDerivationNote | No numeric coordinate published. |
 | sourceCRS | Not stated; no coordinate supplied. |
 | derivedWGS84 | null |
-| derivationOrTransformationMethod | None. |
+| coordinateTransformationMethod | None. |
 | precision | Named site only. |
 | estimatedUncertaintyMeters | null |
 | accessibility | Public government webpage at access date. |
-| independence | Official current-work summary distinct from the direct report and Phase 14A source. |
-| limitations | No numeric location, CRS, point-selection rationale, or boundary data. |
+| independentCrossCheck | Official current-work summary distinct from the direct report and Phase 14A source. |
+| evidenceLimitations | No numeric location, CRS, point-selection rationale, or boundary data. |
 | rightsAndReuse | Citation and factual summary only. |
 
 #### E. Candidate assessment
@@ -854,14 +862,15 @@ Research performed 2026-07-23 using the exact official name, `御窑厂西窑址
 
 | Field | Value |
 | --- | --- |
+| candidateId | JX-PCH-7-010-C01 |
 | candidateLatitude | 29.297778 |
 | candidateLongitude | 117.200000 |
 | candidateSourceCRS | Unknown geographic datum; source publishes latitude/longitude in degrees, minutes, and seconds but does not state WGS84 |
 | candidatePrecision | Published to one arc-second; this precision applies to the broader serial-property coordinate, not this record |
 | candidateMethod | official-map-identification |
-| status | rejected |
-| uncertainty | Not estimated because the coordinate is not attributable to the record |
-| rejectionReason | The UNESCO tentative-list coordinate represents the broader Imperial Kiln Sites of Jingdezhen serial property and does not identify 御窑厂西窑址. The source datum is also unstated. |
+| candidateStatus | rejected |
+| candidateUncertaintyReason | Not estimated because the coordinate is not attributable to the record |
+| candidateRejectionReason | The UNESCO tentative-list coordinate represents the broader Imperial Kiln Sites of Jingdezhen serial property and does not identify 御窑厂西窑址. The source datum is also unstated. |
 
 #### D. Evidence list
 
@@ -872,22 +881,23 @@ Research performed 2026-07-23 using the exact official name, `御窑厂西窑址
 | candidateId | JX-PCH-7-010-C01 |
 | evidenceId | JX-PCH-7-010-C01-E01 |
 | sourceTier | Tier 1 — official intergovernmental tentative-list record submitted by China |
-| sourceTitle | Imperial Kiln Sites of Jingdezhen |
-| sourceUrl | https://whc.unesco.org/en/tentativelists/6265/ |
-| sourceDate | 2017-09-05 |
-| accessDate | 2026-07-23 |
-| sourceOwner | UNESCO World Heritage Centre; tentative-list submission by China |
-| sourceSummary | Publishes a central coordinate of N29 17 52 E117 12 0 for the broader Imperial Kiln Sites of Jingdezhen tentative serial property. |
-| relationshipToCandidate | Direct source for the numeric value, but the value is not record-specific and therefore cannot support approval for JX-PCH-7-010. |
-| coordinateTextAsPublished | N29 17 52 E117 12 0 |
+| coordinateSourceTitle | Imperial Kiln Sites of Jingdezhen |
+| coordinateSourceUrl | https://whc.unesco.org/en/tentativelists/6265/ |
+| coordinateSourceDate | 2017-09-05 |
+| coordinateAccessedDate | 2026-07-23 |
+| coordinateSourcePublisher | UNESCO World Heritage Centre; tentative-list submission by China |
+| coordinateSourceType | Official intergovernmental tentative-list record |
+| evidenceQuoteOrSummary | Publishes a central coordinate of N29 17 52 E117 12 0 for the broader Imperial Kiln Sites of Jingdezhen tentative serial property. |
+| placeMatchEvidence | Direct source for the numeric value, but the value is not record-specific and therefore cannot support approval for JX-PCH-7-010. |
+| coordinateDerivationNote | N29 17 52 E117 12 0 |
 | sourceCRS | Not stated on the page. |
 | derivedWGS84 | 29.297778, 117.200000 for comparison only; not asserted to be WGS84 and not approved. |
-| derivationOrTransformationMethod | Arithmetic DMS-to-decimal conversion only: 29 + 17/60 + 52/3600; 117 + 12/60. No datum transformation. |
+| coordinateTransformationMethod | Arithmetic DMS-to-decimal conversion only: 29 + 17/60 + 52/3600; 117 + 12/60. No datum transformation. |
 | precision | One arc-second as published, but relationship precision is only the broader serial property. |
 | estimatedUncertaintyMeters | null — the candidate is rejected before site-specific uncertainty estimation. |
 | accessibility | Public UNESCO webpage at access date. |
-| independence | Independent official international registry record. |
-| limitations | Broader serial property, unstated datum, no identification of the west kiln component, and no record-specific point-selection explanation. |
+| independentCrossCheck | Independent official international registry record. |
+| evidenceLimitations | Broader serial property, unstated datum, no identification of the west kiln component, and no record-specific point-selection explanation. |
 | rightsAndReuse | Citation and derived arithmetic comparison only; no UNESCO map or geometry is copied. |
 
 ##### JX-PCH-7-010-NC-E01
@@ -897,22 +907,23 @@ Research performed 2026-07-23 using the exact official name, `御窑厂西窑址
 | candidateId | null — identity corroboration only |
 | evidenceId | JX-PCH-7-010-NC-E01 |
 | sourceTier | Tier 1 — official local-authority account publication |
-| sourceTitle | 景德镇手工瓷业遗存申遗进入国家预备名单 |
-| sourceUrl | https://m.thepaper.cn/newsDetail_forward_30857718 |
-| sourceDate | 2026 |
-| accessDate | 2026-07-23 |
-| sourceOwner | Jingdezhen Women’s Federation official account, published through The Paper |
-| sourceSummary | Enumerates 御窑厂窑址、落马桥窑址、观音阁窑址、御窑厂西窑址 as distinct town-area components of the proposed property. |
-| relationshipToCandidate | Confirms that the west kiln site is a distinct record and supports rejecting the broader Imperial Kiln coordinate as a substitute. |
-| coordinateTextAsPublished | No record-specific numeric coordinate published. |
+| coordinateSourceTitle | 景德镇手工瓷业遗存申遗进入国家预备名单 |
+| coordinateSourceUrl | https://m.thepaper.cn/newsDetail_forward_30857718 |
+| coordinateSourceDate | 2026 |
+| coordinateAccessedDate | 2026-07-23 |
+| coordinateSourcePublisher | Jingdezhen Women’s Federation official account, published through The Paper |
+| coordinateSourceType | Official local-authority account publication |
+| evidenceQuoteOrSummary | Enumerates 御窑厂窑址、落马桥窑址、观音阁窑址、御窑厂西窑址 as distinct town-area components of the proposed property. |
+| placeMatchEvidence | Confirms that the west kiln site is a distinct record and supports rejecting the broader Imperial Kiln coordinate as a substitute. |
+| coordinateDerivationNote | No record-specific numeric coordinate published. |
 | sourceCRS | Not stated; no coordinate supplied. |
 | derivedWGS84 | null |
-| derivationOrTransformationMethod | None. |
+| coordinateTransformationMethod | None. |
 | precision | Distinct named component only. |
 | estimatedUncertaintyMeters | null |
 | accessibility | Public mobile article at access date. |
-| independence | Official local-authority communication distinct from the UNESCO registry and Phase 14A source. |
-| limitations | No coordinate, plan, boundary, CRS, or precise placement for the west kiln site. |
+| independentCrossCheck | Official local-authority communication distinct from the UNESCO registry and Phase 14A source. |
+| evidenceLimitations | No coordinate, plan, boundary, CRS, or precise placement for the west kiln site. |
 | rightsAndReuse | Citation and factual summary only. |
 
 #### E. Candidate assessment
@@ -945,15 +956,31 @@ The official UNESCO coordinate has excellent source authority but the wrong plac
 
 ## 6. Cross-record review
 
-Pending completion of all research batches. The final review will check source independence, CRS clarity, transformation documentation, precision, uncertainty, sensitivity, publication policy, rejected candidates, and accidental locality-centre substitution.
+The project research pass is complete; human second review and project-owner acceptance remain pending.
+
+| Review dimension | Cross-record result |
+| --- | --- |
+| source independence | Direct or independently contextual evidence was found for 001, 003, 004 (in part), 005, 006, 008, 009, and 010. Record 002 remains dependent on the official designation location, and 007 has only an earlier reproduced municipal list in addition to the designation. Repeated or copied protected-unit lists were not counted as independent coordinate evidence. |
+| exact identity and false matches | Same-name sites in other provinces, Majiayao-culture results, general Imperial Kiln results, and the Fujian Nankeng kiln were excluded. Record 010’s broader Imperial Kiln coordinate is preserved as rejected rather than silently reused. |
+| CRS consistency | No candidate was approved. The only numeric candidate has an unstated geographic datum and is rejected. No GCJ-02 or BD-09 value appears, and no source coordinate is silently labelled WGS84. |
+| transformations | No datum transformation was performed. The rejected UNESCO DMS value was converted to decimal by transparent arithmetic only; it remains explicitly not asserted as WGS84. |
+| precision and uncertainty | No false precision was introduced into an approved field. All Low/None outcomes use `null` uncertainty because no representative point exists. The rejected candidate preserves source precision but has no site-specific uncertainty estimate. |
+| sensitivity | No High or Medium candidate was selected, so no exact sensitive coordinate was committed and no sensitivity determination was invented. Every record remains `not-assessed`. |
+| publication policy | Every record remains `withheld`, with `null` approved coordinates and `false` renderability. No publication permission is inferred. |
+| rejected candidates | One numeric candidate is retained and rejected. Additional locality centres, administrative centres, road/park/factory/tourism POIs, unsupported web-map pins, wrong-place matches, components, averages, and centroids are documented as rejected discovery results without fabricated candidate coordinates. |
+| locality-centre substitution | No town, village, district, reservoir, road, factory, park, museum, tourism, or government-office centre was accepted. |
+| multi-component parents | Records 004 and 006 remain one parent designation each, with no selected component, centroid, average, child record, or geometry. |
+| human gates | There is no High or Medium outcome. The five provisional Low outcomes still require explicit project acceptance; all five None/unresolved outcomes likewise require project acceptance before merge. Second reviewer and owner approval metadata remain pending. |
 
 ## 7. Integrity status
 
-- Ten sequential records are present in the provisional summary.
-- Ten record sections are present in ID order.
+- Exactly ten sequential summary rows and ten record sections are present in ID order.
 - Source identity values are copied from Phase 14A and Phase 14B.
-- All approved coordinates are currently `null`.
-- Every candidate remains non-renderable.
+- One numeric candidate is documented and rejected; there are no active or selected numeric candidates.
+- Sixteen evidence items reference either that rejected candidate or an explicit record-level no-candidate outcome.
+- Provisional outcomes are five Low and five None; no High or Medium outcome is claimed.
+- All approved coordinates and coordinate reference systems are literal `null`.
+- Every record remains non-renderable and uses publication policy `withheld`.
 - Records 004 and 006 remain non-renderable with no parent Point.
+- Second review, Low/None outcome acceptance, and project-owner approval remain pending.
 - No JSON, CSV, GeoJSON, geometry, runtime data, Firebase change, public-page change, export change, or Map behavior is introduced.
-- Human second review and project-owner approval remain pending.
