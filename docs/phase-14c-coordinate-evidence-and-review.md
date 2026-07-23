@@ -39,13 +39,13 @@ This table is provisional while research and human review remain in progress.
 
 | recordId | officialNameZh | projectNameEn | researchStatus | coordinateConfidence | coordinateMethod | approvedLatitude | approvedLongitude | coordinateReferenceSystem | estimatedUncertaintyMeters | renderable | sensitivityAssessment | publicationLocationPolicy | selectedCandidateId | finalDecisionSummary |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| JX-PCH-7-001 | 打鼓岭遗址 | Dagu Ling Site | researching | pending | unresolved | null | null | null | null | false | not-assessed | withheld | null | Research pending. |
+| JX-PCH-7-001 | 打鼓岭遗址 | Dagu Ling Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Provincial reporting places the hill-slope site about 500 metres east of Kengkou village, but no defensible point or source CRS is published. Project acceptance remains pending. |
 | JX-PCH-7-002 | 大印山遗址群 | Dayin Shan Archaeological Site Group | researching | pending | unresolved | null | null | null | null | false | not-assessed | withheld | null | Research pending. |
-| JX-PCH-7-003 | 荞麦岭遗址 | Qiaomai Ling Site | researching | pending | unresolved | null | null | null | null | false | not-assessed | withheld | null | Research pending. |
+| JX-PCH-7-003 | 荞麦岭遗址 | Qiaomai Ling Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Government-hosted reporting identifies an approximately 50,000-square-metre site within Qiaomailing natural village, but no defensible point or source CRS is published. Project acceptance remains pending. |
 | JX-PCH-7-004 | 袁州古城墙 | Yuanzhou Ancient City Wall | researching | pending | unresolved | null | null | null | null | false | not-assessed | withheld | null | Multi-component parent; research pending and no Point is permitted. |
 | JX-PCH-7-005 | 南市街窑址 | Nanshijie Kiln Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Direct scholarly evidence identifies the site at the south end of Nanshijie natural village but publishes no defensible point or source CRS. Project acceptance remains pending. |
 | JX-PCH-7-006 | 南坑窑址 | Nankeng Kiln Site | researching | pending | unresolved | null | null | null | null | false | not-assessed | withheld | null | Multi-component parent; research pending and no Point is permitted. |
-| JX-PCH-7-007 | 兴源马家窑址 | Xingyuan Majia Kiln Site | researching | pending | unresolved | null | null | null | null | false | not-assessed | withheld | null | Research pending. |
+| JX-PCH-7-007 | 兴源马家窑址 | Xingyuan Majia Kiln Site | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | Searches corroborated the official village-level location and earlier municipal designation but found no direct site description, numeric coordinate, or source CRS. |
 | JX-PCH-7-008 | 落马桥窑址 | Luoma Qiao Kiln Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Direct excavation evidence identifies the Hongguang Ceramics Works compound and its address but publishes no defensible site point or source CRS. Project acceptance remains pending. |
 | JX-PCH-7-009 | 观音阁窑址 | Guanyin Ge Kiln Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Direct excavation evidence describes a broad site extent in Changjiang Village but publishes no defensible site point or source CRS. Project acceptance remains pending. |
 | JX-PCH-7-010 | 御窑厂西窑址 | Yuyaochang West Kiln Site | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | The exact protected-place identity is corroborated, but the only numeric official coordinate found belongs to the broader Imperial Kiln serial property and is rejected for this record. |
@@ -67,31 +67,54 @@ This table is provisional while research and human review remain in progress.
 
 #### B. Search record
 
-Pending Batch 2 research.
+Research performed 2026-07-23 using `打鼓岭遗址`, `坑口村民小组`, `竹山村`, `罗坊镇`, `旧石器`, `坐标`, `经纬度`, and archaeology combinations. Results were checked carefully against same-name sites in Guangdong and Hong Kong. The best record-specific result places this Jiangxi site about 500 metres east of Kengkou village on a small hilly slope and describes its 1989 archaeological discovery. It does not publish a numeric coordinate or CRS.
 
 #### C. Candidate list
 
-No candidate recorded yet.
+No numeric coordinate candidate was created. The “500 metres east” statement improves locality discrimination but does not provide a unique bearing origin, surveyed point, site extent, or coordinate reference system.
 
 #### D. Evidence list
 
-No record-specific evidence recorded yet.
+##### JX-PCH-7-001-NC-E01
+
+| Field | Value |
+| --- | --- |
+| candidateId | null — no numeric candidate |
+| evidenceId | JX-PCH-7-001-NC-E01 |
+| sourceTier | Tier 3 — reputable provincial news report |
+| sourceTitle | 新余市一处遗址获评省级文物保护单位 |
+| sourceUrl | https://tt.jxnews.com.cn/news/2769144 |
+| sourceDate | 2025 |
+| accessDate | 2026-07-23 |
+| sourceOwner | Jiangxi News |
+| sourceSummary | Places the site about 500 metres east of Kengkou village, describes it as a Palaeolithic settlement on a small hilly slope, and reports its 1989 discovery by national, provincial, and municipal archaeological institutions. |
+| relationshipToCandidate | Supports a broad relative locality only; it does not define a point candidate. |
+| coordinateTextAsPublished | No numeric coordinate; relative text is “坑口村东面500米”. |
+| sourceCRS | Not stated; no coordinate supplied. |
+| derivedWGS84 | null |
+| derivationOrTransformationMethod | None. No village-centre offset, geocoding, or map measurement was performed. |
+| precision | Relative distance from a village, without a defined origin point or azimuth. |
+| estimatedUncertaintyMeters | null — a unique point cannot be reconstructed from the text. |
+| accessibility | Public news webpage at access date. |
+| independence | Independent reporting with archaeological discovery context, not a direct copy of the Phase 14A row. |
+| limitations | No site boundary, source point, bearing definition, coordinate, CRS, or surveyed uncertainty. Same-name sites elsewhere create a material false-match risk. |
+| rightsAndReuse | Citation and factual summary only; no media or map content is republished. |
 
 #### E. Candidate assessment
 
-Pending.
+The report meaningfully narrows the record beyond the village-level official location, but deriving a point 500 metres east of an arbitrarily chosen village centre would be prohibited freehand geocoding. The provisional outcome is Low confidence, `broad-locality-only`, null coordinates, and non-renderable. Low-confidence project acceptance remains pending.
 
 #### F. Rejected candidates
 
-None recorded yet.
+Search results for same-name sites in Dongguan, Guangxi, and Hong Kong were rejected as false matches. General village and hill POIs were rejected at discovery stage because they lack record-specific archaeological provenance, CRS, and uncertainty.
 
 #### G. Final decision
 
 | Field | Value |
 | --- | --- |
-| researchStatus | researching |
-| coordinateConfidence | pending |
-| coordinateMethod | unresolved |
+| researchStatus | needs-cross-check |
+| coordinateConfidence | Low |
+| coordinateMethod | broad-locality-only |
 | approvedLatitude | null |
 | approvedLongitude | null |
 | coordinateReferenceSystem | null |
@@ -102,8 +125,8 @@ None recorded yet.
 | selectedCandidateId | null |
 | reviewer | pending |
 | reviewedDate | pending |
-| finalDecisionSummary | Research pending. |
-| remainingLimitations | Record-specific searching has not yet been completed. |
+| finalDecisionSummary | Provisional Low/no-point decision. The site is reported about 500 metres east of Kengkou village, but that relative description cannot produce a defensible Point. Project acceptance is pending. |
+| remainingLimitations | A direct archaeological coordinate, surveyed plan, or authoritative georeferenced site boundary is needed; the village centre must not be used as an implicit origin. |
 
 ### JX-PCH-7-002 — 大印山遗址群
 
@@ -173,31 +196,54 @@ None recorded yet.
 
 #### B. Search record
 
-Pending Batch 2 research.
+Research performed 2026-07-23 using `荞麦岭遗址`, `富民村`, `荞麦岭自然村`, `马回岭镇`, `发掘`, `坐标`, and `经纬度`. Exact-name checking excluded an unrelated same-name site in Hebei for which coordinates are published. A government-hosted Jiangxi Daily report identifies the Jiangxi site as an approximately 50,000-square-metre archaeological area within Qiaomailing natural village and documents excavation from 2013 to 2014. No numeric site coordinate or CRS is supplied.
 
 #### C. Candidate list
 
-No candidate recorded yet.
+No numeric coordinate candidate was created. A natural-village centre, excavation-photo location, highway alignment, or unrelated Hebei same-name coordinate is not a valid substitute.
 
 #### D. Evidence list
 
-No record-specific evidence recorded yet.
+##### JX-PCH-7-003-NC-E01
+
+| Field | Value |
+| --- | --- |
+| candidateId | null — no numeric candidate |
+| evidenceId | JX-PCH-7-003-NC-E01 |
+| sourceTier | Tier 1 host / Tier 3 report — district-government republication of provincial reporting with archaeologist attribution |
+| sourceTitle | 江西日报民生版头条｜撩开荞麦岭遗址的神秘面纱 |
+| sourceUrl | https://www.chaisang.gov.cn/zwgk/zfxxgk/bmxxgk/wgxlj/zdgk_148401/ggwhly_1/202311/t20231128_6305366.html |
+| sourceDate | 2023-11-16 |
+| accessDate | 2026-07-23 |
+| sourceOwner | Chaisang District People’s Government; originating report by Jiangxi Daily |
+| sourceSummary | Identifies the site in Qiaomailing natural village, gives an approximate area of 50,000 square metres, and documents rescue excavation by the Jiangxi archaeological institute and local heritage authorities from 2013 to 2014. |
+| relationshipToCandidate | Strong site-identity and extent evidence, but no representative point is selected or published. |
+| coordinateTextAsPublished | No numeric coordinate published. |
+| sourceCRS | Not stated; no coordinate supplied. |
+| derivedWGS84 | null |
+| derivationOrTransformationMethod | None. No centroid, village geocode, or image-based extraction was performed. |
+| precision | Named natural village plus approximate 50,000-square-metre site extent. |
+| estimatedUncertaintyMeters | null — no source point exists and the extent cannot be reduced to a point without a policy decision. |
+| accessibility | Public district-government webpage at access date. |
+| independence | Government-hosted feature drawing on excavation history and named archaeological staff; distinct from the Phase 14A source. |
+| limitations | Reporting rather than a survey record; no coordinate, CRS, plan control point, site boundary, or approved public-location policy. |
+| rightsAndReuse | Citation and factual summary only; article images and text are not republished as data. |
 
 #### E. Candidate assessment
 
-Pending.
+The evidence clearly distinguishes the Jiangxi site and establishes that it is spatially extensive. It does not establish which excavated locus, entrance, or centre should represent the parent record. The provisional outcome is Low confidence, `broad-locality-only`, null coordinates, and non-renderable, subject to explicit project acceptance.
 
 #### F. Rejected candidates
 
-None recorded yet.
+The published coordinate for another 荞麦岭遗址 in Ping’anbao Town, Xinglong County, Hebei was rejected as an exact-name false match. General natural-village and web-map results were rejected because their coordinates do not document a relationship to this archaeological extent.
 
 #### G. Final decision
 
 | Field | Value |
 | --- | --- |
-| researchStatus | researching |
-| coordinateConfidence | pending |
-| coordinateMethod | unresolved |
+| researchStatus | needs-cross-check |
+| coordinateConfidence | Low |
+| coordinateMethod | broad-locality-only |
 | approvedLatitude | null |
 | approvedLongitude | null |
 | coordinateReferenceSystem | null |
@@ -208,8 +254,8 @@ None recorded yet.
 | selectedCandidateId | null |
 | reviewer | pending |
 | reviewedDate | pending |
-| finalDecisionSummary | Research pending. |
-| remainingLimitations | Record-specific searching has not yet been completed. |
+| finalDecisionSummary | Provisional Low/no-point decision. The 50,000-square-metre site is securely associated with Qiaomailing natural village, but no defensible representative Point or CRS was found. Project acceptance is pending. |
+| remainingLimitations | A direct excavation coordinate, georeferenced plan, or explicit representative-point policy is required before rendering. |
 
 ### JX-PCH-7-004 — 袁州古城墙
 
@@ -408,30 +454,53 @@ None recorded yet.
 
 #### B. Search record
 
-Pending Batch 2 research.
+Research performed 2026-07-23 using `兴源马家窑址`, `兴源村`, `永宁镇`, `铜鼓县`, `宋元`, `考古`, `坐标`, and `经纬度`. Results corroborate the name in the earlier Yichun municipal protection list and the current provincial list, but do not provide a direct site description, numeric coordinate, map with transparent control, or source CRS. Searches were also contaminated by unrelated results for the prehistoric Majiayao culture and those were excluded.
 
 #### C. Candidate list
 
-No candidate recorded yet.
+No numeric coordinate candidate was created. Xingyuan Village, Yongning Town, similarly named kilns, and “Majiayao culture” search results are not substitutes for the protected kiln site.
 
 #### D. Evidence list
 
-No record-specific evidence recorded yet.
+##### JX-PCH-7-007-NC-E01
+
+| Field | Value |
+| --- | --- |
+| candidateId | null — no numeric candidate |
+| evidenceId | JX-PCH-7-007-NC-E01 |
+| sourceTier | Tier 3 — contemporaneous report reproducing the municipal protection list |
+| sourceTitle | 宜春市新增156处市级文物保护单位～快来看看有你家乡的吗 |
+| sourceUrl | https://www.sohu.com/a/280394306_476983 |
+| sourceDate | 2018 |
+| accessDate | 2026-07-23 |
+| sourceOwner | Sohu-hosted local report reproducing the Yichun municipal list |
+| sourceSummary | Lists 兴源马家窑址 as a Song-to-Yuan kiln site in Yongning Town and corroborates its municipal designation before the provincial listing. |
+| relationshipToCandidate | Identity and broad administrative-location corroboration only; no coordinate candidate is supplied. |
+| coordinateTextAsPublished | No numeric coordinate published. |
+| sourceCRS | Not stated; no coordinate supplied. |
+| derivedWGS84 | null |
+| derivationOrTransformationMethod | None. |
+| precision | Town-level in this source; the later official source table provides village level. |
+| estimatedUncertaintyMeters | null |
+| accessibility | Public article at access date. |
+| independence | Earlier designation report, but not a direct archaeological field source. |
+| limitations | Reproduced list rather than primary survey evidence; no exact locality, coordinate, CRS, extent, or point-selection rationale. |
+| rightsAndReuse | Citation and factual summary only. |
 
 #### E. Candidate assessment
 
-Pending.
+The search establishes continuity between municipal and provincial designation but does not improve the coordinate evidence beyond administrative locality. Without a direct archaeological source, a village-centre point would be invented. The record therefore remains unresolved with confidence None and is non-renderable.
 
 #### F. Rejected candidates
 
-None recorded yet.
+Results about the prehistoric Majiayao culture were rejected as semantic false matches. Village, town, and general web-map POIs were rejected at discovery stage because they do not identify the kiln site or disclose coordinate provenance and CRS.
 
 #### G. Final decision
 
 | Field | Value |
 | --- | --- |
-| researchStatus | researching |
-| coordinateConfidence | pending |
+| researchStatus | unresolved |
+| coordinateConfidence | None |
 | coordinateMethod | unresolved |
 | approvedLatitude | null |
 | approvedLongitude | null |
@@ -443,8 +512,8 @@ None recorded yet.
 | selectedCandidateId | null |
 | reviewer | pending |
 | reviewedDate | pending |
-| finalDecisionSummary | Research pending. |
-| remainingLimitations | Record-specific searching has not yet been completed. |
+| finalDecisionSummary | No coordinate approved. The official village location and earlier municipal designation are corroborated, but no direct site-specific coordinate evidence was found. |
+| remainingLimitations | A direct archaeological record, surveyed coordinate, protection plan, or authoritative georeferenced site description is required. |
 
 ### JX-PCH-7-008 — 落马桥窑址
 
