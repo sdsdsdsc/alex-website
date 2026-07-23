@@ -1,0 +1,14 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "schemaVersion": "1.0.0",
+    "datasetId": "jiangxi-provincial-protected-heritage-pilot",
+    "sourceDataset": "data/jiangxi-provincial-heritage-pilot.json",
+    "sourceRecordCount": 10,
+    "featureCount": 0,
+    "excludedRecordCount": 10,
+    "generationStatus": "valid-empty",
+    "geometryProvenance": "Alex's Photo Board project coordinate review"
+  },
+  "features": []
+}
