@@ -17,7 +17,7 @@
   <!-- Firebase -->
   <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="script.js" defer></script>
-  <script type="module" src="map.js?v=2026-07-14-pr41-review-fixes" defer></script>
+  <script type="module" src="map.js?v=2026-07-23-phase14f-preview" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#mapWorkspace">Skip to map and list alternatives</a>
@@ -144,6 +144,10 @@
         </header>
 
         <div class="map-stage">
+          <div class="provincial-heritage-map-status">
+            <p id="provincialHeritageStatus" role="status" aria-live="polite" hidden></p>
+            <p id="provincialHeritageError" role="alert" hidden></p>
+          </div>
           <div id="map" class="map-canvas map-search-canvas" role="region" aria-labelledby="mapSearchTitle" aria-describedby="mapAccessibleDescription"></div>
           <p class="visually-hidden" id="mapAccessibleDescription">Interactive community heritage map. Keyboard-accessible markers open record summaries. Every matching public record is also available through the Places list above.</p>
         </div>
