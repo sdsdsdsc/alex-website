@@ -3,6 +3,8 @@ import { expect, test } from "@playwright/test";
 const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
+const PROVINCIAL_HERITAGE_PREVIEW_VERSION = "2026-07-23-phase14f-preview";
+const PROVINCIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-provincial-heritage-pilot.geojson*";
 const SMOKE_PAGES = [
   {
     path: "/index.html",
@@ -62,6 +64,88 @@ function isAppOwnedConsoleError(message) {
   return true;
 }
 
+function makeSyntheticProvincialFeature({
+  id = "JX-PCH-7-001",
+  confidence = "High",
+  publicationPolicy = "exact",
+  approximateLocation = false,
+  coordinates = [113.8825, 27.6202]
+} = {}) {
+  return {
+    type: "Feature",
+    id,
+    properties: {
+      recordId: id,
+      officialNameZh: "测试遗址",
+      projectNameEn: "Test Archaeological Site",
+      coordinateConfidence: confidence,
+      coordinateReferenceSystem: "WGS84",
+      publicationLocationPolicy: publicationPolicy,
+      sensitivityAssessment: "public-exact-acceptable",
+      approximateLocation,
+      sourceIssuerZh: "江西省人民政府",
+      sourceTitleZh: "江西省人民政府关于公布第七批江西省文物保护单位的通知",
+      sourceUrl: "https://example.gov.cn/source",
+      sourceAccessedDate: "2026-07-23",
+      geometryProvenance: "Alex's Photo Board project coordinate review"
+    },
+    geometry: {
+      type: "Point",
+      coordinates
+    }
+  };
+}
+
+function makeSyntheticProvincialCollection(features = []) {
+  return {
+    type: "FeatureCollection",
+    metadata: {
+      schemaVersion: "1.0.0",
+      datasetId: "jiangxi-provincial-protected-heritage-pilot",
+      sourceDataset: "data/jiangxi-provincial-heritage-pilot.json",
+      sourceRecordCount: 10,
+      featureCount: features.length,
+      excludedRecordCount: 10 - features.length,
+      generationStatus: features.length === 0 ? "valid-empty" : "valid",
+      geometryProvenance: "Alex's Photo Board project coordinate review"
+    },
+    features
+  };
+}
+
+async function openMapLayersControl(page) {
+  const toggle = page.locator(".leaflet-control-layers-toggle");
+  await expect(toggle).toHaveAttribute("aria-label", "Map layers");
+  await toggle.focus();
+  await toggle.press("Enter");
+  await expect(page.locator(".leaflet-control-layers")).toHaveClass(/leaflet-control-layers-expanded/);
+}
+
+function getOverlayCheckbox(page, label) {
+  return page.locator(".leaflet-control-layers-overlays label", { hasText: label }).locator("input");
+}
+
+async function setOverlayChecked(page, label, checked) {
+  const checkbox = getOverlayCheckbox(page, label);
+  for (let attempt = 0; attempt < 3 && await checkbox.isChecked() !== checked; attempt += 1) {
+    await checkbox.focus();
+    await checkbox.press("Space");
+    await page.waitForTimeout(100);
+  }
+  if (checked) {
+    await expect(checkbox).toBeChecked();
+  } else {
+    await expect(checkbox).not.toBeChecked();
+  }
+}
+
+async function getRenderedMapState(page) {
+  return page.evaluate(() => ({
+    mapPaneTransform: document.querySelector("#map .leaflet-map-pane")?.style.transform || "",
+    communityMarkerCount: document.querySelectorAll("#map .community-map-pin").length
+  }));
+}
+
 test.beforeEach(async ({ page }) => {
   await page.route("**/favicon.ico", async (route) => {
     await route.fulfill({ status: 204, body: "" });
@@ -119,6 +203,176 @@ test("map exposes a complete state-preserving non-map alternative", async ({ pag
   await expect(page.locator(".map-search-heading__alternative")).toContainText("records without map coordinates");
 });
 
+test("provincial preview is lazy, default-off, valid-empty, cached, and map-stable", async ({ page }) => {
+  let provincialRequestCount = 0;
+  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, async (route) => {
+    provincialRequestCount += 1;
+    await route.continue();
+  });
+
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".leaflet-control-layers-toggle")).toBeVisible();
+  await expect(page.locator("#mapSearchStatus")).not.toHaveText("");
+  await page.waitForTimeout(250);
+  expect(provincialRequestCount).toBe(0);
+  await expect(page.locator("#provincialHeritageStatus")).toBeHidden();
+  await expect(page.locator("#provincialHeritageError")).toBeHidden();
+
+  await openMapLayersControl(page);
+  const communityOverlay = getOverlayCheckbox(page, "Community heritage records");
+  const provincialOverlay = getOverlayCheckbox(page, "Provincial protected heritage pilot");
+  await expect(communityOverlay).toBeChecked();
+  await expect(provincialOverlay).not.toBeChecked();
+
+  const beforeEnable = await getRenderedMapState(page);
+  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await expect(page.locator("#provincialHeritageStatus")).toHaveText(
+    "No approved provincial heritage locations are available to display yet."
+  );
+  await expect(page.locator("#provincialHeritageError")).toBeHidden();
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(0);
+  expect(provincialRequestCount).toBe(1);
+  expect(await getRenderedMapState(page)).toEqual(beforeEnable);
+
+  await setOverlayChecked(page, "Provincial protected heritage pilot", false);
+  await expect(page.locator("#provincialHeritageStatus")).toBeHidden();
+  await expect(page.locator("#provincialHeritageError")).toBeHidden();
+  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await expect(page.locator("#provincialHeritageStatus")).toHaveText(
+    "No approved provincial heritage locations are available to display yet."
+  );
+  expect(provincialRequestCount).toBe(1);
+  expect(await getRenderedMapState(page)).toEqual(beforeEnable);
+});
+
+test("provincial preview isolates HTTP failure from community markers", async ({ page }) => {
+  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+    status: 503,
+    contentType: "text/plain",
+    body: "Unavailable"
+  }));
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#mapSearchStatus")).not.toHaveText("");
+  await openMapLayersControl(page);
+  const communityCount = await page.locator(".community-map-pin").count();
+  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await expect(page.locator("#provincialHeritageError")).toHaveText(
+    "The provincial heritage preview could not be loaded."
+  );
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(0);
+  await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
+});
+
+test("provincial preview rejects invalid JSON", async ({ page }) => {
+  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+    status: 200,
+    contentType: "application/geo+json",
+    body: "{"
+  }));
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await openMapLayersControl(page);
+  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await expect(page.locator("#provincialHeritageError")).toHaveText(
+    "The provincial heritage preview could not be loaded."
+  );
+});
+
+test("provincial preview rejects malformed metadata", async ({ page }) => {
+  const malformed = makeSyntheticProvincialCollection();
+  malformed.metadata.datasetId = "wrong-dataset";
+  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+    status: 200,
+    contentType: "application/geo+json",
+    body: JSON.stringify(malformed)
+  }));
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await openMapLayersControl(page);
+  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await expect(page.locator("#provincialHeritageError")).toHaveText(
+    "The provincial heritage preview could not be loaded."
+  );
+});
+
+test("provincial preview rejects the complete layer when one feature is invalid", async ({ page }) => {
+  const validFeature = makeSyntheticProvincialFeature();
+  const invalidFeature = makeSyntheticProvincialFeature({
+    id: "JX-PCH-7-002",
+    coordinates: [181, 27.6202]
+  });
+  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+    status: 200,
+    contentType: "application/geo+json",
+    body: JSON.stringify(makeSyntheticProvincialCollection([validFeature, invalidFeature]))
+  }));
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await openMapLayersControl(page);
+  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await expect(page.locator("#provincialHeritageError")).toHaveText(
+    "The provincial heritage preview could not be loaded."
+  );
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(0);
+});
+
+test("provincial preview renders a synthetic exact Point without changing community bounds", async ({ page }) => {
+  const collection = makeSyntheticProvincialCollection([makeSyntheticProvincialFeature()]);
+  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+    status: 200,
+    contentType: "application/geo+json",
+    body: JSON.stringify(collection)
+  }));
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
+  const beforeEnable = await getRenderedMapState(page);
+  await openMapLayersControl(page);
+  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  const marker = page.locator(".provincial-heritage-map-marker");
+  await expect(marker).toHaveCount(1);
+  await expect(marker).toHaveAttribute(
+    "aria-label",
+    "Open provincial heritage record: Test Archaeological Site (测试遗址)"
+  );
+  const afterEnable = await getRenderedMapState(page);
+  expect(afterEnable).toEqual(beforeEnable);
+  await marker.click();
+  await expect(page.locator(".provincial-heritage-map-popup")).toContainText("Test Archaeological Site");
+  await expect(page.locator(".provincial-heritage-map-popup [lang='zh']")).toHaveText("测试遗址");
+  await expect(page.locator(".provincial-heritage-map-popup")).toContainText("not an official designation coordinate");
+});
+
+test("provincial preview labels a synthetic approximate Point", async ({ page }) => {
+  const feature = makeSyntheticProvincialFeature({
+    confidence: "Medium",
+    publicationPolicy: "approximate",
+    approximateLocation: true
+  });
+  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+    status: 200,
+    contentType: "application/geo+json",
+    body: JSON.stringify(makeSyntheticProvincialCollection([feature]))
+  }));
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await openMapLayersControl(page);
+  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  const marker = page.locator(".provincial-heritage-map-marker");
+  await expect(marker).toHaveAttribute("aria-label", /approximate location$/);
+  await marker.click();
+  await expect(page.locator(".provincial-heritage-map-popup")).toContainText("Approximate location");
+  await expect(page.locator(".provincial-heritage-map-popup")).toContainText("Medium");
+});
+
+test("Leaflet layer control is keyboard accessible and Escape restores toggle focus", async ({ page }) => {
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await openMapLayersControl(page);
+  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await expect(page.locator("#provincialHeritageStatus")).toHaveText(
+    "No approved provincial heritage locations are available to display yet."
+  );
+  await getOverlayCheckbox(page, "Provincial protected heritage pilot").focus();
+  await getOverlayCheckbox(page, "Provincial protected heritage pilot").press("Escape");
+  await expect(page.locator(".leaflet-control-layers")).not.toHaveClass(/leaflet-control-layers-expanded/);
+  await expect(page.locator(".leaflet-control-layers-toggle")).toBeFocused();
+});
+
 test("map to Places round-trips every shared discovery parameter", async ({ page }) => {
   await page.goto(
     "/map.html?q=memory&category=Building&category=Park&city=Pingxiang&district=Anyuan&assetType=Hall&heritageCriteria=Historic%20interest&place=beta-hall",
@@ -157,8 +411,14 @@ test("Map and Places expose only the supported structured discovery filters", as
     const mapSource = await (await fetch("/map.js")).text();
     return { mapHtml, mapSource };
   });
-  expect(cacheVersions.mapHtml).toContain('map.js?v=2026-07-14-pr41-review-fixes');
+  expect(cacheVersions.mapHtml).toContain(`map.js?v=${PROVINCIAL_HERITAGE_PREVIEW_VERSION}`);
   expect(cacheVersions.mapSource).toContain('./heritage-engine/maps.js?v=2026-07-14-pr41-review-fixes');
+  expect(cacheVersions.mapSource).toContain(
+    `./heritage-engine/provincial-heritage-map.js?v=${PROVINCIAL_HERITAGE_PREVIEW_VERSION}`
+  );
+  expect(cacheVersions.mapSource).toContain(
+    `./data/jiangxi-provincial-heritage-pilot.geojson?v=${PROVINCIAL_HERITAGE_PREVIEW_VERSION}`
+  );
   expect(cacheVersions.mapSource).not.toContain('./heritage-engine/maps.js?v=2026-06-20-releasepolish');
 });
 
@@ -229,6 +489,7 @@ for (const viewport of [
     await page.setViewportSize(viewport);
     await page.goto("/map.html", { waitUntil: "domcontentloaded" });
     await expect(page.locator("#mapViewResultsList")).toBeVisible();
+    await expect(page.locator(".leaflet-control-layers-toggle")).toBeVisible();
     const dimensions = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
       clientWidth: document.documentElement.clientWidth
@@ -243,6 +504,7 @@ test("map workspace remains usable at 200 percent zoom", async ({ page }) => {
   await expect(page.locator("#mapViewResultsList")).toBeVisible();
   await expect(page.getByLabel("Map tools").getByRole("button", { name: "Search" })).toBeVisible();
   await expect(page.locator("#map")).toBeVisible();
+  await expect(page.locator(".leaflet-control-layers-toggle")).toBeVisible();
   const dimensions = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth
