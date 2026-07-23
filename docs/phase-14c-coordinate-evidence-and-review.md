@@ -19,11 +19,11 @@ The document remains an active draft until all ten records have complete evidenc
 | Field | Value |
 | --- | --- |
 | researchStartDate | 2026-07-23 |
-| researchCompletionDate | pending |
+| researchCompletionDate | 2026-07-23 |
 | researcher | Codex-assisted project research |
 | secondReviewer | pending |
 | projectOwnerApprovalDate | pending |
-| reviewStatus | in-progress |
+| reviewStatus | pending-review |
 
 ## 3. Decision controls
 
@@ -35,7 +35,7 @@ Candidates remain non-renderable. Numeric approved coordinates are permitted onl
 
 ## 4. Final ten-record summary
 
-This table is provisional while research and human review remain in progress.
+This table records the completed project research pass and remains provisional pending human review and project-owner acceptance.
 
 | recordId | officialNameZh | projectNameEn | researchStatus | coordinateConfidence | coordinateMethod | approvedLatitude | approvedLongitude | coordinateReferenceSystem | estimatedUncertaintyMeters | renderable | sensitivityAssessment | publicationLocationPolicy | selectedCandidateId | finalDecisionSummary |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
