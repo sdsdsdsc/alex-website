@@ -1,0 +1,579 @@
+{
+  "schemaVersion": "1.0.0",
+  "datasetId": "jiangxi-provincial-protected-heritage-pilot",
+  "recordType": "official-reference",
+  "dataLayer": "provincial-protected-heritage-pilot",
+  "provenance": {
+    "officialSource": {
+      "sourceIssuerZh": "江西省人民政府",
+      "sourceRepublisherZh": "南昌县供销社",
+      "sourceTitleZh": "江西省人民政府关于公布第七批江西省文物保护单位的通知",
+      "sourceAttachmentTitleZh": "第七批江西省文物保护单位名单",
+      "sourceDocumentNumber": "赣府发〔2025〕8号",
+      "sourceDocumentNumberVerificationStatus": "pending",
+      "sourcePublicationDate": "2025-07-18",
+      "sourceUrl": "https://ncx.nc.gov.cn/ncxrmzf/gxszwgz/202507/9fed39827ae74418af52268254e8f2b0.shtml",
+      "sourceAttachmentUrl": "https://gxls.jiangxi.gov.cn/jxsgxhzslhs/zcwj684/1948655115963285504/eXLlAIYH.png",
+      "sourceAccessedDate": "2026-07-22"
+    },
+    "projectLayers": {
+      "officialTranscription": "docs/phase-14a-ten-record-official-chinese-source-table.md",
+      "projectInterpretation": "docs/phase-14b-translation-structured-location-review.md",
+      "coordinateReview": "docs/phase-14c-coordinate-evidence-and-review.md"
+    },
+    "projectMaintainer": "Alex's Photo Board",
+    "projectLastReviewedDate": "2026-07-23"
+  },
+  "records": [
+    {
+      "recordId": "JX-PCH-7-001",
+      "official": {
+        "officialListNumber": "7—1—001",
+        "officialNameZh": "打鼓岭遗址",
+        "protectionLevelZh": "江西省文物保护单位",
+        "batchZh": "第七批",
+        "designationDate": "2025-07-18",
+        "officialCategoryZh": "古遗址",
+        "periodZh": "旧石器时代",
+        "officialLocationTextZh": "新余市渝水区罗坊镇竹山村坑口村民小组",
+        "remarksZh": null
+      },
+      "projectInterpretation": {
+        "namePinyin": "Dagu Ling Yizhi",
+        "projectNameEn": "Dagu Ling Site",
+        "projectProtectionLevelEn": "Jiangxi Provincial Cultural Heritage Site",
+        "projectCategoryEn": "Archaeological Site",
+        "projectPeriodEn": "Paleolithic",
+        "projectLocationTextEn": "Xinyu City, Yushui District, Luofang Town, Zhushan Village, Kengkou Villagers’ Group",
+        "projectRemarksEn": null,
+        "translationStatus": "reviewed",
+        "translationNote": "Project romanization separates the geographic generic Ling; heritage type translated.",
+        "administrativeLocation": {
+          "prefectureLevelCityZh": "新余市",
+          "countyLevelDivisionZh": "渝水区",
+          "subdistrictTownshipZh": "罗坊镇",
+          "villageCommunityZh": "竹山村",
+          "subVillageLocalityZh": "坑口村民小组",
+          "siteDetailZh": null
+        },
+        "components": [],
+        "structuredLocationStatus": "derived",
+        "structuredLocationNote": "The source states each assigned hierarchy level explicitly."
+      },
+      "coordinateReview": {
+        "researchStatus": "reviewed",
+        "coordinateConfidence": "Low",
+        "coordinateMethod": "broad-locality-only",
+        "approvedLatitude": null,
+        "approvedLongitude": null,
+        "coordinateReferenceSystem": null,
+        "estimatedUncertaintyMeters": null,
+        "renderable": false,
+        "sensitivityAssessment": "not-assessed",
+        "publicationLocationPolicy": "withheld",
+        "selectedCandidateId": null,
+        "coordinateReviewedBy": "project owner",
+        "coordinateReviewDate": "2026-07-23",
+        "coordinateReviewStatus": "approved"
+      }
+    },
+    {
+      "recordId": "JX-PCH-7-002",
+      "official": {
+        "officialListNumber": "7—1—002",
+        "officialNameZh": "大印山遗址群",
+        "protectionLevelZh": "江西省文物保护单位",
+        "batchZh": "第七批",
+        "designationDate": "2025-07-18",
+        "officialCategoryZh": "古遗址",
+        "periodZh": "新石器时代至商",
+        "officialLocationTextZh": "宜春市丰城市淘沙镇前坊村（金桥水库）",
+        "remarksZh": null
+      },
+      "projectInterpretation": {
+        "namePinyin": "Dayin Shan Yizhiqun",
+        "projectNameEn": "Dayin Shan Archaeological Site Group",
+        "projectProtectionLevelEn": "Jiangxi Provincial Cultural Heritage Site",
+        "projectCategoryEn": "Archaeological Site",
+        "projectPeriodEn": "Neolithic to Shang dynasty",
+        "projectLocationTextEn": "Yichun City, Fengcheng City, Taosha Town, Qianfang Village (Jinqiao Reservoir)",
+        "projectRemarksEn": null,
+        "translationStatus": "reviewed",
+        "translationNote": "Archaeological Site Group identifies multiple related remains without asserting a formally bounded complex.",
+        "administrativeLocation": {
+          "prefectureLevelCityZh": "宜春市",
+          "countyLevelDivisionZh": "丰城市",
+          "subdistrictTownshipZh": "淘沙镇",
+          "villageCommunityZh": "前坊村",
+          "subVillageLocalityZh": null,
+          "siteDetailZh": "金桥水库"
+        },
+        "components": [],
+        "structuredLocationStatus": "derived",
+        "structuredLocationNote": "The parenthetical reservoir reference is retained as site detail, not an administrative level."
+      },
+      "coordinateReview": {
+        "researchStatus": "unresolved",
+        "coordinateConfidence": "None",
+        "coordinateMethod": "unresolved",
+        "approvedLatitude": null,
+        "approvedLongitude": null,
+        "coordinateReferenceSystem": null,
+        "estimatedUncertaintyMeters": null,
+        "renderable": false,
+        "sensitivityAssessment": "not-assessed",
+        "publicationLocationPolicy": "withheld",
+        "selectedCandidateId": null,
+        "coordinateReviewedBy": "project owner",
+        "coordinateReviewDate": "2026-07-23",
+        "coordinateReviewStatus": "approved"
+      }
+    },
+    {
+      "recordId": "JX-PCH-7-003",
+      "official": {
+        "officialListNumber": "7—1—003",
+        "officialNameZh": "荞麦岭遗址",
+        "protectionLevelZh": "江西省文物保护单位",
+        "batchZh": "第七批",
+        "designationDate": "2025-07-18",
+        "officialCategoryZh": "古遗址",
+        "periodZh": "夏商",
+        "officialLocationTextZh": "九江市柴桑区马回岭镇富民村荞麦岭自然村庄",
+        "remarksZh": null
+      },
+      "projectInterpretation": {
+        "namePinyin": "Qiaomai Ling Yizhi",
+        "projectNameEn": "Qiaomai Ling Site",
+        "projectProtectionLevelEn": "Jiangxi Provincial Cultural Heritage Site",
+        "projectCategoryEn": "Archaeological Site",
+        "projectPeriodEn": "Xia and Shang dynasties",
+        "projectLocationTextEn": "Jiujiang City, Chaisang District, Mahuiling Town, Fumin Village, Qiaomailing natural village settlement",
+        "projectRemarksEn": null,
+        "translationStatus": "reviewed",
+        "translationNote": "The location wording avoids assigning an unsupported formal administrative status.",
+        "administrativeLocation": {
+          "prefectureLevelCityZh": "九江市",
+          "countyLevelDivisionZh": "柴桑区",
+          "subdistrictTownshipZh": "马回岭镇",
+          "villageCommunityZh": "富民村",
+          "subVillageLocalityZh": "荞麦岭自然村庄",
+          "siteDetailZh": null
+        },
+        "components": [],
+        "structuredLocationStatus": "derived",
+        "structuredLocationNote": "The unusual source wording 荞麦岭自然村庄 is preserved in the sub-village field without normalization."
+      },
+      "coordinateReview": {
+        "researchStatus": "reviewed",
+        "coordinateConfidence": "Low",
+        "coordinateMethod": "broad-locality-only",
+        "approvedLatitude": null,
+        "approvedLongitude": null,
+        "coordinateReferenceSystem": null,
+        "estimatedUncertaintyMeters": null,
+        "renderable": false,
+        "sensitivityAssessment": "not-assessed",
+        "publicationLocationPolicy": "withheld",
+        "selectedCandidateId": null,
+        "coordinateReviewedBy": "project owner",
+        "coordinateReviewDate": "2026-07-23",
+        "coordinateReviewStatus": "approved"
+      }
+    },
+    {
+      "recordId": "JX-PCH-7-004",
+      "official": {
+        "officialListNumber": "7—1—004",
+        "officialNameZh": "袁州古城墙",
+        "protectionLevelZh": "江西省文物保护单位",
+        "batchZh": "第七批",
+        "designationDate": "2025-07-18",
+        "officialCategoryZh": "古遗址",
+        "periodZh": "晚唐五代至民国",
+        "officialLocationTextZh": "宜春市袁州区灵泉池公园、高士南路、王子巷、马家园",
+        "remarksZh": "含灵泉池段、高士南路段、王子巷段、马家园段"
+      },
+      "projectInterpretation": {
+        "namePinyin": "Yuanzhou Guchengqiang",
+        "projectNameEn": "Yuanzhou Ancient City Wall",
+        "projectProtectionLevelEn": "Jiangxi Provincial Cultural Heritage Site",
+        "projectCategoryEn": "Archaeological Site",
+        "projectPeriodEn": "Late Tang dynasty and Five Dynasties period to Republican period",
+        "projectLocationTextEn": "Yichun City, Yuanzhou District, Lingquanchi Park, Gaoshi South Road, Wangzi Lane, and Majiayuan",
+        "projectRemarksEn": "Includes the Lingquanchi, Gaoshi South Road, Wangzi Lane, and Majiayuan sections.",
+        "translationStatus": "reviewed",
+        "translationNote": "One designated wall record comprising the four source-listed sections; no completeness claim is added.",
+        "administrativeLocation": {
+          "prefectureLevelCityZh": "宜春市",
+          "countyLevelDivisionZh": "袁州区",
+          "subdistrictTownshipZh": null,
+          "villageCommunityZh": null,
+          "subVillageLocalityZh": null,
+          "siteDetailZh": "灵泉池公园、高士南路、王子巷、马家园"
+        },
+        "components": [
+          {
+            "nameZh": "灵泉池段",
+            "nameEn": "Lingquanchi Section"
+          },
+          {
+            "nameZh": "高士南路段",
+            "nameEn": "Gaoshi South Road Section"
+          },
+          {
+            "nameZh": "王子巷段",
+            "nameEn": "Wangzi Lane Section"
+          },
+          {
+            "nameZh": "马家园段",
+            "nameEn": "Majiayuan Section"
+          }
+        ],
+        "structuredLocationStatus": "partial",
+        "structuredLocationNote": "The location is a free-form multi-component description. Components come from the source remarks and remain one designated record."
+      },
+      "coordinateReview": {
+        "researchStatus": "unresolved",
+        "coordinateConfidence": "None",
+        "coordinateMethod": "unresolved",
+        "approvedLatitude": null,
+        "approvedLongitude": null,
+        "coordinateReferenceSystem": null,
+        "estimatedUncertaintyMeters": null,
+        "renderable": false,
+        "sensitivityAssessment": "not-assessed",
+        "publicationLocationPolicy": "withheld",
+        "selectedCandidateId": null,
+        "coordinateReviewedBy": "project owner",
+        "coordinateReviewDate": "2026-07-23",
+        "coordinateReviewStatus": "approved"
+      }
+    },
+    {
+      "recordId": "JX-PCH-7-005",
+      "official": {
+        "officialListNumber": "7—1—005",
+        "officialNameZh": "南市街窑址",
+        "protectionLevelZh": "江西省文物保护单位",
+        "batchZh": "第七批",
+        "designationDate": "2025-07-18",
+        "officialCategoryZh": "古遗址",
+        "periodZh": "五代至元",
+        "officialLocationTextZh": "景德镇市浮梁县寿安镇南市街村",
+        "remarksZh": null
+      },
+      "projectInterpretation": {
+        "namePinyin": "Nanshijie Yaozhi",
+        "projectNameEn": "Nanshijie Kiln Site",
+        "projectProtectionLevelEn": "Jiangxi Provincial Cultural Heritage Site",
+        "projectCategoryEn": "Archaeological Site",
+        "projectPeriodEn": "Five Dynasties period to Yuan dynasty",
+        "projectLocationTextEn": "Jingdezhen City, Fuliang County, Shou’an Town, Nanshijie Village",
+        "projectRemarksEn": null,
+        "translationStatus": "reviewed",
+        "translationNote": "Nanshijie remains the village-derived proper name, not a translated street reference.",
+        "administrativeLocation": {
+          "prefectureLevelCityZh": "景德镇市",
+          "countyLevelDivisionZh": "浮梁县",
+          "subdistrictTownshipZh": "寿安镇",
+          "villageCommunityZh": "南市街村",
+          "subVillageLocalityZh": null,
+          "siteDetailZh": null
+        },
+        "components": [],
+        "structuredLocationStatus": "derived",
+        "structuredLocationNote": "The source states each assigned hierarchy level explicitly."
+      },
+      "coordinateReview": {
+        "researchStatus": "reviewed",
+        "coordinateConfidence": "Low",
+        "coordinateMethod": "broad-locality-only",
+        "approvedLatitude": null,
+        "approvedLongitude": null,
+        "coordinateReferenceSystem": null,
+        "estimatedUncertaintyMeters": null,
+        "renderable": false,
+        "sensitivityAssessment": "not-assessed",
+        "publicationLocationPolicy": "withheld",
+        "selectedCandidateId": null,
+        "coordinateReviewedBy": "project owner",
+        "coordinateReviewDate": "2026-07-23",
+        "coordinateReviewStatus": "approved"
+      }
+    },
+    {
+      "recordId": "JX-PCH-7-006",
+      "official": {
+        "officialListNumber": "7—1—006",
+        "officialNameZh": "南坑窑址",
+        "protectionLevelZh": "江西省文物保护单位",
+        "batchZh": "第七批",
+        "designationDate": "2025-07-18",
+        "officialCategoryZh": "古遗址",
+        "periodZh": "宋元",
+        "officialLocationTextZh": "萍乡市芦溪县南坑镇窑下村",
+        "remarksZh": "含凤凰坡、庵子坡、瓦子坳"
+      },
+      "projectInterpretation": {
+        "namePinyin": "Nankeng Yaozhi",
+        "projectNameEn": "Nankeng Kiln Site",
+        "projectProtectionLevelEn": "Jiangxi Provincial Cultural Heritage Site",
+        "projectCategoryEn": "Archaeological Site",
+        "projectPeriodEn": "Song and Yuan dynasties",
+        "projectLocationTextEn": "Pingxiang City, Luxi County, Nankeng Town, Yaoxia Village",
+        "projectRemarksEn": "Includes Fenghuangpo, Anzipo, and Wazi’ao.",
+        "translationStatus": "reviewed",
+        "translationNote": "The three components remain subordinate to one designated record.",
+        "administrativeLocation": {
+          "prefectureLevelCityZh": "萍乡市",
+          "countyLevelDivisionZh": "芦溪县",
+          "subdistrictTownshipZh": "南坑镇",
+          "villageCommunityZh": "窑下村",
+          "subVillageLocalityZh": null,
+          "siteDetailZh": null
+        },
+        "components": [
+          {
+            "nameZh": "凤凰坡",
+            "nameEn": "Fenghuangpo"
+          },
+          {
+            "nameZh": "庵子坡",
+            "nameEn": "Anzipo"
+          },
+          {
+            "nameZh": "瓦子坳",
+            "nameEn": "Wazi’ao"
+          }
+        ],
+        "structuredLocationStatus": "derived",
+        "structuredLocationNote": "Components come from the source remarks and remain subordinate to one designated record."
+      },
+      "coordinateReview": {
+        "researchStatus": "unresolved",
+        "coordinateConfidence": "None",
+        "coordinateMethod": "unresolved",
+        "approvedLatitude": null,
+        "approvedLongitude": null,
+        "coordinateReferenceSystem": null,
+        "estimatedUncertaintyMeters": null,
+        "renderable": false,
+        "sensitivityAssessment": "not-assessed",
+        "publicationLocationPolicy": "withheld",
+        "selectedCandidateId": null,
+        "coordinateReviewedBy": "project owner",
+        "coordinateReviewDate": "2026-07-23",
+        "coordinateReviewStatus": "approved"
+      }
+    },
+    {
+      "recordId": "JX-PCH-7-007",
+      "official": {
+        "officialListNumber": "7—1—007",
+        "officialNameZh": "兴源马家窑址",
+        "protectionLevelZh": "江西省文物保护单位",
+        "batchZh": "第七批",
+        "designationDate": "2025-07-18",
+        "officialCategoryZh": "古遗址",
+        "periodZh": "宋元",
+        "officialLocationTextZh": "宜春市铜鼓县永宁镇兴源村",
+        "remarksZh": null
+      },
+      "projectInterpretation": {
+        "namePinyin": "Xingyuan Majia Yaozhi",
+        "projectNameEn": "Xingyuan Majia Kiln Site",
+        "projectProtectionLevelEn": "Jiangxi Provincial Cultural Heritage Site",
+        "projectCategoryEn": "Archaeological Site",
+        "projectPeriodEn": "Song and Yuan dynasties",
+        "projectLocationTextEn": "Yichun City, Tonggu County, Yongning Town, Xingyuan Village",
+        "projectRemarksEn": null,
+        "translationStatus": "reviewed",
+        "translationNote": "Both proper-name components remain in project pinyin.",
+        "administrativeLocation": {
+          "prefectureLevelCityZh": "宜春市",
+          "countyLevelDivisionZh": "铜鼓县",
+          "subdistrictTownshipZh": "永宁镇",
+          "villageCommunityZh": "兴源村",
+          "subVillageLocalityZh": null,
+          "siteDetailZh": null
+        },
+        "components": [],
+        "structuredLocationStatus": "derived",
+        "structuredLocationNote": "The source states each assigned hierarchy level explicitly."
+      },
+      "coordinateReview": {
+        "researchStatus": "unresolved",
+        "coordinateConfidence": "None",
+        "coordinateMethod": "unresolved",
+        "approvedLatitude": null,
+        "approvedLongitude": null,
+        "coordinateReferenceSystem": null,
+        "estimatedUncertaintyMeters": null,
+        "renderable": false,
+        "sensitivityAssessment": "not-assessed",
+        "publicationLocationPolicy": "withheld",
+        "selectedCandidateId": null,
+        "coordinateReviewedBy": "project owner",
+        "coordinateReviewDate": "2026-07-23",
+        "coordinateReviewStatus": "approved"
+      }
+    },
+    {
+      "recordId": "JX-PCH-7-008",
+      "official": {
+        "officialListNumber": "7—1—008",
+        "officialNameZh": "落马桥窑址",
+        "protectionLevelZh": "江西省文物保护单位",
+        "batchZh": "第七批",
+        "designationDate": "2025-07-18",
+        "officialCategoryZh": "古遗址",
+        "periodZh": "宋至民国",
+        "officialLocationTextZh": "景德镇市珠山区中华南路红光瓷厂院内",
+        "remarksZh": null
+      },
+      "projectInterpretation": {
+        "namePinyin": "Luoma Qiao Yaozhi",
+        "projectNameEn": "Luoma Qiao Kiln Site",
+        "projectProtectionLevelEn": "Jiangxi Provincial Cultural Heritage Site",
+        "projectCategoryEn": "Archaeological Site",
+        "projectPeriodEn": "Song dynasty to Republican period",
+        "projectLocationTextEn": "Jingdezhen City, Zhushan District, within the Hongguang Ceramics Works compound on Zhonghua South Road",
+        "projectRemarksEn": null,
+        "translationStatus": "reviewed",
+        "translationNote": "Hongguang Ceramics Works is an evidence-informed project rendering, not an official government translation.",
+        "administrativeLocation": {
+          "prefectureLevelCityZh": "景德镇市",
+          "countyLevelDivisionZh": "珠山区",
+          "subdistrictTownshipZh": null,
+          "villageCommunityZh": null,
+          "subVillageLocalityZh": null,
+          "siteDetailZh": "中华南路红光瓷厂院内"
+        },
+        "components": [],
+        "structuredLocationStatus": "partial",
+        "structuredLocationNote": "Only the city and district hierarchy are stated; the remaining wording is retained as an industrial-compound site detail."
+      },
+      "coordinateReview": {
+        "researchStatus": "reviewed",
+        "coordinateConfidence": "Low",
+        "coordinateMethod": "broad-locality-only",
+        "approvedLatitude": null,
+        "approvedLongitude": null,
+        "coordinateReferenceSystem": null,
+        "estimatedUncertaintyMeters": null,
+        "renderable": false,
+        "sensitivityAssessment": "not-assessed",
+        "publicationLocationPolicy": "withheld",
+        "selectedCandidateId": null,
+        "coordinateReviewedBy": "project owner",
+        "coordinateReviewDate": "2026-07-23",
+        "coordinateReviewStatus": "approved"
+      }
+    },
+    {
+      "recordId": "JX-PCH-7-009",
+      "official": {
+        "officialListNumber": "7—1—009",
+        "officialNameZh": "观音阁窑址",
+        "protectionLevelZh": "江西省文物保护单位",
+        "batchZh": "第七批",
+        "designationDate": "2025-07-18",
+        "officialCategoryZh": "古遗址",
+        "periodZh": "宋至清",
+        "officialLocationTextZh": "景德镇市珠山区竟成镇昌江村",
+        "remarksZh": null
+      },
+      "projectInterpretation": {
+        "namePinyin": "Guanyin Ge Yaozhi",
+        "projectNameEn": "Guanyin Ge Kiln Site",
+        "projectProtectionLevelEn": "Jiangxi Provincial Cultural Heritage Site",
+        "projectCategoryEn": "Archaeological Site",
+        "projectPeriodEn": "Song to Qing dynasties",
+        "projectLocationTextEn": "Jingdezhen City, Zhushan District, Jingcheng Town, Changjiang Village",
+        "projectRemarksEn": null,
+        "translationStatus": "reviewed",
+        "translationNote": "Guanyin Ge remains in pinyin rather than receiving a semantic translation.",
+        "administrativeLocation": {
+          "prefectureLevelCityZh": "景德镇市",
+          "countyLevelDivisionZh": "珠山区",
+          "subdistrictTownshipZh": "竟成镇",
+          "villageCommunityZh": "昌江村",
+          "subVillageLocalityZh": null,
+          "siteDetailZh": null
+        },
+        "components": [],
+        "structuredLocationStatus": "derived",
+        "structuredLocationNote": "The source states each assigned hierarchy level explicitly."
+      },
+      "coordinateReview": {
+        "researchStatus": "reviewed",
+        "coordinateConfidence": "Low",
+        "coordinateMethod": "broad-locality-only",
+        "approvedLatitude": null,
+        "approvedLongitude": null,
+        "coordinateReferenceSystem": null,
+        "estimatedUncertaintyMeters": null,
+        "renderable": false,
+        "sensitivityAssessment": "not-assessed",
+        "publicationLocationPolicy": "withheld",
+        "selectedCandidateId": null,
+        "coordinateReviewedBy": "project owner",
+        "coordinateReviewDate": "2026-07-23",
+        "coordinateReviewStatus": "approved"
+      }
+    },
+    {
+      "recordId": "JX-PCH-7-010",
+      "official": {
+        "officialListNumber": "7—1—010",
+        "officialNameZh": "御窑厂西窑址",
+        "protectionLevelZh": "江西省文物保护单位",
+        "batchZh": "第七批",
+        "designationDate": "2025-07-18",
+        "officialCategoryZh": "古遗址",
+        "periodZh": "明清",
+        "officialLocationTextZh": "景德镇市珠山区",
+        "remarksZh": null
+      },
+      "projectInterpretation": {
+        "namePinyin": "Yuyaochang Xi Yaozhi",
+        "projectNameEn": "Yuyaochang West Kiln Site",
+        "projectProtectionLevelEn": "Jiangxi Provincial Cultural Heritage Site",
+        "projectCategoryEn": "Archaeological Site",
+        "projectPeriodEn": "Ming and Qing dynasties",
+        "projectLocationTextEn": "Jingdezhen City, Zhushan District",
+        "projectRemarksEn": null,
+        "translationStatus": "reviewed",
+        "translationNote": "Concise hybrid project name; Imperial Kiln is documented contextually, but no exact official English name is claimed.",
+        "administrativeLocation": {
+          "prefectureLevelCityZh": "景德镇市",
+          "countyLevelDivisionZh": "珠山区",
+          "subdistrictTownshipZh": null,
+          "villageCommunityZh": null,
+          "subVillageLocalityZh": null,
+          "siteDetailZh": null
+        },
+        "components": [],
+        "structuredLocationStatus": "partial",
+        "structuredLocationNote": "The source provides only city and district, so unsupported lower levels remain null."
+      },
+      "coordinateReview": {
+        "researchStatus": "unresolved",
+        "coordinateConfidence": "None",
+        "coordinateMethod": "unresolved",
+        "approvedLatitude": null,
+        "approvedLongitude": null,
+        "coordinateReferenceSystem": null,
+        "estimatedUncertaintyMeters": null,
+        "renderable": false,
+        "sensitivityAssessment": "not-assessed",
+        "publicationLocationPolicy": "withheld",
+        "selectedCandidateId": null,
+        "coordinateReviewedBy": "project owner",
+        "coordinateReviewDate": "2026-07-23",
+        "coordinateReviewStatus": "approved"
+      }
+    }
+  ]
+}
