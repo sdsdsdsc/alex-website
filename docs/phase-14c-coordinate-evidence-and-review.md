@@ -40,11 +40,11 @@ This table is provisional while research and human review remain in progress.
 | recordId | officialNameZh | projectNameEn | researchStatus | coordinateConfidence | coordinateMethod | approvedLatitude | approvedLongitude | coordinateReferenceSystem | estimatedUncertaintyMeters | renderable | sensitivityAssessment | publicationLocationPolicy | selectedCandidateId | finalDecisionSummary |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | JX-PCH-7-001 | 打鼓岭遗址 | Dagu Ling Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Provincial reporting places the hill-slope site about 500 metres east of Kengkou village, but no defensible point or source CRS is published. Project acceptance remains pending. |
-| JX-PCH-7-002 | 大印山遗址群 | Dayin Shan Archaeological Site Group | researching | pending | unresolved | null | null | null | null | false | not-assessed | withheld | null | Research pending. |
+| JX-PCH-7-002 | 大印山遗址群 | Dayin Shan Archaeological Site Group | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | Reasonable searching found only the official group-level location at Qianfang Village (Jinqiao Reservoir); no component survey, boundary, point, or CRS was accessible. |
 | JX-PCH-7-003 | 荞麦岭遗址 | Qiaomai Ling Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Government-hosted reporting identifies an approximately 50,000-square-metre site within Qiaomailing natural village, but no defensible point or source CRS is published. Project acceptance remains pending. |
-| JX-PCH-7-004 | 袁州古城墙 | Yuanzhou Ancient City Wall | researching | pending | unresolved | null | null | null | null | false | not-assessed | withheld | null | Multi-component parent; research pending and no Point is permitted. |
+| JX-PCH-7-004 | 袁州古城墙 | Yuanzhou Ancient City Wall | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | All four named wall sections were searched; evidence is uneven and the Point-only policy prohibits a representative parent point, component substitution, or centroid. |
 | JX-PCH-7-005 | 南市街窑址 | Nanshijie Kiln Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Direct scholarly evidence identifies the site at the south end of Nanshijie natural village but publishes no defensible point or source CRS. Project acceptance remains pending. |
-| JX-PCH-7-006 | 南坑窑址 | Nankeng Kiln Site | researching | pending | unresolved | null | null | null | null | false | not-assessed | withheld | null | Multi-component parent; research pending and no Point is permitted. |
+| JX-PCH-7-006 | 南坑窑址 | Nankeng Kiln Site | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | All three named kiln components were searched; direct survey evidence covers a wider kiln complex, and the Point-only policy prohibits choosing one component or a centroid for the parent. |
 | JX-PCH-7-007 | 兴源马家窑址 | Xingyuan Majia Kiln Site | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | Searches corroborated the official village-level location and earlier municipal designation but found no direct site description, numeric coordinate, or source CRS. |
 | JX-PCH-7-008 | 落马桥窑址 | Luoma Qiao Kiln Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Direct excavation evidence identifies the Hongguang Ceramics Works compound and its address but publishes no defensible site point or source CRS. Project acceptance remains pending. |
 | JX-PCH-7-009 | 观音阁窑址 | Guanyin Ge Kiln Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Direct excavation evidence describes a broad site extent in Changjiang Village but publishes no defensible site point or source CRS. Project acceptance remains pending. |
@@ -143,30 +143,48 @@ Search results for same-name sites in Dongguan, Guangxi, and Hong Kong were reje
 
 #### B. Search record
 
-Pending Batch 3 research.
+Research performed 2026-07-23 using `大印山遗址群`, `金桥水库`, `前坊村`, `淘沙镇`, `遗址群调查`, `保护范围`, `坐标`, and `经纬度`. Exact-name searches located the official designation and copied list entries but no accessible archaeological survey, component inventory, protection-boundary document, authoritative map, numeric coordinate, or source CRS. Reservoir and village searches were used only as discovery anchors.
 
 #### C. Candidate list
 
-No candidate recorded yet.
+No numeric coordinate candidate was created. The Jinqiao Reservoir centre, Qianfang Village centre, shoreline centre, dam, or one unidentified component cannot represent an archaeological site group.
 
 #### D. Evidence list
 
-No record-specific evidence recorded yet.
+##### JX-PCH-7-002-NC-E01
+
+| Field | Value |
+| --- | --- |
+| evidenceId | JX-PCH-7-002-NC-E01 |
+| candidateId or explicit record-level no-candidate reference | record-level no-candidate outcome |
+| coordinateSourceTitle | 江西省人民政府关于公布第七批江西省文物保护单位的通知 — 第七批江西省文物保护单位名单 |
+| coordinateSourcePublisher | 江西省人民政府; official county-government republication inspected through 南昌县人民政府 |
+| coordinateSourceUrl | https://ncx.nc.gov.cn/ncxrmzf/gxszwgz/202507/9fed39827ae74418af52268254e8f2b0.shtml |
+| coordinateSourceType | Official designation notice and raster attachment |
+| sourceTier | Tier 1 |
+| coordinateSourceDate | 2025-07-18 |
+| coordinateAccessedDate | 2026-07-23 |
+| evidenceQuoteOrSummary | Identifies one parent record, 大印山遗址群, at 宜春市丰城市淘沙镇前坊村（金桥水库） and supplies no component list, coordinate, geometry, or CRS. |
+| placeMatchEvidence | Exact official Chinese name, archaeological site-group type, period, and administrative location match Phase 14A. |
+| coordinateDerivationNote | None. No reservoir, village, dam, or map centre was derived. |
+| coordinateTransformationMethod | None. |
+| independentCrossCheck | No independent direct archaeological or official GIS source was found. Copied list entries are not independent. |
+| evidenceLimitations | Group-level administrative location only; raster attachment; no point, component inventory, boundary, CRS, positional accuracy, or publication decision. |
 
 #### E. Candidate assessment
 
-Pending.
+Identity, administration, site type, and period are established by the authoritative Chinese source. Spatially, however, the evidence stops at a village/reservoir description for a site group. Source independence, CRS clarity, transformation clarity, point uncertainty, sensitivity, publishability, and renderability cannot be established. Confidence is None and the outcome is unresolved.
 
 #### F. Rejected candidates
 
-None recorded yet.
+The reservoir centre, dam, shoreline centre, Qianfang Village centre, and generic map pins were rejected without promotion to candidate IDs because none is tied by source evidence to the parent archaeological group. A component, if later identified, must not be substituted for the parent.
 
 #### G. Final decision
 
 | Field | Value |
 | --- | --- |
-| researchStatus | researching |
-| coordinateConfidence | pending |
+| researchStatus | unresolved |
+| coordinateConfidence | None |
 | coordinateMethod | unresolved |
 | approvedLatitude | null |
 | approvedLongitude | null |
@@ -178,8 +196,8 @@ None recorded yet.
 | selectedCandidateId | null |
 | reviewer | pending |
 | reviewedDate | pending |
-| finalDecisionSummary | Research pending. |
-| remainingLimitations | Record-specific searching has not yet been completed. |
+| finalDecisionSummary | No coordinate approved. The authoritative source identifies the site group only at Qianfang Village (Jinqiao Reservoir), and no component or boundary evidence suitable for a parent Point was found. |
+| remainingLimitations | Direct site-group survey documentation, component inventory, or authoritative georeferenced boundary evidence is needed. The current Point-only model may remain unsuitable even if component evidence emerges. |
 
 ### JX-PCH-7-003 — 荞麦岭遗址
 
@@ -272,30 +290,88 @@ The published coordinate for another 荞麦岭遗址 in Ping’anbao Town, Xingl
 
 #### B. Search record
 
-Pending Batch 4 research for 灵泉池段、高士南路段、王子巷段、马家园段.
+Research performed 2026-07-23 for every source-listed section: `袁州古城墙 灵泉池段`, `袁州古城墙 高士南路段`, `袁州古城墙 王子巷段`, and `袁州古城墙 马家园段`, plus `考古`, `保护范围`, `坐标`, and `经纬度`. The official designation confirms the four-section parent. Reporting attributed to the Jiangxi Provincial Institute of Cultural Relics and Archaeology describes the Gaoshi South Road discovery and dating. Planning coverage confirms protection/display work around Lingquanchi Park. No comparable direct coordinate evidence was accessible for Wangzi Lane or Majiayuan, and no source provides one defensible parent point or CRS.
 
 #### C. Candidate list
 
-No parent candidate will be selected under the current Point-only policy.
+No parent candidate was created. The four wall sections are spatially separate parts of one designation. One section, a park/road/lane POI, a city-wall tourism pin, an average, or a centroid cannot represent the parent under the current Point-only policy.
 
 #### D. Evidence list
 
-No record-specific evidence recorded yet.
+##### JX-PCH-7-004-NC-E01
+
+| Field | Value |
+| --- | --- |
+| evidenceId | JX-PCH-7-004-NC-E01 |
+| candidateId or explicit record-level no-candidate reference | record-level no-candidate outcome |
+| coordinateSourceTitle | 江西省人民政府关于公布第七批江西省文物保护单位的通知 — 第七批江西省文物保护单位名单 |
+| coordinateSourcePublisher | 江西省人民政府; official county-government republication inspected through 南昌县人民政府 |
+| coordinateSourceUrl | https://ncx.nc.gov.cn/ncxrmzf/gxszwgz/202507/9fed39827ae74418af52268254e8f2b0.shtml |
+| coordinateSourceType | Official designation notice and raster attachment |
+| sourceTier | Tier 1 |
+| coordinateSourceDate | 2025-07-18 |
+| coordinateAccessedDate | 2026-07-23 |
+| evidenceQuoteOrSummary | Defines one 袁州古城墙 designation containing 灵泉池段、高士南路段、王子巷段、马家园段 at the corresponding four named localities. |
+| placeMatchEvidence | Exact parent name, four component names, ancient-site category, period, and Yuanzhou District location match Phase 14A. |
+| coordinateDerivationNote | None. The component names were not geocoded and no parent centroid or representative point was calculated. |
+| coordinateTransformationMethod | None. |
+| independentCrossCheck | Highshi South Road and Lingquanchi have separate contextual corroboration; no independent direct spatial evidence was found for all four sections. |
+| evidenceLimitations | Raster list supplies names only; no coordinates, CRS, lengths, boundaries, surveyed plans, or public-location policy. |
+
+##### JX-PCH-7-004-NC-E02
+
+| Field | Value |
+| --- | --- |
+| evidenceId | JX-PCH-7-004-NC-E02 |
+| candidateId or explicit record-level no-candidate reference | record-level no-candidate outcome; Gaoshi South Road section context |
+| coordinateSourceTitle | 江西宜春中心城区发现疑似千年唐代遗址 |
+| coordinateSourcePublisher | Guizhou Radio and Television news report citing Jiangxi Provincial Institute of Cultural Relics and Archaeology |
+| coordinateSourceUrl | https://movement.gzstv.com/news/detail/vL8Gj/ |
+| coordinateSourceType | Reputable news report with named archaeological attribution |
+| sourceTier | Tier 3 |
+| coordinateSourceDate | 2021 |
+| coordinateAccessedDate | 2026-07-23 |
+| evidenceQuoteOrSummary | Reports discovery of substantial wall bricks during earthworks on the Gaoshi South Road section and the archaeological basis for dating the wall to the late Tang–Five Dynasties period. |
+| placeMatchEvidence | Exact Gaoshi South Road component, wall site type, Yuanzhou urban context, and period match the parent designation. |
+| coordinateDerivationNote | None. A road centre or construction-site point was not inferred. |
+| coordinateTransformationMethod | None. |
+| independentCrossCheck | Independent contextual support for one component only; it does not cross-check the other three sections or a parent point. |
+| evidenceLimitations | No numeric coordinate, CRS, excavation boundary, public point, or evidence for the complete four-section parent. |
+
+##### JX-PCH-7-004-NC-E03
+
+| Field | Value |
+| --- | --- |
+| evidenceId | JX-PCH-7-004-NC-E03 |
+| candidateId or explicit record-level no-candidate reference | record-level no-candidate outcome; Lingquanchi section context |
+| coordinateSourceTitle | 两街区、三公园……袁州古城建成后长这样 |
+| coordinateSourcePublisher | Phoenix New Media Jiangxi |
+| coordinateSourceUrl | https://i.ifeng.com/c/8F7qypsiQ0z |
+| coordinateSourceType | Reputable planning/development news |
+| sourceTier | Tier 3 |
+| coordinateSourceDate | 2022 |
+| coordinateAccessedDate | 2026-07-23 |
+| evidenceQuoteOrSummary | Describes Lingquanchi Park’s bounded urban planning area and states that the project protects Lingquanchi and ancient-city-wall remains. |
+| placeMatchEvidence | Supports a wall-remains relationship at the Lingquanchi locality but does not identify the protected section as a point. |
+| coordinateDerivationNote | None. Park bounds or centre were not converted into a heritage coordinate. |
+| coordinateTransformationMethod | None. |
+| independentCrossCheck | Independent contextual support for the Lingquanchi locality; not an archaeological coordinate source. |
+| evidenceLimitations | Planning journalism, not a surveyed heritage plan; no coordinate, CRS, exact wall-section boundary, or evidence for Wangzi Lane and Majiayuan. |
 
 #### E. Candidate assessment
 
-Pending documentary review of all four components. A representative parent point, component substitution, centroid, or average is prohibited.
+The authoritative identity and all four component names are secure. Evidence quality is uneven: Gaoshi South Road has archaeological context, Lingquanchi has planning context, and the exact Wangzi Lane and Majiayuan extents remain unsupported by accessible direct sources. More importantly, the record is a multi-component linear parent for which a Point would misstate the data model. No source independence, CRS, uncertainty, or sensitivity decision can make a single parent Point valid under current policy.
 
 #### F. Rejected candidates
 
-None recorded yet.
+Gaoshi South Road and Lingquanchi were rejected as parent-coordinate substitutes because each is only one component. Wangzi Lane, Majiayuan, park centres, road centres, tourism POIs, and any average or centroid were rejected at discovery stage. None was promoted to a numeric candidate.
 
 #### G. Final decision
 
 | Field | Value |
 | --- | --- |
-| researchStatus | researching |
-| coordinateConfidence | pending |
+| researchStatus | unresolved |
+| coordinateConfidence | None |
 | coordinateMethod | unresolved |
 | approvedLatitude | null |
 | approvedLongitude | null |
@@ -307,8 +383,8 @@ None recorded yet.
 | selectedCandidateId | null |
 | reviewer | pending |
 | reviewedDate | pending |
-| finalDecisionSummary | Research pending; no parent Point is permitted. |
-| remainingLimitations | Evidence for all four wall sections must be assessed without creating component records or geometry. |
+| finalDecisionSummary | No parent coordinate approved. All four sections were researched, but evidence is uneven and the current Point-only model cannot represent this multi-component linear designation. |
+| remainingLimitations | Direct documentation for the Wangzi Lane and Majiayuan sections remains limited. A later approved geometry/component model would be required; this PR creates neither. |
 
 ### JX-PCH-7-005 — 南市街窑址
 
@@ -401,30 +477,68 @@ Tourism and search-result pins for the kiln-name vicinity were reviewed only as 
 
 #### B. Search record
 
-Pending Batch 4 research for 凤凰坡、庵子坡、瓦子坳.
+Research performed 2026-07-23 for all three source-listed components using `南坑窑址 凤凰坡`, `南坑窑址 庵子坡`, `南坑窑址 瓦子坳`, `窑下村`, `考古调查`, `坐标`, and `经纬度`. A 2022 direct archaeological-survey record reports eighteen kiln sites in the wider Pingxiang Nankeng kiln complex. Public museum material corroborates the complex’s archaeological importance. Exact-name searching found descriptive secondary material for 凤凰坡 and 瓦子坳, but no direct coordinate, CRS, component plan, or equally specific accessible evidence for 庵子坡. Same-name results for the nationally protected Nankeng kiln in Nan’an, Fujian were excluded.
 
 #### C. Candidate list
 
-No parent candidate will be selected under the current Point-only policy.
+No parent candidate was created. 凤凰坡, 庵子坡, and 瓦子坳 are included components of one designation. No one component, wider kiln-complex centre, village centre, town centre, POI, average, or centroid may represent the parent.
 
 #### D. Evidence list
 
-No record-specific evidence recorded yet.
+##### JX-PCH-7-006-NC-E01
+
+| Field | Value |
+| --- | --- |
+| evidenceId | JX-PCH-7-006-NC-E01 |
+| candidateId or explicit record-level no-candidate reference | record-level no-candidate outcome |
+| coordinateSourceTitle | 江西萍乡南坑窑调查 |
+| coordinateSourcePublisher | 南方文物; institutional record hosted by Peking University |
+| coordinateSourceUrl | https://ir.pku.edu.cn/handle/20.500.11897/25/simple-search?etal=0&filter_field_1=author&filter_type_1=equals&filter_value_1=%E7%A7%A6%E5%A4%A7%E6%A0%91&filtername=subject&filterquery=0601+%E8%80%83%E5%8F%A4%E5%AD%A6%3B&filtertype=equals&order=desc&query=&rpp=20&sort_by=score |
+| coordinateSourceType | Direct archaeological survey article record |
+| sourceTier | Tier 2 |
+| coordinateSourceDate | 2022-06-28 |
+| coordinateAccessedDate | 2026-07-23 |
+| evidenceQuoteOrSummary | Summarizes a 2020 archaeological survey of eighteen kiln sites in the Pingxiang Nankeng kiln complex and groups them chronologically and technologically. |
+| placeMatchEvidence | Exact Pingxiang Nankeng kiln name, kiln-site type, Southern Song–Yuan focus, and institutional archaeological context match the protected record; the accessible abstract does not enumerate the three protected components. |
+| coordinateDerivationNote | None. No component, group centre, or surveyed map point was extracted. |
+| coordinateTransformationMethod | None. |
+| independentCrossCheck | Independent direct archaeological work distinct from the designation notice; the accessible record cannot independently place all three protected components. |
+| evidenceLimitations | Search-results record rather than full accessible survey text; no numeric coordinate, CRS, component-to-parent mapping, uncertainty, or public-location decision. |
+
+##### JX-PCH-7-006-NC-E02
+
+| Field | Value |
+| --- | --- |
+| evidenceId | JX-PCH-7-006-NC-E02 |
+| candidateId or explicit record-level no-candidate reference | record-level no-candidate outcome |
+| coordinateSourceTitle | 【展览预告】灼灼窑火 千年不息——萍乡南坑窑瓷器展 |
+| coordinateSourcePublisher | Pingxiang Museum |
+| coordinateSourceUrl | https://www.pxmuseum.com/h-nd-4631.html |
+| coordinateSourceType | Official museum interpretation |
+| sourceTier | Tier 1 |
+| coordinateSourceDate | 2024 |
+| coordinateAccessedDate | 2026-07-23 |
+| evidenceQuoteOrSummary | Describes Pingxiang Nankeng kiln as a major long-lived western Jiangxi kiln complex and documents a museum exhibition of excavated material. |
+| placeMatchEvidence | Correct Pingxiang kiln complex, site type, and broad period; no component-specific spatial match. |
+| coordinateDerivationNote | None. Museum or exhibition coordinates were not used. |
+| coordinateTransformationMethod | None. |
+| independentCrossCheck | Independent official institutional corroboration of identity and significance, but not a spatial cross-check. |
+| evidenceLimitations | Interpretation page only; no coordinates, CRS, component plan, uncertainty, or point-selection basis. |
 
 #### E. Candidate assessment
 
-Pending documentary review of all three components. A representative parent point, component substitution, centroid, or average is prohibited.
+The direct survey evidence confirms a multi-site kiln complex, while the designation specifically retains three components in one parent record. The accessible sources do not establish site-specific coordinates or a source CRS for all three components. Even complete component points would not justify a representative parent Point under the current policy. Confidence is None, the method remains unresolved, and the record is non-renderable.
 
 #### F. Rejected candidates
 
-None recorded yet.
+Any 凤凰坡 or 瓦子坳 locality pin was rejected as a single-component substitute; no 庵子坡 coordinate was found. Yaoxia Village, Nankeng Town, museum, and wider kiln-complex centres were rejected as parent substitutes. All Fujian Nankeng kiln results were rejected as same-name sites in the wrong province and administrative area.
 
 #### G. Final decision
 
 | Field | Value |
 | --- | --- |
-| researchStatus | researching |
-| coordinateConfidence | pending |
+| researchStatus | unresolved |
+| coordinateConfidence | None |
 | coordinateMethod | unresolved |
 | approvedLatitude | null |
 | approvedLongitude | null |
@@ -436,8 +550,8 @@ None recorded yet.
 | selectedCandidateId | null |
 | reviewer | pending |
 | reviewedDate | pending |
-| finalDecisionSummary | Research pending; no parent Point is permitted. |
-| remainingLimitations | Evidence for all three kiln components must be assessed without creating component records or geometry. |
+| finalDecisionSummary | No parent coordinate approved. The three included components belong to a wider multi-site kiln complex, and the current Point-only model cannot represent the parent without prohibited substitution. |
+| remainingLimitations | Full survey access and component-specific plans would improve evidence, but a later approved geometry/component model would still be required; this PR creates neither. |
 
 ### JX-PCH-7-007 — 兴源马家窑址
 
