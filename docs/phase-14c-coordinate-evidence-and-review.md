@@ -12,7 +12,7 @@ This is the documentation-only candidate-evidence and coordinate-review record f
 - Unresolved, Low, None, and non-renderable outcomes are valid.
 - This document creates no JSON, CSV, machine-readable dataset, geometry, GeoJSON, Map behavior, Firebase data, public page, or export change.
 
-The document remains an active draft until all ten records have complete evidence outcomes and the required human review and project acceptance are documented. No candidate may enter machine data, GeoJSON, or Map data automatically.
+The coordinate research review is approved for this pilot stage. PR #48 remains a draft pending explicit merge authorization. No candidate may enter machine data, GeoJSON, or Map data automatically.
 
 ## 2. Review administration
 
@@ -21,9 +21,9 @@ The document remains an active draft until all ten records have complete evidenc
 | researchStartDate | 2026-07-23 |
 | researchCompletionDate | 2026-07-23 |
 | researcher | Codex-assisted project research |
-| secondReviewer | pending |
-| projectOwnerApprovalDate | pending |
-| reviewStatus | pending-review |
+| secondReviewer | not required — no High or Medium coordinate outcome was approved |
+| projectOwnerApprovalDate | 2026-07-23 |
+| reviewStatus | approved |
 
 ## 3. Decision controls
 
@@ -35,20 +35,20 @@ Candidates remain non-renderable. Numeric approved coordinates are permitted onl
 
 ## 4. Final ten-record summary
 
-This table records the completed project research pass and remains provisional pending human review and project-owner acceptance.
+This table records the completed research pass and the project owner’s acceptance of the conservative Low, None, and unresolved outcomes.
 
 | recordId | officialNameZh | projectNameEn | researchStatus | coordinateConfidence | coordinateMethod | approvedLatitude | approvedLongitude | coordinateReferenceSystem | estimatedUncertaintyMeters | renderable | sensitivityAssessment | publicationLocationPolicy | selectedCandidateId | finalDecisionSummary |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| JX-PCH-7-001 | 打鼓岭遗址 | Dagu Ling Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Provincial reporting places the hill-slope site about 500 metres east of Kengkou village, but no defensible point or source CRS is published. Project acceptance remains pending. |
-| JX-PCH-7-002 | 大印山遗址群 | Dayin Shan Archaeological Site Group | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | Reasonable searching found only the official group-level location at Qianfang Village (Jinqiao Reservoir); no component survey, boundary, point, or CRS was accessible. |
-| JX-PCH-7-003 | 荞麦岭遗址 | Qiaomai Ling Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Government-hosted reporting identifies an approximately 50,000-square-metre site within Qiaomailing natural village, but no defensible point or source CRS is published. Project acceptance remains pending. |
-| JX-PCH-7-004 | 袁州古城墙 | Yuanzhou Ancient City Wall | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | All four named wall sections were searched; evidence is uneven and the Point-only policy prohibits a representative parent point, component substitution, or centroid. |
-| JX-PCH-7-005 | 南市街窑址 | Nanshijie Kiln Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Direct scholarly evidence identifies the site at the south end of Nanshijie natural village but publishes no defensible point or source CRS. Project acceptance remains pending. |
-| JX-PCH-7-006 | 南坑窑址 | Nankeng Kiln Site | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | All three named kiln components were searched; direct survey evidence covers a wider kiln complex, and the Point-only policy prohibits choosing one component or a centroid for the parent. |
-| JX-PCH-7-007 | 兴源马家窑址 | Xingyuan Majia Kiln Site | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | Searches corroborated the official village-level location and earlier municipal designation but found no direct site description, numeric coordinate, or source CRS. |
-| JX-PCH-7-008 | 落马桥窑址 | Luoma Qiao Kiln Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Direct excavation evidence identifies the Hongguang Ceramics Works compound and its address but publishes no defensible site point or source CRS. Project acceptance remains pending. |
-| JX-PCH-7-009 | 观音阁窑址 | Guanyin Ge Kiln Site | needs-cross-check | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | Direct excavation evidence describes a broad site extent in Changjiang Village but publishes no defensible site point or source CRS. Project acceptance remains pending. |
-| JX-PCH-7-010 | 御窑厂西窑址 | Yuyaochang West Kiln Site | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | The exact protected-place identity is corroborated, but the only numeric official coordinate found belongs to the broader Imperial Kiln serial property and is rejected for this record. |
+| JX-PCH-7-001 | 打鼓岭遗址 | Dagu Ling Site | reviewed | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | The project owner accepted the Low, non-renderable, no-point outcome: reporting places the hill-slope site about 500 metres east of Kengkou village, but no defensible point or source CRS is published. |
+| JX-PCH-7-002 | 大印山遗址群 | Dayin Shan Archaeological Site Group | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | The project owner accepted None/unresolved as the completed current outcome: reasonable searching found only the official group-level location at Qianfang Village (Jinqiao Reservoir), with no defensible point or CRS. |
+| JX-PCH-7-003 | 荞麦岭遗址 | Qiaomai Ling Site | reviewed | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | The project owner accepted the Low, non-renderable, no-point outcome: the approximately 50,000-square-metre site is identified within Qiaomailing natural village, but no defensible point or source CRS is published. |
+| JX-PCH-7-004 | 袁州古城墙 | Yuanzhou Ancient City Wall | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | The project owner accepted None/unresolved as the completed current outcome: all four wall sections were searched, and the Point-only policy prohibits a representative parent point, component substitution, or centroid. |
+| JX-PCH-7-005 | 南市街窑址 | Nanshijie Kiln Site | reviewed | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | The project owner accepted the Low, non-renderable, no-point outcome: direct scholarly evidence identifies the site at the south end of Nanshijie natural village but publishes no defensible point or source CRS. |
+| JX-PCH-7-006 | 南坑窑址 | Nankeng Kiln Site | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | The project owner accepted None/unresolved as the completed current outcome: the three components belong to a wider kiln complex, and the Point-only policy prohibits choosing one component or a centroid for the parent. |
+| JX-PCH-7-007 | 兴源马家窑址 | Xingyuan Majia Kiln Site | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | The project owner accepted None/unresolved as the completed current outcome: reasonable searching found no direct site description, defensible coordinate, or source CRS beyond the official village location. |
+| JX-PCH-7-008 | 落马桥窑址 | Luoma Qiao Kiln Site | reviewed | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | The project owner accepted the Low, non-renderable, no-point outcome: direct excavation evidence identifies the Hongguang Ceramics Works compound but publishes no defensible site point or source CRS. |
+| JX-PCH-7-009 | 观音阁窑址 | Guanyin Ge Kiln Site | reviewed | Low | broad-locality-only | null | null | null | null | false | not-assessed | withheld | null | The project owner accepted the Low, non-renderable, no-point outcome: direct excavation evidence describes a broad site extent in Changjiang Village but publishes no defensible site point or source CRS. |
+| JX-PCH-7-010 | 御窑厂西窑址 | Yuyaochang West Kiln Site | unresolved | None | unresolved | null | null | null | null | false | not-assessed | withheld | null | The project owner accepted None/unresolved as the completed current outcome: the only numeric official candidate belongs to the broader Imperial Kiln serial property and remains rejected for this record. |
 
 ## 5. Record research
 
@@ -103,7 +103,7 @@ No numeric coordinate candidate was created. The “500 metres east” statement
 
 #### E. Candidate assessment
 
-The report meaningfully narrows the record beyond the village-level official location, but deriving a point 500 metres east of an arbitrarily chosen village centre would be prohibited freehand geocoding. The provisional outcome is Low confidence, `broad-locality-only`, null coordinates, and non-renderable. Low-confidence project acceptance remains pending.
+The report meaningfully narrows the record beyond the village-level official location, but deriving a point 500 metres east of an arbitrarily chosen village centre would be prohibited freehand geocoding. The project owner accepted the Low-confidence, `broad-locality-only`, null-coordinate, non-renderable outcome for this pilot stage.
 
 #### F. Rejected candidates
 
@@ -113,7 +113,7 @@ Search results for same-name sites in Dongguan, Guangxi, and Hong Kong were reje
 
 | Field | Value |
 | --- | --- |
-| researchStatus | needs-cross-check |
+| researchStatus | reviewed |
 | coordinateConfidence | Low |
 | coordinateMethod | broad-locality-only |
 | approvedLatitude | null |
@@ -124,9 +124,9 @@ Search results for same-name sites in Dongguan, Guangxi, and Hong Kong were reje
 | sensitivityAssessment | not-assessed |
 | publicationLocationPolicy | withheld |
 | selectedCandidateId | null |
-| reviewer | pending |
-| reviewedDate | pending |
-| finalDecisionSummary | Provisional Low/no-point decision. The site is reported about 500 metres east of Kengkou village, but that relative description cannot produce a defensible Point. Project acceptance is pending. |
+| reviewer | project owner |
+| reviewedDate | 2026-07-23 |
+| finalDecisionSummary | The project owner accepted the Low, non-renderable, no-point outcome for this pilot stage. The site is reported about 500 metres east of Kengkou village, but that relative description cannot produce a defensible Point. |
 | remainingLimitations | A direct archaeological coordinate, surveyed plan, or authoritative georeferenced site boundary is needed; the village centre must not be used as an implicit origin. |
 
 ### JX-PCH-7-002 — 大印山遗址群
@@ -195,10 +195,10 @@ The reservoir centre, dam, shoreline centre, Qianfang Village centre, and generi
 | sensitivityAssessment | not-assessed |
 | publicationLocationPolicy | withheld |
 | selectedCandidateId | null |
-| reviewer | pending |
-| reviewedDate | pending |
-| finalDecisionSummary | No coordinate approved. The authoritative source identifies the site group only at Qianfang Village (Jinqiao Reservoir), and no component or boundary evidence suitable for a parent Point was found. |
-| remainingLimitations | Direct site-group survey documentation, component inventory, or authoritative georeferenced boundary evidence is needed. The current Point-only model may remain unsuitable even if component evidence emerges. |
+| reviewer | project owner |
+| reviewedDate | 2026-07-23 |
+| finalDecisionSummary | The project owner accepted None/unresolved as the completed outcome of this reasonable research pass. No defensible coordinate was approved; the authoritative source identifies the site group only at Qianfang Village (Jinqiao Reservoir). |
+| remainingLimitations | Direct site-group survey documentation, component inventory, or authoritative georeferenced boundary evidence could reopen this decision in future. The current accepted result remains None and non-renderable, and the Point-only model may remain unsuitable even if component evidence emerges. |
 
 ### JX-PCH-7-003 — 荞麦岭遗址
 
@@ -251,7 +251,7 @@ No numeric coordinate candidate was created. A natural-village centre, excavatio
 
 #### E. Candidate assessment
 
-The evidence clearly distinguishes the Jiangxi site and establishes that it is spatially extensive. It does not establish which excavated locus, entrance, or centre should represent the parent record. The provisional outcome is Low confidence, `broad-locality-only`, null coordinates, and non-renderable, subject to explicit project acceptance.
+The evidence clearly distinguishes the Jiangxi site and establishes that it is spatially extensive. It does not establish which excavated locus, entrance, or centre should represent the parent record. The project owner accepted the Low-confidence, `broad-locality-only`, null-coordinate, non-renderable outcome for this pilot stage.
 
 #### F. Rejected candidates
 
@@ -261,7 +261,7 @@ The published coordinate for another 荞麦岭遗址 in Ping’anbao Town, Xingl
 
 | Field | Value |
 | --- | --- |
-| researchStatus | needs-cross-check |
+| researchStatus | reviewed |
 | coordinateConfidence | Low |
 | coordinateMethod | broad-locality-only |
 | approvedLatitude | null |
@@ -272,9 +272,9 @@ The published coordinate for another 荞麦岭遗址 in Ping’anbao Town, Xingl
 | sensitivityAssessment | not-assessed |
 | publicationLocationPolicy | withheld |
 | selectedCandidateId | null |
-| reviewer | pending |
-| reviewedDate | pending |
-| finalDecisionSummary | Provisional Low/no-point decision. The 50,000-square-metre site is securely associated with Qiaomailing natural village, but no defensible representative Point or CRS was found. Project acceptance is pending. |
+| reviewer | project owner |
+| reviewedDate | 2026-07-23 |
+| finalDecisionSummary | The project owner accepted the Low, non-renderable, no-point outcome for this pilot stage. The 50,000-square-metre site is securely associated with Qiaomailing natural village, but no defensible representative Point or CRS was found. |
 | remainingLimitations | A direct excavation coordinate, georeferenced plan, or explicit representative-point policy is required before rendering. |
 
 ### JX-PCH-7-004 — 袁州古城墙
@@ -383,10 +383,10 @@ Gaoshi South Road and Lingquanchi were rejected as parent-coordinate substitutes
 | sensitivityAssessment | not-assessed |
 | publicationLocationPolicy | withheld |
 | selectedCandidateId | null |
-| reviewer | pending |
-| reviewedDate | pending |
-| finalDecisionSummary | No parent coordinate approved. All four sections were researched, but evidence is uneven and the current Point-only model cannot represent this multi-component linear designation. |
-| remainingLimitations | Direct documentation for the Wangzi Lane and Majiayuan sections remains limited. A later approved geometry/component model would be required; this PR creates neither. |
+| reviewer | project owner |
+| reviewedDate | 2026-07-23 |
+| finalDecisionSummary | The project owner accepted None/unresolved as the completed outcome of this reasonable research pass. No defensible parent coordinate was approved: evidence is uneven and the Point-only model cannot represent this multi-component linear designation. |
+| remainingLimitations | Direct documentation for the Wangzi Lane and Majiayuan sections or a later approved geometry/component model could reopen this decision. The current accepted result remains None and non-renderable; this PR creates no geometry or component records. |
 
 ### JX-PCH-7-005 — 南市街窑址
 
@@ -439,7 +439,7 @@ No numeric coordinate candidate was created. A village centre, Shou’an Town ce
 
 #### E. Candidate assessment
 
-The source evidence is sufficient to distinguish the protected site from the wider town and village, but insufficient to select a representative Point. The 60,000-square-metre extent also makes a single unqualified pin potentially misleading. The provisional outcome is Low confidence, `broad-locality-only`, no approved coordinate, and non-renderable. Because Low confidence requires explicit project acceptance before merge, the record remains `needs-cross-check`.
+The source evidence is sufficient to distinguish the protected site from the wider town and village, but insufficient to select a representative Point. The 60,000-square-metre extent also makes a single unqualified pin potentially misleading. The project owner accepted the Low-confidence, `broad-locality-only`, null-coordinate, non-renderable outcome for this pilot stage.
 
 #### F. Rejected candidates
 
@@ -449,7 +449,7 @@ Tourism and search-result pins for the kiln-name vicinity were reviewed only as 
 
 | Field | Value |
 | --- | --- |
-| researchStatus | needs-cross-check |
+| researchStatus | reviewed |
 | coordinateConfidence | Low |
 | coordinateMethod | broad-locality-only |
 | approvedLatitude | null |
@@ -460,9 +460,9 @@ Tourism and search-result pins for the kiln-name vicinity were reviewed only as 
 | sensitivityAssessment | not-assessed |
 | publicationLocationPolicy | withheld |
 | selectedCandidateId | null |
-| reviewer | pending |
-| reviewedDate | pending |
-| finalDecisionSummary | Provisional Low/no-point decision. The site is identified at the south end of Nanshijie natural village, but no defensible numeric coordinate or source CRS was found. Project acceptance is pending. |
+| reviewer | project owner |
+| reviewedDate | 2026-07-23 |
+| finalDecisionSummary | The project owner accepted the Low, non-renderable, no-point outcome for this pilot stage. The site is identified at the south end of Nanshijie natural village, but no defensible numeric coordinate or source CRS was found. |
 | remainingLimitations | A site-specific surveyed coordinate or an authoritative georeferenced plan is still needed before rendering. The extensive site boundary cannot be reduced to a village or POI centre. |
 
 ### JX-PCH-7-006 — 南坑窑址
@@ -551,10 +551,10 @@ Any 凤凰坡 or 瓦子坳 locality pin was rejected as a single-component subst
 | sensitivityAssessment | not-assessed |
 | publicationLocationPolicy | withheld |
 | selectedCandidateId | null |
-| reviewer | pending |
-| reviewedDate | pending |
-| finalDecisionSummary | No parent coordinate approved. The three included components belong to a wider multi-site kiln complex, and the current Point-only model cannot represent the parent without prohibited substitution. |
-| remainingLimitations | Full survey access and component-specific plans would improve evidence, but a later approved geometry/component model would still be required; this PR creates neither. |
+| reviewer | project owner |
+| reviewedDate | 2026-07-23 |
+| finalDecisionSummary | The project owner accepted None/unresolved as the completed outcome of this reasonable research pass. No defensible parent coordinate was approved: the three components belong to a wider kiln complex that the Point-only model cannot represent without prohibited substitution. |
+| remainingLimitations | Full survey access, component-specific plans, or a later approved geometry/component model could reopen this decision. The current accepted result remains None and non-renderable; this PR creates neither geometry nor component records. |
 
 ### JX-PCH-7-007 — 兴源马家窑址
 
@@ -628,10 +628,10 @@ Results about the prehistoric Majiayao culture were rejected as semantic false m
 | sensitivityAssessment | not-assessed |
 | publicationLocationPolicy | withheld |
 | selectedCandidateId | null |
-| reviewer | pending |
-| reviewedDate | pending |
-| finalDecisionSummary | No coordinate approved. The official village location and earlier municipal designation are corroborated, but no direct site-specific coordinate evidence was found. |
-| remainingLimitations | A direct archaeological record, surveyed coordinate, protection plan, or authoritative georeferenced site description is required. |
+| reviewer | project owner |
+| reviewedDate | 2026-07-23 |
+| finalDecisionSummary | The project owner accepted None/unresolved as the completed outcome of this reasonable research pass. No defensible coordinate was approved: the official village location is corroborated, but no direct site-specific coordinate evidence was found. |
+| remainingLimitations | A direct archaeological record, surveyed coordinate, protection plan, or authoritative georeferenced site description could reopen this decision. The current accepted result remains None and non-renderable. |
 
 ### JX-PCH-7-008 — 落马桥窑址
 
@@ -710,7 +710,7 @@ No numeric coordinate candidate was created. A street-address geocode, factory-c
 
 #### E. Candidate assessment
 
-Multiple independent sources make the identity and industrial-compound relationship strong, but none supports choosing a point within that compound. An address match would not identify which archaeological locus should represent the site. The provisional outcome is Low confidence, `broad-locality-only`, null coordinates, and non-renderable; explicit project acceptance remains pending.
+Multiple independent sources make the identity and industrial-compound relationship strong, but none supports choosing a point within that compound. An address match would not identify which archaeological locus should represent the site. The project owner accepted the Low-confidence, `broad-locality-only`, null-coordinate, non-renderable outcome for this pilot stage.
 
 #### F. Rejected candidates
 
@@ -720,7 +720,7 @@ No numeric candidate reached the evidence threshold. Address-derived and commerc
 
 | Field | Value |
 | --- | --- |
-| researchStatus | needs-cross-check |
+| researchStatus | reviewed |
 | coordinateConfidence | Low |
 | coordinateMethod | broad-locality-only |
 | approvedLatitude | null |
@@ -731,9 +731,9 @@ No numeric candidate reached the evidence threshold. Address-derived and commerc
 | sensitivityAssessment | not-assessed |
 | publicationLocationPolicy | withheld |
 | selectedCandidateId | null |
-| reviewer | pending |
-| reviewedDate | pending |
-| finalDecisionSummary | Provisional Low/no-point decision. Direct excavation and government sources identify the site within the Hongguang Ceramics Works compound, but no defensible site point or source CRS was found. Project acceptance is pending. |
+| reviewer | project owner |
+| reviewedDate | 2026-07-23 |
+| finalDecisionSummary | The project owner accepted the Low, non-renderable, no-point outcome for this pilot stage. Direct excavation and government sources identify the site within the Hongguang Ceramics Works compound, but no defensible site point or source CRS was found. |
 | remainingLimitations | A published surveyed coordinate or georeferenced archaeological plan is needed; the street address or compound centre must not be substituted automatically. |
 
 ### JX-PCH-7-009 — 观音阁窑址
@@ -813,7 +813,7 @@ No numeric coordinate candidate was created. The Guanyinge locality, Changjiang 
 
 #### E. Candidate assessment
 
-The direct report gives substantially better context than an administrative centre, yet it describes an archaeological distribution area rather than a published representative point. Selecting Guanyinge, Dongwangmiao, or any inferred centre would add unsupported judgement. The provisional outcome is Low confidence, `broad-locality-only`, no approved coordinate, and non-renderable. Project acceptance remains pending.
+The direct report gives substantially better context than an administrative centre, yet it describes an archaeological distribution area rather than a published representative point. Selecting Guanyinge, Dongwangmiao, or any inferred centre would add unsupported judgement. The project owner accepted the Low-confidence, `broad-locality-only`, null-coordinate, non-renderable outcome for this pilot stage.
 
 #### F. Rejected candidates
 
@@ -823,7 +823,7 @@ No numeric candidate met the threshold. General web-map and locality results wer
 
 | Field | Value |
 | --- | --- |
-| researchStatus | needs-cross-check |
+| researchStatus | reviewed |
 | coordinateConfidence | Low |
 | coordinateMethod | broad-locality-only |
 | approvedLatitude | null |
@@ -834,9 +834,9 @@ No numeric candidate met the threshold. General web-map and locality results wer
 | sensitivityAssessment | not-assessed |
 | publicationLocationPolicy | withheld |
 | selectedCandidateId | null |
-| reviewer | pending |
-| reviewedDate | pending |
-| finalDecisionSummary | Provisional Low/no-point decision. The direct report identifies a broad archaeological distribution area in Changjiang Village but does not support a representative Point. Project acceptance is pending. |
+| reviewer | project owner |
+| reviewedDate | 2026-07-23 |
+| finalDecisionSummary | The project owner accepted the Low, non-renderable, no-point outcome for this pilot stage. The direct report identifies a broad archaeological distribution area in Changjiang Village but does not support a representative Point. |
 | remainingLimitations | A surveyed coordinate or authoritative georeferenced site plan is required. Named localities within the broad extent must not be treated as the parent site point without evidence. |
 
 ### JX-PCH-7-010 — 御窑厂西窑址
@@ -949,14 +949,14 @@ The official UNESCO coordinate has excellent source authority but the wrong plac
 | sensitivityAssessment | not-assessed |
 | publicationLocationPolicy | withheld |
 | selectedCandidateId | null |
-| reviewer | pending |
-| reviewedDate | pending |
-| finalDecisionSummary | No coordinate approved. The exact site is distinct from the broader Imperial Kiln property; the broader official coordinate is retained only as a rejected candidate. |
-| remainingLimitations | A record-specific official or direct archaeological coordinate, with stated or verifiable CRS and a clear relationship to the west kiln site, is still required. |
+| reviewer | project owner |
+| reviewedDate | 2026-07-23 |
+| finalDecisionSummary | The project owner accepted None/unresolved as the completed outcome of this reasonable research pass. No defensible coordinate was approved; the broader Imperial Kiln coordinate remains rejected because it does not identify the west kiln site. |
+| remainingLimitations | Record-specific official or direct archaeological evidence with a clear relationship to the west kiln site could reopen this decision. The current accepted result remains None and non-renderable. |
 
 ## 6. Cross-record review
 
-The project research pass is complete; human second review and project-owner acceptance remain pending.
+The project research pass is complete. On 2026-07-23, the project owner reviewed and accepted the conservative Low, None, and unresolved outcomes. No second review was required because no High or Medium coordinate outcome was approved.
 
 | Review dimension | Cross-record result |
 | --- | --- |
@@ -970,7 +970,19 @@ The project research pass is complete; human second review and project-owner acc
 | rejected candidates | One numeric candidate is retained and rejected. Additional locality centres, administrative centres, road/park/factory/tourism POIs, unsupported web-map pins, wrong-place matches, components, averages, and centroids are documented as rejected discovery results without fabricated candidate coordinates. |
 | locality-centre substitution | No town, village, district, reservoir, road, factory, park, museum, tourism, or government-office centre was accepted. |
 | multi-component parents | Records 004 and 006 remain one parent designation each, with no selected component, centroid, average, child record, or geometry. |
-| human gates | There is no High or Medium outcome. The five provisional Low outcomes still require explicit project acceptance; all five None/unresolved outcomes likewise require project acceptance before merge. Second reviewer and owner approval metadata remain pending. |
+| human gates | The project owner accepted five Low outcomes and five None/unresolved outcomes on 2026-07-23. No High or Medium outcome exists, so the High/Medium second-review requirement was not triggered. |
+
+### Project-owner sign-off
+
+- Ten records received a completed initial research pass.
+- Five Low, non-renderable, no-point outcomes were accepted.
+- Five None/unresolved, non-renderable, no-point outcomes were accepted.
+- There are zero High outcomes and zero Medium outcomes.
+- There are zero selected candidates, zero approved numeric coordinates, and zero renderable records.
+- One numeric candidate remains documented and rejected.
+- No second-review requirement was triggered because no High or Medium coordinate was approved.
+- The project owner accepts `withheld` as the publication-location policy for all ten records.
+- Later evidence may reopen an individual coordinate decision without changing the authoritative Phase 14A source or the approved Phase 14B project interpretation.
 
 ## 7. Integrity status
 
@@ -978,9 +990,9 @@ The project research pass is complete; human second review and project-owner acc
 - Source identity values are copied from Phase 14A and Phase 14B.
 - One numeric candidate is documented and rejected; there are no active or selected numeric candidates.
 - Sixteen evidence items reference either that rejected candidate or an explicit record-level no-candidate outcome.
-- Provisional outcomes are five Low and five None; no High or Medium outcome is claimed.
+- Approved pilot-stage outcomes are five reviewed Low and five None/unresolved; no High or Medium outcome is claimed.
 - All approved coordinates and coordinate reference systems are literal `null`.
 - Every record remains non-renderable and uses publication policy `withheld`.
 - Records 004 and 006 remain non-renderable with no parent Point.
-- Second review, Low/None outcome acceptance, and project-owner approval remain pending.
+- Project-owner approval is recorded as 2026-07-23. A second reviewer was not required because no High or Medium coordinate outcome was approved.
 - No JSON, CSV, GeoJSON, geometry, runtime data, Firebase change, public-page change, export change, or Map behavior is introduced.
