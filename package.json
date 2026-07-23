@@ -1,6 +1,10 @@
 {
   "scripts": {
-    "test": "npm run test:admin-auth && npm run test:payload && npm run test:promotion && npm run test:place-contributions && npm run test:rules && npm run test:storage-rules",
+    "test": "npm run validate:provincial-heritage && npm run test:provincial-heritage && npm run check:provincial-heritage && npm run test:admin-auth && npm run test:payload && npm run test:promotion && npm run test:place-contributions && npm run test:rules && npm run test:storage-rules",
+    "validate:provincial-heritage": "node scripts/validate-provincial-heritage-data.mjs",
+    "generate:provincial-heritage": "node scripts/generate-provincial-heritage-geojson.mjs",
+    "check:provincial-heritage": "node scripts/generate-provincial-heritage-geojson.mjs --check",
+    "test:provincial-heritage": "node --test tests/provincial-heritage-data.test.mjs",
     "test:admin-auth": "node --test tests/admin-auth.test.mjs",
     "test:browser": "./node_modules/.bin/playwright test",
     "test:payload": "node --test tests/payload-export.test.mjs",
