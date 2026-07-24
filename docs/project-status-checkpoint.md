@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-This document is the current project status map for Alex's Photo Board after the Phase 10 engine work, the Phase 11A backup and audit checkpoint, the Phase 11B/11C public information and place-page work, the Phase 12 public-user auth/account source work, and the documentation reorganization.
+This document is the current project status map for Alex's Photo Board after the Phase 10 engine work, the Phase 11A backup and audit checkpoint, the Phase 11B/11C public information and place-page work, the Phase 12 public-user auth/account source work, the Phase 14 provincial protected heritage pilot, and the documentation reorganization.
 
 It is a source-based checkpoint, not proof that every deployed workflow has been tested recently. A page or helper is marked complete only where the repository and recorded project evidence support that conclusion. Firebase was not contacted while preparing this checkpoint.
 
@@ -108,14 +108,14 @@ The engine boundary is coherent: Firebase initialization, reads/writes, DOM rend
 | Phase 11D | Places/search/map discovery | Mostly done | Search/filter/sort/result count, map markers, record links, and map-to-nomination coordinate handoff are implemented against `communityPlaces`. | No automated end-to-end tests; live data and responsive behavior should be regression-tested. | Stabilize with a short release test matrix, then move to relationship integrity. |
 | Phase 12 | Public user registration/login | Source-complete; live public-auth workflow partially verified; final release/rules verification still required. | Public account safety model documented; public email/password registration/login/logout implemented; registration form includes display name, relevant local interest, confirm password, and consent checkbox; sign-in is required before nomination submission; signed-in nomination ownership metadata is stored privately on `placeNominations`; `my-nominations.html` provides a read-only owner-scoped view; admin nomination review shows submission account/type; promotion strips ownership/private/admin fields; local Firestore rules support signed-in create plus owner-scoped reads; auth stability hardening added `browserLocalPersistence` and `onAuthStateChanged` waiting; Phase 12E release checklist exists. Verified project evidence includes successful public sign-in, signed-in nomination detection for `alex.home@gmail.com`, at least one signed-in nomination submission, “My nominations” showing that user's own nomination, and admin `manage-nominations` displaying the submitted nomination. | Owner-vs-other-user rules verification; Firebase emulator or controlled deployed rules verification; admin review and promotion regression test after Phase 12 changes; intentional Firebase rules deployment review; final backup before production release. | Treat as source-complete with release verification pending. Do not mark fully released until auth/rules/admin regression checks are completed intentionally. |
 | Phase 13 | Media upload, evidence, copyright/source management | In progress | Article uploads use Storage; nominations accept evidence/photo URLs and source fields; Phase 13C now adds URL-only evidence rights metadata around the existing nomination evidence fields. | Broader consent/licensing workflow, file upload policy, retention, Storage backup, moderation, and public display rules still remain incomplete. | Keep Phase 13C narrow and rights-aware before adding any upload behavior. |
-| Phase 14 | GIS layers / official dataset connection | Not started | Leaflet base mapping and place markers exist; retired map collections are absent from active code. | Dataset selection, licensing, provenance, layer model, update strategy, legend, accessibility, and performance plan. | Pause until a named dataset and user need are agreed. |
+| Phase 14 | Ten-record provincial protected heritage pilot and optional Map preview | Complete; production verified | Phases 14A–14F record the official Chinese source transcription, approved project translation and structured location, coordinate research and review, canonical JSON, deterministic valid-empty GeoJSON, and default-off Map overlay. Production at merge `220a8e7905c9813b8e543bbe2c5538ec11fe4a53` was verified with five existing community markers, zero provincial markers, the expected valid-empty message, and no application-owned console errors or warnings. | The source document number remains pending direct verification. All ten records remain non-renderable and withheld; the public non-map list and expansion readiness are deliberately deferred. | Preserve the valid-empty result and provenance boundaries. Address source-number verification as bounded maintenance; undertake the non-map list and then expansion readiness only through separately approved work. |
 | Phase 15 | Testing/staging/deployment/rollback | Partly done | Pure-helper browser harness, manual phase checks, Git workflow, and GitHub Pages deployment history exist. | No staging environment, automated CI, release checklist, smoke suite, rollback procedure, or deployed-rules verification record tied to releases. | Make this one of the next structural priorities. |
 | Phase 16 | Configuration system for other towns/cities | Not started | Some location helpers and generic place fields are reusable. | Tenant/config model, branding/content configuration, collection isolation, security model, onboarding, and migration strategy. | Do not begin before current single-site workflows are tested and documented. |
 | Phase 17 | Installation/admin/support documentation | Partly done | Docs index, site structure, engine README, import notes, maintenance notes, and phase closeouts exist. | No concise installation guide, environment inventory, admin operating manual, troubleshooting guide, support policy, or recovery playbook. | Build after deployment/testing conventions are settled. |
 
 ### Actual Current Phase
 
-The project is past architecture setup and safe-audit work. Its public place, search, map, article, nomination, review, promotion, export, and public-user auth/account pathways are implemented, but several are mature only at the source-code level and still need a coherent release test process. Phase 12 is functionally verified for the current project stage; Phase 13A and Phase 13B are complete planning work; and Phase 13C has now resumed in a narrow URL-only form to add evidence-rights metadata around the existing nomination evidence fields without adding uploads or public export exposure. The practical position is: **Phase 12 source work is complete, reset cleanup is complete, and Phase 13C can proceed only in small rights-aware steps that do not outrun release assurance or privacy controls.**
+The project is past architecture setup and safe-audit work. Its public place, search, map, article, nomination, review, promotion, export, and public-user auth/account pathways are implemented, though release assurance remains an ongoing responsibility. Phase 14A–14F are complete for the approved ten-record provincial protected heritage pilot: the project now has a provenance-bounded canonical dataset, a deterministic valid-empty GeoJSON result, and a production-verified default-off Map overlay. All ten pilot records remain non-renderable and withheld. The practical position is: **Phase 14 is complete without approved provincial point locations; a public non-map list is the next eligible separately approved product step, and expansion readiness follows only after that work.**
 
 ## 9. Stop / Pause List
 
@@ -130,29 +130,29 @@ The project is past architecture setup and safe-audit work. Its public place, se
 | Reading `docs/archive` by default | Archived documents are historical working records, not current instructions. | When a named past decision must be traced. |
 | More engine extraction without a concrete reuse case | The current engine boundary is already broad and coherent. Extraction alone does not improve user workflows. | When duplicated rules or a new consumer justify a focused module change. |
 | Public accounts | Accounts add privacy, moderation, recovery, and support obligations without a proven immediate need. | After a documented user need and security/privacy design exist. |
-| GIS/official layers | No approved dataset, license, provenance model, or maintenance owner exists. | After one named dataset and a clear public task are selected. |
+| Additional provincial coordinates, Map features, or records | The completed ten-record pilot has no High or Medium coordinate outcomes, no approved numeric coordinates, and no renderable records. Adding markers or records now would bypass the approved provenance and review gates. | Only after material new evidence or a separately approved expansion-readiness phase; complete the public non-map alternative first. |
 
 ## 10. Recommended Next Three Structural Phases
 
-1. **Relationship Integrity and Link Management**
-   Consolidate the place-to-article and article-to-place model, validate reciprocal references, expose broken-link warnings in admin tools, and define safe behavior when records are renamed or removed. This strengthens the distinctive linked-heritage value already present.
+1. **Provincial Pilot Public Non-Map List**
+   Scope and approve an accessible official-reference list for all ten pilot records without implying that approved point locations exist. This is future work and is not started by the Phase 14 closeout.
 
-2. **Release Assurance: Staging, Smoke Tests, and Rollback**
-   Define a small repeatable browser test matrix for public and admin workflows, verify deployed Firestore rules, document deployment inputs, and create a rollback checklist. This converts “implemented” workflows into dependable releases.
+2. **Provincial Pilot Expansion Readiness**
+   After the non-map alternative is complete, define the source, provenance, translation, coordinate-evidence, sensitivity, accessibility, testing, and maintenance gates for any proposed expansion. Do not add records or locations during readiness work.
 
-3. **Media, Evidence, and Rights Model**
-   Define source credit, copyright/license, consent, visibility, retention, and Storage-backup rules before adding more upload capability. Reuse existing article Storage and nomination evidence fields rather than creating another media system.
+3. **Ongoing Release And Provenance Assurance**
+   Preserve repeatable production verification, rollback evidence, and the strict separation among official Chinese source facts, project translations, project coordinate review, and generated geometry. Treat source-document-number verification as a bounded maintenance item when stronger evidence becomes available.
 
 ## 11. Suggested Next Immediate Phase
 
-### Phase 13C — Media Rights Metadata Around Existing Evidence URL Fields
+### Provincial Pilot Public Non-Map List — Separate Approval Required
 
-The next immediate work should stay narrow and rights-aware around the existing nomination evidence URL fields:
+After the Phase 14 closeout is approved and merged, the next eligible product step is a separately scoped public non-map list for the ten pilot records. That work should:
 
-- reuse the existing nomination evidence URL, caption, and source/credit fields rather than adding duplicate inputs;
-- add small rights and permission metadata only around that existing evidence section;
-- keep nomination evidence metadata private to nomination review unless a later approved workflow says otherwise;
-- keep Drupal/Pantheon behavior intact;
-- avoid upload behavior, Storage changes, public export expansion, or broader media-system redesign until later phases.
+- present official-reference information without implying approved point locations;
+- preserve the official-source, project-translation, and project-coordinate provenance boundaries;
+- include all ten records, including the records that have no usable point location;
+- remain independent from `communityPlaces`, nominations, and promotion; and
+- define accessibility, testing, and rollback before implementation.
 
-This is the highest-value next step because the project now has enough release and rules-assurance evidence to make a small URL-only metadata improvement safely, while larger upload, Storage, and public-media decisions still need their own deliberate follow-up.
+This checkpoint does not start that work. Provincial expansion readiness follows only after the non-map alternative is complete and separately approved. New coordinate research, machine-data expansion, GeoJSON features, and Map markers remain paused.
