@@ -17,7 +17,7 @@
   <!-- Firebase -->
   <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="script.js" defer></script>
-  <script type="module" src="map.js?v=2026-07-23-phase14f-preview" defer></script>
+  <script type="module" src="map.js?v=2026-07-24-phase15b1-generalized-markers" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#mapWorkspace">Skip to map and list alternatives</a>
@@ -46,7 +46,7 @@
         <div class="map-explorer-panel__body">
           <section class="map-explorer-section map-explorer-section--search is-active" id="mapSearchToolPanel" data-tool-panel="search" aria-labelledby="mapSearchPanelTitle" tabindex="-1">
             <h3 id="mapSearchPanelTitle">Find a place</h3>
-            <p class="map-explorer-section__text">Search by title, address, street, story, or keyword.</p>
+            <p class="map-explorer-section__text">Search community heritage records by title, address, street, story, or keyword.</p>
             <form class="map-search-form" id="mapSearchForm">
               <label class="map-search-form__label" for="mapSearchInput">Keyword search</label>
               <div class="map-search-form__row">
@@ -73,7 +73,8 @@
             <div class="map-filter-panel map-filter-panel--sidebar" id="mapFilterPanel">
               <div class="map-filter-panel__body map-filter-panel__body--sidebar">
                 <fieldset class="map-filter-group">
-                  <legend>Discovery filters</legend>
+                  <legend>Community discovery filters</legend>
+                  <p class="map-explorer-section__text">These filters currently apply to community heritage records. Official-layer filtering will be added separately.</p>
                   <div class="map-filter-field">
                     <span class="map-filter-field__label" id="mapAssetTypeFilterLabel">Asset type</span>
                     <div class="community-custom-filter map-custom-filter" data-filter-key="assetType">
@@ -117,6 +118,17 @@
             <h3 id="mapHelpTitle">Map guide</h3>
             <p class="map-explorer-section__text">Use the search and filters to focus the map, then open a place record for full details.</p>
 
+            <section class="official-heritage-map-info" aria-labelledby="officialHeritageInfoTitle">
+              <h4 id="officialHeritageInfoTitle">About official heritage markers</h4>
+              <p>Community heritage records and official protected heritage records are separate sources.</p>
+              <ul>
+                <li>Blue pins show community heritage records.</li>
+                <li>Filled diamonds show project-reviewed official reference locations.</li>
+                <li>Hollow diamonds are reserved for generalized official references, not precise heritage sites.</li>
+              </ul>
+              <p>Official marker locations are project-produced references, not official designation coordinates or legal boundaries. Search and Filters currently apply only to community records.</p>
+            </section>
+
             <div class="map-explorer-cta" aria-labelledby="mapNominationTitle">
               <h3 id="mapNominationTitle">Nominate a place</h3>
               <p>Choose coordinates by activating the button and then clicking or tapping the map.</p>
@@ -149,7 +161,7 @@
             <p id="provincialHeritageError" role="alert" hidden></p>
           </div>
           <div id="map" class="map-canvas map-search-canvas" role="region" aria-labelledby="mapSearchTitle" aria-describedby="mapAccessibleDescription"></div>
-          <p class="visually-hidden" id="mapAccessibleDescription">Interactive community heritage map. Keyboard-accessible markers open record summaries. Every matching public record is also available through the Places list above.</p>
+          <p class="visually-hidden" id="mapAccessibleDescription">Interactive heritage map. Keyboard-accessible community and optional official protected heritage markers open record summaries. Official markers distinguish reviewed locations from generalized area references. Every matching community record is also available through the Places list above.</p>
         </div>
       </section>
     </div>

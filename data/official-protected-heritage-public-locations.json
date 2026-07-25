@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "1.0.0",
+  "datasetId": "official-protected-heritage-public-location-decisions",
+  "projectMaintainer": "Alex's Photo Board",
+  "projectLastReviewedDate": "2026-07-24",
+  "decisions": [
+    {
+      "recordId": "JX-XY-PCH-001",
+      "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+      "identityConfidence": "confirmed",
+      "siteLocationConfidence": "Medium",
+      "locationEvidenceConfidence": "Medium",
+      "displayLocationType": "compound-centroid",
+      "locationPrecision": "approximate",
+      "publicLocationMeaning": "heritage-compound-centre",
+      "publicationLocationPolicy": "approximate",
+      "sensitivityAssessment": "public-exact-acceptable",
+      "latitude": 27.798123,
+      "longitude": 114.937042,
+      "coordinateReferenceSystem": "WGS84",
+      "estimatedUncertaintyMeters": 75,
+      "generalizationRadiusMeters": null,
+      "publicLocationNote": "This project-produced point indicates the approximate centre of the confirmed Xinyu Confucian Temple compound. It is not an official designation coordinate, exact building location or legal boundary.",
+      "locationEvidenceSummary": "The official Xinyu register identifies the temple on Kuixing Road; Xinyu Museum describes the compound; Google Maps and satellite imagery show the named compound and Dacheng Gate; the selected public point follows the named OpenStreetMap WGS84 compound footprint after comparison with mainland-provider coordinates.",
+      "reviewedBy": "project owner",
+      "reviewedDate": "2026-07-24",
+      "reviewStatus": "approved",
+      "projectLocationSources": [
+        {
+          "sourceId": "JX-XY-PCH-001-S01",
+          "sourceType": "official-record",
+          "sourceTitle": "新余市市级以上文物保护单位名录（2025年）",
+          "sourcePublisher": "新余市文化广电旅游局",
+          "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+          "sourceAccessedDate": "2026-07-24",
+          "supports": [
+            "official-identity",
+            "official-locality"
+          ]
+        },
+        {
+          "sourceId": "JX-XY-PCH-001-S02",
+          "sourceType": "institutional-description",
+          "sourceTitle": "孔庙",
+          "sourcePublisher": "江西省新余市博物馆",
+          "sourceUrl": "https://www.xysmuseum.com/597.html",
+          "sourceAccessedDate": "2026-07-24",
+          "supports": [
+            "independent-identity",
+            "compound-description"
+          ]
+        },
+        {
+          "sourceId": "JX-XY-PCH-001-S03",
+          "sourceType": "map-poi-and-satellite",
+          "sourceTitle": "Confucian Temple / 孔庙",
+          "sourcePublisher": "Google Maps",
+          "sourceUrl": "https://www.google.com/maps/place/Confucian+Temple/@27.794748,114.941361,760m/data=!3m2!1e3!4b1!4m6!3m5!1s0x342480302297ac11:0xd89c89b6d84369c8!8m2!3d27.794748!4d114.941361!16s%2Fg%2F1vp71f2x",
+          "sourceAccessedDate": "2026-07-24",
+          "supports": [
+            "poi-name",
+            "locality-match",
+            "satellite-compound",
+            "internal-venue-label"
+          ]
+        },
+        {
+          "sourceId": "JX-XY-PCH-001-S04",
+          "sourceType": "open-map-geometry",
+          "sourceTitle": "Way: 新余孔庙 (1255899577)",
+          "sourcePublisher": "OpenStreetMap contributors",
+          "sourceUrl": "https://www.openstreetmap.org/way/1255899577",
+          "sourceAccessedDate": "2026-07-24",
+          "supports": [
+            "named-compound",
+            "wgs84-reference"
+          ]
+        }
+      ],
+      "originalProviderCoordinate": {
+        "provider": "Google Maps",
+        "poiName": "Confucian Temple / 孔庙",
+        "whatItRepresents": "Named temple compound point displayed by the mainland Google Maps basemap.",
+        "latitude": 27.794748,
+        "longitude": 114.941361,
+        "coordinateReferenceSystem": "GCJ-02",
+        "coordinateReferenceSystemStatus": "project-assessed",
+        "providerUrl": "https://www.google.com/maps/place/Confucian+Temple/@27.794748,114.941361,760m/data=!3m2!1e3!4b1!4m6!3m5!1s0x342480302297ac11:0xd89c89b6d84369c8!8m2!3d27.794748!4d114.941361!16s%2Fg%2F1vp71f2x"
+      },
+      "transformationOrReconciliationMethod": "The raw mainland Google coordinate was retained as GCJ-02 evidence and was not copied into GeoJSON. A standard inverse GCJ-02 comparison produced an approximate WGS84 cross-check; the published point was reconciled to the named OpenStreetMap WGS84 compound footprint and reviewed as an approximate compound centroid."
+    }
+  ]
+}

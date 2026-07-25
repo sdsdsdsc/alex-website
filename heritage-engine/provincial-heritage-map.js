@@ -1,14 +1,22 @@
-const SUPPORTED_SCHEMA_VERSION = "1.0.0";
-const PROVINCIAL_HERITAGE_DATASET_ID = "jiangxi-provincial-protected-heritage-pilot";
-const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 10;
+const SUPPORTED_SCHEMA_VERSION = "2.0.0";
+const PROVINCIAL_HERITAGE_DATASET_ID = "jiangxi-provincial-protected-heritage-map";
+const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 11;
 const PROVINCIAL_HERITAGE_LOADING_MESSAGE = "Loading provincial heritage preview…";
 const PROVINCIAL_HERITAGE_EMPTY_MESSAGE = "No approved provincial heritage locations are available to display yet.";
 const PROVINCIAL_HERITAGE_FAILURE_MESSAGE = "The provincial heritage preview could not be loaded.";
-const PROJECT_COORDINATE_PROVENANCE = "Displayed location: Alex's Photo Board project coordinate review, not an official designation coordinate.";
+const PROJECT_COORDINATE_PROVENANCE = "Displayed location: Alex's Photo Board reviewed public-location decision, not an official designation coordinate.";
 
 const SUPPORTED_CONFIDENCE = new Set(["High", "Medium"]);
 const SUPPORTED_PUBLICATION_POLICIES = new Set(["exact", "approximate", "generalized"]);
-const SUPPORTED_SENSITIVITY = new Set(["public-exact-acceptable", "public-generalized-only"]);
+const SUPPORTED_MARKER_CLASSES = new Set(["reviewed", "generalized"]);
+const SUPPORTED_LOCATION_MEANINGS = new Set([
+  "heritage-feature",
+  "heritage-compound-centre",
+  "public-entrance",
+  "visitor-reference",
+  "official-locality-centre",
+  "representative-area"
+]);
 
 class ProvincialHeritageMapValidationError extends Error {
   constructor(errors) {
@@ -51,13 +59,19 @@ function validateFeature(feature, index, seenIds) {
       "recordId",
       "projectNameEn",
       "officialNameZh",
-      "coordinateConfidence",
+      "protectionLevelZh",
+      "officialCategoryZh",
+      "officialLocationTextZh",
+      "locationEvidenceConfidence",
       "coordinateReferenceSystem",
       "publicationLocationPolicy",
-      "sensitivityAssessment",
-      "approximateLocation",
+      "locationPrecision",
+      "publicLocationMeaning",
+      "displayLocationType",
+      "markerClass",
+      "publicLocationNote",
       "sourceAccessedDate",
-      "geometryProvenance"
+      "projectLocationProvenance"
     ].forEach((key) => {
       addError(errors, properties[key] !== undefined && properties[key] !== null, `${path}.properties.${key} is required.`);
     });
@@ -72,8 +86,8 @@ function validateFeature(feature, index, seenIds) {
     );
     addError(
       errors,
-      SUPPORTED_CONFIDENCE.has(properties.coordinateConfidence),
-      `${path}.properties.coordinateConfidence must be High or Medium.`
+      SUPPORTED_CONFIDENCE.has(properties.locationEvidenceConfidence),
+      `${path}.properties.locationEvidenceConfidence must be High or Medium.`
     );
     addError(
       errors,
@@ -87,34 +101,39 @@ function validateFeature(feature, index, seenIds) {
     );
     addError(
       errors,
-      SUPPORTED_SENSITIVITY.has(properties.sensitivityAssessment),
-      `${path}.properties.sensitivityAssessment does not permit public display.`
+      SUPPORTED_MARKER_CLASSES.has(properties.markerClass),
+      `${path}.properties.markerClass is unsupported.`
     );
     addError(
       errors,
-      typeof properties.approximateLocation === "boolean",
-      `${path}.properties.approximateLocation must be boolean.`
+      SUPPORTED_LOCATION_MEANINGS.has(properties.publicLocationMeaning),
+      `${path}.properties.publicLocationMeaning is unsupported.`
     );
 
-    if (
-      SUPPORTED_CONFIDENCE.has(properties.coordinateConfidence)
-      && SUPPORTED_PUBLICATION_POLICIES.has(properties.publicationLocationPolicy)
-      && typeof properties.approximateLocation === "boolean"
-    ) {
-      const expectedApproximation = properties.coordinateConfidence === "Medium"
-        || properties.publicationLocationPolicy !== "exact";
+    if (properties.markerClass === "reviewed") {
       addError(
         errors,
-        properties.approximateLocation === expectedApproximation,
-        `${path}.properties.approximateLocation contradicts confidence or publication policy.`
+        ["exact", "approximate"].includes(properties.publicationLocationPolicy),
+        `${path} reviewed markers require exact or approximate publication.`
+      );
+      addError(
+        errors,
+        properties.generalizationRadiusMeters === null,
+        `${path} reviewed markers must not carry a generalization radius.`
       );
     }
-
-    if (["exact", "approximate"].includes(properties.publicationLocationPolicy)) {
+    if (properties.markerClass === "generalized") {
       addError(
         errors,
-        properties.sensitivityAssessment === "public-exact-acceptable",
-        `${path} requires public-exact-acceptable sensitivity for exact or approximate publication.`
+        properties.publicationLocationPolicy === "generalized"
+          && properties.locationPrecision === "generalized",
+        `${path} generalized markers require generalized policy and precision.`
+      );
+      addError(
+        errors,
+        Number.isFinite(properties.generalizationRadiusMeters)
+          && properties.generalizationRadiusMeters > 0,
+        `${path} generalized markers require a positive radius.`
       );
     }
   }
@@ -208,8 +227,12 @@ function buildProvincialMarkerAccessibleName(feature) {
   const officialName = isNonEmptyString(properties.officialNameZh)
     ? ` (${properties.officialNameZh.trim()})`
     : "";
-  const approximation = properties.approximateLocation ? ", approximate location" : "";
-  return `Open provincial heritage record: ${title}${officialName}${approximation}`;
+  const locationLabel = properties.markerClass === "generalized"
+    ? ", generalized area reference"
+    : properties.publicationLocationPolicy === "approximate"
+      ? ", approximate reviewed location"
+      : ", reviewed location";
+  return `Open official protected heritage record: ${title}${officialName}${locationLabel}`;
 }
 
 function buildProvincialPopupData(feature) {
@@ -217,8 +240,17 @@ function buildProvincialPopupData(feature) {
   return {
     projectNameEn: String(properties.projectNameEn || "").trim(),
     officialNameZh: String(properties.officialNameZh || "").trim(),
-    coordinateConfidence: String(properties.coordinateConfidence || "").trim(),
-    approximateLocation: properties.approximateLocation === true,
+    protectionLevelZh: String(properties.protectionLevelZh || "").trim(),
+    officialCategoryZh: String(properties.officialCategoryZh || "").trim(),
+    officialLocationTextZh: String(properties.officialLocationTextZh || "").trim(),
+    locationEvidenceConfidence: String(properties.locationEvidenceConfidence || "").trim(),
+    markerClass: String(properties.markerClass || "").trim(),
+    displayLocationType: String(properties.displayLocationType || "").trim(),
+    locationPrecision: String(properties.locationPrecision || "").trim(),
+    publicLocationMeaning: String(properties.publicLocationMeaning || "").trim(),
+    publicLocationNote: String(properties.publicLocationNote || "").trim(),
+    estimatedUncertaintyMeters: properties.estimatedUncertaintyMeters,
+    generalizationRadiusMeters: properties.generalizationRadiusMeters,
     sourceLabel: String(properties.sourceTitleZh || properties.sourceIssuerZh || "").trim(),
     sourceUrl: String(properties.sourceUrl || "").trim(),
     sourceAccessedDate: String(properties.sourceAccessedDate || "").trim(),

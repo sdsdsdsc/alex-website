@@ -1,0 +1,69 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "schemaVersion": "2.0.0",
+    "datasetId": "jiangxi-provincial-protected-heritage-map",
+    "sourceDatasets": [
+      {
+        "datasetId": "jiangxi-provincial-protected-heritage-pilot",
+        "sourcePath": "data/jiangxi-provincial-heritage-pilot.json",
+        "recordCount": 10
+      },
+      {
+        "datasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+        "sourcePath": "data/xinyu-provincial-heritage-marker-pilot.json",
+        "recordCount": 1
+      }
+    ],
+    "publicLocationSource": "data/official-protected-heritage-public-locations.json",
+    "sourceRecordCount": 11,
+    "featureCount": 1,
+    "excludedRecordCount": 10,
+    "generationStatus": "valid",
+    "deterministicSourceOrder": [
+      "jiangxi-provincial-protected-heritage-pilot",
+      "xinyu-provincial-protected-heritage-marker-pilot"
+    ],
+    "geometryProvenance": "Alex's Photo Board reviewed public-location decision"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "JX-XY-PCH-001",
+      "properties": {
+        "recordId": "JX-XY-PCH-001",
+        "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+        "officialNameZh": "新余孔庙",
+        "projectNameEn": "Xinyu Confucian Temple",
+        "projectEnglishStatus": "Alex's Photo Board project interpretation",
+        "protectionLevelZh": "省级文物保护单位",
+        "officialCategoryZh": "古建筑",
+        "officialLocationTextZh": "渝水区城南办事处魁星路",
+        "sourceTitleZh": "新余市市级以上文物保护单位名录（2025年）",
+        "sourceIssuerZh": "新余市文化广电旅游局",
+        "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+        "sourceAccessedDate": "2026-07-24",
+        "identityConfidence": "confirmed",
+        "siteLocationConfidence": "Medium",
+        "locationEvidenceConfidence": "Medium",
+        "displayLocationType": "compound-centroid",
+        "locationPrecision": "approximate",
+        "publicLocationMeaning": "heritage-compound-centre",
+        "markerClass": "reviewed",
+        "estimatedUncertaintyMeters": 75,
+        "generalizationRadiusMeters": null,
+        "publicationLocationPolicy": "approximate",
+        "publicLocationNote": "This project-produced point indicates the approximate centre of the confirmed Xinyu Confucian Temple compound. It is not an official designation coordinate, exact building location or legal boundary.",
+        "coordinateReferenceSystem": "WGS84",
+        "projectLocationProvenance": "Alex's Photo Board reviewed public-location decision"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.937042,
+          27.798123
+        ]
+      }
+    }
+  ]
+}
