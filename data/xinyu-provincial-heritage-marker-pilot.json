@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0.0",
+  "datasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+  "recordType": "official-reference",
+  "protectionLevelCode": "provincial",
+  "dataLayer": "provincial-protected-heritage-marker-pilot",
+  "provenance": {
+    "officialSourceTitleZh": "新余市市级以上文物保护单位名录（2025年）",
+    "publishingAuthorityZh": "新余市文化广电旅游局",
+    "sourceIndexNumber": "3605000013-2025-01167",
+    "publicationDate": "2025-12-26",
+    "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+    "sourceAccessedDate": "2026-07-24"
+  },
+  "records": [
+    {
+      "recordId": "JX-XY-PCH-001",
+      "sourceSequence": 9,
+      "official": {
+        "officialNameZh": "新余孔庙",
+        "officialCategoryZh": "古建筑",
+        "officialLocationTextZh": "渝水区城南办事处魁星路",
+        "protectionLevelZh": "省级文物保护单位",
+        "officialDesignationNumber": null,
+        "designationBatch": null,
+        "designationDate": null,
+        "periodZh": null
+      },
+      "projectInterpretation": {
+        "projectNameEn": "Xinyu Confucian Temple",
+        "translationStatus": "project-reviewed",
+        "translationNote": "Project English interpretation; the official source supplies no English name."
+      }
+    }
+  ]
+}

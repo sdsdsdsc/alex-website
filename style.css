@@ -1832,6 +1832,24 @@ body.community-modal-open {
   transform: rotate(45deg);
 }
 
+.provincial-heritage-map-marker--reviewed::before {
+  background: #a94700;
+}
+
+.provincial-heritage-map-marker--generalized::before {
+  background: #fff;
+  border-color: #a94700;
+}
+
+.provincial-heritage-map-marker--generalized::after {
+  left: 11px;
+  top: 15px;
+  width: 12px;
+  height: 4px;
+  border-radius: 0;
+  background: #a94700;
+}
+
 .provincial-heritage-map-marker::after {
   content: "";
   position: absolute;
@@ -1847,10 +1865,48 @@ body.community-modal-open {
   font-weight: 700;
 }
 
+.provincial-heritage-map-popup__badge {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 4px 8px;
+  border: 1px solid #a94700;
+  background: #fff5e8;
+  color: #6f3100;
+  font-weight: 800;
+}
+
 .provincial-heritage-map-popup__provenance {
   border-top: 1px solid #d9d3c5;
   padding-top: 10px;
   color: #333;
+}
+
+.provincial-heritage-map-popup__location-note {
+  padding: 10px;
+  border-left: 4px solid #a94700;
+  background: #fff5e8;
+}
+
+.official-heritage-map-info {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-left: 4px solid #a94700;
+  background: #fff5e8;
+}
+
+.official-heritage-map-info h4,
+.official-heritage-map-info p,
+.official-heritage-map-info ul {
+  margin: 0;
+}
+
+.official-heritage-map-info ul {
+  padding-left: 1.25rem;
+}
+
+.official-heritage-map-info li + li {
+  margin-top: 5px;
 }
 
 .community-map-popup .leaflet-popup-content-wrapper {

@@ -7,6 +7,10 @@ const helperSource = await readFile(
   "utf8"
 );
 const helper = await import(`data:text/javascript;base64,${Buffer.from(helperSource).toString("base64")}`);
+const committedGeoJson = JSON.parse(await readFile(
+  new URL("../data/jiangxi-provincial-protected-heritage-map.geojson", import.meta.url),
+  "utf8"
+));
 
 const {
   ProvincialHeritageMapValidationError,
@@ -19,12 +23,11 @@ function makeValidEmpty() {
   return {
     type: "FeatureCollection",
     metadata: {
-      schemaVersion: "1.0.0",
-      datasetId: "jiangxi-provincial-protected-heritage-pilot",
-      sourceDataset: "data/jiangxi-provincial-heritage-pilot.json",
-      sourceRecordCount: 10,
+      schemaVersion: "2.0.0",
+      datasetId: "jiangxi-provincial-protected-heritage-map",
+      sourceRecordCount: 11,
       featureCount: 0,
-      excludedRecordCount: 10,
+      excludedRecordCount: 11,
       generationStatus: "valid-empty",
       geometryProvenance: "Alex's Photo Board project coordinate review"
     },
@@ -40,16 +43,24 @@ function makeValidFeature(overrides = {}) {
       recordId: "JX-PCH-7-001",
       officialNameZh: "测试遗址",
       projectNameEn: "Test Archaeological Site",
-      coordinateConfidence: "High",
+      protectionLevelZh: "省级文物保护单位",
+      officialCategoryZh: "古建筑",
+      officialLocationTextZh: "测试地点",
+      locationEvidenceConfidence: "High",
       coordinateReferenceSystem: "WGS84",
       publicationLocationPolicy: "exact",
-      sensitivityAssessment: "public-exact-acceptable",
-      approximateLocation: false,
+      locationPrecision: "exact",
+      publicLocationMeaning: "heritage-feature",
+      displayLocationType: "site-point",
+      markerClass: "reviewed",
+      publicLocationNote: "Project-reviewed location; not an official coordinate.",
+      estimatedUncertaintyMeters: 20,
+      generalizationRadiusMeters: null,
       sourceIssuerZh: "江西省人民政府",
       sourceTitleZh: "江西省人民政府关于公布第七批江西省文物保护单位的通知",
       sourceUrl: "https://example.gov.cn/source",
       sourceAccessedDate: "2026-07-23",
-      geometryProvenance: "Alex's Photo Board project coordinate review"
+      projectLocationProvenance: "Alex's Photo Board reviewed public-location decision"
     },
     geometry: {
       type: "Point",
@@ -73,7 +84,7 @@ function makeFeatureCollection(features) {
     metadata: {
       ...makeValidEmpty().metadata,
       featureCount: features.length,
-      excludedRecordCount: 10 - features.length,
+      excludedRecordCount: 11 - features.length,
       generationStatus: features.length === 0 ? "valid-empty" : "valid"
     },
     features
@@ -91,12 +102,12 @@ test("accepts the committed valid-empty contract", () => {
   const result = validateProvincialHeritageGeoJson(makeValidEmpty());
   assert.equal(result.status, "valid-empty");
   assert.equal(result.features.length, 0);
-  assert.equal(result.metadata.excludedRecordCount, 10);
+  assert.equal(result.metadata.excludedRecordCount, 11);
 });
 
 test("rejects an unsupported schema", () => {
   const value = makeValidEmpty();
-  value.metadata.schemaVersion = "2.0.0";
+  value.metadata.schemaVersion = "1.0.0";
   expectInvalid(value, /schemaVersion is unsupported/);
 });
 
@@ -127,7 +138,7 @@ test("rejects non-array features", () => {
 test("rejects the wrong source record count", () => {
   const value = makeValidEmpty();
   value.metadata.sourceRecordCount = 9;
-  expectInvalid(value, /sourceRecordCount must be 10/);
+  expectInvalid(value, /sourceRecordCount must be 11/);
 });
 
 test("rejects a feature count mismatch", () => {
@@ -182,8 +193,8 @@ test("rejects invalid longitude", () => {
 });
 
 test("rejects Low and None features", () => {
-  const low = makeValidFeature({ properties: { coordinateConfidence: "Low" } });
-  const none = makeValidFeature({ properties: { coordinateConfidence: "None" } });
+  const low = makeValidFeature({ properties: { locationEvidenceConfidence: "Low" } });
+  const none = makeValidFeature({ properties: { locationEvidenceConfidence: "None" } });
   expectInvalid(makeFeatureCollection([low]), /must be High or Medium/);
   expectInvalid(makeFeatureCollection([none]), /must be High or Medium/);
 });
@@ -193,30 +204,37 @@ test("rejects withheld publication", () => {
   expectInvalid(makeFeatureCollection([feature]), /not public and supported/);
 });
 
-test("rejects restricted sensitivity", () => {
-  const feature = makeValidFeature({ properties: { sensitivityAssessment: "restricted" } });
-  expectInvalid(makeFeatureCollection([feature]), /does not permit public display/);
-});
-
 test("accepts a synthetic High exact Point", () => {
   const feature = makeValidFeature();
   const result = validateProvincialHeritageGeoJson(makeFeatureCollection([feature]));
   assert.equal(result.status, "valid");
   assert.deepEqual(result.features[0].geometry.coordinates, [113.8825, 27.6202]);
-  assert.equal(result.features[0].properties.approximateLocation, false);
+  assert.equal(result.features[0].properties.markerClass, "reviewed");
+});
+
+test("accepts the committed reviewed Xinyu Confucian Temple marker", () => {
+  const result = validateProvincialHeritageGeoJson(committedGeoJson);
+  assert.equal(result.status, "valid");
+  assert.equal(result.features.length, 1);
+  assert.equal(result.features[0].id, "JX-XY-PCH-001");
+  assert.deepEqual(result.features[0].geometry.coordinates, [114.937042, 27.798123]);
+  assert.equal(result.features[0].properties.markerClass, "reviewed");
+  assert.equal(result.features[0].properties.estimatedUncertaintyMeters, 75);
 });
 
 test("accepts a synthetic Medium approximate Point", () => {
   const feature = makeValidFeature({
     properties: {
-      coordinateConfidence: "Medium",
+      locationEvidenceConfidence: "Medium",
       publicationLocationPolicy: "approximate",
-      approximateLocation: true
+      locationPrecision: "approximate",
+      displayLocationType: "compound-centroid",
+      publicLocationMeaning: "heritage-compound-centre"
     }
   });
   const result = validateProvincialHeritageGeoJson(makeFeatureCollection([feature]));
-  assert.equal(result.features[0].properties.coordinateConfidence, "Medium");
-  assert.equal(result.features[0].properties.approximateLocation, true);
+  assert.equal(result.features[0].properties.locationEvidenceConfidence, "Medium");
+  assert.equal(result.features[0].properties.locationPrecision, "approximate");
 });
 
 test("preserves GeoJSON longitude-latitude order", () => {
@@ -227,33 +245,150 @@ test("preserves GeoJSON longitude-latitude order", () => {
   assert.equal(latitude, 28.75);
 });
 
-test("rejects contradictory exact approximation state", () => {
-  const feature = makeValidFeature({ properties: { approximateLocation: true } });
-  expectInvalid(makeFeatureCollection([feature]), /approximateLocation contradicts/);
-});
-
-test("rejects contradictory Medium or approximate non-approximation state", () => {
-  const medium = makeValidFeature({
+test("accepts a generalized marker with explicit radius", () => {
+  const generalized = makeValidFeature({
     properties: {
-      coordinateConfidence: "Medium",
-      publicationLocationPolicy: "approximate",
-      approximateLocation: false
+      locationEvidenceConfidence: "Medium",
+      publicationLocationPolicy: "generalized",
+      locationPrecision: "generalized",
+      displayLocationType: "generalized-locality",
+      publicLocationMeaning: "official-locality-centre",
+      markerClass: "generalized",
+      generalizationRadiusMeters: 1500
     }
   });
-  expectInvalid(makeFeatureCollection([medium]), /approximateLocation contradicts/);
+  assert.equal(validateProvincialHeritageGeoJson(makeFeatureCollection([generalized])).status, "valid");
+});
+
+test("rejects missing, zero, negative, and non-finite uncertainty", () => {
+  const missing = makeValidFeature();
+  delete missing.properties.estimatedUncertaintyMeters;
+  [
+    missing,
+    makeValidFeature({ properties: { estimatedUncertaintyMeters: 0 } }),
+    makeValidFeature({ properties: { estimatedUncertaintyMeters: -25 } }),
+    makeValidFeature({ properties: { estimatedUncertaintyMeters: Infinity } }),
+    makeValidFeature({ properties: { estimatedUncertaintyMeters: Number.NaN } })
+  ].forEach((feature) => {
+    expectInvalid(
+      makeFeatureCollection([feature]),
+      /estimatedUncertaintyMeters must be a positive finite number/
+    );
+  });
+});
+
+test("rejects non-HTTPS, script, malformed, and relative source URLs", () => {
+  [
+    "http://example.gov.cn/source",
+    "javascript:alert(1)",
+    "data:text/html,unsafe",
+    "https:example.gov.cn/source",
+    "not a URL",
+    "/relative/source"
+  ].forEach((sourceUrl) => {
+    const feature = makeValidFeature({ properties: { sourceUrl } });
+    expectInvalid(makeFeatureCollection([feature]), /sourceUrl must be a valid HTTPS URL/);
+  });
+});
+
+test("rejects reviewed markers with generalized semantics", () => {
+  const generalizedDisplay = makeValidFeature({
+    properties: {
+      displayLocationType: "generalized-locality",
+      publicLocationMeaning: "official-locality-centre"
+    }
+  });
+  const generalizedMeaning = makeValidFeature({
+    properties: { publicLocationMeaning: "representative-area" }
+  });
+  const generalizedPolicy = makeValidFeature({
+    properties: {
+      publicationLocationPolicy: "generalized",
+      locationPrecision: "generalized"
+    }
+  });
+  [generalizedDisplay, generalizedMeaning, generalizedPolicy].forEach((feature) => {
+    expectInvalid(makeFeatureCollection([feature]), /reviewed marker|reviewed markers/);
+  });
+});
+
+test("rejects generalized markers with reviewed or exact semantics", () => {
+  const reviewedDisplay = makeValidFeature({
+    properties: {
+      markerClass: "generalized",
+      publicationLocationPolicy: "generalized",
+      locationPrecision: "generalized",
+      generalizationRadiusMeters: 1500
+    }
+  });
+  const exactMeaning = makeValidFeature({
+    properties: {
+      markerClass: "generalized",
+      publicationLocationPolicy: "generalized",
+      locationPrecision: "generalized",
+      displayLocationType: "generalized-locality",
+      publicLocationMeaning: "heritage-feature",
+      generalizationRadiusMeters: 1500
+    }
+  });
+  [reviewedDisplay, exactMeaning].forEach((feature) => {
+    expectInvalid(makeFeatureCollection([feature]), /generalized marker display type and public-location meaning/);
+  });
+});
+
+test("rejects generalized markers without a positive radius", () => {
+  const baseProperties = {
+    publicationLocationPolicy: "generalized",
+    locationPrecision: "generalized",
+    displayLocationType: "generalized-locality",
+    publicLocationMeaning: "official-locality-centre",
+    markerClass: "generalized"
+  };
+  [null, 0, -1, Infinity].forEach((generalizationRadiusMeters) => {
+    const feature = makeValidFeature({
+      properties: { ...baseProperties, generalizationRadiusMeters }
+    });
+    expectInvalid(makeFeatureCollection([feature]), /positive radius/);
+  });
+});
+
+test("rejects generalized markers with incompatible precision or publication policy", () => {
+  const incompatiblePrecision = makeValidFeature({
+    properties: {
+      publicationLocationPolicy: "generalized",
+      locationPrecision: "approximate",
+      displayLocationType: "generalized-locality",
+      publicLocationMeaning: "official-locality-centre",
+      markerClass: "generalized",
+      generalizationRadiusMeters: 1500
+    }
+  });
+  const incompatiblePolicy = makeValidFeature({
+    properties: {
+      publicationLocationPolicy: "approximate",
+      locationPrecision: "generalized",
+      displayLocationType: "generalized-area-reference",
+      publicLocationMeaning: "representative-area",
+      markerClass: "generalized",
+      generalizationRadiusMeters: 1500
+    }
+  });
+  [incompatiblePrecision, incompatiblePolicy].forEach((feature) => {
+    expectInvalid(makeFeatureCollection([feature]), /generalized policy and precision/);
+  });
 });
 
 test("builds a descriptive accessible marker name", () => {
   const feature = makeValidFeature({
     properties: {
-      coordinateConfidence: "Medium",
+      locationEvidenceConfidence: "Medium",
       publicationLocationPolicy: "approximate",
-      approximateLocation: true
+      locationPrecision: "approximate"
     }
   });
   assert.equal(
     buildProvincialMarkerAccessibleName(feature),
-    "Open provincial heritage record: Test Archaeological Site (测试遗址), approximate location"
+    "Open official protected heritage record: Test Archaeological Site (测试遗址), approximate reviewed location"
   );
 });
 
@@ -261,8 +396,16 @@ test("builds provenance-safe popup display data", () => {
   const popup = buildProvincialPopupData(makeValidFeature());
   assert.equal(popup.projectNameEn, "Test Archaeological Site");
   assert.equal(popup.officialNameZh, "测试遗址");
-  assert.equal(popup.coordinateConfidence, "High");
-  assert.equal(popup.approximateLocation, false);
-  assert.match(popup.coordinateProvenance, /project coordinate review/);
+  assert.equal(popup.locationEvidenceConfidence, "High");
+  assert.equal(popup.markerClass, "reviewed");
+  assert.equal(popup.sourceUrl, "https://example.gov.cn/source");
+  assert.match(popup.coordinateProvenance, /reviewed public-location decision/);
   assert.match(popup.coordinateProvenance, /not an official designation coordinate/);
+});
+
+test("popup display data does not expose an invalid source URL", () => {
+  const popup = buildProvincialPopupData(makeValidFeature({
+    properties: { sourceUrl: "javascript:alert(1)" }
+  }));
+  assert.equal(popup.sourceUrl, null);
 });

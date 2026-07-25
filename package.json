@@ -1,11 +1,15 @@
 {
   "scripts": {
-    "test": "npm run validate:provincial-heritage && npm run test:provincial-heritage && npm run check:provincial-heritage && npm run test:provincial-heritage-map && npm run test:admin-auth && npm run test:payload && npm run test:promotion && npm run test:place-contributions && npm run test:rules && npm run test:storage-rules",
+    "test": "npm run validate:provincial-heritage && npm run test:provincial-heritage && npm run check:provincial-heritage && npm run validate:official-heritage-map && npm run test:official-heritage-map && npm run check:official-heritage-map && npm run test:provincial-heritage-map && npm run test:admin-auth && npm run test:payload && npm run test:promotion && npm run test:place-contributions && npm run test:rules && npm run test:storage-rules",
     "validate:provincial-heritage": "node scripts/validate-provincial-heritage-data.mjs",
     "generate:provincial-heritage": "node scripts/generate-provincial-heritage-geojson.mjs",
     "check:provincial-heritage": "node scripts/generate-provincial-heritage-geojson.mjs --check",
     "test:provincial-heritage": "node --test tests/provincial-heritage-data.test.mjs",
     "test:provincial-heritage-map": "node --test tests/provincial-heritage-map.test.mjs",
+    "validate:official-heritage-map": "node scripts/validate-official-protected-heritage-publication.mjs",
+    "generate:official-heritage-map": "node scripts/generate-official-protected-heritage-map.mjs",
+    "check:official-heritage-map": "node scripts/generate-official-protected-heritage-map.mjs --check",
+    "test:official-heritage-map": "node --test tests/official-protected-heritage-publication.test.mjs",
     "test:admin-auth": "node --test tests/admin-auth.test.mjs",
     "test:browser": "./node_modules/.bin/playwright test",
     "test:payload": "node --test tests/payload-export.test.mjs",
