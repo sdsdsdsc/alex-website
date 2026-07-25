@@ -7,6 +7,10 @@ const helperSource = await readFile(
   "utf8"
 );
 const helper = await import(`data:text/javascript;base64,${Buffer.from(helperSource).toString("base64")}`);
+const committedGeoJson = JSON.parse(await readFile(
+  new URL("../data/jiangxi-provincial-protected-heritage-map.geojson", import.meta.url),
+  "utf8"
+));
 
 const {
   ProvincialHeritageMapValidationError,
@@ -208,6 +212,16 @@ test("accepts a synthetic High exact Point", () => {
   assert.equal(result.features[0].properties.markerClass, "reviewed");
 });
 
+test("accepts the committed reviewed Xinyu Confucian Temple marker", () => {
+  const result = validateProvincialHeritageGeoJson(committedGeoJson);
+  assert.equal(result.status, "valid");
+  assert.equal(result.features.length, 1);
+  assert.equal(result.features[0].id, "JX-XY-PCH-001");
+  assert.deepEqual(result.features[0].geometry.coordinates, [114.937042, 27.798123]);
+  assert.equal(result.features[0].properties.markerClass, "reviewed");
+  assert.equal(result.features[0].properties.estimatedUncertaintyMeters, 75);
+});
+
 test("accepts a synthetic Medium approximate Point", () => {
   const feature = makeValidFeature({
     properties: {
@@ -246,17 +260,122 @@ test("accepts a generalized marker with explicit radius", () => {
   assert.equal(validateProvincialHeritageGeoJson(makeFeatureCollection([generalized])).status, "valid");
 });
 
-test("rejects generalized marker without a radius", () => {
-  const feature = makeValidFeature({
+test("rejects missing, zero, negative, and non-finite uncertainty", () => {
+  const missing = makeValidFeature();
+  delete missing.properties.estimatedUncertaintyMeters;
+  [
+    missing,
+    makeValidFeature({ properties: { estimatedUncertaintyMeters: 0 } }),
+    makeValidFeature({ properties: { estimatedUncertaintyMeters: -25 } }),
+    makeValidFeature({ properties: { estimatedUncertaintyMeters: Infinity } }),
+    makeValidFeature({ properties: { estimatedUncertaintyMeters: Number.NaN } })
+  ].forEach((feature) => {
+    expectInvalid(
+      makeFeatureCollection([feature]),
+      /estimatedUncertaintyMeters must be a positive finite number/
+    );
+  });
+});
+
+test("rejects non-HTTPS, script, malformed, and relative source URLs", () => {
+  [
+    "http://example.gov.cn/source",
+    "javascript:alert(1)",
+    "data:text/html,unsafe",
+    "https:example.gov.cn/source",
+    "not a URL",
+    "/relative/source"
+  ].forEach((sourceUrl) => {
+    const feature = makeValidFeature({ properties: { sourceUrl } });
+    expectInvalid(makeFeatureCollection([feature]), /sourceUrl must be a valid HTTPS URL/);
+  });
+});
+
+test("rejects reviewed markers with generalized semantics", () => {
+  const generalizedDisplay = makeValidFeature({
     properties: {
+      displayLocationType: "generalized-locality",
+      publicLocationMeaning: "official-locality-centre"
+    }
+  });
+  const generalizedMeaning = makeValidFeature({
+    properties: { publicLocationMeaning: "representative-area" }
+  });
+  const generalizedPolicy = makeValidFeature({
+    properties: {
+      publicationLocationPolicy: "generalized",
+      locationPrecision: "generalized"
+    }
+  });
+  [generalizedDisplay, generalizedMeaning, generalizedPolicy].forEach((feature) => {
+    expectInvalid(makeFeatureCollection([feature]), /reviewed marker|reviewed markers/);
+  });
+});
+
+test("rejects generalized markers with reviewed or exact semantics", () => {
+  const reviewedDisplay = makeValidFeature({
+    properties: {
+      markerClass: "generalized",
+      publicationLocationPolicy: "generalized",
+      locationPrecision: "generalized",
+      generalizationRadiusMeters: 1500
+    }
+  });
+  const exactMeaning = makeValidFeature({
+    properties: {
+      markerClass: "generalized",
       publicationLocationPolicy: "generalized",
       locationPrecision: "generalized",
       displayLocationType: "generalized-locality",
-      publicLocationMeaning: "official-locality-centre",
-      markerClass: "generalized"
+      publicLocationMeaning: "heritage-feature",
+      generalizationRadiusMeters: 1500
     }
   });
-  expectInvalid(makeFeatureCollection([feature]), /positive radius/);
+  [reviewedDisplay, exactMeaning].forEach((feature) => {
+    expectInvalid(makeFeatureCollection([feature]), /generalized marker display type and public-location meaning/);
+  });
+});
+
+test("rejects generalized markers without a positive radius", () => {
+  const baseProperties = {
+    publicationLocationPolicy: "generalized",
+    locationPrecision: "generalized",
+    displayLocationType: "generalized-locality",
+    publicLocationMeaning: "official-locality-centre",
+    markerClass: "generalized"
+  };
+  [null, 0, -1, Infinity].forEach((generalizationRadiusMeters) => {
+    const feature = makeValidFeature({
+      properties: { ...baseProperties, generalizationRadiusMeters }
+    });
+    expectInvalid(makeFeatureCollection([feature]), /positive radius/);
+  });
+});
+
+test("rejects generalized markers with incompatible precision or publication policy", () => {
+  const incompatiblePrecision = makeValidFeature({
+    properties: {
+      publicationLocationPolicy: "generalized",
+      locationPrecision: "approximate",
+      displayLocationType: "generalized-locality",
+      publicLocationMeaning: "official-locality-centre",
+      markerClass: "generalized",
+      generalizationRadiusMeters: 1500
+    }
+  });
+  const incompatiblePolicy = makeValidFeature({
+    properties: {
+      publicationLocationPolicy: "approximate",
+      locationPrecision: "generalized",
+      displayLocationType: "generalized-area-reference",
+      publicLocationMeaning: "representative-area",
+      markerClass: "generalized",
+      generalizationRadiusMeters: 1500
+    }
+  });
+  [incompatiblePrecision, incompatiblePolicy].forEach((feature) => {
+    expectInvalid(makeFeatureCollection([feature]), /generalized policy and precision/);
+  });
 });
 
 test("builds a descriptive accessible marker name", () => {
@@ -279,6 +398,14 @@ test("builds provenance-safe popup display data", () => {
   assert.equal(popup.officialNameZh, "测试遗址");
   assert.equal(popup.locationEvidenceConfidence, "High");
   assert.equal(popup.markerClass, "reviewed");
+  assert.equal(popup.sourceUrl, "https://example.gov.cn/source");
   assert.match(popup.coordinateProvenance, /reviewed public-location decision/);
   assert.match(popup.coordinateProvenance, /not an official designation coordinate/);
+});
+
+test("popup display data does not expose an invalid source URL", () => {
+  const popup = buildProvincialPopupData(makeValidFeature({
+    properties: { sourceUrl: "javascript:alert(1)" }
+  }));
+  assert.equal(popup.sourceUrl, null);
 });

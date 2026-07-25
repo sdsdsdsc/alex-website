@@ -2,7 +2,7 @@
 
 ## Status
 
-Local implementation prepared for review on 24 July 2026. No commit, pull request, deployment or production change has been made.
+The implementation is committed on the feature branch and draft PR #52 is open for review. It has not been merged or deployed, and production remains unchanged.
 
 ## Purpose and boundary
 

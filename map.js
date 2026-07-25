@@ -179,7 +179,10 @@ function buildProvincialHeritagePopup(feature) {
     ["Displayed location", data.markerClass === "generalized" ? "Generalized area reference" : "Reviewed approximate location"],
     ["Location meaning", data.publicLocationMeaning],
     ["Location evidence", data.locationEvidenceConfidence],
-    ["Uncertainty", `${data.estimatedUncertaintyMeters} metres`],
+    ["Estimated location uncertainty", `${data.estimatedUncertaintyMeters} metres`],
+    ...(data.markerClass === "generalized"
+      ? [["Generalization radius", `${data.generalizationRadiusMeters} metres`]]
+      : []),
     ["Official source", data.sourceLabel, "zh-Hans"],
     ["Source accessed", data.sourceAccessedDate]
   ];
@@ -202,13 +205,15 @@ function buildProvincialHeritagePopup(feature) {
   locationNote.className = "provincial-heritage-map-popup__location-note";
   locationNote.textContent = data.publicLocationNote;
 
-  const sourceLink = document.createElement("a");
-  sourceLink.href = data.sourceUrl;
-  sourceLink.target = "_blank";
-  sourceLink.rel = "noopener noreferrer";
-  sourceLink.textContent = "Open official source";
-
-  article.append(title, locationBadge, officialName, facts, locationNote, provenance, sourceLink);
+  article.append(title, locationBadge, officialName, facts, locationNote, provenance);
+  if (data.sourceUrl) {
+    const sourceLink = document.createElement("a");
+    sourceLink.href = data.sourceUrl;
+    sourceLink.target = "_blank";
+    sourceLink.rel = "noopener noreferrer";
+    sourceLink.textContent = "Open official source";
+    article.appendChild(sourceLink);
+  }
   return article;
 }
 

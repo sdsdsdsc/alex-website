@@ -69,6 +69,8 @@ function makeSyntheticProvincialFeature({
   confidence = "High",
   publicationPolicy = "exact",
   markerClass = "reviewed",
+  estimatedUncertaintyMeters = markerClass === "generalized" ? 900 : 20,
+  generalizationRadiusMeters = markerClass === "generalized" ? 1500 : null,
   coordinates = [113.8825, 27.6202]
 } = {}) {
   return {
@@ -91,8 +93,8 @@ function makeSyntheticProvincialFeature({
       publicLocationNote: markerClass === "generalized"
         ? "This marker shows only a representative locality, not the precise heritage feature."
         : "This project-reviewed point is not an official designation coordinate or legal boundary.",
-      estimatedUncertaintyMeters: markerClass === "generalized" ? 1500 : 20,
-      generalizationRadiusMeters: markerClass === "generalized" ? 1500 : null,
+      estimatedUncertaintyMeters,
+      generalizationRadiusMeters,
       sourceIssuerZh: "江西省人民政府",
       sourceTitleZh: "江西省人民政府关于公布第七批江西省文物保护单位的通知",
       sourceUrl: "https://example.gov.cn/source",
@@ -405,8 +407,16 @@ test("provincial preview distinguishes a generalized marker and explains its rad
   await expect(marker).toHaveAttribute("aria-label", /generalized area reference$/);
   await marker.focus();
   await marker.press("Enter");
-  await expect(page.locator(".provincial-heritage-map-popup")).toContainText("General locality");
-  await expect(page.locator(".provincial-heritage-map-popup")).toContainText("1500 metres");
+  const popup = page.locator(".provincial-heritage-map-popup");
+  await expect(popup).toContainText("General locality");
+  const uncertaintyRow = popup.locator(".map-point-card__facts > div").filter({
+    has: page.locator("dt", { hasText: /^Estimated location uncertainty$/ })
+  });
+  const radiusRow = popup.locator(".map-point-card__facts > div").filter({
+    has: page.locator("dt", { hasText: /^Generalization radius$/ })
+  });
+  await expect(uncertaintyRow.locator("dd")).toHaveText("900 metres");
+  await expect(radiusRow.locator("dd")).toHaveText("1500 metres");
 });
 
 test("Leaflet layer control is keyboard accessible and Escape restores toggle focus", async ({ page }) => {

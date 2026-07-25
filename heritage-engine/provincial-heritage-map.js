@@ -17,6 +17,16 @@ const SUPPORTED_LOCATION_MEANINGS = new Set([
   "official-locality-centre",
   "representative-area"
 ]);
+const REVIEWED_DISPLAY_MEANINGS = new Map([
+  ["site-point", new Set(["heritage-feature"])],
+  ["compound-centroid", new Set(["heritage-compound-centre"])],
+  ["public-entrance", new Set(["public-entrance"])],
+  ["visitor-reference-point", new Set(["visitor-reference"])]
+]);
+const GENERALIZED_DISPLAY_MEANINGS = new Map([
+  ["generalized-locality", new Set(["official-locality-centre"])],
+  ["generalized-area-reference", new Set(["representative-area"])]
+]);
 
 class ProvincialHeritageMapValidationError extends Error {
   constructor(errors) {
@@ -36,6 +46,18 @@ function isNonEmptyString(value) {
 
 function addError(errors, condition, message) {
   if (!condition) errors.push(message);
+}
+
+function normalizeHttpsUrl(value) {
+  if (!isNonEmptyString(value)) return null;
+  const candidate = value.trim();
+  if (!/^https:\/\//i.test(candidate)) return null;
+  try {
+    const url = new URL(candidate);
+    return url.protocol === "https:" && isNonEmptyString(url.hostname) ? url.href : null;
+  } catch {
+    return null;
+  }
 }
 
 function validateFeature(feature, index, seenIds) {
@@ -70,6 +92,8 @@ function validateFeature(feature, index, seenIds) {
       "displayLocationType",
       "markerClass",
       "publicLocationNote",
+      "estimatedUncertaintyMeters",
+      "sourceUrl",
       "sourceAccessedDate",
       "projectLocationProvenance"
     ].forEach((key) => {
@@ -109,12 +133,36 @@ function validateFeature(feature, index, seenIds) {
       SUPPORTED_LOCATION_MEANINGS.has(properties.publicLocationMeaning),
       `${path}.properties.publicLocationMeaning is unsupported.`
     );
+    addError(
+      errors,
+      Number.isFinite(properties.estimatedUncertaintyMeters)
+        && properties.estimatedUncertaintyMeters > 0,
+      `${path}.properties.estimatedUncertaintyMeters must be a positive finite number.`
+    );
+    addError(
+      errors,
+      normalizeHttpsUrl(properties.sourceUrl) !== null,
+      `${path}.properties.sourceUrl must be a valid HTTPS URL.`
+    );
 
     if (properties.markerClass === "reviewed") {
       addError(
         errors,
         ["exact", "approximate"].includes(properties.publicationLocationPolicy),
         `${path} reviewed markers require exact or approximate publication.`
+      );
+      addError(
+        errors,
+        properties.publicationLocationPolicy === "exact"
+          ? ["exact", "near-exact"].includes(properties.locationPrecision)
+          : properties.locationPrecision === "approximate",
+        `${path} reviewed marker precision contradicts its publication policy.`
+      );
+      addError(
+        errors,
+        REVIEWED_DISPLAY_MEANINGS.get(properties.displayLocationType)
+          ?.has(properties.publicLocationMeaning) === true,
+        `${path} reviewed marker display type and public-location meaning are incompatible.`
       );
       addError(
         errors,
@@ -128,6 +176,12 @@ function validateFeature(feature, index, seenIds) {
         properties.publicationLocationPolicy === "generalized"
           && properties.locationPrecision === "generalized",
         `${path} generalized markers require generalized policy and precision.`
+      );
+      addError(
+        errors,
+        GENERALIZED_DISPLAY_MEANINGS.get(properties.displayLocationType)
+          ?.has(properties.publicLocationMeaning) === true,
+        `${path} generalized marker display type and public-location meaning are incompatible.`
       );
       addError(
         errors,
@@ -252,7 +306,7 @@ function buildProvincialPopupData(feature) {
     estimatedUncertaintyMeters: properties.estimatedUncertaintyMeters,
     generalizationRadiusMeters: properties.generalizationRadiusMeters,
     sourceLabel: String(properties.sourceTitleZh || properties.sourceIssuerZh || "").trim(),
-    sourceUrl: String(properties.sourceUrl || "").trim(),
+    sourceUrl: normalizeHttpsUrl(properties.sourceUrl),
     sourceAccessedDate: String(properties.sourceAccessedDate || "").trim(),
     coordinateProvenance: PROJECT_COORDINATE_PROVENANCE
   };
