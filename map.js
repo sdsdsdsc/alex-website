@@ -943,7 +943,6 @@ function initCommunityMap({
   syncLayerControls();
 
   loadMarkers().then(() => {
-    setActiveToolPanel("search", { moveFocus: false });
     runSearch(searchInput?.value || initialDiscoveryState.q);
   });
 

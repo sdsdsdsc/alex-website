@@ -126,23 +126,26 @@ function makeSyntheticProvincialCollection(features = []) {
 }
 
 async function openMapLayersTab(page) {
-  const panel = page.locator("#mapLayersToolPanel");
-  if (!await panel.isVisible()) {
-    await page.getByRole("tab", { name: "Layers", exact: true }).click();
-  }
+  const layersTab = page.getByRole("tab", { name: "Layers", exact: true });
+  const panel = page.getByRole("tabpanel", { name: "Layers", exact: true });
+  await expect(layersTab).toBeVisible();
+  await layersTab.click();
   await expect(panel).toBeVisible();
+  return panel;
 }
 
 function getOverlayCheckbox(page, label) {
-  return page.getByRole("checkbox", { name: label, exact: true });
+  return page
+    .getByRole("tabpanel", { name: "Layers", exact: true })
+    .getByRole("checkbox", { name: label, exact: true });
 }
 
 async function setOverlayChecked(page, label, checked) {
   const checkbox = getOverlayCheckbox(page, label);
-  for (let attempt = 0; attempt < 3 && await checkbox.isChecked() !== checked; attempt += 1) {
-    await checkbox.focus();
-    await checkbox.press("Space");
-    await page.waitForTimeout(100);
+  await expect(checkbox).toBeVisible();
+  await expect(checkbox).toBeEnabled();
+  if (await checkbox.isChecked() !== checked) {
+    await checkbox.click();
   }
   if (checked) {
     await expect(checkbox).toBeChecked();
@@ -391,7 +394,15 @@ test("provincial preview labels a synthetic approximate Point", async ({ page })
     body: JSON.stringify(makeSyntheticProvincialCollection([feature]))
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
-  await openMapLayersTab(page);
+  const layersPanel = await openMapLayersTab(page);
+  const communityCheckbox = layersPanel.getByRole("checkbox", { name: "Community heritage records", exact: true });
+  const provincialCheckbox = layersPanel.getByRole("checkbox", { name: "Provincial protected heritage", exact: true });
+  await expect(communityCheckbox).toBeVisible();
+  await expect(communityCheckbox).toBeEnabled();
+  await expect(communityCheckbox).toBeChecked();
+  await expect(provincialCheckbox).toBeVisible();
+  await expect(provincialCheckbox).toBeEnabled();
+  await expect(provincialCheckbox).not.toBeChecked();
   await setOverlayChecked(page, "Provincial protected heritage", true);
   const marker = page.locator(".provincial-heritage-map-marker");
   await expect(marker).toHaveAttribute("aria-label", /approximate reviewed location$/);
@@ -413,7 +424,15 @@ test("provincial preview distinguishes a generalized marker and explains its rad
     body: JSON.stringify(makeSyntheticProvincialCollection([feature]))
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
-  await openMapLayersTab(page);
+  const layersPanel = await openMapLayersTab(page);
+  const communityCheckbox = layersPanel.getByRole("checkbox", { name: "Community heritage records", exact: true });
+  const provincialCheckbox = layersPanel.getByRole("checkbox", { name: "Provincial protected heritage", exact: true });
+  await expect(communityCheckbox).toBeVisible();
+  await expect(communityCheckbox).toBeEnabled();
+  await expect(communityCheckbox).toBeChecked();
+  await expect(provincialCheckbox).toBeVisible();
+  await expect(provincialCheckbox).toBeEnabled();
+  await expect(provincialCheckbox).not.toBeChecked();
   await setOverlayChecked(page, "Provincial protected heritage", true);
   const marker = page.locator(".provincial-heritage-map-marker--generalized");
   await expect(marker).toHaveAttribute("aria-label", /generalized area reference$/);
