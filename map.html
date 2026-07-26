@@ -17,7 +17,7 @@
   <!-- Firebase -->
   <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="script.js" defer></script>
-  <script type="module" src="map.js?v=2026-07-24-phase15b1-generalized-markers" defer></script>
+  <script type="module" src="map.js?v=2026-07-26-map-layers-tab" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#mapWorkspace">Skip to map and list alternatives</a>
@@ -37,14 +37,15 @@
           </p>
         </div>
 
-        <nav class="map-tool-index" aria-label="Map tools">
-          <button class="map-tool-index__button is-active" type="button" data-tool-target="search" aria-expanded="true" aria-controls="mapSearchToolPanel">Search</button>
-          <button class="map-tool-index__button" type="button" data-tool-target="filters" aria-expanded="false" aria-controls="mapFiltersToolPanel">Filters</button>
-          <button class="map-tool-index__button" type="button" data-tool-target="help" aria-expanded="false" aria-controls="mapInfoToolPanel">Info</button>
+        <nav class="map-tool-index" aria-label="Map tools" role="tablist">
+          <button class="map-tool-index__button is-active" id="mapSearchTab" type="button" role="tab" data-tool-target="search" aria-selected="true" aria-controls="mapSearchToolPanel" tabindex="0">Search</button>
+          <button class="map-tool-index__button" id="mapFiltersTab" type="button" role="tab" data-tool-target="filters" aria-selected="false" aria-controls="mapFiltersToolPanel" tabindex="-1">Filters</button>
+          <button class="map-tool-index__button" id="mapLayersTab" type="button" role="tab" data-tool-target="layers" aria-selected="false" aria-controls="mapLayersToolPanel" tabindex="-1">Layers</button>
+          <button class="map-tool-index__button" id="mapInfoTab" type="button" role="tab" data-tool-target="help" aria-selected="false" aria-controls="mapInfoToolPanel" tabindex="-1">Info</button>
         </nav>
 
         <div class="map-explorer-panel__body">
-          <section class="map-explorer-section map-explorer-section--search is-active" id="mapSearchToolPanel" data-tool-panel="search" aria-labelledby="mapSearchPanelTitle" tabindex="-1">
+          <section class="map-explorer-section map-explorer-section--search is-active" id="mapSearchToolPanel" data-tool-panel="search" role="tabpanel" aria-labelledby="mapSearchTab" tabindex="-1">
             <h3 id="mapSearchPanelTitle">Find a place</h3>
             <p class="map-explorer-section__text">Search community heritage records by title, address, street, story, or keyword.</p>
             <form class="map-search-form" id="mapSearchForm">
@@ -64,7 +65,7 @@
             <p class="map-search-status map-focus-status" id="mapFocusStatus" role="status" aria-live="polite" hidden></p>
           </section>
 
-          <section class="map-explorer-section" id="mapFiltersToolPanel" data-tool-panel="filters" aria-labelledby="mapFilterTitle" tabindex="-1" hidden>
+          <section class="map-explorer-section" id="mapFiltersToolPanel" data-tool-panel="filters" role="tabpanel" aria-labelledby="mapFiltersTab" tabindex="-1" hidden>
             <div class="map-explorer-section__heading">
               <h3 id="mapFilterTitle">Filter records</h3>
               <button class="map-filter-panel__reset" id="mapFilterReset" type="button">Reset</button>
@@ -114,20 +115,60 @@
             </div>
           </section>
 
-          <section class="map-explorer-section map-explorer-section--info" id="mapInfoToolPanel" data-tool-panel="help" aria-labelledby="mapHelpTitle" tabindex="-1" hidden>
+          <section class="map-explorer-section map-layers-panel" id="mapLayersToolPanel" data-tool-panel="layers" role="tabpanel" aria-labelledby="mapLayersTab" tabindex="-1" hidden>
+            <h3>Map layers</h3>
+
+            <fieldset class="map-layers-group" aria-describedby="communityLayerHelp">
+              <legend>Community heritage</legend>
+              <label class="map-layer-toggle" for="communityHeritageLayerToggle">
+                <input id="communityHeritageLayerToggle" type="checkbox" checked>
+                <span class="map-layer-symbol map-layer-symbol--community" aria-hidden="true"></span>
+                <span>Community heritage records</span>
+              </label>
+              <p class="map-layers-group__help" id="communityLayerHelp">Contributed and locally maintained project records.</p>
+            </fieldset>
+
+            <fieldset class="map-layers-group" aria-describedby="officialLayerHelp">
+              <legend>Official protected heritage</legend>
+              <label class="map-layer-toggle" for="provincialHeritageLayerToggle">
+                <input id="provincialHeritageLayerToggle" type="checkbox">
+                <span class="map-layer-symbol map-layer-symbol--official-filled" aria-hidden="true"></span>
+                <span>Provincial protected heritage</span>
+              </label>
+              <p class="map-layers-group__help" id="officialLayerHelp">Off by default. Loaded only when selected.</p>
+            </fieldset>
+
+            <section class="map-layers-group" aria-labelledby="locationDisplayTitle">
+              <h4 id="locationDisplayTitle">Location display</h4>
+              <ul class="map-layer-legend" aria-label="Official heritage location symbols">
+                <li>
+                  <span class="map-layer-symbol map-layer-symbol--official-filled" aria-hidden="true"></span>
+                  <span><strong>Reviewed official locations</strong><small>Project-reviewed public reference</small></span>
+                </li>
+                <li>
+                  <span class="map-layer-symbol map-layer-symbol--official-general" aria-hidden="true"></span>
+                  <span><strong>General official references</strong><small>Legend only; none are currently published</small></span>
+                </li>
+              </ul>
+            </section>
+
+            <section class="map-layers-group map-layers-information" aria-labelledby="additionalInformationTitle">
+              <h4 id="additionalInformationTitle">Additional information</h4>
+              <details>
+                <summary>About community records</summary>
+                <p>Community records are contributed and maintained by this local project. Search and Filters apply to these records only.</p>
+              </details>
+              <details>
+                <summary>About official heritage markers</summary>
+                <p>Official source facts are separate from project-produced locations. Filled diamonds are reviewed locations; hollow diamonds are general references. Project locations are not official designation coordinates or legal boundaries.</p>
+              </details>
+            </section>
+          </section>
+
+          <section class="map-explorer-section map-explorer-section--info" id="mapInfoToolPanel" data-tool-panel="help" role="tabpanel" aria-labelledby="mapInfoTab" tabindex="-1" hidden>
             <h3 id="mapHelpTitle">Map guide</h3>
             <p class="map-explorer-section__text">Use the search and filters to focus the map, then open a place record for full details.</p>
-
-            <section class="official-heritage-map-info" aria-labelledby="officialHeritageInfoTitle">
-              <h4 id="officialHeritageInfoTitle">About official heritage markers</h4>
-              <p>Community heritage records and official protected heritage records are separate sources.</p>
-              <ul>
-                <li>Blue pins show community heritage records.</li>
-                <li>Filled diamonds show project-reviewed official reference locations.</li>
-                <li>Hollow diamonds are reserved for generalized official references, not precise heritage sites.</li>
-              </ul>
-              <p>Official marker locations are project-produced references, not official designation coordinates or legal boundaries. Search and Filters currently apply only to community records.</p>
-            </section>
+            <p class="map-explorer-section__text">Use Layers to show or hide community and official heritage markers. Layer choices remain active when you switch tabs.</p>
 
             <div class="map-explorer-cta" aria-labelledby="mapNominationTitle">
               <h3 id="mapNominationTitle">Nominate a place</h3>
@@ -157,9 +198,10 @@
 
         <div class="map-stage">
           <div class="provincial-heritage-map-status">
-            <p id="provincialHeritageStatus" role="status" aria-live="polite" hidden></p>
+            <p id="provincialHeritageStatus" role="status" aria-live="polite">No heritage records displayed.</p>
             <p id="provincialHeritageError" role="alert" hidden></p>
           </div>
+
           <div id="map" class="map-canvas map-search-canvas" role="region" aria-labelledby="mapSearchTitle" aria-describedby="mapAccessibleDescription"></div>
           <p class="visually-hidden" id="mapAccessibleDescription">Interactive heritage map. Keyboard-accessible community and optional official protected heritage markers open record summaries. Official markers distinguish reviewed locations from generalized area references. Every matching community record is also available through the Places list above.</p>
         </div>

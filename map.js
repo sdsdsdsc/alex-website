@@ -244,6 +244,8 @@ function initCommunityMap({
   const mapNominationStatus = document.getElementById("mapNominationStatus");
   const provincialStatusEl = document.getElementById("provincialHeritageStatus");
   const provincialErrorEl = document.getElementById("provincialHeritageError");
+  const communityLayerToggle = document.getElementById("communityHeritageLayerToggle");
+  const provincialLayerToggle = document.getElementById("provincialHeritageLayerToggle");
 
   const map = L.map(containerId).setView(fallbackCenter, 13);
   const communityLayer = L.layerGroup().addTo(map);
@@ -258,10 +260,10 @@ function initCommunityMap({
 
   let allPublicRecords = [];
   let isNominationPickMode = false;
-  let activeToolKey = "search";
   let provincialLoadPromise = null;
   let lastProvincialAnnouncement = "";
   let displayedProvincialMarkerCount = null;
+  let provincialLayerState = "off";
 
   baseLayers.osm.addTo(map);
   map.whenReady(() => {
@@ -276,14 +278,11 @@ function initCommunityMap({
       "OpenStreetMap": baseLayers.osm,
       "Gaode (AMap)": baseLayers.gaode,
       "Esri World Street": baseLayers.esri
-    }, {
-      "Community heritage records": communityLayer,
-      "Provincial protected heritage pilot": provincialLayer
     }).addTo(map);
     const layerControlContainer = layerControl.getContainer();
     const layerControlToggle = layerControlContainer?.querySelector(".leaflet-control-layers-toggle");
-    layerControlContainer?.setAttribute("aria-label", "Map layers");
-    layerControlToggle?.setAttribute("aria-label", "Map layers");
+    layerControlContainer?.setAttribute("aria-label", "Basemap");
+    layerControlToggle?.setAttribute("aria-label", "Choose basemap");
     layerControlContainer?.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
@@ -324,14 +323,35 @@ function initCommunityMap({
     }
   }
 
-  function hideProvincialMessages() {
-    if (provincialStatusEl) provincialStatusEl.hidden = true;
-    if (provincialErrorEl) provincialErrorEl.hidden = true;
+  function getVisibleLayerStatus() {
+    const communityVisible = map.hasLayer(communityLayer);
+    const provincialVisible = map.hasLayer(provincialLayer);
+    const communityCount = communityVisible ? communityLayer.getLayers().length : 0;
+    const provincialCount = provincialVisible && Number.isInteger(displayedProvincialMarkerCount)
+      ? displayedProvincialMarkerCount
+      : 0;
+    const communityLabel = `${communityCount} community ${communityCount === 1 ? "record" : "records"}`;
+    const provincialLabel = `${provincialCount} provincial heritage ${provincialCount === 1 ? "location" : "locations"}`;
+
+    if (provincialVisible && provincialLayerState === "loading") {
+      return `${PROVINCIAL_HERITAGE_LOADING_MESSAGE} ${communityVisible ? `${communityLabel} displayed.` : ""}`.trim();
+    }
+    if (provincialVisible && provincialLayerState === "valid-empty") {
+      return communityVisible
+        ? `${communityLabel} displayed. ${PROVINCIAL_HERITAGE_EMPTY_MESSAGE}`
+        : PROVINCIAL_HERITAGE_EMPTY_MESSAGE;
+    }
+    if (communityCount > 0 && provincialCount > 0) {
+      return `${communityLabel} and ${provincialLabel} displayed.`;
+    }
+    if (communityCount > 0) return `${communityLabel} displayed.`;
+    if (provincialCount > 0) return `${provincialLabel} displayed.`;
+    return "No heritage records displayed.";
   }
 
-  function showProvincialStatus(message, announcementKey) {
-    if (provincialErrorEl) provincialErrorEl.hidden = true;
+  function updateVisibleLayerStatus(announcementKey = "") {
     if (!provincialStatusEl) return;
+    const message = getVisibleLayerStatus();
     provincialStatusEl.hidden = false;
     if (lastProvincialAnnouncement !== announcementKey || provincialStatusEl.textContent !== message) {
       provincialStatusEl.textContent = message;
@@ -340,7 +360,6 @@ function initCommunityMap({
   }
 
   function showProvincialError() {
-    if (provincialStatusEl) provincialStatusEl.hidden = true;
     if (!provincialErrorEl) return;
     provincialErrorEl.hidden = false;
     if (
@@ -350,17 +369,17 @@ function initCommunityMap({
       provincialErrorEl.textContent = PROVINCIAL_HERITAGE_FAILURE_MESSAGE;
       lastProvincialAnnouncement = "failure";
     }
+    updateVisibleLayerStatus("failure-status");
   }
 
-  function showProvincialSuccessStatus() {
-    if (displayedProvincialMarkerCount === null) return;
-    const communityCount = communityLayer.getLayers().length;
-    const communityLabel = `${communityCount} community ${communityCount === 1 ? "record" : "records"}`;
-    const provincialLabel = `${displayedProvincialMarkerCount} provincial heritage ${displayedProvincialMarkerCount === 1 ? "location" : "locations"}`;
-    showProvincialStatus(
-      `${communityLabel} and ${provincialLabel} displayed.`,
-      `valid-${communityCount}-${displayedProvincialMarkerCount}`
-    );
+  function syncLayerControls() {
+    if (communityLayerToggle) {
+      communityLayerToggle.checked = map.hasLayer(communityLayer);
+    }
+    if (provincialLayerToggle) {
+      provincialLayerToggle.checked = map.hasLayer(provincialLayer) && provincialLayerState !== "failed";
+      provincialLayerToggle.setAttribute("aria-invalid", String(provincialLayerState === "failed"));
+    }
   }
 
   function buildProvincialMarkers(features) {
@@ -409,7 +428,9 @@ function initCommunityMap({
 
   async function activateProvincialHeritageLayer() {
     if (!provincialLoadPromise) {
-      showProvincialStatus(PROVINCIAL_HERITAGE_LOADING_MESSAGE, "loading");
+      provincialLayerState = "loading";
+      if (provincialErrorEl) provincialErrorEl.hidden = true;
+      updateVisibleLayerStatus("loading");
     }
 
     const result = await getProvincialHeritageResult();
@@ -418,41 +439,34 @@ function initCommunityMap({
     provincialLayer.clearLayers();
     if (!result.ok) {
       console.error("Error loading provincial heritage preview:", result.error);
+      provincialLayerState = "failed";
+      displayedProvincialMarkerCount = null;
+      map.removeLayer(provincialLayer);
+      syncLayerControls();
       showProvincialError();
       return;
     }
 
     if (result.value.status === "valid-empty") {
+      provincialLayerState = "valid-empty";
       displayedProvincialMarkerCount = 0;
-      showProvincialStatus(PROVINCIAL_HERITAGE_EMPTY_MESSAGE, "valid-empty");
+      updateVisibleLayerStatus("valid-empty");
       return;
     }
 
+    provincialLayerState = "valid";
     const markers = buildProvincialMarkers(result.value.features);
     markers.forEach((marker) => marker.addTo(provincialLayer));
     displayedProvincialMarkerCount = markers.length;
-    showProvincialSuccessStatus();
-  }
-
-  function closeActiveToolPanel({ restoreFocus = false } = {}) {
-    const activeButton = toolButtons.find((button) => button.dataset.toolTarget === activeToolKey);
-    toolButtons.forEach((button) => {
-      button.classList.remove("is-active");
-      button.setAttribute("aria-expanded", "false");
-    });
-    toolPanels.forEach((panel) => {
-      panel.classList.remove("is-active");
-      panel.hidden = true;
-    });
-    if (restoreFocus) activeButton?.focus();
+    updateVisibleLayerStatus(`valid-${displayedProvincialMarkerCount}`);
   }
 
   function setActiveToolPanel(panelKey, { moveFocus = true } = {}) {
-    activeToolKey = panelKey;
     toolButtons.forEach((button) => {
       const isActive = button.dataset.toolTarget === panelKey;
       button.classList.toggle("is-active", isActive);
-      button.setAttribute("aria-expanded", String(isActive));
+      button.setAttribute("aria-selected", String(isActive));
+      button.tabIndex = isActive ? 0 : -1;
     });
 
     toolPanels.forEach((panel) => {
@@ -727,9 +741,7 @@ function initCommunityMap({
       : `${matchingLabel}; ${mapLabel}${unavailableLabel}.`);
 
     fitMapToLayers(map, boundsItems, fallbackCenter);
-    if (map.hasLayer(provincialLayer) && displayedProvincialMarkerCount > 0) {
-      showProvincialSuccessStatus();
-    }
+    updateVisibleLayerStatus(`community-${map.hasLayer(communityLayer)}-${matchingPoints.length}`);
 
     renderRequestedPlaceFocus(matchingRecords);
     updateDiscoveryLinks(searchTerm);
@@ -827,12 +839,42 @@ function initCommunityMap({
   toolButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const panelKey = button.dataset.toolTarget || "search";
-      if (button.getAttribute("aria-expanded") === "true") {
-        closeActiveToolPanel({ restoreFocus: true });
-        return;
-      }
       setActiveToolPanel(panelKey);
     });
+    button.addEventListener("keydown", (event) => {
+      const currentIndex = toolButtons.indexOf(button);
+      let nextIndex = null;
+      if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % toolButtons.length;
+      if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + toolButtons.length) % toolButtons.length;
+      if (event.key === "Home") nextIndex = 0;
+      if (event.key === "End") nextIndex = toolButtons.length - 1;
+      if (nextIndex === null) return;
+      event.preventDefault();
+      const nextButton = toolButtons[nextIndex];
+      setActiveToolPanel(nextButton.dataset.toolTarget || "search", { moveFocus: false });
+      nextButton.focus();
+    });
+  });
+
+  communityLayerToggle?.addEventListener("change", () => {
+    if (communityLayerToggle.checked) {
+      communityLayer.addTo(map);
+    } else {
+      map.removeLayer(communityLayer);
+    }
+    syncLayerControls();
+    updateVisibleLayerStatus(`community-toggle-${communityLayerToggle.checked}`);
+  });
+
+  provincialLayerToggle?.addEventListener("change", () => {
+    if (provincialLayerToggle.checked) {
+      provincialLayerState = "loading";
+      if (provincialErrorEl) provincialErrorEl.hidden = true;
+      provincialLayer.addTo(map);
+    } else {
+      map.removeLayer(provincialLayer);
+    }
+    syncLayerControls();
   });
 
   document.addEventListener("click", (event) => {
@@ -850,9 +892,6 @@ function initCommunityMap({
       }
       closeAllCustomFilters();
       map.closePopup();
-      if (toolButtons.some((button) => button.getAttribute("aria-expanded") === "true")) {
-        closeActiveToolPanel({ restoreFocus: true });
-      }
     }
   });
 
@@ -863,17 +902,34 @@ function initCommunityMap({
     window.location.href = buildNominationUrlFromCoordinates(lat, lng);
   });
 
-  map.on("overlayadd", (event) => {
+  map.on("layeradd", (event) => {
+    if (event.layer === communityLayer) {
+      syncLayerControls();
+      updateVisibleLayerStatus("community-layer-added");
+      return;
+    }
     if (event.layer === provincialLayer) {
+      syncLayerControls();
       activateProvincialHeritageLayer();
     }
   });
 
-  map.on("overlayremove", (event) => {
-    if (event.layer !== provincialLayer) return;
-    provincialLayer.clearLayers();
-    displayedProvincialMarkerCount = null;
-    hideProvincialMessages();
+  map.on("layerremove", (event) => {
+    if (event.layer === communityLayer) {
+      syncLayerControls();
+      updateVisibleLayerStatus("community-layer-removed");
+      return;
+    }
+    if (event.layer === provincialLayer) {
+      provincialLayer.clearLayers();
+      displayedProvincialMarkerCount = null;
+      if (provincialLayerState !== "failed") {
+        provincialLayerState = "off";
+        if (provincialErrorEl) provincialErrorEl.hidden = true;
+      }
+      syncLayerControls();
+      updateVisibleLayerStatus(`provincial-layer-removed-${provincialLayerState}`);
+    }
   });
 
   mapNominationToggle?.addEventListener("click", () => {
@@ -884,8 +940,9 @@ function initCommunityMap({
     startMapNominationMode();
   });
 
+  syncLayerControls();
+
   loadMarkers().then(() => {
-    setActiveToolPanel("search", { moveFocus: false });
     runSearch(searchInput?.value || initialDiscoveryState.q);
   });
 
