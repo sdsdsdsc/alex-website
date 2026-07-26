@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
+const MAP_PAGE_VERSION = "2026-07-26-map-layers-tab";
 const PROVINCIAL_HERITAGE_PREVIEW_VERSION = "2026-07-24-phase15b1-generalized-markers";
 const PROVINCIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-provincial-protected-heritage-map.geojson*";
 const SMOKE_PAGES = [
@@ -124,16 +125,16 @@ function makeSyntheticProvincialCollection(features = []) {
   };
 }
 
-async function openMapLayersControl(page) {
-  const toggle = page.locator(".leaflet-control-layers-toggle");
-  await expect(toggle).toHaveAttribute("aria-label", "Map layers");
-  await toggle.focus();
-  await toggle.press("Enter");
-  await expect(page.locator(".leaflet-control-layers")).toHaveClass(/leaflet-control-layers-expanded/);
+async function openMapLayersTab(page) {
+  const panel = page.locator("#mapLayersToolPanel");
+  if (!await panel.isVisible()) {
+    await page.getByRole("tab", { name: "Layers", exact: true }).click();
+  }
+  await expect(panel).toBeVisible();
 }
 
 function getOverlayCheckbox(page, label) {
-  return page.locator(".leaflet-control-layers-overlays label", { hasText: label }).locator("input");
+  return page.getByRole("checkbox", { name: label, exact: true });
 }
 
 async function setOverlayChecked(page, label, checked) {
@@ -226,22 +227,34 @@ test("provincial preview is lazy, default-off, valid-empty, cached, and map-stab
   });
 
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
-  await expect(page.locator(".leaflet-control-layers-toggle")).toBeVisible();
   await expect(page.locator("#mapSearchStatus")).not.toHaveText("");
+  const mapTabs = page.getByRole("tablist", { name: "Map tools" }).getByRole("tab");
+  await expect(mapTabs).toHaveCount(4);
+  await expect(mapTabs).toHaveText(["Search", "Filters", "Layers", "Info"]);
+  await expect(page.getByRole("tab", { name: "Search" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tab", { name: "Layers" })).toHaveAttribute("aria-selected", "false");
+  await expect(page.locator("#mapLayersToolPanel")).toBeHidden();
+  await expect(page.locator("#mapLayersToolPanel")).toContainText("Community heritage");
+  await expect(page.locator("#mapLayersToolPanel")).toContainText("Official protected heritage");
+  await expect(page.locator("#mapLayersToolPanel")).toContainText("Location display");
+  await expect(page.locator("#mapLayersToolPanel")).toContainText("Additional information");
+  await expect(page.locator("#mapLayersToolPanel")).toContainText("Reviewed official locations");
+  await expect(page.locator("#mapLayersToolPanel")).toContainText("General official references");
+  await expect(page.locator(".leaflet-control-layers-overlays input")).toHaveCount(0);
   await page.waitForTimeout(250);
   expect(provincialRequestCount).toBe(0);
-  await expect(page.locator("#provincialHeritageStatus")).toBeHidden();
+  await expect(page.locator("#provincialHeritageStatus")).toHaveText(/\d+ community records? displayed\./);
   await expect(page.locator("#provincialHeritageError")).toBeHidden();
 
-  await openMapLayersControl(page);
+  await openMapLayersTab(page);
   const communityOverlay = getOverlayCheckbox(page, "Community heritage records");
-  const provincialOverlay = getOverlayCheckbox(page, "Provincial protected heritage pilot");
+  const provincialOverlay = getOverlayCheckbox(page, "Provincial protected heritage");
   await expect(communityOverlay).toBeChecked();
   await expect(provincialOverlay).not.toBeChecked();
 
   const beforeEnable = await getRenderedMapState(page);
-  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
-  await expect(page.locator("#provincialHeritageStatus")).toHaveText(
+  await getOverlayCheckbox(page, "Provincial protected heritage").click();
+  await expect(page.locator("#provincialHeritageStatus")).toContainText(
     "No approved provincial heritage locations are available to display yet."
   );
   await expect(page.locator("#provincialHeritageError")).toBeHidden();
@@ -249,11 +262,11 @@ test("provincial preview is lazy, default-off, valid-empty, cached, and map-stab
   expect(provincialRequestCount).toBe(1);
   expect(await getRenderedMapState(page)).toEqual(beforeEnable);
 
-  await setOverlayChecked(page, "Provincial protected heritage pilot", false);
-  await expect(page.locator("#provincialHeritageStatus")).toBeHidden();
+  await setOverlayChecked(page, "Provincial protected heritage", false);
+  await expect(page.locator("#provincialHeritageStatus")).toContainText("community");
   await expect(page.locator("#provincialHeritageError")).toBeHidden();
-  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
-  await expect(page.locator("#provincialHeritageStatus")).toHaveText(
+  await getOverlayCheckbox(page, "Provincial protected heritage").click();
+  await expect(page.locator("#provincialHeritageStatus")).toContainText(
     "No approved provincial heritage locations are available to display yet."
   );
   expect(provincialRequestCount).toBe(1);
@@ -268,14 +281,15 @@ test("provincial preview isolates HTTP failure from community markers", async ({
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   await expect(page.locator("#mapSearchStatus")).not.toHaveText("");
-  await openMapLayersControl(page);
+  await openMapLayersTab(page);
   const communityCount = await page.locator(".community-map-pin").count();
-  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await getOverlayCheckbox(page, "Provincial protected heritage").click();
   await expect(page.locator("#provincialHeritageError")).toHaveText(
     "The provincial heritage preview could not be loaded."
   );
   await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(0);
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
+  await expect(getOverlayCheckbox(page, "Provincial protected heritage")).not.toBeChecked();
 });
 
 test("provincial preview rejects invalid JSON", async ({ page }) => {
@@ -285,8 +299,8 @@ test("provincial preview rejects invalid JSON", async ({ page }) => {
     body: "{"
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
-  await openMapLayersControl(page);
-  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await openMapLayersTab(page);
+  await getOverlayCheckbox(page, "Provincial protected heritage").click();
   await expect(page.locator("#provincialHeritageError")).toHaveText(
     "The provincial heritage preview could not be loaded."
   );
@@ -301,8 +315,8 @@ test("provincial preview rejects malformed metadata", async ({ page }) => {
     body: JSON.stringify(malformed)
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
-  await openMapLayersControl(page);
-  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await openMapLayersTab(page);
+  await getOverlayCheckbox(page, "Provincial protected heritage").click();
   await expect(page.locator("#provincialHeritageError")).toHaveText(
     "The provincial heritage preview could not be loaded."
   );
@@ -320,8 +334,8 @@ test("provincial preview rejects the complete layer when one feature is invalid"
     body: JSON.stringify(makeSyntheticProvincialCollection([validFeature, invalidFeature]))
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
-  await openMapLayersControl(page);
-  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await openMapLayersTab(page);
+  await getOverlayCheckbox(page, "Provincial protected heritage").click();
   await expect(page.locator("#provincialHeritageError")).toHaveText(
     "The provincial heritage preview could not be loaded."
   );
@@ -338,18 +352,16 @@ test("provincial preview renders a synthetic exact Point without changing commun
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
   await expect(page.locator(".official-heritage-map-legend")).toHaveCount(0);
-  await page.getByRole("button", { name: "Info" }).click();
-  const officialInfo = page.locator(".official-heritage-map-info");
-  await expect(officialInfo).toBeVisible();
-  await expect(officialInfo).toContainText("Community heritage records and official protected heritage records are separate sources");
-  await expect(officialInfo).toContainText("Blue pins show community heritage records");
-  await expect(officialInfo).toContainText("Filled diamonds show project-reviewed official reference locations");
-  await expect(officialInfo).toContainText("Hollow diamonds are reserved for generalized official references");
-  await expect(officialInfo).toContainText("not official designation coordinates or legal boundaries");
-  await page.getByRole("button", { name: "Search" }).click();
+  await openMapLayersTab(page);
+  const layersPanel = page.locator("#mapLayersToolPanel");
+  await expect(layersPanel).toContainText("Reviewed official locations");
+  await expect(layersPanel).toContainText("General official references");
+  await expect(layersPanel).toContainText("Official source facts are separate from project-produced locations");
+  await expect(layersPanel).toContainText("not official designation coordinates or legal boundaries");
+  await page.getByRole("tab", { name: "Search" }).click();
   const beforeEnable = await getRenderedMapState(page);
-  await openMapLayersControl(page);
-  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await openMapLayersTab(page);
+  await setOverlayChecked(page, "Provincial protected heritage", true);
   await expect(page.locator("#provincialHeritageStatus")).toHaveText(
     /\d+ community records? and 1 provincial heritage location displayed\./
   );
@@ -379,8 +391,8 @@ test("provincial preview labels a synthetic approximate Point", async ({ page })
     body: JSON.stringify(makeSyntheticProvincialCollection([feature]))
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
-  await openMapLayersControl(page);
-  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await openMapLayersTab(page);
+  await setOverlayChecked(page, "Provincial protected heritage", true);
   const marker = page.locator(".provincial-heritage-map-marker");
   await expect(marker).toHaveAttribute("aria-label", /approximate reviewed location$/);
   await marker.focus();
@@ -401,8 +413,8 @@ test("provincial preview distinguishes a generalized marker and explains its rad
     body: JSON.stringify(makeSyntheticProvincialCollection([feature]))
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
-  await openMapLayersControl(page);
-  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await openMapLayersTab(page);
+  await setOverlayChecked(page, "Provincial protected heritage", true);
   const marker = page.locator(".provincial-heritage-map-marker--generalized");
   await expect(marker).toHaveAttribute("aria-label", /generalized area reference$/);
   await marker.focus();
@@ -419,17 +431,106 @@ test("provincial preview distinguishes a generalized marker and explains its rad
   await expect(radiusRow.locator("dd")).toHaveText("1500 metres");
 });
 
-test("Leaflet layer control is keyboard accessible and Escape restores toggle focus", async ({ page }) => {
+test("Layers tab controls overlays while Leaflet retains basemap selection only", async ({ page }) => {
+  test.setTimeout(60000);
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
-  await openMapLayersControl(page);
-  await setOverlayChecked(page, "Provincial protected heritage pilot", true);
+  await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
+  await openMapLayersTab(page);
+  const communityToggle = getOverlayCheckbox(page, "Community heritage records");
+  const provincialToggle = getOverlayCheckbox(page, "Provincial protected heritage");
+  await expect(communityToggle).toBeChecked();
+  await expect(provincialToggle).not.toBeChecked();
+  await expect(page.locator(".leaflet-control-layers-overlays input")).toHaveCount(0);
+
+  const basemapToggle = page.locator(".leaflet-control-layers-toggle");
+  await expect(basemapToggle).toHaveAttribute("aria-label", "Choose basemap");
+  await basemapToggle.focus();
+  await basemapToggle.press("Enter");
+  await expect(page.locator(".leaflet-control-layers")).toHaveClass(/leaflet-control-layers-expanded/);
+  await expect(page.locator(".leaflet-control-layers-base input")).toHaveCount(3);
+  const esriBasemap = page.locator(".leaflet-control-layers-base label", { hasText: "Esri World Street" }).locator("input");
+  await esriBasemap.evaluate((input) => input.click());
+  await expect(esriBasemap).toBeChecked();
+
+  const communityCount = await page.locator(".community-map-pin").count();
+  expect(communityCount).toBeGreaterThan(0);
+  await setOverlayChecked(page, "Community heritage records", false);
+  await expect(page.locator(".community-map-pin")).toHaveCount(0);
+  await expect(page.locator("#provincialHeritageStatus")).toHaveText("No heritage records displayed.");
+
+  await setOverlayChecked(page, "Provincial protected heritage", true);
   await expect(page.locator("#provincialHeritageStatus")).toHaveText(
-    /\d+ community records? and 1 provincial heritage location displayed\./
+    "1 provincial heritage location displayed."
   );
-  await getOverlayCheckbox(page, "Provincial protected heritage pilot").focus();
-  await getOverlayCheckbox(page, "Provincial protected heritage pilot").press("Escape");
-  await expect(page.locator(".leaflet-control-layers")).not.toHaveClass(/leaflet-control-layers-expanded/);
-  await expect(page.locator(".leaflet-control-layers-toggle")).toBeFocused();
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(1);
+
+  await setOverlayChecked(page, "Community heritage records", true);
+  await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
+  await expect(page.locator("#provincialHeritageStatus")).toHaveText(
+    new RegExp(`${communityCount} community records? and 1 provincial heritage location displayed\\.`)
+  );
+
+  await page.getByRole("tab", { name: "Search" }).click();
+  await expect(page.locator("#mapLayersToolPanel")).toBeHidden();
+  await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(1);
+  await page.getByRole("tab", { name: "Layers" }).click();
+  await expect(communityToggle).toBeChecked();
+  await expect(provincialToggle).toBeChecked();
+});
+
+test("desktop keeps one Heritage Explorer sidebar and restores the full Map column", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".map-layers-sidebar, .map-stage__layout, #mapLayersTrigger")).toHaveCount(0);
+  await expect(page.locator("#mapLayersToolPanel")).toBeHidden();
+  await expect(page.locator("#map")).toBeVisible();
+
+  const layout = await page.evaluate(() => {
+    const explorer = document.querySelector(".map-search-sidebar")?.getBoundingClientRect();
+    const map = document.getElementById("map")?.getBoundingClientRect();
+    return explorer && map
+      ? {
+          explorerLeft: explorer.left,
+          explorerRight: explorer.right,
+          explorerWidth: explorer.width,
+          mapLeft: map.left,
+          mapWidth: map.width,
+          mapHeight: map.height
+        }
+      : null;
+  });
+
+  expect(layout).not.toBeNull();
+  expect(layout.explorerLeft).toBeLessThan(layout.mapLeft);
+  expect(layout.explorerRight).toBeLessThan(layout.mapLeft);
+  expect(layout.explorerWidth).toBeGreaterThanOrEqual(280);
+  expect(layout.mapWidth).toBeGreaterThanOrEqual(850);
+  expect(layout.mapHeight).toBeGreaterThanOrEqual(600);
+
+  const beforeTabSwitch = await page.locator("#map").boundingBox();
+  await openMapLayersTab(page);
+  const afterTabSwitch = await page.locator("#map").boundingBox();
+  expect(afterTabSwitch?.width).toBe(beforeTabSwitch?.width);
+});
+
+test("Layers remains a normal usable tab on mobile without a second drawer", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  const layersTab = page.getByRole("tab", { name: "Layers", exact: true });
+  const panel = page.locator("#mapLayersToolPanel");
+  await expect(layersTab).toBeVisible();
+  await expect(layersTab).toHaveAttribute("aria-selected", "false");
+  await expect(panel).toBeHidden();
+
+  await layersTab.click();
+  await expect(layersTab).toHaveAttribute("aria-selected", "true");
+  await expect(panel).toBeVisible();
+  await expect(getOverlayCheckbox(page, "Community heritage records")).toBeFocused();
+  await page.getByRole("tab", { name: "Info" }).click();
+  await expect(panel).toBeHidden();
+  await expect(page.locator("#mapInfoToolPanel")).toBeVisible();
+  await expect(page.locator(".map-layers-sidebar, #mapLayersTrigger, #mapLayersClose")).toHaveCount(0);
 });
 
 test("map to Places round-trips every shared discovery parameter", async ({ page }) => {
@@ -470,7 +571,7 @@ test("Map and Places expose only the supported structured discovery filters", as
     const mapSource = await (await fetch("/map.js")).text();
     return { mapHtml, mapSource };
   });
-  expect(cacheVersions.mapHtml).toContain(`map.js?v=${PROVINCIAL_HERITAGE_PREVIEW_VERSION}`);
+  expect(cacheVersions.mapHtml).toContain(`map.js?v=${MAP_PAGE_VERSION}`);
   expect(cacheVersions.mapSource).toContain('./heritage-engine/maps.js?v=2026-07-14-pr41-review-fixes');
   expect(cacheVersions.mapSource).toContain(
     `./heritage-engine/provincial-heritage-map.js?v=${PROVINCIAL_HERITAGE_PREVIEW_VERSION}`
@@ -515,25 +616,46 @@ test("map skip link and region provide an accessible workspace entry", async ({ 
   await expect(page.locator("#map")).toHaveAttribute("aria-describedby", "mapAccessibleDescription");
 });
 
-test("map tool panels move focus, close with Escape, and restore trigger focus", async ({ page }) => {
+test("Map tools expose four accessible tabs with automatic arrow-key activation", async ({ page }) => {
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   await expect(page.locator("#mapSearchToolPanel")).toContainText("Search community heritage records");
-  const filtersButton = page.getByRole("button", { name: "Filters" });
-  await expect(filtersButton).toHaveAttribute("aria-controls", "mapFiltersToolPanel");
-  await filtersButton.click();
-  await expect(filtersButton).toHaveAttribute("aria-expanded", "true");
+  const tabs = page.getByRole("tablist", { name: "Map tools" }).getByRole("tab");
+  await expect(tabs).toHaveCount(4);
+  await expect(tabs).toHaveText(["Search", "Filters", "Layers", "Info"]);
+
+  const searchTab = page.getByRole("tab", { name: "Search" });
+  const filtersTab = page.getByRole("tab", { name: "Filters" });
+  const layersTab = page.getByRole("tab", { name: "Layers" });
+  const infoTab = page.getByRole("tab", { name: "Info" });
+  await expect(searchTab).toHaveAttribute("aria-selected", "true");
+  await expect(searchTab).toHaveAttribute("tabindex", "0");
+  await expect(filtersTab).toHaveAttribute("tabindex", "-1");
+
+  await filtersTab.click();
+  await expect(filtersTab).toHaveAttribute("aria-selected", "true");
+  await expect(searchTab).toHaveAttribute("aria-selected", "false");
   await expect(page.locator("#mapFiltersToolPanel")).toContainText("Community discovery filters");
   await expect(page.locator("#mapFiltersToolPanel")).toContainText("Official-layer filtering will be added separately");
   await expect(page.locator("#mapFilterReset")).toBeFocused();
-  await page.keyboard.press("Escape");
-  await expect(filtersButton).toHaveAttribute("aria-expanded", "false");
-  await expect(filtersButton).toBeFocused();
-  await expect(page.locator("#mapFiltersToolPanel")).toBeHidden();
+
+  await filtersTab.focus();
+  await filtersTab.press("ArrowRight");
+  await expect(layersTab).toBeFocused();
+  await expect(layersTab).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator("#mapLayersToolPanel")).toBeVisible();
+  await layersTab.press("ArrowRight");
+  await expect(infoTab).toBeFocused();
+  await expect(page.locator("#mapInfoToolPanel")).toBeVisible();
+  await infoTab.press("Home");
+  await expect(searchTab).toBeFocused();
+  await expect(page.locator("#mapSearchToolPanel")).toBeVisible();
+  await searchTab.press("End");
+  await expect(infoTab).toBeFocused();
 });
 
 test("map offers a keyboard-accessible nomination path without map picking", async ({ page }) => {
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
-  await page.getByRole("button", { name: "Info" }).click();
+  await page.getByRole("tab", { name: "Info" }).click();
   const fallback = page.getByRole("link", { name: "Open the nomination form without choosing a map point" });
   await expect(fallback).toBeVisible();
   await expect(fallback).toHaveAttribute("href", "nominate-place.html");
@@ -551,7 +673,12 @@ for (const viewport of [
     await page.setViewportSize(viewport);
     await page.goto("/map.html", { waitUntil: "domcontentloaded" });
     await expect(page.locator("#mapViewResultsList")).toBeVisible();
-    await expect(page.locator(".leaflet-control-layers-toggle")).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Layers", exact: true })).toBeVisible();
+    await expect(page.locator("#mapLayersToolPanel")).toBeHidden();
+    await page.getByRole("tab", { name: "Layers", exact: true }).click();
+    await expect(page.locator("#mapLayersToolPanel")).toBeVisible();
+    await expect(page.locator(".map-layers-sidebar, #mapLayersTrigger")).toHaveCount(0);
+    await expect(page.locator(".leaflet-control-layers-toggle")).toHaveAttribute("aria-label", "Choose basemap");
     const dimensions = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
       clientWidth: document.documentElement.clientWidth
@@ -564,9 +691,11 @@ test("map workspace remains usable at 200 percent zoom", async ({ page }) => {
   await page.setViewportSize({ width: 640, height: 720 });
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   await expect(page.locator("#mapViewResultsList")).toBeVisible();
-  await expect(page.getByLabel("Map tools").getByRole("button", { name: "Search" })).toBeVisible();
+  await expect(page.getByRole("tablist", { name: "Map tools" }).getByRole("tab", { name: "Search" })).toBeVisible();
   await expect(page.locator("#map")).toBeVisible();
-  await expect(page.locator(".leaflet-control-layers-toggle")).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Layers", exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: "Layers", exact: true }).click();
+  await expect(page.locator("#mapLayersToolPanel")).toBeVisible();
   const dimensions = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth
