@@ -17,7 +17,7 @@
   <!-- Firebase -->
   <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="script.js" defer></script>
-  <script type="module" src="map.js?v=2026-07-26-map-layers-tab" defer></script>
+  <script type="module" src="map.js?v=2026-07-26-community-category-icons" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#mapWorkspace">Skip to map and list alternatives</a>
@@ -123,9 +123,47 @@
               <label class="map-layer-toggle" for="communityHeritageLayerToggle">
                 <input id="communityHeritageLayerToggle" type="checkbox" checked>
                 <span class="map-layer-symbol map-layer-symbol--community" aria-hidden="true"></span>
-                <span>Community heritage records</span>
+                <span>All community records</span>
               </label>
-              <p class="map-layers-group__help" id="communityLayerHelp">Contributed and locally maintained project records.</p>
+              <div class="map-layer-category-list">
+                <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryBuildings">
+                  <input id="communityCategoryBuildings" type="checkbox" data-community-map-category="buildings" checked>
+                  <span class="map-layer-category-symbol" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" focusable="false"><path d="M3.5 13.5v-9h9v9m-7-9v-2h5v2M5.5 7h1m3 0h1m-5 3h1m3 0h1M2.5 13.5h11"/></svg>
+                  </span>
+                  <span>Buildings</span>
+                </label>
+                <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryParksGardens">
+                  <input id="communityCategoryParksGardens" type="checkbox" data-community-map-category="parks-gardens" checked>
+                  <span class="map-layer-category-symbol" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" focusable="false"><path d="M12.8 2.7C7.4 2.8 4 5.1 4 8.7c0 2.4 1.8 3.6 3.7 3.6 3.6 0 5.2-3.7 5.1-9.6ZM3.2 13.3c1.6-2.7 3.8-4.8 7-6.4"/></svg>
+                  </span>
+                  <span>Parks and gardens</span>
+                </label>
+                <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryMonumentsLandmarks">
+                  <input id="communityCategoryMonumentsLandmarks" type="checkbox" data-community-map-category="monuments-landmarks" checked>
+                  <span class="map-layer-category-symbol" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" focusable="false"><path d="m8 2 2 3H6l2-3Zm-1.5 3h3v6h-3V5ZM4 13.5h8M5 11h6v2.5H5V11Z"/></svg>
+                  </span>
+                  <span>Monuments and landmarks</span>
+                </label>
+                <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryOtherSitesLandscapes">
+                  <input id="communityCategoryOtherSitesLandscapes" type="checkbox" data-community-map-category="other-sites-landscapes" checked>
+                  <span class="map-layer-category-symbol" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" focusable="false"><path d="M2.5 11.5 6 7.8l2.1 2 2.2-3 3.2 4.7M2.5 13.5h11M3.5 4.5h2"/></svg>
+                  </span>
+                  <span>Other sites and landscapes</span>
+                </label>
+                <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryUnknown">
+                  <input id="communityCategoryUnknown" type="checkbox" data-community-map-category="unknown" checked>
+                  <span class="map-layer-category-symbol" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" focusable="false"><circle cx="8" cy="8" r="3"/></svg>
+                  </span>
+                  <span>Unknown or uncategorized</span>
+                </label>
+              </div>
+              <p class="map-layers-group__help" id="communityLayerHelp">Contributed and locally maintained project records. Category choices affect Map visibility only.</p>
+              <p class="map-layer-category-status" id="communityCategoryStatus" role="status" aria-live="polite">0 of 0 matching community locations displayed.</p>
             </fieldset>
 
             <fieldset class="map-layers-group" aria-describedby="officialLayerHelp">
@@ -156,7 +194,7 @@
               <h4 id="additionalInformationTitle">Additional information</h4>
               <details>
                 <summary>About community records</summary>
-                <p>Community records are contributed and maintained by this local project. Search and Filters apply to these records only.</p>
+                <p>Community records are contributed and maintained by this local project. Search and Filters apply to these records only. Map categories use asset type first, with the legacy category field as a fallback; unknown values use the fallback symbol.</p>
               </details>
               <details>
                 <summary>About official heritage markers</summary>

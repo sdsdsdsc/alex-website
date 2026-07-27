@@ -180,6 +180,13 @@
       isValidLongitude
     } from "./heritage-engine/maps.js?v=2026-07-14-pr41-review-fixes";
     import {
+      COMMUNITY_MAP_CATEGORY_DEFINITIONS,
+      buildCommunityMarkerAccessibleName,
+      getCommunityMapCategory,
+      getEffectiveCommunityType,
+      normalizeCommunityTypeForComparison
+    } from "./heritage-engine/community-map-categories.js?v=2026-07-26-community-category-icons";
+    import {
       buildMapUrl,
       formatCriteriaList,
       formatPlaceLocationAddress,
@@ -554,6 +561,57 @@
         "Fenyi County",
         "Map Helpers",
         "map popup location fallback uses containedInPlace name"
+      );
+    }
+
+    function runCommunityMapCategoryTests() {
+      const categoryFor = (record) => getCommunityMapCategory(record);
+
+      assertEqual(categoryFor({ assetType: "Building", category: "Park" }).label, "Buildings", "Community Map Categories", "assetType takes precedence over legacy category");
+      assertEqual(categoryFor({ category: "Park" }).label, "Parks and gardens", "Community Map Categories", "legacy category is used when assetType is missing");
+      assertEqual(categoryFor({ assetType: "   ", category: "Park or garden" }).label, "Parks and gardens", "Community Map Categories", "blank assetType falls back to legacy category");
+      assertEqual(getEffectiveCommunityType({ assetType: "  Public   art  ", category: "Building" }), "Public   art", "Community Map Categories", "effective type preserves stored internal whitespace");
+      assertEqual(normalizeCommunityTypeForComparison("  Public   Space  "), "public space", "Community Map Categories", "comparison normalization trims, collapses whitespace, and ignores case");
+
+      [
+        ["Building", "Buildings"],
+        ["Park", "Parks and gardens"],
+        ["Park or garden", "Parks and gardens"],
+        ["Landmark", "Monuments and landmarks"],
+        ["Public art", "Monuments and landmarks"],
+        ["Public space", "Other sites and landscapes"],
+        ["Public Space", "Other sites and landscapes"],
+        ["Street or route", "Other sites and landscapes"],
+        ["Natural or landscape feature", "Other sites and landscapes"],
+        ["Other", "Other sites and landscapes"],
+        ["Community Place", "Unknown or uncategorized"]
+      ].forEach(([assetType, expected]) => {
+        assertEqual(categoryFor({ assetType }).label, expected, "Community Map Categories", `${assetType} maps to ${expected}`);
+      });
+
+      [
+        "",
+        "Unrecognized type",
+        "Site",
+        "Heritage Place",
+        "Community Facility",
+        "Industrial heritage",
+        "Archaeological feature",
+        "Ruins / Relic"
+      ].forEach((assetType) => {
+        assertEqual(categoryFor({ assetType }).label, "Unknown or uncategorized", "Community Map Categories", `${assetType || "missing type"} uses the controlled fallback`);
+      });
+
+      assertEqual(COMMUNITY_MAP_CATEGORY_DEFINITIONS.length, 5, "Community Map Categories", "controlled category vocabulary stays bounded");
+      const hostileValue = '<img src=x onerror="alert(1)">';
+      const hostileCategory = categoryFor({ assetType: hostileValue });
+      assertEqual(hostileCategory.label, "Unknown or uncategorized", "Community Map Categories", "arbitrary record text cannot create a category");
+      assertNotContains(hostileCategory.glyphSvg, hostileValue, "Community Map Categories", "raw record data never enters static SVG markup");
+      assertEqual(
+        buildCommunityMarkerAccessibleName({ title: "Alpha Hall", assetType: "Building" }),
+        "Open community heritage record: Alpha Hall. Map category: Buildings.",
+        "Community Map Categories",
+        "community marker accessible name includes the controlled category"
       );
     }
 
@@ -1396,6 +1454,7 @@
       runSharedDiscoveryTests();
       runSharedUrlAndFocusTests();
       runMapTests();
+      runCommunityMapCategoryTests();
       runPlaceTests();
       runExportTests();
       runValidationTests();
