@@ -1679,6 +1679,50 @@ body.community-modal-open {
   line-height: 1.4;
 }
 
+.map-layer-category-list {
+  display: grid;
+  gap: 8px;
+  margin-left: 31px;
+  padding-left: 14px;
+  border-left: 2px solid #d9d3c5;
+}
+
+.map-layer-toggle--category {
+  grid-template-columns: 22px 26px minmax(0, 1fr);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.map-layer-category-symbol {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #263f8f;
+  box-shadow: 0 0 0 1px #263f8f;
+}
+
+.map-layer-category-symbol svg {
+  width: 16px;
+  height: 16px;
+  overflow: visible;
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.map-layer-category-status {
+  margin: 2px 0 0 57px;
+  color: #17343f;
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
 .map-layer-symbol {
   position: relative;
   display: inline-block;
@@ -1966,15 +2010,23 @@ body.community-modal-open {
   transform: rotate(-45deg);
 }
 
-.community-map-pin::after {
-  content: "";
+.community-map-pin__glyph {
   position: absolute;
-  left: 11px;
-  top: 7px;
-  width: 8px;
-  height: 8px;
-  background: #fff;
-  border-radius: 50%;
+  left: 8px;
+  top: 5px;
+  width: 14px;
+  height: 14px;
+  z-index: 1;
+  overflow: visible;
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.community-map-pin__glyph--fallback {
+  stroke-width: 2;
 }
 
 .provincial-heritage-map-marker {

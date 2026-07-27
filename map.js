@@ -7,7 +7,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import {
   buildNominationUrlFromCoordinates,
-  buildMarkerAccessibleName,
   buildPlaceRecordUrl,
   cleanText,
   escapeHTML,
@@ -36,6 +35,12 @@ import {
   buildProvincialPopupData,
   validateProvincialHeritageGeoJson
 } from "./heritage-engine/provincial-heritage-map.js?v=2026-07-24-phase15b1-generalized-markers";
+import {
+  COMMUNITY_MAP_CATEGORY_DEFINITIONS,
+  buildCommunityMarkerAccessibleName,
+  getCommunityMapCategory,
+  getCommunityMapCategoryByKey
+} from "./heritage-engine/community-map-categories.js?v=2026-07-26-community-category-icons";
 
 const PROVINCIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-provincial-protected-heritage-map.geojson?v=2026-07-24-phase15b1-generalized-markers";
 
@@ -50,9 +55,11 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
-function makeBluePinIcon() {
+function makeBluePinIcon(categoryKey) {
+  const category = getCommunityMapCategoryByKey(categoryKey);
   return L.divIcon({
-    className: "community-map-pin",
+    className: `community-map-pin community-map-pin--${category.key}`,
+    html: category.glyphSvg,
     iconSize: [30, 42],
     iconAnchor: [15, 42],
     popupAnchor: [0, -42]
@@ -245,14 +252,20 @@ function initCommunityMap({
   const provincialStatusEl = document.getElementById("provincialHeritageStatus");
   const provincialErrorEl = document.getElementById("provincialHeritageError");
   const communityLayerToggle = document.getElementById("communityHeritageLayerToggle");
+  const communityCategoryToggles = Array.from(
+    document.querySelectorAll("[data-community-map-category]")
+  );
+  const communityCategoryStatusEl = document.getElementById("communityCategoryStatus");
   const provincialLayerToggle = document.getElementById("provincialHeritageLayerToggle");
 
   const map = L.map(containerId).setView(fallbackCenter, 13);
   const communityLayer = L.layerGroup().addTo(map);
   const provincialLayer = L.layerGroup();
-  const bluePinIcon = makeBluePinIcon();
   const baseLayers = createBaseLayers();
   const markersById = new Map();
+  const selectedCommunityCategoryKeys = new Set(
+    COMMUNITY_MAP_CATEGORY_DEFINITIONS.map((category) => category.key)
+  );
   const pendingFilters = {
     assetType: initialDiscoveryState.assetType,
     heritageCriteria: initialDiscoveryState.heritageCriteria
@@ -264,6 +277,8 @@ function initCommunityMap({
   let lastProvincialAnnouncement = "";
   let displayedProvincialMarkerCount = null;
   let provincialLayerState = "off";
+  let matchingCommunityPointCount = 0;
+  let visibleCommunityPointCount = 0;
 
   baseLayers.osm.addTo(map);
   map.whenReady(() => {
@@ -359,6 +374,14 @@ function initCommunityMap({
     }
   }
 
+  function updateCommunityCategoryStatus() {
+    if (!communityCategoryStatusEl) return;
+    const matchingLabel = matchingCommunityPointCount === 1
+      ? "matching community location"
+      : "matching community locations";
+    communityCategoryStatusEl.textContent = `${visibleCommunityPointCount} of ${matchingCommunityPointCount} ${matchingLabel} displayed.`;
+  }
+
   function showProvincialError() {
     if (!provincialErrorEl) return;
     provincialErrorEl.hidden = false;
@@ -374,8 +397,14 @@ function initCommunityMap({
 
   function syncLayerControls() {
     if (communityLayerToggle) {
-      communityLayerToggle.checked = map.hasLayer(communityLayer);
+      const selectedCount = selectedCommunityCategoryKeys.size;
+      communityLayerToggle.checked = selectedCount === COMMUNITY_MAP_CATEGORY_DEFINITIONS.length;
+      communityLayerToggle.indeterminate = selectedCount > 0
+        && selectedCount < COMMUNITY_MAP_CATEGORY_DEFINITIONS.length;
     }
+    communityCategoryToggles.forEach((toggle) => {
+      toggle.checked = selectedCommunityCategoryKeys.has(toggle.dataset.communityMapCategory);
+    });
     if (provincialLayerToggle) {
       provincialLayerToggle.checked = map.hasLayer(provincialLayer) && provincialLayerState !== "failed";
       provincialLayerToggle.setAttribute("aria-invalid", String(provincialLayerState === "failed"));
@@ -657,7 +686,7 @@ function initCommunityMap({
     focusStatusEl.append(" ", link);
   }
 
-  function renderRequestedPlaceFocus(matchingRecords) {
+  function renderRequestedPlaceFocus(matchingRecords, matchingPoints, { moveMap = true } = {}) {
     if (!focusStatusEl) return;
     focusStatusEl.textContent = "";
     focusStatusEl.hidden = !requestedPlaceId;
@@ -678,11 +707,25 @@ function initCommunityMap({
       return;
     }
 
+    const matchingPoint = matchingPoints.find((place) => place.id === record.id);
+    if (matchingPoint && !selectedCommunityCategoryKeys.has(getCommunityMapCategory(matchingPoint).key)) {
+      focusStatusEl.append(`${cleanText(record.title) || "The requested place"} is hidden by the current Map layer/category selection.`);
+      appendFocusLink("View its public record", recordUrl);
+      appendFocusLink("View preserved Places results", buildDiscoveryUrl("search.html", getCurrentDiscoveryState()));
+      return;
+    }
+
     const marker = markersById.get(record.id);
     if (!marker || !matchingRecords.some((place) => place.id === record.id)) {
       focusStatusEl.append(`${cleanText(record.title) || "The requested place"} does not match the active discovery filters.`);
       appendFocusLink("View its public record", recordUrl);
       appendFocusLink("View preserved Places results", buildDiscoveryUrl("search.html", getCurrentDiscoveryState()));
+      return;
+    }
+
+    if (!moveMap) {
+      focusStatusEl.append(`${cleanText(record.title) || "The requested place"} remains visible with the current Map layer/category selection.`);
+      appendFocusLink("View its public record", recordUrl);
       return;
     }
 
@@ -693,7 +736,11 @@ function initCommunityMap({
     appendFocusLink("View its public record", recordUrl);
   }
 
-  function renderMapFeatures(searchTerm = "") {
+  function renderMapFeatures(searchTerm = "", {
+    preserveMapView = false,
+    updateDiscoveryState = true,
+    moveRequestedPlace = true
+  } = {}) {
     const normalizedTerm = normalizeSearchText(searchTerm);
     communityLayer.clearLayers();
     markersById.clear();
@@ -707,12 +754,18 @@ function initCommunityMap({
     const matchingPoints = matchingRecords
       .filter(hasValidCoordinates)
       .sort((a, b) => cleanText(a.title).localeCompare(cleanText(b.title)));
+    const visiblePoints = matchingPoints.filter((point) => (
+      selectedCommunityCategoryKeys.has(getCommunityMapCategory(point).key)
+    ));
+    matchingCommunityPointCount = matchingPoints.length;
+    visibleCommunityPointCount = visiblePoints.length;
 
     const boundsItems = [];
-    matchingPoints.forEach((point) => {
-      const markerName = buildMarkerAccessibleName(point);
+    visiblePoints.forEach((point) => {
+      const category = getCommunityMapCategory(point);
+      const markerName = buildCommunityMarkerAccessibleName(point);
       const marker = L.marker([point.lat, point.lng], {
-        icon: bluePinIcon,
+        icon: makeBluePinIcon(category.key),
         title: markerName,
         alt: markerName,
         keyboard: true,
@@ -740,11 +793,16 @@ function initCommunityMap({
       ? "No community places match this search or filter."
       : `${matchingLabel}; ${mapLabel}${unavailableLabel}.`);
 
-    fitMapToLayers(map, boundsItems, fallbackCenter);
+    if (!preserveMapView) {
+      fitMapToLayers(map, boundsItems, fallbackCenter);
+    }
+    updateCommunityCategoryStatus();
     updateVisibleLayerStatus(`community-${map.hasLayer(communityLayer)}-${matchingPoints.length}`);
 
-    renderRequestedPlaceFocus(matchingRecords);
-    updateDiscoveryLinks(searchTerm);
+    renderRequestedPlaceFocus(matchingRecords, matchingPoints, { moveMap: moveRequestedPlace });
+    if (updateDiscoveryState) {
+      updateDiscoveryLinks(searchTerm);
+    }
 
     setTimeout(() => map.invalidateSize(), 0);
   }
@@ -858,12 +916,35 @@ function initCommunityMap({
 
   communityLayerToggle?.addEventListener("change", () => {
     if (communityLayerToggle.checked) {
-      communityLayer.addTo(map);
+      COMMUNITY_MAP_CATEGORY_DEFINITIONS.forEach((category) => {
+        selectedCommunityCategoryKeys.add(category.key);
+      });
     } else {
-      map.removeLayer(communityLayer);
+      selectedCommunityCategoryKeys.clear();
     }
     syncLayerControls();
-    updateVisibleLayerStatus(`community-toggle-${communityLayerToggle.checked}`);
+    renderMapFeatures(searchInput?.value || "", {
+      preserveMapView: true,
+      updateDiscoveryState: false,
+      moveRequestedPlace: false
+    });
+  });
+
+  communityCategoryToggles.forEach((toggle) => {
+    toggle.addEventListener("change", () => {
+      const categoryKey = toggle.dataset.communityMapCategory;
+      if (toggle.checked) {
+        selectedCommunityCategoryKeys.add(categoryKey);
+      } else {
+        selectedCommunityCategoryKeys.delete(categoryKey);
+      }
+      syncLayerControls();
+      renderMapFeatures(searchInput?.value || "", {
+        preserveMapView: true,
+        updateDiscoveryState: false,
+        moveRequestedPlace: false
+      });
+    });
   });
 
   provincialLayerToggle?.addEventListener("change", () => {

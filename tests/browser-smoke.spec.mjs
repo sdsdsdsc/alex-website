@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
-const MAP_PAGE_VERSION = "2026-07-26-map-layers-tab";
+const MAP_PAGE_VERSION = "2026-07-26-community-category-icons";
 const PROVINCIAL_HERITAGE_PREVIEW_VERSION = "2026-07-24-phase15b1-generalized-markers";
 const PROVINCIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-provincial-protected-heritage-map.geojson*";
 const SMOKE_PAGES = [
@@ -179,6 +179,11 @@ test("heritage engine helper harness passes", async ({ page }) => {
   await expect(sharedUrlAndFocus.locator(".result")).toHaveCount(22);
   const urlAndFocusFailures = await sharedUrlAndFocus.locator(".result:has(.badge--fail)").allTextContents();
   expect(urlAndFocusFailures).toEqual([]);
+
+  const communityCategories = page.locator(".test-card", { has: page.locator("h2", { hasText: "Community Map Categories" }) });
+  await expect(communityCategories.locator(".result")).toHaveCount(28);
+  const communityCategoryFailures = await communityCategories.locator(".result:has(.badge--fail)").allTextContents();
+  expect(communityCategoryFailures).toEqual([]);
 });
 
 test("map adopts legacy search URLs and keeps q authoritative", async ({ page }) => {
@@ -250,7 +255,7 @@ test("provincial preview is lazy, default-off, valid-empty, cached, and map-stab
   await expect(page.locator("#provincialHeritageError")).toBeHidden();
 
   await openMapLayersTab(page);
-  const communityOverlay = getOverlayCheckbox(page, "Community heritage records");
+  const communityOverlay = getOverlayCheckbox(page, "All community records");
   const provincialOverlay = getOverlayCheckbox(page, "Provincial protected heritage");
   await expect(communityOverlay).toBeChecked();
   await expect(provincialOverlay).not.toBeChecked();
@@ -395,7 +400,7 @@ test("provincial preview labels a synthetic approximate Point", async ({ page })
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   const layersPanel = await openMapLayersTab(page);
-  const communityCheckbox = layersPanel.getByRole("checkbox", { name: "Community heritage records", exact: true });
+  const communityCheckbox = layersPanel.getByRole("checkbox", { name: "All community records", exact: true });
   const provincialCheckbox = layersPanel.getByRole("checkbox", { name: "Provincial protected heritage", exact: true });
   await expect(communityCheckbox).toBeVisible();
   await expect(communityCheckbox).toBeEnabled();
@@ -425,7 +430,7 @@ test("provincial preview distinguishes a generalized marker and explains its rad
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   const layersPanel = await openMapLayersTab(page);
-  const communityCheckbox = layersPanel.getByRole("checkbox", { name: "Community heritage records", exact: true });
+  const communityCheckbox = layersPanel.getByRole("checkbox", { name: "All community records", exact: true });
   const provincialCheckbox = layersPanel.getByRole("checkbox", { name: "Provincial protected heritage", exact: true });
   await expect(communityCheckbox).toBeVisible();
   await expect(communityCheckbox).toBeEnabled();
@@ -455,7 +460,7 @@ test("Layers tab controls overlays while Leaflet retains basemap selection only"
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
   await openMapLayersTab(page);
-  const communityToggle = getOverlayCheckbox(page, "Community heritage records");
+  const communityToggle = getOverlayCheckbox(page, "All community records");
   const provincialToggle = getOverlayCheckbox(page, "Provincial protected heritage");
   await expect(communityToggle).toBeChecked();
   await expect(provincialToggle).not.toBeChecked();
@@ -473,7 +478,7 @@ test("Layers tab controls overlays while Leaflet retains basemap selection only"
 
   const communityCount = await page.locator(".community-map-pin").count();
   expect(communityCount).toBeGreaterThan(0);
-  await setOverlayChecked(page, "Community heritage records", false);
+  await setOverlayChecked(page, "All community records", false);
   await expect(page.locator(".community-map-pin")).toHaveCount(0);
   await expect(page.locator("#provincialHeritageStatus")).toHaveText("No heritage records displayed.");
 
@@ -483,7 +488,7 @@ test("Layers tab controls overlays while Leaflet retains basemap selection only"
   );
   await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(1);
 
-  await setOverlayChecked(page, "Community heritage records", true);
+  await setOverlayChecked(page, "All community records", true);
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
   await expect(page.locator("#provincialHeritageStatus")).toHaveText(
     new RegExp(`${communityCount} community records? and 1 provincial heritage location displayed\\.`)
@@ -496,6 +501,107 @@ test("Layers tab controls overlays while Leaflet retains basemap selection only"
   await page.getByRole("tab", { name: "Layers" }).click();
   await expect(communityToggle).toBeChecked();
   await expect(provincialToggle).toBeChecked();
+});
+
+test("community categories are accessible tri-state Map visibility controls", async ({ page }) => {
+  test.setTimeout(60000);
+  await page.goto("/map.html?place=jiangxi-test-community-square", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
+  await expect(page.locator("#mapFocusStatus")).toContainText("Focused on Jiangxi Test Community Square");
+  const layersPanel = await openMapLayersTab(page);
+  const parent = layersPanel.getByRole("checkbox", { name: "All community records", exact: true });
+  const categoryLabels = [
+    "Buildings",
+    "Parks and gardens",
+    "Monuments and landmarks",
+    "Other sites and landscapes",
+    "Unknown or uncategorized"
+  ];
+  const categoryCheckboxes = categoryLabels.map((label) => (
+    layersPanel.getByRole("checkbox", { name: label, exact: true })
+  ));
+
+  await expect(parent).toBeChecked();
+  await expect(parent).toHaveJSProperty("indeterminate", false);
+  for (const checkbox of categoryCheckboxes) {
+    await expect(checkbox).toBeVisible();
+    await expect(checkbox).toBeEnabled();
+    await expect(checkbox).toBeChecked();
+  }
+
+  const initialMarkers = page.locator(".community-map-pin");
+  const initialCount = await initialMarkers.count();
+  expect(initialCount).toBeGreaterThan(0);
+  await expect(page.locator("#communityCategoryStatus")).toHaveText(
+    new RegExp(`^${initialCount} of ${initialCount} matching community locations? displayed\\.$`)
+  );
+  for (let index = 0; index < initialCount; index += 1) {
+    await expect(initialMarkers.nth(index)).toHaveAttribute(
+      "aria-label",
+      /^Open community heritage record: .+\. Map category: (Buildings|Parks and gardens|Monuments and landmarks|Other sites and landscapes|Unknown or uncategorized)\.$/
+    );
+    await expect(initialMarkers.nth(index).locator("svg.community-map-pin__glyph")).toHaveCount(1);
+  }
+
+  const markerCategory = "other-sites-landscapes";
+  const selectedCategory = layersPanel.getByRole("checkbox", {
+    name: "Other sites and landscapes",
+    exact: true
+  });
+  const categoryMarkerCount = await page.locator(`.community-map-pin--${markerCategory}`).count();
+  const beforeState = await getRenderedMapState(page);
+  const beforeUrl = page.url();
+
+  await selectedCategory.focus();
+  await expect(selectedCategory).toBeFocused();
+  await selectedCategory.press("Space");
+  await expect(selectedCategory).not.toBeChecked();
+  await expect(parent).not.toBeChecked();
+  await expect(parent).toHaveJSProperty("indeterminate", true);
+  await expect(page.locator(".community-map-pin")).toHaveCount(initialCount - categoryMarkerCount);
+  await expect(page.locator("#communityCategoryStatus")).toHaveText(
+    new RegExp(`^${initialCount - categoryMarkerCount} of ${initialCount} matching community locations? displayed\\.$`)
+  );
+  await expect(page.locator("#mapFocusStatus")).toContainText(
+    "hidden by the current Map layer/category selection"
+  );
+  expect(page.url()).toBe(beforeUrl);
+  expect((await getRenderedMapState(page)).mapPaneTransform).toBe(beforeState.mapPaneTransform);
+  await expect(page.locator('.map-custom-filter[data-filter-key="assetType"]')).toHaveCount(1);
+  await expect(page.locator('.map-custom-filter[data-filter-key="heritageCriteria"]')).toHaveCount(1);
+
+  await page.getByRole("tab", { name: "Search", exact: true }).click();
+  await expect(page.locator(".community-map-pin")).toHaveCount(initialCount - categoryMarkerCount);
+  await page.getByRole("tab", { name: "Layers", exact: true }).click();
+  await expect(selectedCategory).not.toBeChecked();
+  await expect(parent).toHaveJSProperty("indeterminate", true);
+
+  await parent.click();
+  await expect(parent).toBeChecked();
+  await expect(parent).toHaveJSProperty("indeterminate", false);
+  for (const checkbox of categoryCheckboxes) {
+    await expect(checkbox).toBeChecked();
+  }
+  await expect(page.locator(".community-map-pin")).toHaveCount(initialCount);
+
+  await parent.click();
+  await expect(parent).not.toBeChecked();
+  await expect(parent).toHaveJSProperty("indeterminate", false);
+  for (const checkbox of categoryCheckboxes) {
+    await expect(checkbox).not.toBeChecked();
+  }
+  await expect(page.locator(".community-map-pin")).toHaveCount(0);
+  await expect(page.locator("#communityCategoryStatus")).toHaveText(
+    new RegExp(`^0 of ${initialCount} matching community locations? displayed\\.$`)
+  );
+
+  await parent.click();
+  await expect(parent).toBeChecked();
+  for (const checkbox of categoryCheckboxes) {
+    await expect(checkbox).toBeChecked();
+  }
+  await expect(page.locator(".community-map-pin")).toHaveCount(initialCount);
+  expect((await getRenderedMapState(page)).mapPaneTransform).toBe(beforeState.mapPaneTransform);
 });
 
 test("desktop keeps one Heritage Explorer sidebar and restores the full Map column", async ({ page }) => {
@@ -545,7 +651,7 @@ test("Layers remains a normal usable tab on mobile without a second drawer", asy
   await layersTab.click();
   await expect(layersTab).toHaveAttribute("aria-selected", "true");
   await expect(panel).toBeVisible();
-  await expect(getOverlayCheckbox(page, "Community heritage records")).toBeFocused();
+  await expect(getOverlayCheckbox(page, "All community records")).toBeFocused();
   await page.getByRole("tab", { name: "Info" }).click();
   await expect(panel).toBeHidden();
   await expect(page.locator("#mapInfoToolPanel")).toBeVisible();
@@ -691,6 +797,7 @@ for (const viewport of [
   test(`map workspace fits ${viewport.width}x${viewport.height} without page-level horizontal overflow`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
     await expect(page.locator("#mapViewResultsList")).toBeVisible();
     await expect(page.getByRole("tab", { name: "Layers", exact: true })).toBeVisible();
     await expect(page.locator("#mapLayersToolPanel")).toBeHidden();
