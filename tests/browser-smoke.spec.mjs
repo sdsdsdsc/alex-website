@@ -311,11 +311,27 @@ test("production-sized official fixture renders five accessible markers across r
   await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(5);
   await expect(page.locator("#provincialHeritageStatus")).toContainText("5 provincial heritage locations");
 
-  const visitorMarker = page.locator(
-    '.provincial-heritage-map-marker[aria-label*="Fu Baoshi Former Residence"][aria-label$="visitor reference point"]'
-  );
+  const compoundMarker = page.getByRole("button", {
+    name: "Open official protected heritage record: Xinyu Confucian Temple (新余孔庙); Compound reference point (approximate project-reviewed location)",
+    exact: true
+  });
+  await expect(compoundMarker).toHaveCount(1);
+  await expect(compoundMarker).not.toHaveAttribute("aria-label", /approximate reviewed location/);
+  await compoundMarker.focus();
+  await expect(compoundMarker).toBeFocused();
+  await compoundMarker.press("Enter");
+  const compoundPopup = page.locator(".provincial-heritage-map-popup").filter({
+    hasText: "Xinyu Confucian Temple"
+  });
+  await expect(compoundPopup).toContainText("Compound reference point");
+
+  const visitorMarker = page.getByRole("button", {
+    name: "Open official protected heritage record: Fu Baoshi Former Residence (傅抱石故居), visitor reference point",
+    exact: true
+  });
   await expect(visitorMarker).toHaveCount(1);
   await visitorMarker.focus();
+  await expect(visitorMarker).toBeFocused();
   await visitorMarker.press("Enter");
   const visitorPopup = page.locator(".provincial-heritage-map-popup").filter({
     hasText: "Fu Baoshi Former Residence"
@@ -325,11 +341,13 @@ test("production-sized official fixture renders five accessible markers across r
     "This marker shows a public visitor reference associated with the official heritage record."
   );
 
-  const bridgeMarker = page.locator(
-    '.provincial-heritage-map-marker[aria-label*="Rongquan Bridge"][aria-label$="approximate site location"]'
-  );
+  const bridgeMarker = page.getByRole("button", {
+    name: "Open official protected heritage record: Rongquan Bridge (蓉泉桥), approximate site location",
+    exact: true
+  });
   await expect(bridgeMarker).toHaveCount(1);
   await bridgeMarker.focus();
+  await expect(bridgeMarker).toBeFocused();
   await bridgeMarker.press("Enter");
   const bridgePopup = page.locator(".provincial-heritage-map-popup").filter({
     hasText: "Rongquan Bridge"

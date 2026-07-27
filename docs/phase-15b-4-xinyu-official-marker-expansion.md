@@ -18,7 +18,7 @@ The source sequence is retained only as source order. It is not a formal designa
 
 ## Approved records and reviewed Points
 
-| Record ID | Official name | Official category and locality | Gaode POI and original GCJ-02 audit value | Published WGS84 Point | Meaning | Uncertainty |
+| Record ID | Official name | Official category and locality | Current reviewed provider GCJ-02 coordinate | Published WGS84 Point | Meaning | Uncertainty |
 | --- | --- | --- | --- | --- | --- | ---: |
 | `JX-XY-PCH-008` | 昼锦堂 | 古建筑; 仙女湖区观巢镇汉泉村 | `B0IRN5X33Z`; `[114.845605, 27.851425]` | `[114.840705, 27.854836]` | Visitor reference | 125 m |
 | `JX-XY-PCH-009` | 蓉泉桥 | 古建筑; 渝水区水北镇排江村 | `B0JU95B3WN`; `[115.052627, 28.070835]` | `[115.047377, 28.074011]` | Approximate heritage-feature Point | 75 m |

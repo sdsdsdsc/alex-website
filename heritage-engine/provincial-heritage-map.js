@@ -285,6 +285,11 @@ function buildProvincialMarkerAccessibleName(feature) {
     ? ", generalized area reference"
     : properties.displayLocationType === "visitor-reference-point"
       ? ", visitor reference point"
+      : (
+        properties.displayLocationType === "compound-centroid"
+          || properties.publicLocationMeaning === "heritage-compound-centre"
+      )
+        ? "; Compound reference point (approximate project-reviewed location)"
       : properties.displayLocationType === "site-point" && properties.locationPrecision === "approximate"
         ? ", approximate site location"
         : properties.publicationLocationPolicy === "approximate"

@@ -406,7 +406,28 @@ test("accessible marker names distinguish visitor references from feature points
       publicLocationMeaning: "visitor-reference"
     }
   });
-  assert.match(buildProvincialMarkerAccessibleName(visitorReference), /visitor reference point$/);
+  assert.equal(
+    buildProvincialMarkerAccessibleName(visitorReference),
+    "Open official protected heritage record: Test Archaeological Site (测试遗址), visitor reference point"
+  );
+});
+
+test("compound-centroid accessible names identify an approximate project-reviewed compound reference", () => {
+  const compoundReference = makeValidFeature({
+    properties: {
+      locationEvidenceConfidence: "Medium",
+      publicationLocationPolicy: "approximate",
+      locationPrecision: "approximate",
+      displayLocationType: "compound-centroid",
+      publicLocationMeaning: "heritage-compound-centre"
+    }
+  });
+  const accessibleName = buildProvincialMarkerAccessibleName(compoundReference);
+  assert.equal(
+    accessibleName,
+    "Open official protected heritage record: Test Archaeological Site (测试遗址); Compound reference point (approximate project-reviewed location)"
+  );
+  assert.doesNotMatch(accessibleName, /, approximate reviewed location$/);
 });
 
 test("builds provenance-safe popup display data", () => {
