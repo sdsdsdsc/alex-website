@@ -1,6 +1,6 @@
 const SUPPORTED_SCHEMA_VERSION = "2.0.0";
 const PROVINCIAL_HERITAGE_DATASET_ID = "jiangxi-provincial-protected-heritage-map";
-const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 11;
+const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 15;
 const PROVINCIAL_HERITAGE_LOADING_MESSAGE = "Loading provincial heritage preview…";
 const PROVINCIAL_HERITAGE_EMPTY_MESSAGE = "No approved provincial heritage locations are available to display yet.";
 const PROVINCIAL_HERITAGE_FAILURE_MESSAGE = "The provincial heritage preview could not be loaded.";
@@ -283,9 +283,13 @@ function buildProvincialMarkerAccessibleName(feature) {
     : "";
   const locationLabel = properties.markerClass === "generalized"
     ? ", generalized area reference"
-    : properties.publicationLocationPolicy === "approximate"
-      ? ", approximate reviewed location"
-      : ", reviewed location";
+    : properties.displayLocationType === "visitor-reference-point"
+      ? ", visitor reference point"
+      : properties.displayLocationType === "site-point" && properties.locationPrecision === "approximate"
+        ? ", approximate site location"
+        : properties.publicationLocationPolicy === "approximate"
+          ? ", approximate reviewed location"
+          : ", reviewed location";
   return `Open official protected heritage record: ${title}${officialName}${locationLabel}`;
 }
 

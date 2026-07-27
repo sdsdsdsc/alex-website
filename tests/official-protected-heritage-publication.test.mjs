@@ -30,22 +30,108 @@ const expectInvalid = (mutate, pattern) => {
   );
 };
 
-test("aggregate joins eleven records and publishes one reviewed marker", () => {
+const expandedIds = [
+  "JX-XY-PCH-008",
+  "JX-XY-PCH-009",
+  "JX-XY-PCH-014",
+  "JX-XY-PCH-016"
+];
+const publishedIds = [
+  "JX-XY-PCH-001",
+  ...expandedIds
+];
+
+test("aggregate joins fifteen records and publishes five reviewed markers", () => {
   const result = generate();
-  assert.equal(result.geojson.metadata.sourceRecordCount, 11);
-  assert.equal(result.geojson.metadata.featureCount, 1);
+  assert.equal(result.geojson.metadata.sourceRecordCount, 15);
+  assert.equal(result.geojson.metadata.featureCount, 5);
   assert.equal(result.geojson.metadata.excludedRecordCount, 10);
   assert.equal(result.exclusions.length, 10);
-  assert.deepEqual(result.geojson.features.map(({ id }) => id), ["JX-XY-PCH-001"]);
+  assert.deepEqual(result.geojson.features.map(({ id }) => id), publishedIds);
 });
 
-test("published Xinyu point is WGS84 and carries project provenance", () => {
-  const feature = generate().geojson.features[0];
-  assert.deepEqual(feature.geometry.coordinates, [114.937042, 27.798123]);
-  assert.equal(feature.properties.coordinateReferenceSystem, "WGS84");
-  assert.equal(feature.properties.markerClass, "reviewed");
-  assert.equal(feature.properties.publicLocationMeaning, "heritage-compound-centre");
-  assert.match(feature.properties.projectLocationProvenance, /reviewed public-location decision/);
+test("all four added source records preserve the official register facts", () => {
+  const records = new Map(xinyu.records.map((record) => [record.recordId, record]));
+  assert.deepEqual(
+    expandedIds.map((id) => {
+      const record = records.get(id);
+      return [
+        id,
+        record.sourceSequence,
+        record.official.officialNameZh,
+        record.official.officialCategoryZh,
+        record.official.officialLocationTextZh,
+        record.official.protectionLevelZh,
+        record.official.officialDesignationNumber
+      ];
+    }),
+    [
+      ["JX-XY-PCH-008", 7, "昼锦堂", "古建筑", "仙女湖区观巢镇汉泉村", "省级文物保护单位", null],
+      ["JX-XY-PCH-009", 8, "蓉泉桥", "古建筑", "渝水区水北镇排江村", "省级文物保护单位", null],
+      ["JX-XY-PCH-014", 14, "傅抱石故居", "近现代重要史迹", "渝水区罗坊镇章塘村", "省级文物保护单位", null],
+      ["JX-XY-PCH-016", 16, "上海劳动妇女战地服务团旧址", "近现代重要史迹", "渝水区珠珊镇沙头村", "省级文物保护单位", null]
+    ]
+  );
+});
+
+test("all four added location decisions retain provider CRS, POI identity, and deterministic conversion documentation", () => {
+  const decisions = new Map(locations.decisions.map((decision) => [decision.recordId, decision]));
+  assert.deepEqual(
+    expandedIds.map((id) => {
+      const decision = decisions.get(id);
+      return [
+        id,
+        decision.originalProviderCoordinate.coordinateReferenceSystem,
+        decision.originalProviderCoordinate.providerUrl.split("/").at(-1),
+        decision.estimatedUncertaintyMeters,
+        decision.displayLocationType,
+        decision.publicLocationMeaning
+      ];
+    }),
+    [
+      ["JX-XY-PCH-008", "GCJ-02", "B0IRN5X33Z", 125, "visitor-reference-point", "visitor-reference"],
+      ["JX-XY-PCH-009", "GCJ-02", "B0JU95B3WN", 75, "site-point", "heritage-feature"],
+      ["JX-XY-PCH-014", "GCJ-02", "B0FFJ6C27Y", 100, "visitor-reference-point", "visitor-reference"],
+      ["JX-XY-PCH-016", "GCJ-02", "B0IATLWGUH", 100, "visitor-reference-point", "visitor-reference"]
+    ]
+  );
+  expandedIds.forEach((id) => {
+    const method = decisions.get(id).transformationOrReconciliationMethod;
+    assert.match(method, /iterative inverse GCJ-02 transform/);
+    assert.match(method, /a=6378245\.0/);
+    assert.match(method, /ee=0\.00669342162296594323/);
+    assert.match(method, /ten/);
+  });
+  const shanghai = decisions.get("JX-XY-PCH-016");
+  assert.deepEqual(
+    [shanghai.originalProviderCoordinate.longitude, shanghai.originalProviderCoordinate.latitude],
+    [114.977746, 27.770564]
+  );
+  assert.match(shanghai.transformationOrReconciliationMethod, /114\.978214, 27\.769586 GCJ-02/);
+});
+
+test("published Xinyu points are WGS84 and carry project provenance", () => {
+  const features = new Map(generate().geojson.features.map((feature) => [feature.id, feature]));
+  assert.deepEqual(
+    publishedIds.map((id) => features.get(id).geometry.coordinates),
+    [
+      [114.937042, 27.798123],
+      [114.840705, 27.854836],
+      [115.047377, 28.074011],
+      [115.09312, 27.911966],
+      [114.97278, 27.773914]
+    ]
+  );
+  publishedIds.forEach((id) => {
+    const feature = features.get(id);
+    assert.equal(feature.properties.coordinateReferenceSystem, "WGS84");
+    assert.equal(feature.properties.markerClass, "reviewed");
+    assert.match(feature.properties.projectLocationProvenance, /reviewed public-location decision/);
+  });
+  assert.equal(features.get("JX-XY-PCH-009").properties.publicLocationMeaning, "heritage-feature");
+  ["JX-XY-PCH-008", "JX-XY-PCH-014", "JX-XY-PCH-016"].forEach((id) => {
+    assert.equal(features.get(id).properties.publicLocationMeaning, "visitor-reference");
+  });
 });
 
 test("official sequence remains distinct from a designation number", () => {
@@ -134,9 +220,12 @@ test("deterministic aggregate supports mixed reviewed and generalized marker cla
   locationValue.decisions.push(generalizedDecision);
 
   const result = generate({ xinyu: xinyuValue, locations: locationValue });
-  assert.deepEqual(result.geojson.features.map(({ properties }) => properties.markerClass), ["reviewed", "generalized"]);
-  assert.equal(result.geojson.metadata.sourceRecordCount, 12);
-  assert.equal(result.geojson.metadata.featureCount, 2);
+  assert.deepEqual(
+    result.geojson.features.map(({ properties }) => properties.markerClass),
+    ["reviewed", "generalized", "reviewed", "reviewed", "reviewed", "reviewed"]
+  );
+  assert.equal(result.geojson.metadata.sourceRecordCount, 16);
+  assert.equal(result.geojson.metadata.featureCount, 6);
 });
 
 test("Phase 14 multi-component parents cannot become Point features", () => {
@@ -153,4 +242,6 @@ test("the public feature excludes candidate and research internals", () => {
   ["originalProviderCoordinate", "projectLocationSources", "locationEvidenceSummary", "reviewedBy"].forEach((field) => {
     assert.equal(text.includes(field), false);
   });
+  assert.equal(text.includes("114.978214"), false);
+  assert.equal(text.includes("27.769586"), false);
 });

@@ -12,12 +12,12 @@
       {
         "datasetId": "xinyu-provincial-protected-heritage-marker-pilot",
         "sourcePath": "data/xinyu-provincial-heritage-marker-pilot.json",
-        "recordCount": 1
+        "recordCount": 5
       }
     ],
     "publicLocationSource": "data/official-protected-heritage-public-locations.json",
-    "sourceRecordCount": 11,
-    "featureCount": 1,
+    "sourceRecordCount": 15,
+    "featureCount": 5,
     "excludedRecordCount": 10,
     "generationStatus": "valid",
     "deterministicSourceOrder": [
@@ -62,6 +62,158 @@
         "coordinates": [
           114.937042,
           27.798123
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "JX-XY-PCH-008",
+      "properties": {
+        "recordId": "JX-XY-PCH-008",
+        "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+        "officialNameZh": "昼锦堂",
+        "projectNameEn": "Zhoujin Hall",
+        "projectEnglishStatus": "Alex's Photo Board project interpretation",
+        "protectionLevelZh": "省级文物保护单位",
+        "officialCategoryZh": "古建筑",
+        "officialLocationTextZh": "仙女湖区观巢镇汉泉村",
+        "sourceTitleZh": "新余市市级以上文物保护单位名录（2025年）",
+        "sourceIssuerZh": "新余市文化广电旅游局",
+        "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+        "sourceAccessedDate": "2026-07-24",
+        "identityConfidence": "confirmed",
+        "siteLocationConfidence": "Medium",
+        "locationEvidenceConfidence": "Medium",
+        "displayLocationType": "visitor-reference-point",
+        "locationPrecision": "approximate",
+        "publicLocationMeaning": "visitor-reference",
+        "markerClass": "reviewed",
+        "estimatedUncertaintyMeters": 125,
+        "generalizationRadiusMeters": null,
+        "publicationLocationPolicy": "approximate",
+        "publicLocationNote": "This marker shows a public visitor reference associated with the official heritage record. It may not coincide with the protected feature itself. The location was produced by Alex’s Photo Board and is not an official designation coordinate or legal boundary.",
+        "coordinateReferenceSystem": "WGS84",
+        "projectLocationProvenance": "Alex's Photo Board reviewed public-location decision"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.840705,
+          27.854836
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "JX-XY-PCH-009",
+      "properties": {
+        "recordId": "JX-XY-PCH-009",
+        "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+        "officialNameZh": "蓉泉桥",
+        "projectNameEn": "Rongquan Bridge",
+        "projectEnglishStatus": "Alex's Photo Board project interpretation",
+        "protectionLevelZh": "省级文物保护单位",
+        "officialCategoryZh": "古建筑",
+        "officialLocationTextZh": "渝水区水北镇排江村",
+        "sourceTitleZh": "新余市市级以上文物保护单位名录（2025年）",
+        "sourceIssuerZh": "新余市文化广电旅游局",
+        "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+        "sourceAccessedDate": "2026-07-24",
+        "identityConfidence": "confirmed",
+        "siteLocationConfidence": "High",
+        "locationEvidenceConfidence": "Medium",
+        "displayLocationType": "site-point",
+        "locationPrecision": "approximate",
+        "publicLocationMeaning": "heritage-feature",
+        "markerClass": "reviewed",
+        "estimatedUncertaintyMeters": 75,
+        "generalizationRadiusMeters": null,
+        "publicationLocationPolicy": "approximate",
+        "publicLocationNote": "This official heritage record has a project-reviewed approximate feature location. The displayed point was produced by Alex’s Photo Board; it is not an official designation coordinate or legal boundary.",
+        "coordinateReferenceSystem": "WGS84",
+        "projectLocationProvenance": "Alex's Photo Board reviewed public-location decision"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          115.047377,
+          28.074011
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "JX-XY-PCH-014",
+      "properties": {
+        "recordId": "JX-XY-PCH-014",
+        "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+        "officialNameZh": "傅抱石故居",
+        "projectNameEn": "Fu Baoshi Former Residence",
+        "projectEnglishStatus": "Alex's Photo Board project interpretation",
+        "protectionLevelZh": "省级文物保护单位",
+        "officialCategoryZh": "近现代重要史迹",
+        "officialLocationTextZh": "渝水区罗坊镇章塘村",
+        "sourceTitleZh": "新余市市级以上文物保护单位名录（2025年）",
+        "sourceIssuerZh": "新余市文化广电旅游局",
+        "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+        "sourceAccessedDate": "2026-07-24",
+        "identityConfidence": "confirmed",
+        "siteLocationConfidence": "Medium",
+        "locationEvidenceConfidence": "Medium",
+        "displayLocationType": "visitor-reference-point",
+        "locationPrecision": "approximate",
+        "publicLocationMeaning": "visitor-reference",
+        "markerClass": "reviewed",
+        "estimatedUncertaintyMeters": 100,
+        "generalizationRadiusMeters": null,
+        "publicationLocationPolicy": "approximate",
+        "publicLocationNote": "This marker shows a public visitor reference associated with the official heritage record. It may not coincide with the protected feature itself. The location was produced by Alex’s Photo Board and is not an official designation coordinate or legal boundary.",
+        "coordinateReferenceSystem": "WGS84",
+        "projectLocationProvenance": "Alex's Photo Board reviewed public-location decision"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          115.09312,
+          27.911966
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "JX-XY-PCH-016",
+      "properties": {
+        "recordId": "JX-XY-PCH-016",
+        "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+        "officialNameZh": "上海劳动妇女战地服务团旧址",
+        "projectNameEn": "Former Site of the Shanghai Labour Women's Battlefield Service Corps",
+        "projectEnglishStatus": "Alex's Photo Board project interpretation",
+        "protectionLevelZh": "省级文物保护单位",
+        "officialCategoryZh": "近现代重要史迹",
+        "officialLocationTextZh": "渝水区珠珊镇沙头村",
+        "sourceTitleZh": "新余市市级以上文物保护单位名录（2025年）",
+        "sourceIssuerZh": "新余市文化广电旅游局",
+        "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+        "sourceAccessedDate": "2026-07-24",
+        "identityConfidence": "confirmed",
+        "siteLocationConfidence": "Medium",
+        "locationEvidenceConfidence": "Medium",
+        "displayLocationType": "visitor-reference-point",
+        "locationPrecision": "approximate",
+        "publicLocationMeaning": "visitor-reference",
+        "markerClass": "reviewed",
+        "estimatedUncertaintyMeters": 100,
+        "generalizationRadiusMeters": null,
+        "publicationLocationPolicy": "approximate",
+        "publicLocationNote": "This marker shows a public visitor reference associated with the official heritage record. It may not coincide with the protected feature itself. The location was produced by Alex’s Photo Board and is not an official designation coordinate or legal boundary.",
+        "coordinateReferenceSystem": "WGS84",
+        "projectLocationProvenance": "Alex's Photo Board reviewed public-location decision"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.97278,
+          27.773914
         ]
       }
     }

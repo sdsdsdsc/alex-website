@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "datasetId": "official-protected-heritage-public-location-decisions",
   "projectMaintainer": "Alex's Photo Board",
-  "projectLastReviewedDate": "2026-07-24",
+  "projectLastReviewedDate": "2026-07-27",
   "decisions": [
     {
       "recordId": "JX-XY-PCH-001",
@@ -88,6 +88,290 @@
         "providerUrl": "https://www.google.com/maps/place/Confucian+Temple/@27.794748,114.941361,760m/data=!3m2!1e3!4b1!4m6!3m5!1s0x342480302297ac11:0xd89c89b6d84369c8!8m2!3d27.794748!4d114.941361!16s%2Fg%2F1vp71f2x"
       },
       "transformationOrReconciliationMethod": "The raw mainland Google coordinate was retained as GCJ-02 evidence and was not copied into GeoJSON. A standard inverse GCJ-02 comparison produced an approximate WGS84 cross-check; the published point was reconciled to the named OpenStreetMap WGS84 compound footprint and reviewed as an approximate compound centroid."
+    },
+    {
+      "recordId": "JX-XY-PCH-008",
+      "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+      "identityConfidence": "confirmed",
+      "siteLocationConfidence": "Medium",
+      "locationEvidenceConfidence": "Medium",
+      "displayLocationType": "visitor-reference-point",
+      "locationPrecision": "approximate",
+      "publicLocationMeaning": "visitor-reference",
+      "publicationLocationPolicy": "approximate",
+      "sensitivityAssessment": "public-exact-acceptable",
+      "latitude": 27.854836,
+      "longitude": 114.840705,
+      "coordinateReferenceSystem": "WGS84",
+      "estimatedUncertaintyMeters": 125,
+      "generalizationRadiusMeters": null,
+      "publicLocationNote": "This marker shows a public visitor reference associated with the official heritage record. It may not coincide with the protected feature itself. The location was produced by Alex’s Photo Board and is not an official designation coordinate or legal boundary.",
+      "locationEvidenceSummary": "The official Xinyu register identifies Zhoujin Hall in Hanquan Village; Xinyu Museum independently describes the named building and village; Gaode POI B0IRN5X33Z has the same name, a 295 County Road address and a venue photograph. The inverse-GCJ result was checked in WGS84 basemap and satellite context at Hanquan Village, with no conflicting same-name result found.",
+      "reviewedBy": "project owner",
+      "reviewedDate": "2026-07-27",
+      "reviewStatus": "approved",
+      "projectLocationSources": [
+        {
+          "sourceId": "JX-XY-PCH-008-S01",
+          "sourceType": "official-record",
+          "sourceTitle": "新余市市级以上文物保护单位名录（2025年）",
+          "sourcePublisher": "新余市文化广电旅游局",
+          "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["official-identity", "official-locality"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-008-S02",
+          "sourceType": "institutional-description",
+          "sourceTitle": "昼锦堂",
+          "sourcePublisher": "江西省新余市博物馆",
+          "sourceUrl": "https://www.xysmuseum.com/592.html",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["independent-identity", "compound-description", "locality-match"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-008-S03",
+          "sourceType": "gaode-poi",
+          "sourceTitle": "昼锦堂 (B0IRN5X33Z)",
+          "sourcePublisher": "高德地图",
+          "sourceUrl": "https://www.amap.com/place/B0IRN5X33Z",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["poi-name", "locality-match", "venue-photograph", "detailed-address"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-008-S04",
+          "sourceType": "provider-comparison",
+          "sourceTitle": "WGS84 basemap review centred on the reconciled Zhoujin Hall visitor reference",
+          "sourcePublisher": "OpenStreetMap contributors",
+          "sourceUrl": "https://www.openstreetmap.org/?mlat=27.854836&mlon=114.840705#map=18/27.854836/114.840705",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["wgs84-reference", "locality-match"]
+        }
+      ],
+      "originalProviderCoordinate": {
+        "provider": "高德地图",
+        "poiName": "昼锦堂",
+        "whatItRepresents": "Named public visitor POI on 295 County Road with a venue photograph.",
+        "latitude": 27.851425,
+        "longitude": 114.845605,
+        "coordinateReferenceSystem": "GCJ-02",
+        "coordinateReferenceSystemStatus": "documented",
+        "providerUrl": "https://www.amap.com/place/B0IRN5X33Z"
+      },
+      "transformationOrReconciliationMethod": "Gaode POI B0IRN5X33Z was rechecked on 2026-07-27 at 114.845605, 27.851425 in GCJ-02. WGS84 was calculated with the standard deterministic iterative inverse GCJ-02 transform using the Krasovsky 1940 ellipsoid constants a=6378245.0 and ee=0.00669342162296594323, iterating forward-transform residual correction ten times. The computed 114.840695, 27.854827 was rounded and reconciled to the reviewed WGS84 visitor reference 114.840705, 27.854836 after independent locality and imagery review."
+    },
+    {
+      "recordId": "JX-XY-PCH-009",
+      "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+      "identityConfidence": "confirmed",
+      "siteLocationConfidence": "High",
+      "locationEvidenceConfidence": "Medium",
+      "displayLocationType": "site-point",
+      "locationPrecision": "approximate",
+      "publicLocationMeaning": "heritage-feature",
+      "publicationLocationPolicy": "approximate",
+      "sensitivityAssessment": "public-exact-acceptable",
+      "latitude": 28.074011,
+      "longitude": 115.047377,
+      "coordinateReferenceSystem": "WGS84",
+      "estimatedUncertaintyMeters": 75,
+      "generalizationRadiusMeters": null,
+      "publicLocationNote": "This official heritage record has a project-reviewed approximate feature location. The displayed point was produced by Alex’s Photo Board; it is not an official designation coordinate or legal boundary.",
+      "locationEvidenceSummary": "The official Xinyu register identifies Rongquan Bridge in Paijiang Village; Xinyu Museum independently describes the named single-span stone bridge ten metres east of the Paijiang village group; Gaode POI B0JU95B3WN has the exact name, Shizhen Line address and a feature photograph. The inverse-GCJ point was checked in WGS84 basemap and satellite context against the village road and watercourse, with no same-name conflict found.",
+      "reviewedBy": "project owner",
+      "reviewedDate": "2026-07-27",
+      "reviewStatus": "approved",
+      "projectLocationSources": [
+        {
+          "sourceId": "JX-XY-PCH-009-S01",
+          "sourceType": "official-record",
+          "sourceTitle": "新余市市级以上文物保护单位名录（2025年）",
+          "sourcePublisher": "新余市文化广电旅游局",
+          "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["official-identity", "official-locality"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-009-S02",
+          "sourceType": "institutional-description",
+          "sourceTitle": "蓉泉桥",
+          "sourcePublisher": "江西省新余市博物馆",
+          "sourceUrl": "https://www.xysmuseum.com/593.html",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["independent-identity", "locality-match", "detailed-address"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-009-S03",
+          "sourceType": "gaode-poi",
+          "sourceTitle": "蓉泉桥 (B0JU95B3WN)",
+          "sourcePublisher": "高德地图",
+          "sourceUrl": "https://www.amap.com/place/B0JU95B3WN",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["poi-name", "locality-match", "venue-photograph", "detailed-address"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-009-S04",
+          "sourceType": "provider-comparison",
+          "sourceTitle": "WGS84 basemap review centred on the reconciled Rongquan Bridge feature point",
+          "sourcePublisher": "OpenStreetMap contributors",
+          "sourceUrl": "https://www.openstreetmap.org/?mlat=28.074011&mlon=115.047377#map=18/28.074011/115.047377",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["wgs84-reference", "locality-match"]
+        }
+      ],
+      "originalProviderCoordinate": {
+        "provider": "高德地图",
+        "poiName": "蓉泉桥",
+        "whatItRepresents": "Named bridge-feature POI on Shizhen Line with a feature photograph.",
+        "latitude": 28.070835,
+        "longitude": 115.052627,
+        "coordinateReferenceSystem": "GCJ-02",
+        "coordinateReferenceSystemStatus": "documented",
+        "providerUrl": "https://www.amap.com/place/B0JU95B3WN"
+      },
+      "transformationOrReconciliationMethod": "Gaode POI B0JU95B3WN was rechecked on 2026-07-27 at 115.052627, 28.070835 in GCJ-02. WGS84 was calculated with the standard deterministic iterative inverse GCJ-02 transform using the Krasovsky 1940 ellipsoid constants a=6378245.0 and ee=0.00669342162296594323, iterating forward-transform residual correction ten times. The computed 115.047390, 28.074022 was rounded and reconciled to the reviewed WGS84 feature point 115.047377, 28.074011 after independent locality, road and watercourse review."
+    },
+    {
+      "recordId": "JX-XY-PCH-014",
+      "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+      "identityConfidence": "confirmed",
+      "siteLocationConfidence": "Medium",
+      "locationEvidenceConfidence": "Medium",
+      "displayLocationType": "visitor-reference-point",
+      "locationPrecision": "approximate",
+      "publicLocationMeaning": "visitor-reference",
+      "publicationLocationPolicy": "approximate",
+      "sensitivityAssessment": "public-exact-acceptable",
+      "latitude": 27.911966,
+      "longitude": 115.09312,
+      "coordinateReferenceSystem": "WGS84",
+      "estimatedUncertaintyMeters": 100,
+      "generalizationRadiusMeters": null,
+      "publicLocationNote": "This marker shows a public visitor reference associated with the official heritage record. It may not coincide with the protected feature itself. The location was produced by Alex’s Photo Board and is not an official designation coordinate or legal boundary.",
+      "locationEvidenceSummary": "The official Xinyu register identifies Fu Baoshi Former Residence in Zhangtang Village; Xinyu Museum independently describes the small former residence in Beigang Zhangtang; Gaode POI B0FFJ6C27Y names Fu Baoshi's former residence and places the visitor venue 150 metres east of County Road 294. The inverse-GCJ point was checked in WGS84 basemap and satellite context within the same village, with no conflicting Xinyu venue found.",
+      "reviewedBy": "project owner",
+      "reviewedDate": "2026-07-27",
+      "reviewStatus": "approved",
+      "projectLocationSources": [
+        {
+          "sourceId": "JX-XY-PCH-014-S01",
+          "sourceType": "official-record",
+          "sourceTitle": "新余市市级以上文物保护单位名录（2025年）",
+          "sourcePublisher": "新余市文化广电旅游局",
+          "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["official-identity", "official-locality"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-014-S02",
+          "sourceType": "institutional-description",
+          "sourceTitle": "傅抱石故居",
+          "sourcePublisher": "江西省新余市博物馆",
+          "sourceUrl": "https://www.xysmuseum.com/598.html",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["independent-identity", "compound-description", "locality-match"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-014-S03",
+          "sourceType": "gaode-poi",
+          "sourceTitle": "傅抱石先生故居 (B0FFJ6C27Y)",
+          "sourcePublisher": "高德地图",
+          "sourceUrl": "https://www.amap.com/place/B0FFJ6C27Y",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["poi-name", "locality-match", "detailed-address"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-014-S04",
+          "sourceType": "provider-comparison",
+          "sourceTitle": "WGS84 basemap review centred on the reconciled Fu Baoshi visitor reference",
+          "sourcePublisher": "OpenStreetMap contributors",
+          "sourceUrl": "https://www.openstreetmap.org/?mlat=27.911966&mlon=115.093120#map=18/27.911966/115.093120",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["wgs84-reference", "locality-match"]
+        }
+      ],
+      "originalProviderCoordinate": {
+        "provider": "高德地图",
+        "poiName": "傅抱石先生故居",
+        "whatItRepresents": "Named public visitor POI for the former residence, east of County Road 294.",
+        "latitude": 27.908861,
+        "longitude": 115.098417,
+        "coordinateReferenceSystem": "GCJ-02",
+        "coordinateReferenceSystemStatus": "documented",
+        "providerUrl": "https://www.amap.com/place/B0FFJ6C27Y"
+      },
+      "transformationOrReconciliationMethod": "Gaode POI B0FFJ6C27Y was rechecked on 2026-07-27 at 115.098417, 27.908861 in GCJ-02. WGS84 was calculated with the standard deterministic iterative inverse GCJ-02 transform using the Krasovsky 1940 ellipsoid constants a=6378245.0 and ee=0.00669342162296594323, iterating forward-transform residual correction ten times. The computed 115.093121, 27.911967 was rounded to the reviewed WGS84 visitor reference 115.093120, 27.911966 after independent locality and imagery review."
+    },
+    {
+      "recordId": "JX-XY-PCH-016",
+      "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+      "identityConfidence": "confirmed",
+      "siteLocationConfidence": "Medium",
+      "locationEvidenceConfidence": "Medium",
+      "displayLocationType": "visitor-reference-point",
+      "locationPrecision": "approximate",
+      "publicLocationMeaning": "visitor-reference",
+      "publicationLocationPolicy": "approximate",
+      "sensitivityAssessment": "public-exact-acceptable",
+      "latitude": 27.773914,
+      "longitude": 114.97278,
+      "coordinateReferenceSystem": "WGS84",
+      "estimatedUncertaintyMeters": 100,
+      "generalizationRadiusMeters": null,
+      "publicLocationNote": "This marker shows a public visitor reference associated with the official heritage record. It may not coincide with the protected feature itself. The location was produced by Alex’s Photo Board and is not an official designation coordinate or legal boundary.",
+      "locationEvidenceSummary": "The official Xinyu register identifies the former site in Shatou Village; Xinyu Women's Federation independently places the public education venue in Hengbanqiao Village within Shatou; Gaode POI B0IATLWGUH has the exact name, Hengbanqiao address and a venue photograph. On 2026-07-27 the same POI ID rendered at a slightly updated provider pin; the published WGS84 visitor reference follows that current pin and remains separate from the earlier audit coordinate.",
+      "reviewedBy": "project owner",
+      "reviewedDate": "2026-07-27",
+      "reviewStatus": "approved",
+      "projectLocationSources": [
+        {
+          "sourceId": "JX-XY-PCH-016-S01",
+          "sourceType": "official-record",
+          "sourceTitle": "新余市市级以上文物保护单位名录（2025年）",
+          "sourcePublisher": "新余市文化广电旅游局",
+          "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["official-identity", "official-locality"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-016-S02",
+          "sourceType": "institutional-description",
+          "sourceTitle": "祝贺！上海劳动妇女战地服务团旧址入选全国妇女爱国主义教育基地",
+          "sourcePublisher": "新余市妇女联合会",
+          "sourceUrl": "https://m.thepaper.cn/newsDetail_forward_24632052",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["independent-identity", "visitor-information", "locality-match"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-016-S03",
+          "sourceType": "gaode-poi",
+          "sourceTitle": "上海劳动妇女战地服务团旧址 (B0IATLWGUH)",
+          "sourcePublisher": "高德地图",
+          "sourceUrl": "https://www.amap.com/place/B0IATLWGUH",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["poi-name", "locality-match", "venue-photograph", "detailed-address"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-016-S04",
+          "sourceType": "provider-comparison",
+          "sourceTitle": "WGS84 basemap review centred on the reconciled battlefield service corps visitor reference",
+          "sourcePublisher": "OpenStreetMap contributors",
+          "sourceUrl": "https://www.openstreetmap.org/?mlat=27.773914&mlon=114.972780#map=18/27.773914/114.972780",
+          "sourceAccessedDate": "2026-07-27",
+          "supports": ["wgs84-reference", "locality-match"]
+        }
+      ],
+      "originalProviderCoordinate": {
+        "provider": "高德地图",
+        "poiName": "上海劳动妇女战地服务团旧址",
+        "whatItRepresents": "Named public visitor venue in Hengbanqiao Village with a venue photograph; this is the current provider pin rechecked on 2026-07-27.",
+        "latitude": 27.770564,
+        "longitude": 114.977746,
+        "coordinateReferenceSystem": "GCJ-02",
+        "coordinateReferenceSystemStatus": "documented",
+        "providerUrl": "https://www.amap.com/place/B0IATLWGUH"
+      },
+      "transformationOrReconciliationMethod": "The bounded audit retained Gaode POI B0IATLWGUH at 114.978214, 27.769586 GCJ-02 (iterative inverse result 114.973247, 27.772935). A mandatory recheck on 2026-07-27 confirmed the same POI ID, name, visitor photograph and Hengbanqiao address but rendered its current pin at 114.977746, 27.770564 GCJ-02. Using the standard deterministic iterative inverse GCJ-02 transform with Krasovsky 1940 constants a=6378245.0 and ee=0.00669342162296594323 and ten forward-residual iterations produced 114.972780, 27.773914 WGS84. That current result was adopted as the reviewed visitor reference after independent locality and imagery review; the earlier preliminary WGS84 candidate was not copied into GeoJSON."
     }
   ]
 }

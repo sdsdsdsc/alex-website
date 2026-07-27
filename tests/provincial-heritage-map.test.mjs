@@ -25,9 +25,9 @@ function makeValidEmpty() {
     metadata: {
       schemaVersion: "2.0.0",
       datasetId: "jiangxi-provincial-protected-heritage-map",
-      sourceRecordCount: 11,
+      sourceRecordCount: 15,
       featureCount: 0,
-      excludedRecordCount: 11,
+      excludedRecordCount: 15,
       generationStatus: "valid-empty",
       geometryProvenance: "Alex's Photo Board project coordinate review"
     },
@@ -84,7 +84,7 @@ function makeFeatureCollection(features) {
     metadata: {
       ...makeValidEmpty().metadata,
       featureCount: features.length,
-      excludedRecordCount: 11 - features.length,
+      excludedRecordCount: 15 - features.length,
       generationStatus: features.length === 0 ? "valid-empty" : "valid"
     },
     features
@@ -102,7 +102,7 @@ test("accepts the committed valid-empty contract", () => {
   const result = validateProvincialHeritageGeoJson(makeValidEmpty());
   assert.equal(result.status, "valid-empty");
   assert.equal(result.features.length, 0);
-  assert.equal(result.metadata.excludedRecordCount, 11);
+  assert.equal(result.metadata.excludedRecordCount, 15);
 });
 
 test("rejects an unsupported schema", () => {
@@ -138,7 +138,7 @@ test("rejects non-array features", () => {
 test("rejects the wrong source record count", () => {
   const value = makeValidEmpty();
   value.metadata.sourceRecordCount = 9;
-  expectInvalid(value, /sourceRecordCount must be 11/);
+  expectInvalid(value, /sourceRecordCount must be 15/);
 });
 
 test("rejects a feature count mismatch", () => {
@@ -212,14 +212,18 @@ test("accepts a synthetic High exact Point", () => {
   assert.equal(result.features[0].properties.markerClass, "reviewed");
 });
 
-test("accepts the committed reviewed Xinyu Confucian Temple marker", () => {
+test("accepts the committed five-marker Xinyu publication set", () => {
   const result = validateProvincialHeritageGeoJson(committedGeoJson);
   assert.equal(result.status, "valid");
-  assert.equal(result.features.length, 1);
+  assert.equal(result.features.length, 5);
   assert.equal(result.features[0].id, "JX-XY-PCH-001");
   assert.deepEqual(result.features[0].geometry.coordinates, [114.937042, 27.798123]);
   assert.equal(result.features[0].properties.markerClass, "reviewed");
   assert.equal(result.features[0].properties.estimatedUncertaintyMeters, 75);
+  assert.deepEqual(
+    result.features.map(({ id }) => id),
+    ["JX-XY-PCH-001", "JX-XY-PCH-008", "JX-XY-PCH-009", "JX-XY-PCH-014", "JX-XY-PCH-016"]
+  );
 });
 
 test("accepts a synthetic Medium approximate Point", () => {
@@ -388,8 +392,21 @@ test("builds a descriptive accessible marker name", () => {
   });
   assert.equal(
     buildProvincialMarkerAccessibleName(feature),
-    "Open official protected heritage record: Test Archaeological Site (测试遗址), approximate reviewed location"
+    "Open official protected heritage record: Test Archaeological Site (测试遗址), approximate site location"
   );
+});
+
+test("accessible marker names distinguish visitor references from feature points", () => {
+  const visitorReference = makeValidFeature({
+    properties: {
+      locationEvidenceConfidence: "Medium",
+      publicationLocationPolicy: "approximate",
+      locationPrecision: "approximate",
+      displayLocationType: "visitor-reference-point",
+      publicLocationMeaning: "visitor-reference"
+    }
+  });
+  assert.match(buildProvincialMarkerAccessibleName(visitorReference), /visitor reference point$/);
 });
 
 test("builds provenance-safe popup display data", () => {

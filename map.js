@@ -34,7 +34,7 @@ import {
   buildProvincialMarkerAccessibleName,
   buildProvincialPopupData,
   validateProvincialHeritageGeoJson
-} from "./heritage-engine/provincial-heritage-map.js?v=2026-07-24-phase15b1-generalized-markers";
+} from "./heritage-engine/provincial-heritage-map.js?v=2026-07-27-xinyu-marker-expansion";
 import {
   COMMUNITY_MAP_CATEGORY_DEFINITIONS,
   buildCommunityMarkerAccessibleName,
@@ -42,7 +42,7 @@ import {
   getCommunityMapCategoryByKey
 } from "./heritage-engine/community-map-categories.js?v=2026-07-26-community-category-icons";
 
-const PROVINCIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-provincial-protected-heritage-map.geojson?v=2026-07-24-phase15b1-generalized-markers";
+const PROVINCIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-provincial-protected-heritage-map.geojson?v=2026-07-27-xinyu-marker-expansion";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",

@@ -31,6 +31,82 @@
         "translationStatus": "project-reviewed",
         "translationNote": "Project English interpretation; the official source supplies no English name."
       }
+    },
+    {
+      "recordId": "JX-XY-PCH-008",
+      "sourceSequence": 7,
+      "official": {
+        "officialNameZh": "昼锦堂",
+        "officialCategoryZh": "古建筑",
+        "officialLocationTextZh": "仙女湖区观巢镇汉泉村",
+        "protectionLevelZh": "省级文物保护单位",
+        "officialDesignationNumber": null,
+        "designationBatch": null,
+        "designationDate": null,
+        "periodZh": null
+      },
+      "projectInterpretation": {
+        "projectNameEn": "Zhoujin Hall",
+        "translationStatus": "project-reviewed",
+        "translationNote": "Project English interpretation transliterates the established proper name; the official source supplies no English name."
+      }
+    },
+    {
+      "recordId": "JX-XY-PCH-009",
+      "sourceSequence": 8,
+      "official": {
+        "officialNameZh": "蓉泉桥",
+        "officialCategoryZh": "古建筑",
+        "officialLocationTextZh": "渝水区水北镇排江村",
+        "protectionLevelZh": "省级文物保护单位",
+        "officialDesignationNumber": null,
+        "designationBatch": null,
+        "designationDate": null,
+        "periodZh": null
+      },
+      "projectInterpretation": {
+        "projectNameEn": "Rongquan Bridge",
+        "translationStatus": "project-reviewed",
+        "translationNote": "Project English interpretation transliterates the bridge name and translates the heritage type; the official source supplies no English name."
+      }
+    },
+    {
+      "recordId": "JX-XY-PCH-014",
+      "sourceSequence": 14,
+      "official": {
+        "officialNameZh": "傅抱石故居",
+        "officialCategoryZh": "近现代重要史迹",
+        "officialLocationTextZh": "渝水区罗坊镇章塘村",
+        "protectionLevelZh": "省级文物保护单位",
+        "officialDesignationNumber": null,
+        "designationBatch": null,
+        "designationDate": null,
+        "periodZh": null
+      },
+      "projectInterpretation": {
+        "projectNameEn": "Fu Baoshi Former Residence",
+        "translationStatus": "project-reviewed",
+        "translationNote": "Project English interpretation uses the artist's established romanized name; the official source supplies no English name."
+      }
+    },
+    {
+      "recordId": "JX-XY-PCH-016",
+      "sourceSequence": 16,
+      "official": {
+        "officialNameZh": "上海劳动妇女战地服务团旧址",
+        "officialCategoryZh": "近现代重要史迹",
+        "officialLocationTextZh": "渝水区珠珊镇沙头村",
+        "protectionLevelZh": "省级文物保护单位",
+        "officialDesignationNumber": null,
+        "designationBatch": null,
+        "designationDate": null,
+        "periodZh": null
+      },
+      "projectInterpretation": {
+        "projectNameEn": "Former Site of the Shanghai Labour Women's Battlefield Service Corps",
+        "translationStatus": "project-reviewed",
+        "translationNote": "Project English interpretation describes the named wartime service organization; the official source supplies no English name."
+      }
     }
   ]
 }
