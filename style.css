@@ -1679,6 +1679,22 @@ body.community-modal-open {
   line-height: 1.4;
 }
 
+.official-map-category-controls {
+  display: grid;
+  gap: 10px;
+}
+
+.official-map-category-controls[hidden] {
+  display: none;
+}
+
+.map-layer-subheading {
+  margin: 6px 0 0;
+  color: #17343f;
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
 .map-layer-category-list {
   display: grid;
   gap: 8px;
@@ -1713,6 +1729,27 @@ body.community-modal-open {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.5;
+}
+
+.map-layer-category-symbol--official {
+  border-radius: 4px;
+  background: #a94700;
+  box-shadow: 0 0 0 1px #a94700;
+  transform: rotate(45deg) scale(0.82);
+}
+
+.map-layer-category-symbol--official svg {
+  transform: rotate(-45deg) scale(1.08);
+}
+
+.map-layer-category-symbol--official .official-map-marker__glyph-dot {
+  fill: #fff;
+  stroke: none;
+}
+
+.map-layer-toggle:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.62;
 }
 
 .map-layer-category-status {
@@ -2058,24 +2095,32 @@ body.community-modal-open {
   border-color: #a94700;
 }
 
-.provincial-heritage-map-marker--generalized::after {
-  left: 11px;
-  top: 15px;
-  width: 12px;
-  height: 4px;
-  border-radius: 0;
-  background: #a94700;
+.provincial-heritage-map-marker .official-map-marker__glyph {
+  position: absolute;
+  left: 9px;
+  top: 9px;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  overflow: visible;
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.35;
 }
 
-.provincial-heritage-map-marker::after {
-  content: "";
-  position: absolute;
-  left: 14px;
-  top: 14px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #fff;
+.provincial-heritage-map-marker--generalized .official-map-marker__glyph {
+  stroke: #a94700;
+}
+
+.provincial-heritage-map-marker .official-map-marker__glyph-dot {
+  fill: #fff;
+  stroke: none;
+}
+
+.provincial-heritage-map-marker--generalized .official-map-marker__glyph-dot {
+  fill: #a94700;
 }
 
 .provincial-heritage-map-popup__official-name {

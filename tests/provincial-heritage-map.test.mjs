@@ -2,11 +2,14 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const helperSource = await readFile(
-  new URL("../heritage-engine/provincial-heritage-map.js", import.meta.url),
-  "utf8"
-);
-const helper = await import(`data:text/javascript;base64,${Buffer.from(helperSource).toString("base64")}`);
+const helper = await import(new URL(
+  "../heritage-engine/provincial-heritage-map.js",
+  import.meta.url
+));
+const categoryHelper = await import(new URL(
+  "../heritage-engine/official-map-categories.js",
+  import.meta.url
+));
 const committedGeoJson = JSON.parse(await readFile(
   new URL("../data/jiangxi-provincial-protected-heritage-map.geojson", import.meta.url),
   "utf8"
@@ -18,6 +21,12 @@ const {
   buildProvincialPopupData,
   validateProvincialHeritageGeoJson
 } = helper;
+const {
+  OFFICIAL_MAP_CATEGORY_DEFINITIONS,
+  OFFICIAL_MAP_CATEGORY_KEYS,
+  getOfficialMapCategory,
+  getPublishedOfficialMapCategories
+} = categoryHelper;
 
 function makeValidEmpty() {
   return {
@@ -165,6 +174,73 @@ test("rejects duplicate feature IDs", () => {
   expectInvalid(makeFeatureCollection([first, second]), /duplicates JX-PCH-7-001/);
 });
 
+test("rejects missing, blank, and non-string official categories", () => {
+  const missing = makeValidFeature();
+  delete missing.properties.officialCategoryZh;
+  const blank = makeValidFeature({ properties: { officialCategoryZh: "   " } });
+  const nonString = makeValidFeature({ properties: { officialCategoryZh: ["古建筑"] } });
+  [missing, blank, nonString].forEach((feature) => {
+    expectInvalid(
+      makeFeatureCollection([feature]),
+      /properties\.officialCategoryZh must be a non-empty string/
+    );
+  });
+});
+
+test("maps exact official Chinese categories to controlled project labels", () => {
+  assert.equal(getOfficialMapCategory("古建筑").label, "Ancient buildings");
+  assert.equal(
+    getOfficialMapCategory("近现代重要史迹").label,
+    "Important modern historic sites"
+  );
+  assert.equal(getOfficialMapCategory("古遗址").label, "Archaeological sites");
+  assert.equal(
+    getOfficialMapCategory("未来官方类别").label,
+    "Other official heritage"
+  );
+  assert.equal(
+    getOfficialMapCategory(" 古建筑 ").label,
+    "Other official heritage"
+  );
+  assert.equal(getOfficialMapCategory(""), null);
+  assert.equal(getOfficialMapCategory(undefined), null);
+});
+
+test("published official categories derive only from validated feature values", () => {
+  const features = [
+    makeValidFeature({ properties: { officialCategoryZh: "古建筑" } }),
+    makeValidFeature({
+      id: "JX-PCH-7-002",
+      properties: {
+        recordId: "JX-PCH-7-002",
+        officialCategoryZh: "近现代重要史迹"
+      }
+    })
+  ];
+  assert.deepEqual(
+    getPublishedOfficialMapCategories(features).map((category) => category.label),
+    ["Ancient buildings", "Important modern historic sites"]
+  );
+  assert.equal(
+    getPublishedOfficialMapCategories(features).some(
+      (category) => category.key === OFFICIAL_MAP_CATEGORY_KEYS.ARCHAEOLOGICAL_SITES
+    ),
+    false
+  );
+});
+
+test("official category glyphs are static project-owned SVG", () => {
+  const hostileValue = '<img src=x onerror="alert(1)">';
+  const fallback = getOfficialMapCategory(hostileValue);
+  assert.equal(fallback.label, "Other official heritage");
+  assert.equal(OFFICIAL_MAP_CATEGORY_DEFINITIONS.length, 4);
+  OFFICIAL_MAP_CATEGORY_DEFINITIONS.forEach((category) => {
+    assert.match(category.glyphSvg, /^<svg /);
+    assert.doesNotMatch(category.glyphSvg, /<script|onerror|https?:|data:/i);
+    assert.doesNotMatch(category.glyphSvg, new RegExp(hostileValue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  });
+});
+
 test("rejects unsupported geometry", () => {
   const feature = makeValidFeature({ geometry: { type: "Polygon" } });
   expectInvalid(makeFeatureCollection([feature]), /geometry.type must be Point/);
@@ -223,6 +299,24 @@ test("accepts the committed five-marker Xinyu publication set", () => {
   assert.deepEqual(
     result.features.map(({ id }) => id),
     ["JX-XY-PCH-001", "JX-XY-PCH-008", "JX-XY-PCH-009", "JX-XY-PCH-014", "JX-XY-PCH-016"]
+  );
+  assert.deepEqual(
+    getPublishedOfficialMapCategories(result.features).map((category) => category.label),
+    ["Ancient buildings", "Important modern historic sites"]
+  );
+  assert.deepEqual(
+    Object.fromEntries(
+      getPublishedOfficialMapCategories(result.features).map((category) => [
+        category.key,
+        result.features.filter((feature) => (
+          getOfficialMapCategory(feature.properties.officialCategoryZh).key === category.key
+        )).length
+      ])
+    ),
+    {
+      "ancient-buildings": 3,
+      "important-modern-historic-sites": 2
+    }
   );
 });
 
@@ -392,7 +486,7 @@ test("builds a descriptive accessible marker name", () => {
   });
   assert.equal(
     buildProvincialMarkerAccessibleName(feature),
-    "Open official protected heritage record: Test Archaeological Site (测试遗址), approximate site location"
+    "Open official protected heritage record: Test Archaeological Site (测试遗址); Map category: Ancient buildings; Approximate site location"
   );
 });
 
@@ -408,7 +502,7 @@ test("accessible marker names distinguish visitor references from feature points
   });
   assert.equal(
     buildProvincialMarkerAccessibleName(visitorReference),
-    "Open official protected heritage record: Test Archaeological Site (测试遗址), visitor reference point"
+    "Open official protected heritage record: Test Archaeological Site (测试遗址); Map category: Ancient buildings; Visitor reference point"
   );
 });
 
@@ -425,9 +519,27 @@ test("compound-centroid accessible names identify an approximate project-reviewe
   const accessibleName = buildProvincialMarkerAccessibleName(compoundReference);
   assert.equal(
     accessibleName,
-    "Open official protected heritage record: Test Archaeological Site (测试遗址); Compound reference point (approximate project-reviewed location)"
+    "Open official protected heritage record: Test Archaeological Site (测试遗址); Map category: Ancient buildings; Compound reference point (approximate project-reviewed location)"
   );
-  assert.doesNotMatch(accessibleName, /, approximate reviewed location$/);
+  assert.doesNotMatch(accessibleName, /; Approximate reviewed location$/);
+});
+
+test("generalized and unknown-category accessible names retain both meanings", () => {
+  const generalized = makeValidFeature({
+    properties: {
+      officialCategoryZh: "未来官方类别",
+      publicationLocationPolicy: "generalized",
+      locationPrecision: "generalized",
+      displayLocationType: "generalized-locality",
+      publicLocationMeaning: "official-locality-centre",
+      markerClass: "generalized",
+      generalizationRadiusMeters: 1500
+    }
+  });
+  assert.equal(
+    buildProvincialMarkerAccessibleName(generalized),
+    "Open official protected heritage record: Test Archaeological Site (测试遗址); Map category: Other official heritage; Generalized official reference"
+  );
 });
 
 test("builds provenance-safe popup display data", () => {

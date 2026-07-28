@@ -1,3 +1,5 @@
+import { getOfficialMapCategory } from "./official-map-categories.js?v=2026-07-27-official-category-filters";
+
 const SUPPORTED_SCHEMA_VERSION = "2.0.0";
 const PROVINCIAL_HERITAGE_DATASET_ID = "jiangxi-provincial-protected-heritage-map";
 const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 15;
@@ -103,6 +105,7 @@ function validateFeature(feature, index, seenIds) {
     addError(errors, properties.recordId === feature.id, `${path}.properties.recordId must match feature.id.`);
     addError(errors, isNonEmptyString(properties.projectNameEn), `${path}.properties.projectNameEn must be a non-empty string.`);
     addError(errors, isNonEmptyString(properties.officialNameZh), `${path}.properties.officialNameZh must be a non-empty string.`);
+    addError(errors, isNonEmptyString(properties.officialCategoryZh), `${path}.properties.officialCategoryZh must be a non-empty string.`);
     addError(
       errors,
       isNonEmptyString(properties.sourceTitleZh) || isNonEmptyString(properties.sourceIssuerZh),
@@ -281,21 +284,23 @@ function buildProvincialMarkerAccessibleName(feature) {
   const officialName = isNonEmptyString(properties.officialNameZh)
     ? ` (${properties.officialNameZh.trim()})`
     : "";
+  const category = getOfficialMapCategory(properties.officialCategoryZh);
+  const categoryLabel = category?.label || "Other official heritage";
   const locationLabel = properties.markerClass === "generalized"
-    ? ", generalized area reference"
+    ? "Generalized official reference"
     : properties.displayLocationType === "visitor-reference-point"
-      ? ", visitor reference point"
+      ? "Visitor reference point"
       : (
         properties.displayLocationType === "compound-centroid"
           || properties.publicLocationMeaning === "heritage-compound-centre"
       )
-        ? "; Compound reference point (approximate project-reviewed location)"
+        ? "Compound reference point (approximate project-reviewed location)"
       : properties.displayLocationType === "site-point" && properties.locationPrecision === "approximate"
-        ? ", approximate site location"
+        ? "Approximate site location"
         : properties.publicationLocationPolicy === "approximate"
-          ? ", approximate reviewed location"
-          : ", reviewed location";
-  return `Open official protected heritage record: ${title}${officialName}${locationLabel}`;
+          ? "Approximate reviewed location"
+          : "Reviewed location";
+  return `Open official protected heritage record: ${title}${officialName}; Map category: ${categoryLabel}; ${locationLabel}`;
 }
 
 function buildProvincialPopupData(feature) {

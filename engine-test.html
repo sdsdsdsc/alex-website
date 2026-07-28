@@ -187,6 +187,11 @@
       normalizeCommunityTypeForComparison
     } from "./heritage-engine/community-map-categories.js?v=2026-07-26-community-category-icons";
     import {
+      OFFICIAL_MAP_CATEGORY_DEFINITIONS,
+      getOfficialMapCategory,
+      getPublishedOfficialMapCategories
+    } from "./heritage-engine/official-map-categories.js?v=2026-07-27-official-category-filters";
+    import {
       buildMapUrl,
       formatCriteriaList,
       formatPlaceLocationAddress,
@@ -613,6 +618,29 @@
         "Community Map Categories",
         "community marker accessible name includes the controlled category"
       );
+    }
+
+    function runOfficialMapCategoryTests() {
+      assertEqual(getOfficialMapCategory("古建筑").label, "Ancient buildings", "Official Map Categories", "古建筑 uses the controlled presentation label");
+      assertEqual(getOfficialMapCategory("近现代重要史迹").label, "Important modern historic sites", "Official Map Categories", "近现代重要史迹 uses the controlled presentation label");
+      assertEqual(getOfficialMapCategory("古遗址").label, "Archaeological sites", "Official Map Categories", "古遗址 uses the controlled presentation label");
+      assertEqual(getOfficialMapCategory("未来官方类别").label, "Other official heritage", "Official Map Categories", "unknown non-empty official values use the controlled fallback");
+      assertEqual(getOfficialMapCategory(" 古建筑 ").label, "Other official heritage", "Official Map Categories", "near-match official values do not infer a controlled category");
+      assertEqual(getOfficialMapCategory(""), null, "Official Map Categories", "blank official category values are not mapped");
+      assertEqual(getOfficialMapCategory(undefined), null, "Official Map Categories", "missing official category values are not mapped");
+      assertEqual(OFFICIAL_MAP_CATEGORY_DEFINITIONS.length, 4, "Official Map Categories", "controlled official category vocabulary stays bounded");
+
+      const publishedCategories = getPublishedOfficialMapCategories([
+        { properties: { officialCategoryZh: "古建筑" } },
+        { properties: { officialCategoryZh: "近现代重要史迹" } }
+      ]);
+      assertEqual(publishedCategories.length, 2, "Official Map Categories", "published category controls derive from supplied published features");
+      assertEqual(publishedCategories.some((category) => category.label === "Archaeological sites"), false, "Official Map Categories", "unpublished archaeological source categories do not create controls");
+
+      const hostileValue = '<img src=x onerror="alert(1)">';
+      const fallback = getOfficialMapCategory(hostileValue);
+      assertEqual(fallback.label, "Other official heritage", "Official Map Categories", "arbitrary official category text cannot create a category");
+      assertNotContains(fallback.glyphSvg, hostileValue, "Official Map Categories", "raw official category data never enters static SVG markup");
     }
 
     function runPlaceTests() {
@@ -1455,6 +1483,7 @@
       runSharedUrlAndFocusTests();
       runMapTests();
       runCommunityMapCategoryTests();
+      runOfficialMapCategoryTests();
       runPlaceTests();
       runExportTests();
       runValidationTests();
