@@ -282,6 +282,22 @@ async function openMapLayersTab(page) {
   return panel;
 }
 
+async function waitForCommunityMapReady(page) {
+  const searchStatus = page.locator("#mapSearchStatus");
+  await expect(searchStatus).toHaveText(
+    /^\d+ matching records?; \d+ on map(?:; .+)?\.$/,
+    { timeout: 20000 }
+  );
+  const statusText = await searchStatus.textContent();
+  const onMapMatch = statusText?.match(/;\s*(\d+) on map(?:;|\.)/);
+  expect(onMapMatch).not.toBeNull();
+  const onMapCount = Number(onMapMatch[1]);
+  await expect(page.locator("#communityCategoryStatus")).toHaveText(
+    new RegExp(`^${onMapCount} of ${onMapCount} matching community locations? displayed\\.$`)
+  );
+  return onMapCount;
+}
+
 function getOverlayCheckbox(page, label) {
   return page
     .getByRole("tabpanel", { name: "Layers", exact: true })
@@ -569,10 +585,10 @@ test("validated official line and area geometries render with accessible meaning
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
+  const initialCommunityCount = await waitForCommunityMapReady(page);
   const initialUrl = page.url();
   const initialMapState = await getRenderedMapState(page);
-  const initialCommunityCount = await page.locator(".community-map-pin").count();
+  await expect(page.locator(".community-map-pin")).toHaveCount(initialCommunityCount);
   const layersPanel = await openMapLayersTab(page);
   const officialLayer = layersPanel.getByRole("checkbox", {
     name: "Provincial protected heritage",
@@ -740,8 +756,9 @@ test("unsupported official geometry meaning fails the complete layer atomically"
     body: JSON.stringify(makeSyntheticProvincialCollection([valid, invalid]))
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  const communityCount = await waitForCommunityMapReady(page);
+  await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
   await openMapLayersTab(page);
-  const communityCount = await page.locator(".community-map-pin").count();
   await getOverlayCheckbox(page, "Provincial protected heritage").click();
   await expect(page.locator("#provincialHeritageError")).toHaveText(
     "The provincial heritage preview could not be loaded."
@@ -766,7 +783,8 @@ test("official categories are published-only tri-state visibility controls with 
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/map.html?q=memory", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
+  const communityCount = await waitForCommunityMapReady(page);
+  await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
   const beforeEnableUrl = page.url();
   const beforeEnableMapState = await getRenderedMapState(page);
   const layersPanel = await openMapLayersTab(page);
@@ -817,7 +835,6 @@ test("official categories are published-only tri-state visibility controls with 
   await expect(page.locator(".provincial-heritage-map-marker--important-modern-historic-sites")).toHaveCount(2);
   await expect(page.locator(".provincial-heritage-map-marker .official-map-marker__glyph")).toHaveCount(5);
 
-  const communityCount = await page.locator(".community-map-pin").count();
   await ancientBuildings.focus();
   await expect(ancientBuildings).toBeFocused();
   await ancientBuildings.press("Space");
@@ -890,9 +907,9 @@ test("provincial preview isolates HTTP failure from community markers", async ({
     body: "Unavailable"
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("#mapSearchStatus")).not.toHaveText("");
+  const communityCount = await waitForCommunityMapReady(page);
+  await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
   await openMapLayersTab(page);
-  const communityCount = await page.locator(".community-map-pin").count();
   await getOverlayCheckbox(page, "Provincial protected heritage").click();
   await expect(page.locator("#provincialHeritageError")).toHaveText(
     "The provincial heritage preview could not be loaded."
@@ -1144,7 +1161,8 @@ test("provincial preview distinguishes a generalized marker and explains its rad
 test("Layers tab controls overlays while Leaflet retains basemap selection only", async ({ page }) => {
   test.setTimeout(60000);
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
+  const communityCount = await waitForCommunityMapReady(page);
+  await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
   await openMapLayersTab(page);
   const communityToggle = getOverlayCheckbox(page, "All community records");
   const provincialToggle = getOverlayCheckbox(page, "Provincial protected heritage");
@@ -1162,7 +1180,6 @@ test("Layers tab controls overlays while Leaflet retains basemap selection only"
   await esriBasemap.evaluate((input) => input.click());
   await expect(esriBasemap).toBeChecked();
 
-  const communityCount = await page.locator(".community-map-pin").count();
   expect(communityCount).toBeGreaterThan(0);
   await setOverlayChecked(page, "All community records", false);
   await expect(page.locator(".community-map-pin")).toHaveCount(0);
@@ -1192,7 +1209,7 @@ test("Layers tab controls overlays while Leaflet retains basemap selection only"
 test("community categories are accessible tri-state Map visibility controls", async ({ page }) => {
   test.setTimeout(60000);
   await page.goto("/map.html?place=jiangxi-test-community-square", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
+  const readyCommunityCount = await waitForCommunityMapReady(page);
   await expect(page.locator("#mapFocusStatus")).toContainText("Focused on Jiangxi Test Community Square");
   const layersPanel = await openMapLayersTab(page);
   const parent = layersPanel.getByRole("checkbox", { name: "All community records", exact: true });
@@ -1217,6 +1234,7 @@ test("community categories are accessible tri-state Map visibility controls", as
 
   const initialMarkers = page.locator(".community-map-pin");
   const initialCount = await initialMarkers.count();
+  expect(initialCount).toBe(readyCommunityCount);
   expect(initialCount).toBeGreaterThan(0);
   await expect(page.locator("#communityCategoryStatus")).toHaveText(
     new RegExp(`^${initialCount} of ${initialCount} matching community locations? displayed\\.$`)

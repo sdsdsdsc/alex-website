@@ -4,7 +4,7 @@
 
 Phase 15C-2 adds a bounded production-renderer capability for already validated official heritage geometry. It supports `Point`, `LineString`, `MultiLineString`, `Polygon`, and `MultiPolygon` after the shared publication validator succeeds. `GeometryCollection`, malformed geometry, incompatible meaning metadata, and unsupported presentation combinations continue to fail closed.
 
-This local implementation is on `codex/official-geometry-rendering`. It is unstaged, uncommitted, unpushed, unreviewed, unmerged, and undeployed. Production remains unchanged on `main`: the official layer is off by default and the current generated dataset contains only five Point features. No real line or area feature is published by this work.
+The implementation was committed at `0de2ccd3a9096c04329ca004c0788eeb227b5c28` before the current corrective commit and pushed to `codex/official-geometry-rendering`. Draft PR #62 is open. Push verification passed on rerun, and pull-request verification run 320 passed. The PR remains unapproved, unmerged, and undeployed. Production remains unchanged on `main`: the official layer is off by default, the generated production GeoJSON remains byte-for-byte unchanged, and the current generated dataset contains only five Point features. No real line or area feature is published by this work.
 
 ## Controlled visual grammar
 
