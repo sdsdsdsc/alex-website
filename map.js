@@ -34,15 +34,20 @@ import {
   buildProvincialMarkerAccessibleName,
   buildProvincialPopupData,
   validateProvincialHeritageGeoJson
-} from "./heritage-engine/provincial-heritage-map.js?v=2026-07-27-xinyu-marker-expansion";
+} from "./heritage-engine/provincial-heritage-map.js?v=2026-07-27-official-category-filters";
 import {
   COMMUNITY_MAP_CATEGORY_DEFINITIONS,
   buildCommunityMarkerAccessibleName,
   getCommunityMapCategory,
   getCommunityMapCategoryByKey
 } from "./heritage-engine/community-map-categories.js?v=2026-07-26-community-category-icons";
+import {
+  getOfficialMapCategory,
+  getOfficialMapCategoryByKey,
+  getPublishedOfficialMapCategories
+} from "./heritage-engine/official-map-categories.js?v=2026-07-27-official-category-filters";
 
-const PROVINCIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-provincial-protected-heritage-map.geojson?v=2026-07-27-xinyu-marker-expansion";
+const PROVINCIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-provincial-protected-heritage-map.geojson?v=2026-07-27-official-category-filters";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -66,9 +71,15 @@ function makeBluePinIcon(categoryKey) {
   });
 }
 
-function makeProvincialHeritageIcon(markerClass = "reviewed") {
+function makeProvincialHeritageIcon(markerClass = "reviewed", categoryKey) {
+  const category = getOfficialMapCategoryByKey(categoryKey);
   return L.divIcon({
-    className: `provincial-heritage-map-marker provincial-heritage-map-marker--${markerClass}`,
+    className: [
+      "provincial-heritage-map-marker",
+      `provincial-heritage-map-marker--${markerClass}`,
+      `provincial-heritage-map-marker--${category.key}`
+    ].join(" "),
+    html: category.glyphSvg,
     iconSize: [34, 34],
     iconAnchor: [17, 17],
     popupAnchor: [0, -19]
@@ -257,6 +268,12 @@ function initCommunityMap({
   );
   const communityCategoryStatusEl = document.getElementById("communityCategoryStatus");
   const provincialLayerToggle = document.getElementById("provincialHeritageLayerToggle");
+  const officialCategoryAvailabilityEl = document.getElementById("officialCategoryAvailability");
+  const officialCategoryControlsEl = document.getElementById("officialCategoryControls");
+  const officialCategoryAllToggle = document.getElementById("officialCategoryAll");
+  const officialCategoryListEl = document.getElementById("officialCategoryList");
+  const officialCategoryDisabledHelpEl = document.getElementById("officialCategoryDisabledHelp");
+  const officialCategoryStatusEl = document.getElementById("officialCategoryStatus");
 
   const map = L.map(containerId).setView(fallbackCenter, 13);
   const communityLayer = L.layerGroup().addTo(map);
@@ -277,6 +294,10 @@ function initCommunityMap({
   let lastProvincialAnnouncement = "";
   let displayedProvincialMarkerCount = null;
   let provincialLayerState = "off";
+  let publishedProvincialFeatures = [];
+  let availableOfficialCategories = [];
+  let officialCategoriesInitialized = false;
+  const selectedOfficialCategoryKeys = new Set();
   let matchingCommunityPointCount = 0;
   let visibleCommunityPointCount = 0;
 
@@ -382,6 +403,83 @@ function initCommunityMap({
     communityCategoryStatusEl.textContent = `${visibleCommunityPointCount} of ${matchingCommunityPointCount} ${matchingLabel} displayed.`;
   }
 
+  function getOfficialCategoryToggles() {
+    return Array.from(
+      officialCategoryListEl?.querySelectorAll("[data-official-map-category]") || []
+    );
+  }
+
+  function updateOfficialCategoryStatus() {
+    if (!officialCategoryStatusEl || publishedProvincialFeatures.length === 0) return;
+    const visibleCount = map.hasLayer(provincialLayer)
+      ? publishedProvincialFeatures.filter((feature) => {
+        const category = getOfficialMapCategory(feature.properties.officialCategoryZh);
+        return category && selectedOfficialCategoryKeys.has(category.key);
+      }).length
+      : 0;
+    const locationLabel = publishedProvincialFeatures.length === 1
+      ? "published official location"
+      : "published official locations";
+    officialCategoryStatusEl.textContent = `${visibleCount} of ${publishedProvincialFeatures.length} ${locationLabel} displayed.`;
+  }
+
+  function showOfficialCategoryAvailability(message) {
+    if (officialCategoryAvailabilityEl) {
+      officialCategoryAvailabilityEl.textContent = message;
+      officialCategoryAvailabilityEl.hidden = false;
+    }
+    if (officialCategoryControlsEl) officialCategoryControlsEl.hidden = true;
+  }
+
+  function buildOfficialCategoryControls() {
+    if (!officialCategoryListEl) return;
+    officialCategoryListEl.replaceChildren();
+
+    availableOfficialCategories.forEach((category) => {
+      const label = document.createElement("label");
+      label.className = "map-layer-toggle map-layer-toggle--category";
+      label.htmlFor = `officialCategory-${category.key}`;
+
+      const input = document.createElement("input");
+      input.id = label.htmlFor;
+      input.type = "checkbox";
+      input.dataset.officialMapCategory = category.key;
+
+      const symbol = document.createElement("span");
+      symbol.className = "map-layer-category-symbol map-layer-category-symbol--official";
+      symbol.setAttribute("aria-hidden", "true");
+      symbol.innerHTML = category.glyphSvg;
+
+      const text = document.createElement("span");
+      text.textContent = category.label;
+
+      label.append(input, symbol, text);
+      officialCategoryListEl.appendChild(label);
+    });
+  }
+
+  function initializeOfficialCategories(features) {
+    publishedProvincialFeatures = features;
+    availableOfficialCategories = getPublishedOfficialMapCategories(features);
+
+    if (availableOfficialCategories.length === 0) {
+      showOfficialCategoryAvailability("No published official categories are available.");
+      return;
+    }
+
+    if (!officialCategoriesInitialized) {
+      availableOfficialCategories.forEach((category) => {
+        selectedOfficialCategoryKeys.add(category.key);
+      });
+      officialCategoriesInitialized = true;
+    }
+
+    buildOfficialCategoryControls();
+    if (officialCategoryAvailabilityEl) officialCategoryAvailabilityEl.hidden = true;
+    if (officialCategoryControlsEl) officialCategoryControlsEl.hidden = false;
+    updateOfficialCategoryStatus();
+  }
+
   function showProvincialError() {
     if (!provincialErrorEl) return;
     provincialErrorEl.hidden = false;
@@ -392,6 +490,11 @@ function initCommunityMap({
       provincialErrorEl.textContent = PROVINCIAL_HERITAGE_FAILURE_MESSAGE;
       lastProvincialAnnouncement = "failure";
     }
+    publishedProvincialFeatures = [];
+    availableOfficialCategories = [];
+    selectedOfficialCategoryKeys.clear();
+    officialCategoriesInitialized = false;
+    showOfficialCategoryAvailability("Official categories are unavailable because the official layer could not be loaded.");
     updateVisibleLayerStatus("failure-status");
   }
 
@@ -409,14 +512,35 @@ function initCommunityMap({
       provincialLayerToggle.checked = map.hasLayer(provincialLayer) && provincialLayerState !== "failed";
       provincialLayerToggle.setAttribute("aria-invalid", String(provincialLayerState === "failed"));
     }
+    const officialCategoriesEnabled = map.hasLayer(provincialLayer)
+      && provincialLayerState === "valid";
+    if (officialCategoryDisabledHelpEl) {
+      officialCategoryDisabledHelpEl.hidden = officialCategoriesEnabled
+        || availableOfficialCategories.length === 0;
+    }
+    if (officialCategoryAllToggle) {
+      const selectedCount = availableOfficialCategories.filter((category) => (
+        selectedOfficialCategoryKeys.has(category.key)
+      )).length;
+      officialCategoryAllToggle.checked = availableOfficialCategories.length > 0
+        && selectedCount === availableOfficialCategories.length;
+      officialCategoryAllToggle.indeterminate = selectedCount > 0
+        && selectedCount < availableOfficialCategories.length;
+      officialCategoryAllToggle.disabled = !officialCategoriesEnabled;
+    }
+    getOfficialCategoryToggles().forEach((toggle) => {
+      toggle.checked = selectedOfficialCategoryKeys.has(toggle.dataset.officialMapCategory);
+      toggle.disabled = !officialCategoriesEnabled;
+    });
   }
 
   function buildProvincialMarkers(features) {
     return features.map((feature) => {
       const [longitude, latitude] = feature.geometry.coordinates;
       const markerName = buildProvincialMarkerAccessibleName(feature);
+      const category = getOfficialMapCategory(feature.properties.officialCategoryZh);
       const marker = L.marker([latitude, longitude], {
-        icon: makeProvincialHeritageIcon(feature.properties.markerClass),
+        icon: makeProvincialHeritageIcon(feature.properties.markerClass, category.key),
         title: markerName,
         alt: markerName,
         keyboard: true,
@@ -432,6 +556,19 @@ function initCommunityMap({
       });
       return marker;
     });
+  }
+
+  function renderProvincialMarkers() {
+    provincialLayer.clearLayers();
+    const visibleFeatures = publishedProvincialFeatures.filter((feature) => {
+      const category = getOfficialMapCategory(feature.properties.officialCategoryZh);
+      return category && selectedOfficialCategoryKeys.has(category.key);
+    });
+    buildProvincialMarkers(visibleFeatures).forEach((marker) => marker.addTo(provincialLayer));
+    displayedProvincialMarkerCount = visibleFeatures.length;
+    updateOfficialCategoryStatus();
+    syncLayerControls();
+    updateVisibleLayerStatus(`valid-${displayedProvincialMarkerCount}`);
   }
 
   function getProvincialHeritageResult() {
@@ -479,15 +616,17 @@ function initCommunityMap({
     if (result.value.status === "valid-empty") {
       provincialLayerState = "valid-empty";
       displayedProvincialMarkerCount = 0;
+      publishedProvincialFeatures = [];
+      availableOfficialCategories = [];
+      showOfficialCategoryAvailability("No published official categories are available.");
+      syncLayerControls();
       updateVisibleLayerStatus("valid-empty");
       return;
     }
 
     provincialLayerState = "valid";
-    const markers = buildProvincialMarkers(result.value.features);
-    markers.forEach((marker) => marker.addTo(provincialLayer));
-    displayedProvincialMarkerCount = markers.length;
-    updateVisibleLayerStatus(`valid-${displayedProvincialMarkerCount}`);
+    initializeOfficialCategories(result.value.features);
+    renderProvincialMarkers();
   }
 
   function setActiveToolPanel(panelKey, { moveFocus = true } = {}) {
@@ -947,6 +1086,39 @@ function initCommunityMap({
     });
   });
 
+  officialCategoryAllToggle?.addEventListener("change", () => {
+    if (officialCategoryAllToggle.checked) {
+      availableOfficialCategories.forEach((category) => {
+        selectedOfficialCategoryKeys.add(category.key);
+      });
+    } else {
+      selectedOfficialCategoryKeys.clear();
+    }
+    if (map.hasLayer(provincialLayer) && provincialLayerState === "valid") {
+      renderProvincialMarkers();
+    } else {
+      syncLayerControls();
+      updateOfficialCategoryStatus();
+    }
+  });
+
+  officialCategoryListEl?.addEventListener("change", (event) => {
+    const toggle = event.target;
+    if (!(toggle instanceof HTMLInputElement) || !toggle.dataset.officialMapCategory) return;
+    const categoryKey = toggle.dataset.officialMapCategory;
+    if (toggle.checked) {
+      selectedOfficialCategoryKeys.add(categoryKey);
+    } else {
+      selectedOfficialCategoryKeys.delete(categoryKey);
+    }
+    if (map.hasLayer(provincialLayer) && provincialLayerState === "valid") {
+      renderProvincialMarkers();
+    } else {
+      syncLayerControls();
+      updateOfficialCategoryStatus();
+    }
+  });
+
   provincialLayerToggle?.addEventListener("change", () => {
     if (provincialLayerToggle.checked) {
       provincialLayerState = "loading";
@@ -1009,6 +1181,7 @@ function initCommunityMap({
         if (provincialErrorEl) provincialErrorEl.hidden = true;
       }
       syncLayerControls();
+      updateOfficialCategoryStatus();
       updateVisibleLayerStatus(`provincial-layer-removed-${provincialLayerState}`);
     }
   });

@@ -17,7 +17,7 @@
   <!-- Firebase -->
   <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="script.js" defer></script>
-  <script type="module" src="map.js?v=2026-07-27-xinyu-marker-expansion" defer></script>
+  <script type="module" src="map.js?v=2026-07-27-official-category-filters" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#mapWorkspace">Skip to map and list alternatives</a>
@@ -174,6 +174,18 @@
                 <span>Provincial protected heritage</span>
               </label>
               <p class="map-layers-group__help" id="officialLayerHelp">Off by default. Loaded only when selected.</p>
+              <p class="map-layers-group__help" id="officialCategoryAvailability">Categories become available after the official layer is loaded.</p>
+              <div class="official-map-category-controls" id="officialCategoryControls" hidden>
+                <p class="map-layer-subheading">Official categories</p>
+                <label class="map-layer-toggle" for="officialCategoryAll">
+                  <input id="officialCategoryAll" type="checkbox" checked disabled>
+                  <span class="map-layer-symbol map-layer-symbol--official-filled" aria-hidden="true"></span>
+                  <span>All official categories</span>
+                </label>
+                <div class="map-layer-category-list" id="officialCategoryList"></div>
+                <p class="map-layers-group__help" id="officialCategoryDisabledHelp" hidden>Turn on Provincial protected heritage to change category selections.</p>
+                <p class="map-layer-category-status" id="officialCategoryStatus" role="status" aria-live="polite">0 of 0 published official locations displayed.</p>
+              </div>
             </fieldset>
 
             <section class="map-layers-group" aria-labelledby="locationDisplayTitle">
@@ -198,7 +210,7 @@
               </details>
               <details>
                 <summary>About official heritage markers</summary>
-                <p>Official source facts are separate from project-produced locations. Filled diamonds are reviewed locations; hollow diamonds are general references. Project locations are not official designation coordinates or legal boundaries.</p>
+                <p>Official source facts are separate from project-produced locations. Filled diamonds are reviewed locations; hollow diamonds are general references. Category glyphs and English labels are project presentation aids derived only from validated published Map features. Category choices affect Map visibility only and do not change official source values. Project locations are not official designation coordinates or legal boundaries.</p>
               </details>
             </section>
           </section>
