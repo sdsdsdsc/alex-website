@@ -690,6 +690,7 @@ test("an unknown non-empty official category uses the static Other presentation 
     body: JSON.stringify(makeSyntheticProvincialCollection([feature]))
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
   const layersPanel = await openMapLayersTab(page);
   await getOverlayCheckbox(page, "Provincial protected heritage").click();
   await expect(layersPanel.getByRole("checkbox", {
@@ -699,14 +700,19 @@ test("an unknown non-empty official category uses the static Other presentation 
   await expect(page.locator("[data-official-map-category]")).toHaveCount(1);
   await expect(page.locator(".provincial-heritage-map-marker--other-official-heritage")).toHaveCount(1);
   await expect(page.locator(".provincial-heritage-map-marker script")).toHaveCount(0);
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveAttribute(
-    "aria-label",
+  const marker = page.getByRole("button", {
+    name: /Map category: Other official heritage; Reviewed location$/
+  });
+  await expect(marker).toBeVisible();
+  await expect(marker).toHaveAccessibleName(
     /Map category: Other official heritage; Reviewed location$/
   );
-  await page.locator(".provincial-heritage-map-marker").click();
-  await expect(page.locator(".provincial-heritage-map-popup")).toContainText(
-    "未来类别<script>alert(1)</script>"
-  );
+  await marker.focus();
+  await marker.press("Enter");
+  const popup = page.locator(".provincial-heritage-map-popup");
+  await expect(popup).toContainText("未来类别<script>alert(1)</script>");
+  await expect(popup).toContainText("Reviewed approximate location");
+  await expect(popup).toContainText("heritage-feature");
 });
 
 test("provincial preview labels a synthetic approximate Point", async ({ page }) => {
