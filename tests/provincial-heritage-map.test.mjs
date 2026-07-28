@@ -17,9 +17,11 @@ const committedGeoJson = JSON.parse(await readFile(
 
 const {
   ProvincialHeritageMapValidationError,
+  PROVINCIAL_HERITAGE_POINT_RENDERER_MESSAGE,
   buildProvincialMarkerAccessibleName,
   buildProvincialPopupData,
-  validateProvincialHeritageGeoJson
+  validateProvincialHeritageGeoJson,
+  validateProvincialHeritagePublicationGeoJson
 } = helper;
 const {
   OFFICIAL_MAP_CATEGORY_DEFINITIONS,
@@ -242,13 +244,15 @@ test("official category glyphs are static project-owned SVG", () => {
 });
 
 test("rejects unsupported geometry", () => {
-  const feature = makeValidFeature({ geometry: { type: "Polygon" } });
-  expectInvalid(makeFeatureCollection([feature]), /geometry.type must be Point/);
+  const feature = makeValidFeature({
+    geometry: { type: "MultiPoint", coordinates: [[113.8825, 27.6202]] }
+  });
+  expectInvalid(makeFeatureCollection([feature]), /geometry\.type is unsupported/);
 });
 
 test("rejects incomplete coordinates", () => {
   const feature = makeValidFeature({ geometry: { coordinates: [113.8825] } });
-  expectInvalid(makeFeatureCollection([feature]), /coordinates must be \[longitude, latitude\]/);
+  expectInvalid(makeFeatureCollection([feature]), /coordinates must be exactly \[longitude, latitude\]/);
 });
 
 test("rejects non-finite longitude and latitude", () => {
@@ -286,6 +290,134 @@ test("accepts a synthetic High exact Point", () => {
   assert.equal(result.status, "valid");
   assert.deepEqual(result.features[0].geometry.coordinates, [113.8825, 27.6202]);
   assert.equal(result.features[0].properties.markerClass, "reviewed");
+});
+
+test("publication validation accepts future supported geometries with explicit metadata", () => {
+  const cases = [
+    {
+      type: "LineString",
+      coordinates: [[113.88, 27.62], [113.89, 27.63]],
+      geometryMeaning: "reviewed-line",
+      geometryPrecision: "reviewed",
+      horizontalUncertaintyMetres: null
+    },
+    {
+      type: "MultiLineString",
+      coordinates: [[[113.88, 27.62], [113.89, 27.63]]],
+      geometryMeaning: "approximate-line",
+      geometryPrecision: "approximate",
+      horizontalUncertaintyMetres: 25
+    },
+    {
+      type: "Polygon",
+      coordinates: [[
+        [113.88, 27.62],
+        [113.89, 27.62],
+        [113.89, 27.63],
+        [113.88, 27.62]
+      ]],
+      geometryMeaning: "generalized-reference-area",
+      geometryPrecision: "generalized",
+      horizontalUncertaintyMetres: 100
+    },
+    {
+      type: "MultiPolygon",
+      coordinates: [[[
+        [113.88, 27.62],
+        [113.89, 27.62],
+        [113.89, 27.63],
+        [113.88, 27.62]
+      ]]],
+      geometryMeaning: "uncertainty-area",
+      geometryPrecision: "uncertain",
+      horizontalUncertaintyMetres: 150
+    }
+  ];
+
+  cases.forEach((entry, index) => {
+    const feature = makeValidFeature({
+      id: `JX-PCH-7-00${index + 1}`,
+      properties: {
+        recordId: `JX-PCH-7-00${index + 1}`,
+        geometryMeaning: entry.geometryMeaning,
+        geometrySourceType: "project-generalized-reference",
+        geometrySourceLabel: "Project geometry test source",
+        geometrySourceUrl: "https://example.gov.cn/geometry",
+        geometryReviewedAt: "2026-07-28",
+        geometryReviewNotes: "Project reference geometry; not an official legal boundary.",
+        geometryPrecision: entry.geometryPrecision,
+        horizontalUncertaintyMetres: entry.horizontalUncertaintyMetres
+      },
+      geometry: {
+        type: entry.type,
+        coordinates: entry.coordinates
+      }
+    });
+    const result = validateProvincialHeritagePublicationGeoJson(makeFeatureCollection([feature]));
+    assert.equal(result.status, "valid");
+    assert.equal(result.features[0].geometry.type, entry.type);
+  });
+});
+
+test("production Map validation remains Point-only until PR 5B", () => {
+  const feature = makeValidFeature({
+    properties: {
+      geometryMeaning: "reviewed-line",
+      geometrySourceType: "official-published-geometry",
+      geometrySourceLabel: "Official published geometry",
+      geometrySourceUrl: "https://example.gov.cn/geometry",
+      geometryReviewedAt: "2026-07-28",
+      geometryReviewNotes: "Reviewed publication test geometry.",
+      geometryPrecision: "reviewed",
+      horizontalUncertaintyMetres: null
+    },
+    geometry: {
+      type: "LineString",
+      coordinates: [[113.88, 27.62], [113.89, 27.63]]
+    }
+  });
+  assert.equal(
+    validateProvincialHeritagePublicationGeoJson(makeFeatureCollection([feature])).status,
+    "valid"
+  );
+  expectInvalid(
+    makeFeatureCollection([feature]),
+    new RegExp(PROVINCIAL_HERITAGE_POINT_RENDERER_MESSAGE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+  );
+});
+
+test("publication collection validation fails atomically for a malformed child geometry", () => {
+  const validPoint = makeValidFeature();
+  const invalidArea = makeValidFeature({
+    id: "JX-PCH-7-002",
+    properties: {
+      recordId: "JX-PCH-7-002",
+      geometryMeaning: "approximate-boundary",
+      geometrySourceType: "project-reviewed-digitization",
+      geometrySourceLabel: "Project-reviewed test digitization",
+      geometryReviewNotes: "Project digitization; not an official legal boundary.",
+      geometryPrecision: "approximate",
+      horizontalUncertaintyMetres: 25
+    },
+    geometry: {
+      type: "Polygon",
+      coordinates: [[
+        [113.88, 27.62],
+        [113.89, 27.62],
+        [113.89, 27.63],
+        [113.88, 27.64]
+      ]]
+    }
+  });
+  assert.throws(
+    () => validateProvincialHeritagePublicationGeoJson(
+      makeFeatureCollection([validPoint, invalidArea])
+    ),
+    (error) => (
+      error instanceof ProvincialHeritageMapValidationError
+      && /must be closed/.test(error.message)
+    )
+  );
 });
 
 test("accepts the committed five-marker Xinyu publication set", () => {

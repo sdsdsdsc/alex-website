@@ -1,4 +1,8 @@
 import { getOfficialMapCategory } from "./official-map-categories.js?v=2026-07-27-official-category-filters";
+import {
+  validateOfficialGeometry,
+  validateOfficialGeometryMetadata
+} from "./official-geometry-schema.js?v=2026-07-28-official-geometry-schema-foundation";
 
 const SUPPORTED_SCHEMA_VERSION = "2.0.0";
 const PROVINCIAL_HERITAGE_DATASET_ID = "jiangxi-provincial-protected-heritage-map";
@@ -6,6 +10,7 @@ const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 15;
 const PROVINCIAL_HERITAGE_LOADING_MESSAGE = "Loading provincial heritage preview…";
 const PROVINCIAL_HERITAGE_EMPTY_MESSAGE = "No approved provincial heritage locations are available to display yet.";
 const PROVINCIAL_HERITAGE_FAILURE_MESSAGE = "The provincial heritage preview could not be loaded.";
+const PROVINCIAL_HERITAGE_POINT_RENDERER_MESSAGE = "The official heritage publication contains a supported non-Point geometry, but the production Map renderer supports Point only until PR 5B.";
 const PROJECT_COORDINATE_PROVENANCE = "Displayed location: Alex's Photo Board reviewed public-location decision, not an official designation coordinate.";
 
 const SUPPORTED_CONFIDENCE = new Set(["High", "Medium"]);
@@ -76,6 +81,8 @@ function validateFeature(feature, index, seenIds) {
     seenIds.add(feature.id);
   }
 
+  const geometryType = isPlainObject(feature.geometry) ? feature.geometry.type : null;
+  const isPointFeature = geometryType === "Point";
   const properties = feature.properties;
   addError(errors, isPlainObject(properties), `${path}.properties must be an object.`);
   if (isPlainObject(properties)) {
@@ -89,18 +96,24 @@ function validateFeature(feature, index, seenIds) {
       "locationEvidenceConfidence",
       "coordinateReferenceSystem",
       "publicationLocationPolicy",
-      "locationPrecision",
-      "publicLocationMeaning",
-      "displayLocationType",
-      "markerClass",
       "publicLocationNote",
-      "estimatedUncertaintyMeters",
       "sourceUrl",
       "sourceAccessedDate",
       "projectLocationProvenance"
     ].forEach((key) => {
       addError(errors, properties[key] !== undefined && properties[key] !== null, `${path}.properties.${key} is required.`);
     });
+    if (isPointFeature) {
+      [
+        "locationPrecision",
+        "publicLocationMeaning",
+        "displayLocationType",
+        "markerClass",
+        "estimatedUncertaintyMeters"
+      ].forEach((key) => {
+        addError(errors, properties[key] !== undefined && properties[key] !== null, `${path}.properties.${key} is required.`);
+      });
+    }
 
     addError(errors, properties.recordId === feature.id, `${path}.properties.recordId must match feature.id.`);
     addError(errors, isNonEmptyString(properties.projectNameEn), `${path}.properties.projectNameEn must be a non-empty string.`);
@@ -126,29 +139,31 @@ function validateFeature(feature, index, seenIds) {
       SUPPORTED_PUBLICATION_POLICIES.has(properties.publicationLocationPolicy),
       `${path}.properties.publicationLocationPolicy is not public and supported.`
     );
-    addError(
-      errors,
-      SUPPORTED_MARKER_CLASSES.has(properties.markerClass),
-      `${path}.properties.markerClass is unsupported.`
-    );
-    addError(
-      errors,
-      SUPPORTED_LOCATION_MEANINGS.has(properties.publicLocationMeaning),
-      `${path}.properties.publicLocationMeaning is unsupported.`
-    );
-    addError(
-      errors,
-      Number.isFinite(properties.estimatedUncertaintyMeters)
-        && properties.estimatedUncertaintyMeters > 0,
-      `${path}.properties.estimatedUncertaintyMeters must be a positive finite number.`
-    );
+    if (isPointFeature) {
+      addError(
+        errors,
+        SUPPORTED_MARKER_CLASSES.has(properties.markerClass),
+        `${path}.properties.markerClass is unsupported.`
+      );
+      addError(
+        errors,
+        SUPPORTED_LOCATION_MEANINGS.has(properties.publicLocationMeaning),
+        `${path}.properties.publicLocationMeaning is unsupported.`
+      );
+      addError(
+        errors,
+        Number.isFinite(properties.estimatedUncertaintyMeters)
+          && properties.estimatedUncertaintyMeters > 0,
+        `${path}.properties.estimatedUncertaintyMeters must be a positive finite number.`
+      );
+    }
     addError(
       errors,
       normalizeHttpsUrl(properties.sourceUrl) !== null,
       `${path}.properties.sourceUrl must be a valid HTTPS URL.`
     );
 
-    if (properties.markerClass === "reviewed") {
+    if (isPointFeature && properties.markerClass === "reviewed") {
       addError(
         errors,
         ["exact", "approximate"].includes(properties.publicationLocationPolicy),
@@ -173,7 +188,7 @@ function validateFeature(feature, index, seenIds) {
         `${path} reviewed markers must not carry a generalization radius.`
       );
     }
-    if (properties.markerClass === "generalized") {
+    if (isPointFeature && properties.markerClass === "generalized") {
       addError(
         errors,
         properties.publicationLocationPolicy === "generalized"
@@ -196,32 +211,21 @@ function validateFeature(feature, index, seenIds) {
   }
 
   const geometry = feature.geometry;
-  addError(errors, isPlainObject(geometry), `${path}.geometry must be an object.`);
-  if (!isPlainObject(geometry)) return errors;
-
-  addError(errors, geometry.type === "Point", `${path}.geometry.type must be Point.`);
-  addError(
-    errors,
-    Array.isArray(geometry.coordinates) && geometry.coordinates.length === 2,
-    `${path}.geometry.coordinates must be [longitude, latitude].`
-  );
-
-  if (Array.isArray(geometry.coordinates) && geometry.coordinates.length === 2) {
-    const [longitude, latitude] = geometry.coordinates;
-    addError(errors, Number.isFinite(longitude), `${path} longitude must be finite.`);
-    addError(errors, Number.isFinite(latitude), `${path} latitude must be finite.`);
-    if (Number.isFinite(longitude)) {
-      addError(errors, longitude >= -180 && longitude <= 180, `${path} longitude is outside -180 to 180.`);
-    }
-    if (Number.isFinite(latitude)) {
-      addError(errors, latitude >= -90 && latitude <= 90, `${path} latitude is outside -90 to 90.`);
-    }
+  const geometryResult = validateOfficialGeometry(geometry, { path: `${path}.geometry` });
+  errors.push(...geometryResult.errors);
+  if (isPlainObject(properties) && geometryResult.geometryType) {
+    const metadataResult = validateOfficialGeometryMetadata(
+      properties,
+      geometryResult.geometryType,
+      { path: `${path}.properties`, allowLegacyPoint: true }
+    );
+    errors.push(...metadataResult.errors);
   }
 
   return errors;
 }
 
-function validateProvincialHeritageGeoJson(value) {
+function validateProvincialHeritagePublicationGeoJson(value) {
   const errors = [];
   addError(errors, isPlainObject(value), "GeoJSON must be an object.");
   if (!isPlainObject(value)) throw new ProvincialHeritageMapValidationError(errors);
@@ -274,6 +278,17 @@ function validateProvincialHeritageGeoJson(value) {
     features: value.features,
     status: value.features.length === 0 ? "valid-empty" : "valid"
   };
+}
+
+function validateProvincialHeritageGeoJson(value) {
+  const result = validateProvincialHeritagePublicationGeoJson(value);
+  const firstNonPointIndex = result.features.findIndex((feature) => feature.geometry.type !== "Point");
+  if (firstNonPointIndex !== -1) {
+    throw new ProvincialHeritageMapValidationError([
+      `${PROVINCIAL_HERITAGE_POINT_RENDERER_MESSAGE} features[${firstNonPointIndex}].geometry.type is ${result.features[firstNonPointIndex].geometry.type}.`
+    ]);
+  }
+  return result;
 }
 
 function buildProvincialMarkerAccessibleName(feature) {
@@ -332,10 +347,12 @@ export {
   PROVINCIAL_HERITAGE_EMPTY_MESSAGE,
   PROVINCIAL_HERITAGE_FAILURE_MESSAGE,
   PROVINCIAL_HERITAGE_LOADING_MESSAGE,
+  PROVINCIAL_HERITAGE_POINT_RENDERER_MESSAGE,
   PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT,
   ProvincialHeritageMapValidationError,
   SUPPORTED_SCHEMA_VERSION,
   buildProvincialMarkerAccessibleName,
   buildProvincialPopupData,
-  validateProvincialHeritageGeoJson
+  validateProvincialHeritageGeoJson,
+  validateProvincialHeritagePublicationGeoJson
 };

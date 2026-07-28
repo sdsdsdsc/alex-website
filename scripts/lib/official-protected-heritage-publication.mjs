@@ -3,6 +3,10 @@ import {
   ProvincialHeritageValidationError,
   validateProvincialHeritageDataset
 } from "./provincial-heritage-data.mjs";
+import {
+  validateOfficialGeometry,
+  validateOfficialGeometryMetadata
+} from "../../heritage-engine/official-geometry-schema.js";
 
 const AGGREGATE_SCHEMA_VERSION = "2.0.0";
 const AGGREGATE_DATASET_ID = "jiangxi-provincial-protected-heritage-map";
@@ -604,6 +608,19 @@ function buildFeature(recordId, record, decision) {
   };
 }
 
+function validateGeneratedFeatureGeometry(feature, path) {
+  const geometryResult = validateOfficialGeometry(feature.geometry, { path: `${path}.geometry` });
+  const errors = [...geometryResult.errors];
+  if (geometryResult.geometryType) {
+    errors.push(...validateOfficialGeometryMetadata(
+      feature.properties,
+      geometryResult.geometryType,
+      { path: `${path}.properties`, allowLegacyPoint: true }
+    ).errors);
+  }
+  return errors;
+}
+
 function generateOfficialProtectedHeritageMap({
   phase14Dataset,
   xinyuDataset,
@@ -616,6 +633,7 @@ function generateOfficialProtectedHeritageMap({
   const recordIds = [...recordIndex.keys()].sort((a, b) => a.localeCompare(b));
   const features = [];
   const exclusions = [];
+  const geometryErrors = [];
 
   recordIds.forEach((recordId) => {
     const decision = decisionIndex.get(recordId);
@@ -623,8 +641,13 @@ function generateOfficialProtectedHeritageMap({
       exclusions.push({ recordId, reasons: ["no-approved-public-location"] });
       return;
     }
-    features.push(buildFeature(recordId, recordIndex.get(recordId), decision));
+    const feature = buildFeature(recordId, recordIndex.get(recordId), decision);
+    geometryErrors.push(...validateGeneratedFeatureGeometry(feature, `features[${features.length}]`));
+    features.push(feature);
   });
+  if (geometryErrors.length > 0) {
+    throw new OfficialProtectedHeritagePublicationError(geometryErrors);
+  }
 
   const sourceDatasets = [
     {
@@ -684,6 +707,7 @@ export {
   generateOfficialProtectedHeritageMap,
   isGeneralizedDecision,
   serializeJson,
+  validateGeneratedFeatureGeometry,
   validatePublicLocationDataset,
   validateXinyuCompanionDataset
 };
