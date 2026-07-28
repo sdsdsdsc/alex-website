@@ -3,8 +3,10 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
   OfficialProtectedHeritagePublicationError,
+  AGGREGATE_SCHEMA_VERSION,
   generateOfficialProtectedHeritageMap,
-  serializeJson
+  serializeJson,
+  validateGeneratedFeatureGeometry
 } from "../scripts/lib/official-protected-heritage-publication.mjs";
 
 const readJson = (path) => readFile(new URL(path, import.meta.url), "utf8").then(JSON.parse);
@@ -43,11 +45,26 @@ const publishedIds = [
 
 test("aggregate joins fifteen records and publishes five reviewed markers", () => {
   const result = generate();
+  assert.equal(AGGREGATE_SCHEMA_VERSION, "2.0.0");
   assert.equal(result.geojson.metadata.sourceRecordCount, 15);
   assert.equal(result.geojson.metadata.featureCount, 5);
   assert.equal(result.geojson.metadata.excludedRecordCount, 10);
   assert.equal(result.exclusions.length, 10);
+  assert.equal(result.hardErrorCount, 0);
+  assert.equal(result.geojson.metadata.generationStatus, "valid");
   assert.deepEqual(result.geojson.features.map(({ id }) => id), publishedIds);
+});
+
+test("current generated Points pass the shared geometry foundation without new metadata", () => {
+  const features = generate().geojson.features;
+  features.forEach((feature, index) => {
+    assert.deepEqual(validateGeneratedFeatureGeometry(feature, `features[${index}]`), []);
+    assert.equal(feature.geometry.type, "Point");
+    assert.equal(Object.hasOwn(feature.properties, "geometryMeaning"), false);
+    assert.equal(Object.hasOwn(feature.properties, "geometrySourceType"), false);
+    assert.equal(Object.hasOwn(feature.properties, "geometryPrecision"), false);
+    assert.equal(Object.hasOwn(feature.properties, "horizontalUncertaintyMetres"), false);
+  });
 });
 
 test("all four added source records preserve the official register facts", () => {
