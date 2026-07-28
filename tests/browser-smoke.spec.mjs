@@ -4,8 +4,9 @@ import { readFile } from "node:fs/promises";
 const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
-const MAP_PAGE_VERSION = "2026-07-27-official-category-filters";
-const PROVINCIAL_HERITAGE_PREVIEW_VERSION = "2026-07-27-official-category-filters";
+const MAP_PAGE_VERSION = "2026-07-28-official-geometry-rendering";
+const PROVINCIAL_HERITAGE_PREVIEW_VERSION = "2026-07-28-official-geometry-rendering";
+const OFFICIAL_CATEGORY_VERSION = "2026-07-27-official-category-filters";
 const PROVINCIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-provincial-protected-heritage-map.geojson*";
 const COMMITTED_PROVINCIAL_HERITAGE = JSON.parse(await readFile(
   new URL("../data/jiangxi-provincial-protected-heritage-map.geojson", import.meta.url),
@@ -131,6 +132,147 @@ function makeSyntheticProvincialCollection(features = []) {
   };
 }
 
+function makeSyntheticOfficialGeometryFeature({
+  id,
+  title,
+  officialNameZh,
+  officialCategoryZh = "古建筑",
+  type,
+  coordinates,
+  geometryMeaning,
+  geometrySourceType,
+  geometrySourceLabel,
+  geometryPrecision,
+  horizontalUncertaintyMetres = null
+}) {
+  const feature = makeSyntheticProvincialFeature({ id, officialCategoryZh });
+  feature.properties.projectNameEn = title;
+  feature.properties.officialNameZh = officialNameZh;
+  Object.assign(feature.properties, {
+    geometryMeaning,
+    geometrySourceType,
+    geometrySourceLabel,
+    geometrySourceUrl: "https://example.gov.cn/geometry-source",
+    geometryReviewedAt: "2026-07-28",
+    geometryReviewNotes: geometrySourceType.startsWith("project-")
+      ? "Project reference geometry prepared for rendering tests; not an official legal boundary."
+      : "Geometry follows the cited reviewed publication source.",
+    geometryPrecision,
+    horizontalUncertaintyMetres
+  });
+  feature.geometry = { type, coordinates };
+  return feature;
+}
+
+function makeSyntheticOfficialGeometryCollection() {
+  return makeSyntheticProvincialCollection([
+    makeSyntheticOfficialGeometryFeature({
+      id: "JX-SYN-GEO-001",
+      title: "Reviewed Canal Route",
+      officialNameZh: "审定水道",
+      type: "LineString",
+      coordinates: [[113.876, 27.616], [113.882, 27.622], [113.888, 27.626]],
+      geometryMeaning: "reviewed-line",
+      geometrySourceType: "official-published-geometry",
+      geometrySourceLabel: "Official published route geometry",
+      geometryPrecision: "reviewed"
+    }),
+    makeSyntheticOfficialGeometryFeature({
+      id: "JX-SYN-GEO-002",
+      title: "Approximate Historic Routes",
+      officialNameZh: "历史路线参考",
+      type: "MultiLineString",
+      coordinates: [
+        [[113.875, 27.625], [113.881, 27.629]],
+        [[113.884, 27.615], [113.891, 27.619]]
+      ],
+      geometryMeaning: "approximate-line",
+      geometrySourceType: "project-reviewed-digitization",
+      geometrySourceLabel: "Project-reviewed route digitization",
+      geometryPrecision: "approximate",
+      horizontalUncertaintyMetres: 35
+    }),
+    makeSyntheticOfficialGeometryFeature({
+      id: "JX-SYN-GEO-003",
+      title: "Reviewed Heritage Boundary",
+      officialNameZh: "审定范围",
+      type: "Polygon",
+      coordinates: [[
+        [113.874, 27.617],
+        [113.878, 27.617],
+        [113.878, 27.621],
+        [113.874, 27.617]
+      ]],
+      geometryMeaning: "reviewed-boundary",
+      geometrySourceType: "official-published-geometry",
+      geometrySourceLabel: "Official published boundary geometry",
+      geometryPrecision: "reviewed"
+    }),
+    makeSyntheticOfficialGeometryFeature({
+      id: "JX-SYN-GEO-004",
+      title: "Approximate Heritage Boundary",
+      officialNameZh: "近似范围",
+      officialCategoryZh: "近现代重要史迹",
+      type: "Polygon",
+      coordinates: [[
+        [113.886, 27.622],
+        [113.89, 27.622],
+        [113.89, 27.626],
+        [113.886, 27.622]
+      ]],
+      geometryMeaning: "approximate-boundary",
+      geometrySourceType: "project-reviewed-digitization",
+      geometrySourceLabel: "Project-reviewed approximate boundary",
+      geometryPrecision: "approximate",
+      horizontalUncertaintyMetres: 50
+    }),
+    makeSyntheticOfficialGeometryFeature({
+      id: "JX-SYN-GEO-005",
+      title: "Generalized Heritage Areas",
+      officialNameZh: "概化参考区",
+      officialCategoryZh: "近现代重要史迹",
+      type: "MultiPolygon",
+      coordinates: [
+        [[
+          [113.876, 27.627],
+          [113.879, 27.627],
+          [113.879, 27.63],
+          [113.876, 27.627]
+        ]],
+        [[
+          [113.882, 27.612],
+          [113.885, 27.612],
+          [113.885, 27.615],
+          [113.882, 27.612]
+        ]]
+      ],
+      geometryMeaning: "generalized-reference-area",
+      geometrySourceType: "project-generalized-reference",
+      geometrySourceLabel: "Project-generalized reference areas",
+      geometryPrecision: "generalized",
+      horizontalUncertaintyMetres: 120
+    }),
+    makeSyntheticOfficialGeometryFeature({
+      id: "JX-SYN-GEO-006",
+      title: "Heritage Uncertainty Area",
+      officialNameZh: "不确定范围",
+      officialCategoryZh: "近现代重要史迹",
+      type: "Polygon",
+      coordinates: [[
+        [113.88, 27.624],
+        [113.884, 27.624],
+        [113.884, 27.628],
+        [113.88, 27.624]
+      ]],
+      geometryMeaning: "uncertainty-area",
+      geometrySourceType: "project-generalized-reference",
+      geometrySourceLabel: "Project uncertainty reference",
+      geometryPrecision: "uncertain",
+      horizontalUncertaintyMetres: 180
+    })
+  ]);
+}
+
 async function openMapLayersTab(page) {
   const layersTab = page.getByRole("tab", { name: "Layers", exact: true });
   const panel = page.getByRole("tabpanel", { name: "Layers", exact: true });
@@ -195,6 +337,11 @@ test("heritage engine helper harness passes", async ({ page }) => {
   await expect(officialCategories.locator(".result")).toHaveCount(12);
   const officialCategoryFailures = await officialCategories.locator(".result:has(.badge--fail)").allTextContents();
   expect(officialCategoryFailures).toEqual([]);
+
+  const officialGeometry = page.locator(".test-card", { has: page.locator("h2", { hasText: "Official Geometry Rendering" }) });
+  await expect(officialGeometry.locator(".result")).toHaveCount(8);
+  const officialGeometryFailures = await officialGeometry.locator(".result:has(.badge--fail)").allTextContents();
+  expect(officialGeometryFailures).toEqual([]);
 });
 
 test("map adopts legacy search URLs and keeps q authoritative", async ({ page }) => {
@@ -400,6 +547,209 @@ test("production-sized official fixture renders five accessible markers across r
     document.documentElement.scrollWidth <= document.documentElement.clientWidth
   ))).toBe(true);
   expect(appErrors).toEqual([]);
+});
+
+test("validated official line and area geometries render with accessible meaning-driven interaction", async ({ page }) => {
+  test.setTimeout(60000);
+  let provincialRequestCount = 0;
+  const appErrors = [];
+  page.on("console", (message) => {
+    if (message.type() === "error" && isAppOwnedConsoleError(message.text())) {
+      appErrors.push(message.text());
+    }
+  });
+  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => {
+    provincialRequestCount += 1;
+    return route.fulfill({
+      status: 200,
+      contentType: "application/geo+json",
+      body: JSON.stringify(makeSyntheticOfficialGeometryCollection())
+    });
+  });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
+  const initialUrl = page.url();
+  const initialMapState = await getRenderedMapState(page);
+  const initialCommunityCount = await page.locator(".community-map-pin").count();
+  const layersPanel = await openMapLayersTab(page);
+  const officialLayer = layersPanel.getByRole("checkbox", {
+    name: "Provincial protected heritage",
+    exact: true
+  });
+  await expect(officialLayer).not.toBeChecked();
+  await expect(page.locator(".official-heritage-geometry")).toHaveCount(0);
+  expect(provincialRequestCount).toBe(0);
+
+  await officialLayer.click();
+  await expect(page.locator(".official-heritage-geometry")).toHaveCount(6);
+  await expect(page.locator("#officialCategoryStatus")).toHaveText(
+    "6 of 6 published official locations displayed."
+  );
+  await expect(page.locator(".community-map-pin")).toHaveCount(initialCommunityCount);
+  expect(provincialRequestCount).toBe(1);
+  expect(page.url()).toBe(initialUrl);
+  expect(await getRenderedMapState(page)).toEqual(initialMapState);
+
+  const reviewedLine = page.getByRole("button", {
+    name: "Open official protected heritage record: Reviewed Canal Route (审定水道); Map category: Ancient buildings; Reviewed line",
+    exact: true
+  });
+  const approximateMultiLine = page.getByRole("button", {
+    name: /Approximate Historic Routes.*Approximate line$/,
+    exact: false
+  });
+  const reviewedBoundary = page.getByRole("button", {
+    name: /Reviewed Heritage Boundary.*Reviewed boundary$/,
+    exact: false
+  });
+  const approximateBoundary = page.getByRole("button", {
+    name: /Approximate Heritage Boundary.*Approximate boundary$/,
+    exact: false
+  });
+  const generalizedArea = page.getByRole("button", {
+    name: /Generalized Heritage Areas.*Generalized project reference area$/,
+    exact: false
+  });
+  const uncertaintyArea = page.getByRole("button", {
+    name: /Heritage Uncertainty Area.*Uncertainty area$/,
+    exact: false
+  });
+  for (const feature of [
+    reviewedLine,
+    approximateMultiLine,
+    reviewedBoundary,
+    approximateBoundary,
+    generalizedArea,
+    uncertaintyArea
+  ]) {
+    await expect(feature).toHaveCount(1);
+    await expect(feature).toBeVisible();
+    await expect(feature).toHaveAttribute("tabindex", "0");
+  }
+
+  await expect(page.locator(".official-heritage-geometry--reviewed-line")).not.toHaveAttribute("stroke-dasharray");
+  await expect(page.locator(".official-heritage-geometry--approximate-line")).toHaveAttribute("stroke-dasharray", "8 7");
+  await expect(page.locator(".official-heritage-geometry--reviewed-boundary")).not.toHaveAttribute("stroke-dasharray");
+  await expect(page.locator(".official-heritage-geometry--approximate-boundary")).toHaveAttribute("stroke-dasharray", "8 6");
+  await expect(page.locator(".official-heritage-geometry--generalized-reference-area")).toHaveAttribute("stroke-dasharray", "3 7");
+  await expect(page.locator(".official-heritage-geometry--uncertainty-area")).toHaveAttribute("stroke-dasharray", "2 8");
+
+  await reviewedLine.dispatchEvent("click");
+  const reviewedLinePopup = page.locator(".provincial-heritage-map-popup").filter({
+    hasText: "Reviewed Canal Route"
+  });
+  await expect(reviewedLinePopup).toContainText("Reviewed line");
+  await expect(reviewedLinePopup).toContainText(
+    "Official published geometry: Official published route geometry"
+  );
+
+  await approximateBoundary.focus();
+  await page.keyboard.press("Tab");
+  await expect(generalizedArea).toBeFocused();
+  expect(await generalizedArea.evaluate((element) => ({
+    outlineStyle: getComputedStyle(element).outlineStyle,
+    outlineWidth: getComputedStyle(element).outlineWidth
+  }))).toEqual({
+    outlineStyle: "solid",
+    outlineWidth: "4px"
+  });
+  await generalizedArea.press("Enter");
+  const generalizedPopup = page.locator(".provincial-heritage-map-popup").filter({
+    hasText: "Generalized Heritage Areas"
+  });
+  await expect(generalizedPopup).toContainText("Generalized project reference area");
+  await expect(generalizedPopup).toContainText("Project-generalized reference");
+  await expect(generalizedPopup).toContainText("120 metres");
+  await expect(generalizedPopup).toContainText(
+    "This geometry is a project reference or approximation, not an official legal boundary."
+  );
+  await expect(generalizedPopup.getByRole("link", { name: "Open geometry source" })).toHaveAttribute(
+    "href",
+    "https://example.gov.cn/geometry-source"
+  );
+
+  await uncertaintyArea.focus();
+  await uncertaintyArea.press("Space");
+  await expect(page.locator(".provincial-heritage-map-popup").filter({
+    hasText: "Heritage Uncertainty Area"
+  })).toContainText("Uncertainty area");
+
+  const ancientBuildings = layersPanel.getByRole("checkbox", {
+    name: "Ancient buildings",
+    exact: true
+  });
+  const officialAll = layersPanel.getByRole("checkbox", {
+    name: "All official categories",
+    exact: true
+  });
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".provincial-heritage-map-popup")).toHaveCount(0);
+  const beforeCategoryFilterState = await getRenderedMapState(page);
+  await ancientBuildings.focus();
+  await ancientBuildings.press("Space");
+  await expect(page.locator(".official-heritage-geometry")).toHaveCount(3);
+  await expect(page.locator("#officialCategoryStatus")).toHaveText(
+    "3 of 6 published official locations displayed."
+  );
+  await expect(officialAll).toHaveJSProperty("indeterminate", true);
+  await expect(page.locator(".community-map-pin")).toHaveCount(initialCommunityCount);
+  expect(provincialRequestCount).toBe(1);
+  expect(page.url()).toBe(initialUrl);
+  expect(await getRenderedMapState(page)).toEqual(beforeCategoryFilterState);
+
+  await officialLayer.click();
+  await expect(page.locator(".official-heritage-geometry")).toHaveCount(0);
+  await officialLayer.click();
+  await expect(page.locator(".official-heritage-geometry")).toHaveCount(3);
+  await expect(ancientBuildings).not.toBeChecked();
+  await expect(officialAll).toHaveJSProperty("indeterminate", true);
+  expect(provincialRequestCount).toBe(1);
+
+  await ancientBuildings.click();
+  await expect(page.locator(".official-heritage-geometry")).toHaveCount(6);
+  for (const viewport of [
+    { width: 320, height: 720 },
+    { width: 768, height: 1024 },
+    { width: 844, height: 390 }
+  ]) {
+    await page.setViewportSize(viewport);
+    await expect(page.locator(".official-heritage-geometry")).toHaveCount(6);
+    expect(await page.evaluate(() => (
+      document.documentElement.scrollWidth <= document.documentElement.clientWidth
+    ))).toBe(true);
+  }
+  await page.evaluate(() => {
+    document.documentElement.style.zoom = "2";
+  });
+  await expect(page.locator(".official-heritage-geometry")).toHaveCount(6);
+  expect(await page.evaluate(() => (
+    document.documentElement.scrollWidth <= document.documentElement.clientWidth
+  ))).toBe(true);
+  expect(appErrors).toEqual([]);
+});
+
+test("unsupported official geometry meaning fails the complete layer atomically", async ({ page }) => {
+  const valid = makeSyntheticOfficialGeometryCollection().features[0];
+  const invalid = makeSyntheticOfficialGeometryCollection().features[2];
+  invalid.properties.geometryMeaning = "reviewed-line";
+  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+    status: 200,
+    contentType: "application/geo+json",
+    body: JSON.stringify(makeSyntheticProvincialCollection([valid, invalid]))
+  }));
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await openMapLayersTab(page);
+  const communityCount = await page.locator(".community-map-pin").count();
+  await getOverlayCheckbox(page, "Provincial protected heritage").click();
+  await expect(page.locator("#provincialHeritageError")).toHaveText(
+    "The provincial heritage preview could not be loaded."
+  );
+  await expect(page.locator(".official-heritage-geometry")).toHaveCount(0);
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(0);
+  await expect(page.locator("#officialCategoryControls")).toBeHidden();
+  await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
 });
 
 test("official categories are published-only tri-state visibility controls with persistent cached selections", async ({ page }) => {
@@ -1038,7 +1388,7 @@ test("Map and Places expose only the supported structured discovery filters", as
     `./heritage-engine/provincial-heritage-map.js?v=${PROVINCIAL_HERITAGE_PREVIEW_VERSION}`
   );
   expect(cacheVersions.mapSource).toContain(
-    `./heritage-engine/official-map-categories.js?v=${PROVINCIAL_HERITAGE_PREVIEW_VERSION}`
+    `./heritage-engine/official-map-categories.js?v=${OFFICIAL_CATEGORY_VERSION}`
   );
   expect(cacheVersions.mapSource).toContain(
     `./data/jiangxi-provincial-protected-heritage-map.geojson?v=${PROVINCIAL_HERITAGE_PREVIEW_VERSION}`
