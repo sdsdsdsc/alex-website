@@ -192,6 +192,10 @@
       getPublishedOfficialMapCategories
     } from "./heritage-engine/official-map-categories.js?v=2026-07-27-official-category-filters";
     import {
+      getOfficialGeometryRenderPresentation,
+      getOfficialGeometrySourceLabel
+    } from "./heritage-engine/official-geometry-rendering.js?v=2026-07-28-official-geometry-rendering";
+    import {
       buildMapUrl,
       formatCriteriaList,
       formatPlaceLocationAddress,
@@ -641,6 +645,35 @@
       const fallback = getOfficialMapCategory(hostileValue);
       assertEqual(fallback.label, "Other official heritage", "Official Map Categories", "arbitrary official category text cannot create a category");
       assertNotContains(fallback.glyphSvg, hostileValue, "Official Map Categories", "raw official category data never enters static SVG markup");
+    }
+
+    function runOfficialGeometryRenderingTests() {
+      const feature = (type, geometryMeaning, geometryPrecision) => ({
+        type: "Feature",
+        properties: { geometryMeaning, geometryPrecision },
+        geometry: { type, coordinates: [] }
+      });
+      const reviewedLine = getOfficialGeometryRenderPresentation(
+        feature("LineString", "reviewed-line", "reviewed")
+      );
+      const approximateLine = getOfficialGeometryRenderPresentation(
+        feature("MultiLineString", "approximate-line", "approximate")
+      );
+      const reviewedArea = getOfficialGeometryRenderPresentation(
+        feature("Polygon", "reviewed-boundary", "reviewed")
+      );
+      const generalizedArea = getOfficialGeometryRenderPresentation(
+        feature("MultiPolygon", "generalized-reference-area", "generalized")
+      );
+
+      assertEqual(reviewedLine.renderer, "line", "Official Geometry Rendering", "reviewed lines use the line renderer");
+      assertEqual(reviewedLine.pathOptions.dashArray, undefined, "Official Geometry Rendering", "reviewed lines remain solid");
+      assertEqual(approximateLine.pathOptions.dashArray, "8 7", "Official Geometry Rendering", "approximate lines use the controlled dash");
+      assertEqual(reviewedArea.renderer, "area", "Official Geometry Rendering", "reviewed boundaries use the area renderer");
+      assertEqual(reviewedArea.pathOptions.fillOpacity, 0.14, "Official Geometry Rendering", "reviewed boundary fill stays restrained");
+      assertEqual(generalizedArea.pathOptions.dashArray, "3 7", "Official Geometry Rendering", "generalized areas remain clearly dashed");
+      assertEqual(getOfficialGeometrySourceLabel("official-published-geometry"), "Official published geometry", "Official Geometry Rendering", "official geometry provenance has a controlled label");
+      assertEqual(getOfficialGeometrySourceLabel("project-generalized-reference"), "Project-generalized reference", "Official Geometry Rendering", "project geometry provenance remains explicit");
     }
 
     function runPlaceTests() {
@@ -1484,6 +1517,7 @@
       runMapTests();
       runCommunityMapCategoryTests();
       runOfficialMapCategoryTests();
+      runOfficialGeometryRenderingTests();
       runPlaceTests();
       runExportTests();
       runValidationTests();

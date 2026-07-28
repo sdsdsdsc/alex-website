@@ -3,6 +3,12 @@ import {
   validateOfficialGeometry,
   validateOfficialGeometryMetadata
 } from "./official-geometry-schema.js?v=2026-07-28-official-geometry-schema-foundation";
+import {
+  getFeatureGeometryMeaning,
+  getOfficialGeometryRenderPresentation,
+  getOfficialGeometrySourceLabel,
+  prepareOfficialGeometryRenderModels
+} from "./official-geometry-rendering.js?v=2026-07-28-official-geometry-rendering";
 
 const SUPPORTED_SCHEMA_VERSION = "2.0.0";
 const PROVINCIAL_HERITAGE_DATASET_ID = "jiangxi-provincial-protected-heritage-map";
@@ -10,8 +16,8 @@ const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 15;
 const PROVINCIAL_HERITAGE_LOADING_MESSAGE = "Loading provincial heritage preview…";
 const PROVINCIAL_HERITAGE_EMPTY_MESSAGE = "No approved provincial heritage locations are available to display yet.";
 const PROVINCIAL_HERITAGE_FAILURE_MESSAGE = "The provincial heritage preview could not be loaded.";
-const PROVINCIAL_HERITAGE_POINT_RENDERER_MESSAGE = "The official heritage publication contains a supported non-Point geometry, but the production Map renderer supports Point only until PR 5B.";
 const PROJECT_COORDINATE_PROVENANCE = "Displayed location: Alex's Photo Board reviewed public-location decision, not an official designation coordinate.";
+const PROJECT_GEOMETRY_CAUTION = "This geometry is a project reference or approximation, not an official legal boundary.";
 
 const SUPPORTED_CONFIDENCE = new Set(["High", "Medium"]);
 const SUPPORTED_PUBLICATION_POLICIES = new Set(["exact", "approximate", "generalized"]);
@@ -282,13 +288,16 @@ function validateProvincialHeritagePublicationGeoJson(value) {
 
 function validateProvincialHeritageGeoJson(value) {
   const result = validateProvincialHeritagePublicationGeoJson(value);
-  const firstNonPointIndex = result.features.findIndex((feature) => feature.geometry.type !== "Point");
-  if (firstNonPointIndex !== -1) {
+  try {
+    return {
+      ...result,
+      renderModels: prepareOfficialGeometryRenderModels(result.features)
+    };
+  } catch (error) {
     throw new ProvincialHeritageMapValidationError([
-      `${PROVINCIAL_HERITAGE_POINT_RENDERER_MESSAGE} features[${firstNonPointIndex}].geometry.type is ${result.features[firstNonPointIndex].geometry.type}.`
+      `Official geometry rendering configuration is unsupported. ${error.message}`
     ]);
   }
-  return result;
 }
 
 function buildProvincialMarkerAccessibleName(feature) {
@@ -318,8 +327,41 @@ function buildProvincialMarkerAccessibleName(feature) {
   return `Open official protected heritage record: ${title}${officialName}; Map category: ${categoryLabel}; ${locationLabel}`;
 }
 
+function buildProvincialFeatureAccessibleName(feature) {
+  if (feature?.geometry?.type === "Point") {
+    return buildProvincialMarkerAccessibleName(feature);
+  }
+  const properties = feature?.properties || {};
+  const title = isNonEmptyString(properties.projectNameEn)
+    ? properties.projectNameEn.trim()
+    : "Untitled provincial heritage record";
+  const officialName = isNonEmptyString(properties.officialNameZh)
+    ? ` (${properties.officialNameZh.trim()})`
+    : "";
+  const category = getOfficialMapCategory(properties.officialCategoryZh);
+  const categoryLabel = category?.label || "Other official heritage";
+  const presentation = getOfficialGeometryRenderPresentation(feature);
+  return `Open official protected heritage record: ${title}${officialName}; Map category: ${categoryLabel}; ${presentation.meaningLabel}`;
+}
+
 function buildProvincialPopupData(feature) {
   const properties = feature?.properties || {};
+  const geometryType = String(feature?.geometry?.type || "").trim();
+  const geometryMeaning = getFeatureGeometryMeaning(feature);
+  const geometryPresentation = geometryType
+    ? getOfficialGeometryRenderPresentation(feature)
+    : null;
+  const geometrySourceType = String(properties.geometrySourceType || "").trim();
+  const isProjectGeometry = [
+    "project-reviewed-digitization",
+    "project-generalized-reference"
+  ].includes(geometrySourceType);
+  const isQualifiedGeometry = [
+    "approximate-line",
+    "approximate-boundary",
+    "generalized-reference-area",
+    "uncertainty-area"
+  ].includes(geometryMeaning);
   return {
     projectNameEn: String(properties.projectNameEn || "").trim(),
     officialNameZh: String(properties.officialNameZh || "").trim(),
@@ -337,7 +379,21 @@ function buildProvincialPopupData(feature) {
     sourceLabel: String(properties.sourceTitleZh || properties.sourceIssuerZh || "").trim(),
     sourceUrl: normalizeHttpsUrl(properties.sourceUrl),
     sourceAccessedDate: String(properties.sourceAccessedDate || "").trim(),
-    coordinateProvenance: PROJECT_COORDINATE_PROVENANCE
+    coordinateProvenance: PROJECT_COORDINATE_PROVENANCE,
+    geometryType,
+    geometryMeaning,
+    geometryMeaningLabel: geometryPresentation?.meaningLabel || "",
+    geometryPrecision: String(properties.geometryPrecision || "").trim(),
+    horizontalUncertaintyMetres: properties.horizontalUncertaintyMetres,
+    geometrySourceType,
+    geometrySourceTypeLabel: getOfficialGeometrySourceLabel(geometrySourceType),
+    geometrySourceLabel: String(properties.geometrySourceLabel || "").trim(),
+    geometrySourceUrl: normalizeHttpsUrl(properties.geometrySourceUrl),
+    geometryReviewedAt: String(properties.geometryReviewedAt || "").trim(),
+    geometryReviewNotes: String(properties.geometryReviewNotes || "").trim(),
+    geometryCaution: geometryType !== "Point" && (isProjectGeometry || isQualifiedGeometry)
+      ? PROJECT_GEOMETRY_CAUTION
+      : ""
   };
 }
 
@@ -347,10 +403,10 @@ export {
   PROVINCIAL_HERITAGE_EMPTY_MESSAGE,
   PROVINCIAL_HERITAGE_FAILURE_MESSAGE,
   PROVINCIAL_HERITAGE_LOADING_MESSAGE,
-  PROVINCIAL_HERITAGE_POINT_RENDERER_MESSAGE,
   PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT,
   ProvincialHeritageMapValidationError,
   SUPPORTED_SCHEMA_VERSION,
+  buildProvincialFeatureAccessibleName,
   buildProvincialMarkerAccessibleName,
   buildProvincialPopupData,
   validateProvincialHeritageGeoJson,

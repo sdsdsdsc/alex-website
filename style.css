@@ -1820,6 +1820,35 @@ body.community-modal-open {
   background: #a94700;
 }
 
+.map-layer-symbol--official-reviewed-geometry::before,
+.map-layer-symbol--official-qualified-geometry::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 10px;
+  border-top: 4px solid #a94700;
+}
+
+.map-layer-symbol--official-reviewed-geometry::after,
+.map-layer-symbol--official-qualified-geometry::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 2px solid #a94700;
+  background: rgba(214, 106, 22, 0.14);
+}
+
+.map-layer-symbol--official-qualified-geometry::before,
+.map-layer-symbol--official-qualified-geometry::after {
+  border-style: dashed;
+  opacity: 0.72;
+}
+
+.map-layer-symbol--official-qualified-geometry::after {
+  background: rgba(239, 170, 114, 0.08);
+}
+
 .map-layer-legend {
   display: grid;
   gap: 12px;
@@ -2121,6 +2150,21 @@ body.community-modal-open {
 
 .provincial-heritage-map-marker--generalized .official-map-marker__glyph-dot {
   fill: #a94700;
+}
+
+.official-heritage-geometry {
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+}
+
+.official-heritage-geometry:focus {
+  outline: none;
+}
+
+.official-heritage-geometry:focus-visible {
+  outline: 4px solid #123f52;
+  outline-offset: 3px;
+  filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 5px rgba(18, 63, 82, 0.8));
 }
 
 .provincial-heritage-map-popup__official-name {

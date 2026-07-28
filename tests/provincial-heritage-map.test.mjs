@@ -17,7 +17,7 @@ const committedGeoJson = JSON.parse(await readFile(
 
 const {
   ProvincialHeritageMapValidationError,
-  PROVINCIAL_HERITAGE_POINT_RENDERER_MESSAGE,
+  buildProvincialFeatureAccessibleName,
   buildProvincialMarkerAccessibleName,
   buildProvincialPopupData,
   validateProvincialHeritageGeoJson,
@@ -359,7 +359,7 @@ test("publication validation accepts future supported geometries with explicit m
   });
 });
 
-test("production Map validation remains Point-only until PR 5B", () => {
+test("production Map validation prepares supported non-Point rendering", () => {
   const feature = makeValidFeature({
     properties: {
       geometryMeaning: "reviewed-line",
@@ -376,14 +376,15 @@ test("production Map validation remains Point-only until PR 5B", () => {
       coordinates: [[113.88, 27.62], [113.89, 27.63]]
     }
   });
-  assert.equal(
-    validateProvincialHeritagePublicationGeoJson(makeFeatureCollection([feature])).status,
-    "valid"
+  const publication = validateProvincialHeritagePublicationGeoJson(
+    makeFeatureCollection([feature])
   );
-  expectInvalid(
-    makeFeatureCollection([feature]),
-    new RegExp(PROVINCIAL_HERITAGE_POINT_RENDERER_MESSAGE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-  );
+  const production = validateProvincialHeritageGeoJson(makeFeatureCollection([feature]));
+  assert.equal(publication.status, "valid");
+  assert.equal(production.status, "valid");
+  assert.equal(production.renderModels.length, 1);
+  assert.equal(production.renderModels[0].presentation.renderer, "line");
+  assert.equal(production.renderModels[0].presentation.meaningLabel, "Reviewed line");
 });
 
 test("publication collection validation fails atomically for a malformed child geometry", () => {
@@ -674,6 +675,34 @@ test("generalized and unknown-category accessible names retain both meanings", (
   );
 });
 
+test("non-Point accessible names include category and controlled geometry meaning", () => {
+  const feature = makeValidFeature({
+    properties: {
+      geometryMeaning: "generalized-reference-area",
+      geometrySourceType: "project-generalized-reference",
+      geometrySourceLabel: "Project generalized test area",
+      geometrySourceUrl: "https://example.gov.cn/geometry",
+      geometryReviewedAt: "2026-07-28",
+      geometryReviewNotes: "Project reference area; not an official legal boundary.",
+      geometryPrecision: "generalized",
+      horizontalUncertaintyMetres: 100
+    },
+    geometry: {
+      type: "MultiPolygon",
+      coordinates: [[[
+        [113.88, 27.62],
+        [113.89, 27.62],
+        [113.89, 27.63],
+        [113.88, 27.62]
+      ]]]
+    }
+  });
+  assert.equal(
+    buildProvincialFeatureAccessibleName(feature),
+    "Open official protected heritage record: Test Archaeological Site (测试遗址); Map category: Ancient buildings; Generalized project reference area"
+  );
+});
+
 test("builds provenance-safe popup display data", () => {
   const popup = buildProvincialPopupData(makeValidFeature());
   assert.equal(popup.projectNameEn, "Test Archaeological Site");
@@ -683,6 +712,36 @@ test("builds provenance-safe popup display data", () => {
   assert.equal(popup.sourceUrl, "https://example.gov.cn/source");
   assert.match(popup.coordinateProvenance, /reviewed public-location decision/);
   assert.match(popup.coordinateProvenance, /not an official designation coordinate/);
+});
+
+test("builds qualified non-Point popup data with safe geometry provenance", () => {
+  const popup = buildProvincialPopupData(makeValidFeature({
+    properties: {
+      geometryMeaning: "approximate-boundary",
+      geometrySourceType: "project-reviewed-digitization",
+      geometrySourceLabel: "Project-reviewed boundary digitization",
+      geometrySourceUrl: "https://example.gov.cn/geometry",
+      geometryReviewedAt: "2026-07-28",
+      geometryReviewNotes: "Digitized as a project reference.",
+      geometryPrecision: "approximate",
+      horizontalUncertaintyMetres: 40
+    },
+    geometry: {
+      type: "Polygon",
+      coordinates: [[
+        [113.88, 27.62],
+        [113.89, 27.62],
+        [113.89, 27.63],
+        [113.88, 27.62]
+      ]]
+    }
+  }));
+  assert.equal(popup.geometryMeaningLabel, "Approximate boundary");
+  assert.equal(popup.geometrySourceTypeLabel, "Project-reviewed digitization");
+  assert.equal(popup.geometrySourceUrl, "https://example.gov.cn/geometry");
+  assert.equal(popup.horizontalUncertaintyMetres, 40);
+  assert.match(popup.geometryCaution, /project reference or approximation/);
+  assert.match(popup.geometryCaution, /not an official legal boundary/);
 });
 
 test("popup display data does not expose an invalid source URL", () => {
