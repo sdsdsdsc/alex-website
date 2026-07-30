@@ -50,8 +50,8 @@ Before any release, rules deployment, or public-auth rollout, make sure the foll
 - the current Firebase rules deployment time and version note have been recorded;
 - a public test account is available;
 - a test admin account is available;
-- [docs/release-smoke-test-matrix.md](/Users/liuyang/Library/Mobile%20Documents/com~apple~CloudDocs/coding/54Add%20the%20%E2%80%9C:heritage.json%E2%80%9D%20export%20page'/docs/release-smoke-test-matrix.md) is ready;
-- [docs/firestore-rules-verification-plan.md](/Users/liuyang/Library/Mobile%20Documents/com~apple~CloudDocs/coding/54Add%20the%20%E2%80%9C:heritage.json%E2%80%9D%20export%20page'/docs/firestore-rules-verification-plan.md) is ready.
+- [docs/release-smoke-test-matrix.md](./release-smoke-test-matrix.md) is ready;
+- [docs/firestore-rules-verification-plan.md](./firestore-rules-verification-plan.md) is ready.
 
 Do not rely on memory during rollback. Record the intended previous file set and previous rules text before release work begins.
 
@@ -164,9 +164,9 @@ After any rollback, rerun a short verification checklist before calling the syst
 
 Use the smoke test matrix and rules verification plan where relevant:
 
-- [docs/release-smoke-test-matrix.md](/Users/liuyang/Library/Mobile%20Documents/com~apple~CloudDocs/coding/54Add%20the%20%E2%80%9C:heritage.json%E2%80%9D%20export%20page'/docs/release-smoke-test-matrix.md)
-- [docs/firestore-rules-verification-plan.md](/Users/liuyang/Library/Mobile%20Documents/com~apple~CloudDocs/coding/54Add%20the%20%E2%80%9C:heritage.json%E2%80%9D%20export%20page'/docs/firestore-rules-verification-plan.md)
-- [docs/phase-12e-auth-rules-release-checklist.md](/Users/liuyang/Library/Mobile%20Documents/com~apple~CloudDocs/coding/54Add%20the%20%E2%80%9C:heritage.json%E2%80%9D%20export%20page'/docs/phase-12e-auth-rules-release-checklist.md)
+- [docs/release-smoke-test-matrix.md](./release-smoke-test-matrix.md)
+- [docs/firestore-rules-verification-plan.md](./firestore-rules-verification-plan.md)
+- [docs/phase-12e-auth-rules-release-checklist.md](./phase-12e-auth-rules-release-checklist.md)
 
 ## 10. Evidence
 

@@ -2,7 +2,7 @@
 
 ## Historical status
 
-This document is preserved as the Phase 15C-3 audit record. Its candidate rankings and publication conclusion reflect the stricter evidence gate used at that time and are superseded by the later re-audit and controlling policy. [Phase 15C-4](./phase-15c-4-xinyu-mixed-geometry-reaudit.md) later re-audited the candidates, [Phase 15C-5](./phase-15c-5-xiabu-geometry-pilot.md) is the authoritative detailed Xiabu evidence record, and [Phase 15C-6](./phase-15c-6-official-record-publication-policy-and-batch-plan.md) is the controlling current publication policy and batch plan. This historical record is not implementation or publication approval.
+This document is preserved as the Phase 15C-3 audit record. Its candidate rankings and publication conclusion reflect the stricter evidence gate used at that time and are superseded by the later re-audit and controlling policy. [Phase 15C-4](./phase-15c-4-xinyu-mixed-geometry-reaudit.md) later re-audited the candidates, [Phase 15C-5](./phase-15c-5-xiabu-geometry-pilot.md) is the authoritative detailed Xiabu evidence record, and [Phase 15C-6](../plans/phase-15c-6-official-record-publication-policy-and-batch-plan.md) preserves the historical batch plan. The standalone [official-record publication policy](../policy/official-record-publication-policy.md) is the controlling current authority. This historical record is not implementation or publication approval.
 
 ## Outcome
 
@@ -142,4 +142,4 @@ Rollback is documentation-only: remove this audit and restore the two status ref
 
 This was a public web and document audit, not a cadastral survey, authority consultation, or field inspection. Search indexing can omit official plans, and the original Jiangxi government URLs were intermittently unavailable during review. The archived PDF was compared visually at the relevant pages, but the missing datum remains unresolved.
 
-At this historical audit's stop point, no follow-on implementation PR had started. Current next-step authority now comes from Phase 15C-6, not this document.
+At this historical audit's stop point, no follow-on implementation PR had started. Current decision authority comes from the standalone [official-record publication policy](../policy/official-record-publication-policy.md), not this document.

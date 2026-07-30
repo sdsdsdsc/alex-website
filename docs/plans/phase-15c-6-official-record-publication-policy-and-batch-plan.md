@@ -2,16 +2,22 @@
 
 ## Outcome and stop point
 
-This documentation-only phase establishes the controlling current publication policy, applies it to the complete Xinyu provincial register, and proposes one future implementation batch.
+This document is preserved as the historical Phase 15C-6 policy-development
+and Xinyu batch-planning record. It applied the outcome model developed during
+that phase to the complete Xinyu provincial register and proposed one future
+implementation batch. The standalone
+[official-record publication policy](../policy/official-record-publication-policy.md)
+is now the controlling current authority. Nothing in this historical plan
+overrides that policy or constitutes implementation approval.
 
 It does not add or publish the Xiabu Point. It does not change official source data, reviewed public-location decisions, generated GeoJSON, application code, tests, category mappings, Firebase, workflows, packages, or production behavior. Nothing in this document is implementation approval.
 
 The complete review universe is the current official register's provincial section: **20处22点**, represented by 22 listed record/component rows. The identity count needs care. The rows contain 21 distinct designation names because 袁州明代城墙砖窑址群 is a cross-city parent represented in Xinyu only by its 芦塘 component; the second extra listed point is the second component of 下保农民暴动旧址. This audit therefore preserves the register's published `20处22点` wording, audits all 22 rows, and does not manufacture one unsupported “designation total” from the display table. The current machine aggregate remains narrower: 15 joined records, five published Points, and ten exclusions. Only one of the ten Phase 14 exclusions, 打鼓岭遗址, is a Xinyu record; the other nine Phase 14 records are outside Xinyu and are not batch candidates here.
 
-The policy produces this future-batch recommendation:
+The Phase 15C-6 review produced this historical future-batch recommendation:
 
 1. **下保农民暴动旧址（暴动举行地旧址） - outcome B, proposed future Point candidate.** Preserve the provisional WGS84 Point `[114.995570, 27.667620]`, `horizontalUncertaintyMetres: 150`, and `geometryMeaning: component-reference-point`; do not implement or publish it without explicit approval.
-2. **斜里遗址 - outcome C, proposed future shape candidate.** Preserve the published GPS centre and four 30-metre cardinal extensions as one explicitly project-created `generalized-reference-area`. Xieli remains subject to a separate misleading-risk decision on the unknown source datum, 500-metre horizontal uncertainty, and whether displaying a 60-metre square would be more misleading than useful.
+2. **斜里遗址 - outcome C, proposed future shape candidate at the Phase 15C-6 stop point.** Preserve the published GPS centre and four 30-metre cardinal extensions as one explicitly project-created `generalized-reference-area`. This recommendation was subsequently rejected by the [Phase 15C-7 misleading-risk review](../audits/phase-15c-7-xieli-misleading-risk-review.md), which recommends only a separately approved generalized reference Point and retains withholding as the fallback.
 
 This is a two-record batch, containing one new Point and one shape. It is smaller than the preferred three-to-eight new Points because no third unpublished Xinyu record currently has both a defensible public Point and a reproducibly reconciled WGS84 coordinate. The batch must not be padded with village centres, provider display centres, guessed centroids, or decorative geometry.
 
@@ -30,188 +36,35 @@ Principal supporting sources:
 - [Xinyu Museum provincial-unit index](https://www.xysmuseum.com/list_22/);
 - [public archival copy of the Jiangxi sixth-batch protection-range annex](https://commons.wikimedia.org/wiki/File%3A%E7%AC%AC%E5%85%AD%E6%89%B9%E6%B1%9F%E8%A5%BF%E7%9C%81%E6%96%87%E7%89%A9%E4%BF%9D%E6%8A%A4%E5%8D%95%E4%BD%8D%E4%BF%9D%E6%8A%A4%E8%8C%83%E5%9B%B4%E4%B8%80%E8%A7%88%E8%A1%A8.pdf), whose file record identifies the Jiangxi Provincial People's Government as author and preserves the original government-source references;
 - existing reviewed production decisions in `data/official-protected-heritage-public-locations.json`;
-- [the preserved Phase 15C-3 initial candidate audit](./phase-15c-3-first-real-official-geometry.md);
-- [the preserved Phase 15C-4 mixed-geometry re-audit](./phase-15c-4-xinyu-mixed-geometry-reaudit.md);
-- [the authoritative detailed Phase 15C-5 Xiabu evidence record](./phase-15c-5-xiabu-geometry-pilot.md).
+- [the preserved Phase 15C-3 initial candidate audit](../audits/phase-15c-3-first-real-official-geometry.md);
+- [the preserved Phase 15C-4 mixed-geometry re-audit](../audits/phase-15c-4-xinyu-mixed-geometry-reaudit.md);
+- [the authoritative detailed Phase 15C-5 Xiabu evidence record](../audits/phase-15c-5-xiabu-geometry-pilot.md).
 
 Provider evidence is supporting evidence, not official geometry. A failed or verification-blocked provider search is recorded as unverified, not as proof that a place is absent.
 
-## Primary outcome classes
+## Historical policy summary used by this audit
 
-Every designation or component receives exactly one primary outcome at each review date.
+Phase 15C-6 assigned one of five outcomes to each designation or named
+component: **A - Point now**, **B - Point now, shape later**, **C - Shape
+now**, **D - Point plus shape now**, or **E - Withhold**. Its evidence gate
+required resolved official identity and locality, an explicit representation
+meaning, reproducible coordinates or shape construction, recorded CRS and
+conversion, uncertainty and sensitivity review, and a finding that the map
+would not imply more precision or legal authority than the evidence supported.
 
-### A - Point now
+The review treated Points, lines, and areas as representations of a stable
+record or component identity, not as additional official records. A component
+could not stand in for its parent, and multiple representations would not
+inflate record counts. The Phase 15C-6 schema assessment also recorded that
+the existing one-feature-per-record publication pipeline would require stable
+`representationId` and `representationRole` fields plus separate record and
+representation counts before one identity could safely publish Point plus shape.
 
-Publish one Point when the heritage feature is naturally point-like, or when a credible public reference location is the only useful representation now and a future shape would not add a distinct heritage meaning.
-
-Minimum gate:
-
-- official identity, category, and locality match;
-- the Point meaning is explicit;
-- a reproducible source coordinate and source CRS are preserved;
-- any required deterministic conversion is documented and tested;
-- WGS84 comparison finds no serious mismatch;
-- uncertainty and sensitivity are accepted;
-- the popup explains what the Point does and does not mean.
-
-### B - Point now, shape later
-
-Publish one Point when a credible location is available now but the heritage record is naturally linear, areal, multipart, or compound and stronger evidence may later support a LineString, Polygon, MultiPolygon, or Point plus shape.
-
-The Point must remain semantically honest. A component reference, visitor reference, or entrance must not be described as a footprint, centroid, or legal boundary.
-
-### C - Shape now
-
-Publish one reproducible LineString, MultiLineString, Polygon, or MultiPolygon when the shape is already defensible and a separate Point adds no distinct meaning.
-
-The shape may be authority supplied or project created. Project-created geometry must:
-
-- follow a reproducible source rule or georeferenced evidence;
-- state its precision, source, construction method, review date, and uncertainty;
-- avoid a legal-boundary claim unless authority-supplied geometry supports it;
-- carry the project-geometry caution;
-- stop if uncertainty makes the rendered shape more misleading than useful.
-
-### D - Point plus shape now
-
-Publish both only when each representation is independently defensible and communicates a different meaning, such as an entrance plus site extent, a memorial plus battlefield area, or a surviving structure plus a wider compound.
-
-Two renderable geometries do not create two official records. Both must resolve to the same record or component identity.
-
-### E - Withhold
-
-Withhold when identity, component assignment, coordinate, extent, sensitivity, access implications, or misleading risk remains unacceptable. A null coordinate and a recorded evidence gap are a complete, valid audit result.
-
-## Representation meanings and minimum evidence
-
-### Point meanings
-
-| Meaning | Plain-language definition | Minimum evidence |
-| --- | --- | --- |
-| `heritage-feature-point` | A reviewed Point on or immediately associated with the heritage feature itself. It is not automatically an exact centroid. | Strong record identity; feature-specific location evidence; reconciled WGS84 coordinate; uncertainty consistent with the feature scale. |
-| `component-reference-point` | A public reference associated with one named component of a multipart designation. | Official component identity; evidence directly linking the mapped place to that component; no substitution for the parent or another component. |
-| `visitor-reference-point` | A public-facing venue or arrival reference associated with the record; it may not coincide with the protected fabric. | Official identity/locality plus a visitor venue, POI, entrance, museum, or interpretation-site relationship; popup explicitly separates venue and fabric. |
-| `entrance-reference-point` | A reviewed public entrance or access point. | Entrance-specific evidence such as an authoritative visitor map, clearly identified gate, or independently corroborated entrance POI. |
-| `generalized-reference-point` | A deliberately generalized public reference used where a more precise point should not be published. | A defensible source location, justified generalization method/radius, public explanation, and sensitivity approval. |
-
-`protected-building-centroid` is not an approved meaning unless the protected building footprint is identified and a reproducible centroid is calculated from that footprint.
-
-### Line and area meanings
-
-| Meaning | Plain-language definition | Minimum evidence |
-| --- | --- | --- |
-| `approximate-line` | A project line approximating a short physical alignment. | Identified endpoints or centreline evidence, source scale/CRS, reproducible construction, and uncertainty smaller enough to make the line useful. |
-| `heritage-reference-line` | A reviewed reference alignment that communicates the heritage route or feature without claiming a legal line. | Institutional or official alignment evidence, georeferenced control, provenance, and an explicit non-boundary caution. |
-| `approximate-site-footprint` | A project approximation of the feature or site footprint. | Positive identification of the feature edges in georeferenced evidence; reproducible tracing; no reliance on area totals alone. |
-| `approximate-compound` | A project approximation of a known heritage compound. | Compound identity and perimeter evidence; distinct from a single building or village parcel; source scale and uncertainty recorded. |
-| `generalized-reference-area` | A deliberately simplified area indicating where an extensive or uncertain record is situated. | A source-derived centre/extent or reproducible generalization rule; sensitivity approval; prominent non-boundary wording. |
-| `uncertainty-area` | An area expressing spatial uncertainty rather than heritage extent. | A documented uncertainty model and a UI that cannot be mistaken for the feature or legal boundary. |
-| `reviewed-boundary` | An authority-supplied or authority-confirmed boundary reproduced without substantive reinterpretation. | Authority-supplied vertices or GIS, explicit CRS, provenance, licence/public-use basis, and deterministic transformation where needed. |
-
-A map-provider POI may support a Point after corroboration. It does not, by itself, support a legal boundary or exact footprint. Satellite imagery may be traced only when other evidence connects the visible feature to the official record and the result is reproducible.
-
-## Point-versus-shape decision tree
-
-1. **Is official record or component identity unresolved?** If yes, outcome E.
-2. **Is a public location sensitive, unsafe, or likely to enable harm?** If exact display is unacceptable, test a justified generalized reference; otherwise outcome E.
-3. **Is there a reproducible, source-supported shape?**
-   - no: test a Point;
-   - yes: decide whether the shape communicates the complete useful meaning.
-4. **Is there a credible Point with an explicit meaning and reconciled WGS84 coordinate?**
-   - no Point, defensible shape: C;
-   - Point only and no meaningful future shape: A;
-   - Point now with meaningful future shape: B;
-   - independently meaningful Point and shape: D;
-   - neither: E.
-5. **Would the geometry look more exact than its evidence?** If yes, generalize, enlarge uncertainty, downgrade the claim, or withhold.
-6. **Would an area total, offset rule, building outline, parcel, road, ditch, reservoir edge, or imagery feature need an unsupported identity assumption?** If yes, do not construct the shape.
-
-## Evidence and conversion requirements
-
-Every future decision must record:
-
-- official name, category, locality, designation/component relationship, and source;
-- institutional description or another independent identity check;
-- Gaode, Baidu, and Google evidence where useful, including stable identifiers and URLs;
-- Google Earth current/historical imagery only where it materially answers a spatial question;
-- photographs and what they do or do not identify;
-- original coordinate, capture method, source CRS, conversion algorithm, output precision, and conversion test;
-- provider-to-provider WGS84 comparison, pairwise distances, cluster spread, and selection rationale;
-- shape construction steps, source scale/CRS, and reproducibility;
-- sensitivity, public access implications, uncertainty, and misleading risk.
-
-GCJ-02 and BD-09 values must never be relabelled WGS84. Baidu `@x,y` URL display values are not longitude/latitude. They may be used only after proper Baidu Mercator decoding and only when provider-supported evidence establishes that they represent the POI rather than a shifted display centre.
-
-Coordinates must not be silently averaged. Averaging is permitted only where all candidates represent the same semantic point, have comparable quality, and a documented estimator and uncertainty model justify it.
-
-## Upgrade and revision rules
-
-Allowed transitions include:
-
-- A Point now → D Point plus shape later;
-- A Point now → C Shape later when the Point has no longer-useful distinct meaning;
-- B Point now, shape later → D Point plus shape;
-- B Point now, shape later → C Shape later when the shape supersedes the Point's meaning;
-- E Withhold → A or B Point;
-- E Withhold → C Shape;
-- C Shape → revised C Shape after stronger evidence.
-
-Every transition must:
-
-1. retain the stable official record and component identity;
-2. retain prior provenance and review history;
-3. add the new representation as a reviewed revision;
-4. state why the previous representation was retained, deprecated, or superseded;
-5. avoid silent coordinate or geometry replacement;
-6. preserve the earlier source coordinate and conversion record even when a provider pin changes.
-
-## Record identity, component relationships, and counting
-
-Policy:
-
-- one official designation counts once at designation level;
-- one separately named official component counts once at component level;
-- Point plus shape does not increase either count;
-- search and filters operate on record/component identity, not feature count;
-- activating any representation opens the same record information;
-- a component must never masquerade as its parent designation;
-- parent/component relationships must be explicit;
-- UI may report both “official records visible” and “map representations visible” when those numbers differ.
-
-For Xiabu:
-
-- parent designation: 下保农民暴动旧址, `6-5-321`;
-- component 1: 暴动举行地旧址;
-- component 2: 暴动会议地旧址;
-- the proposed Point belongs only to component 1;
-- neither component may be used as the parent designation's centroid;
-- component 1 Point plus a future component 1 shape still counts as one component.
-
-### Current-schema assessment
-
-The current geometry vocabulary and renderer already validate and present Point, line, and area types with provenance, precision, uncertainty, and project-geometry cautions.
-
-The current publication pipeline does **not** cleanly support multiple representations of one record:
-
-- public-location decisions are keyed uniquely by `recordId`;
-- the generator emits exactly one feature per decision and always constructs a Point;
-- each GeoJSON feature uses `feature.id === properties.recordId`;
-- duplicate feature IDs are rejected;
-- `metadata.featureCount + excludedRecordCount === sourceRecordCount`;
-- the visible feature count therefore assumes one feature equals one record.
-
-Smallest future extension, not implemented here:
-
-1. retain `recordId` as the stable record/component identity;
-2. add stable `representationId` and `representationRole`;
-3. allow one record decision to contain a `representations` array, or allow multiple geometry decisions sharing `recordId`;
-4. use `representationId` as GeoJSON `feature.id`, with `properties.recordId` shared;
-5. add `parentRecordId` and `componentId` only where a parent/component relation exists;
-6. record `recordCount`, `representationCount`, and `excludedRecordCount` separately;
-7. deduplicate search, filter results, visible-record counts, and popup identity by `recordId`;
-8. validate that multiple representations have different meanings when outcome D is used.
-
-The existing five Point records need no migration until a second representation is proposed.
+Those rules explain the historical table and batch below. Their reusable and
+current form now lives only in the standalone
+[official-record publication policy](../policy/official-record-publication-policy.md).
+The standalone policy controls all future decisions, upgrades, provenance,
+uncertainty, sensitivity, misleading-risk, and parent/component handling.
 
 ## Complete Xinyu provincial re-audit
 
@@ -301,9 +154,9 @@ Required popup meaning:
 
 The annex defines east/west walls, north/south eave drip lines, offsets, and a 283.2 m² protection area. It does not identify the correct building in georeferenced evidence. The rule therefore cannot be spatially constructed. Do not publish a Polygon, MultiPolygon, Point plus shape, or trace from visible parcel/building outlines.
 
-## Recommended first publication batch
+## Historical recommended first publication batch
 
-### Proposed future batch candidates
+### Proposed future batch candidates at the Phase 15C-6 stop point
 
 | Record | Exact future representation | Coordinate or draft geometry | Meaning, precision, uncertainty | Provenance and category | Popup caution | Strength and implementation risk |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -316,6 +169,10 @@ Batch rules:
 - do not add a Xieli centre Point;
 - do not count the two representations as more than two official component/record identities;
 - if Xieli fails final misleading-risk review, reduce the batch to Xiabu only rather than replacing it with a weaker candidate.
+
+The later Phase 15C-7 review did reject the Xieli shape on misleading-risk
+grounds. This table remains unchanged as the Phase 15C-6 proposal; it is not a
+current implementation recommendation.
 
 ### Reserve candidates needing one more evidence cycle
 
@@ -372,4 +229,5 @@ Production remains unchanged:
 
 Rollback for this phase is documentation-only: remove this file. No data regeneration, application rollback, deployment rollback, or production record change is required.
 
-Do not implement or publish Xiabu, stage, commit, push, open a pull request, or begin a production batch without explicit approval.
+Do not implement or publish Xiabu or Xieli, stage, commit, push, open a pull
+request, or begin a production batch without explicit approval.

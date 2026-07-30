@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="930" viewBox="0 0 1200 930" role="img" aria-labelledby="title desc">
+  <title id="title">Xieli Site misleading-risk prototype comparison</title>
+  <desc id="desc">Nine research-only panels compare a 60 metre square, a 500 metre uncertainty area, and a generalized point at regional, neighbourhood, and site zooms.</desc>
+  <defs>
+    <pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse">
+      <rect width="42" height="42" fill="#eef2e9"/>
+      <path d="M42 0H0V42" fill="none" stroke="#d9e1d5" stroke-width="1"/>
+    </pattern>
+    <style>
+      .heading{font:700 22px system-ui,sans-serif;fill:#fff}.intro{font:13px system-ui,sans-serif;fill:#d7e7df}
+      .rowtitle{font:700 17px system-ui,sans-serif;fill:#242824}.rowsub{font:12px system-ui,sans-serif;fill:#5a625c}
+      .panel{fill:#fff;stroke:#c7cec8}.map{fill:url(#grid)}.road{stroke:#dedbd2;stroke-width:18}
+      .badge{font:700 10px system-ui,sans-serif;fill:#29302b}.small{font:10px system-ui,sans-serif;fill:#59605b}
+      .note{font:10px system-ui,sans-serif;fill:#3f443f}.square{fill:#e9874b24;stroke:#b95720;stroke-width:2.5;stroke-dasharray:6 4}
+      .halo{fill:#956bb622;stroke:#79539a;stroke-width:2.5;stroke-dasharray:6 4}.point{fill:#fff;stroke:#a64819;stroke-width:3}
+      .warning{fill:#fff7e3;stroke:#d0ad57}.scale{stroke:#343934;stroke-width:3}
+    </style>
+  </defs>
+  <rect width="1200" height="930" fill="#f3f4f1"/>
+  <rect width="1200" height="92" fill="#17372d"/>
+  <text x="25" y="34" class="heading">Xieli Site — research-only misleading-risk prototypes</text>
+  <text x="25" y="59" class="intro">Published centre + 30 m cardinal rule · theoretical square 60 × 60 m · datum unspecified · horizontal uncertainty 500 m</text>
+  <text x="25" y="78" class="intro">Abstract scale simulation; no panel is a production map, archaeological footprint, or legal boundary.</text>
+
+  <text x="25" y="124" class="rowtitle">Prototype 1 — 60 × 60 m generalized reference-area</text>
+  <text x="25" y="143" class="rowsub">Dashed low-opacity square; uncertainty appears only in wording.</text>
+  <text x="25" y="405" class="rowtitle">Prototype 2 — 500 m uncertainty area</text>
+  <text x="25" y="424" class="rowsub">Purple area means possible positional error, not heritage extent.</text>
+  <text x="25" y="686" class="rowtitle">Prototype 3 — generalized reference Point</text>
+  <text x="25" y="705" class="rowsub">Hollow reference marker; datum and 500 m uncertainty remain explicit.</text>
+
+  <!-- Row 1 -->
+  <g transform="translate(25 155)">
+    <rect class="panel" width="370" height="225" rx="8"/><rect class="map" x="1" y="1" width="368" height="166" rx="7"/>
+    <path class="road" d="M25 18L350 150M240 0L175 166"/><text x="12" y="20" class="badge">City / regional · z12</text>
+    <path class="square" d="M184 81h2v2h-2z"/><rect class="warning" x="10" y="126" width="350" height="32" rx="5"/>
+    <text x="17" y="141" class="note">60 m = 1.8 px; nearly invisible.</text><text x="17" y="153" class="note">500 m uncertainty radius = 14.8 px.</text>
+    <text x="12" y="190" class="small">Low usefulness; warning carries more meaning than geometry.</text>
+  </g>
+  <g transform="translate(415 155)">
+    <rect class="panel" width="370" height="225" rx="8"/><rect class="map" x="1" y="1" width="368" height="166" rx="7"/>
+    <path class="road" d="M25 18L350 150M240 0L175 166"/><text x="12" y="20" class="badge">Neighbourhood · z15</text>
+    <rect class="square" x="178" y="76" width="14" height="14"/><rect class="warning" x="10" y="126" width="350" height="32" rx="5"/>
+    <text x="17" y="141" class="note">60 m = 14.2 px; reads as a precise small footprint.</text><text x="17" y="153" class="note">500 m uncertainty radius = 118.3 px.</text>
+    <text x="12" y="190" class="small">High footprint/legal-boundary confusion risk.</text>
+  </g>
+  <g transform="translate(805 155)">
+    <rect class="panel" width="370" height="225" rx="8"/><rect class="map" x="1" y="1" width="368" height="166" rx="7"/>
+    <path class="road" d="M25 18L350 150M240 0L175 166"/><text x="12" y="20" class="badge">Site level · z18</text>
+    <rect class="square" x="128" y="27" width="114" height="114"/><rect class="warning" x="10" y="126" width="350" height="32" rx="5"/>
+    <text x="17" y="141" class="note">60 m = 113.5 px; visually dominant and exact-looking.</text><text x="17" y="153" class="note">500 m uncertainty radius = 946.2 px, outside view.</text>
+    <text x="12" y="190" class="small">Fails visual-precision and non-misleading criteria.</text>
+  </g>
+
+  <!-- Row 2 -->
+  <g transform="translate(25 436)">
+    <rect class="panel" width="370" height="225" rx="8"/><rect class="map" x="1" y="1" width="368" height="166" rx="7"/>
+    <path class="road" d="M25 18L350 150M240 0L175 166"/><text x="12" y="20" class="badge">City / regional · z12</text>
+    <circle class="halo" cx="185" cy="83" r="15"/><circle class="point" cx="185" cy="83" r="7"/>
+    <rect class="warning" x="10" y="126" width="350" height="32" rx="5"/><text x="17" y="141" class="note">Uncertainty remains legible and geographically useful.</text><text x="17" y="153" class="note">It can still be mistaken for site extent without a legend.</text>
+    <text x="12" y="190" class="small">Moderate usefulness; interpretation depends on wording.</text>
+  </g>
+  <g transform="translate(415 436)">
+    <rect class="panel" width="370" height="225" rx="8"/><rect class="map" x="1" y="1" width="368" height="166" rx="7"/>
+    <path class="road" d="M25 18L350 150M240 0L175 166"/><text x="12" y="20" class="badge">Neighbourhood · z15</text>
+    <circle class="halo" cx="185" cy="83" r="118"/><circle class="point" cx="185" cy="83" r="7"/>
+    <rect class="warning" x="10" y="126" width="350" height="32" rx="5"/><text x="17" y="141" class="note">Uncertainty area dominates the map and nearby context.</text><text x="17" y="153" class="note">The circle is not the archaeological site.</text>
+    <text x="12" y="190" class="small">High risk of extent or protection-zone confusion.</text>
+  </g>
+  <g transform="translate(805 436)">
+    <rect class="panel" width="370" height="225" rx="8"/><rect x="1" y="1" width="368" height="166" rx="7" fill="#e4deeb"/>
+    <path class="road" d="M25 18L350 150M240 0L175 166"/><text x="12" y="20" class="badge">Site level · z18</text>
+    <circle class="point" cx="185" cy="83" r="7"/><rect class="warning" x="10" y="126" width="350" height="32" rx="5"/>
+    <text x="17" y="141" class="note">500 m radius is 946.2 px; boundary is outside view.</text><text x="17" y="153" class="note">Tint covers the entire panel and stops locating anything.</text>
+    <text x="12" y="190" class="small">Fails usefulness and visual-hierarchy criteria.</text>
+  </g>
+
+  <!-- Row 3 -->
+  <g transform="translate(25 717)">
+    <rect class="panel" width="370" height="190" rx="8"/><rect class="map" x="1" y="1" width="368" height="132" rx="7"/>
+    <path class="road" d="M25 18L350 120M240 0L175 132"/><text x="12" y="20" class="badge">City / regional · z12</text><circle class="point" cx="185" cy="67" r="8"/>
+    <text x="12" y="151" class="small">Useful regional reference; no footprint or boundary claim.</text><text x="12" y="167" class="small">Must say: generalized, datum unresolved, uncertainty 500 m.</text>
+  </g>
+  <g transform="translate(415 717)">
+    <rect class="panel" width="370" height="190" rx="8"/><rect class="map" x="1" y="1" width="368" height="132" rx="7"/>
+    <path class="road" d="M25 18L350 120M240 0L175 132"/><text x="12" y="20" class="badge">Neighbourhood · z15</text><circle class="point" cx="185" cy="67" r="8"/>
+    <text x="12" y="151" class="small">More honest than an area, but marker still understates uncertainty.</text><text x="12" y="167" class="small">Distinct hollow styling and persistent limitation text required.</text>
+  </g>
+  <g transform="translate(805 717)">
+    <rect class="panel" width="370" height="190" rx="8"/><rect class="map" x="1" y="1" width="368" height="132" rx="7"/>
+    <path class="road" d="M25 18L350 120M240 0L175 132"/><text x="12" y="20" class="badge">Site level · z18</text><circle class="point" cx="185" cy="67" r="8"/>
+    <text x="12" y="151" class="small">Point looks exact at site zoom; wording must reject exactness.</text><text x="12" y="167" class="small">No site-level footprint, entrance, or legal-boundary inference.</text>
+  </g>
+</svg>
