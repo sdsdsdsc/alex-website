@@ -248,7 +248,7 @@ Rules impact:
 
 ## 6. Phase 12 Verified Behavior
 
-Based on `docs/phase-12-final-verification-record.md`, the following behavior was verified at the time of verification:
+Based on `docs/audits/phase-12-final-verification-record.md`, the following behavior was verified at the time of verification:
 
 - public email/password sign-in worked;
 - Account A saw only Account A's nomination;

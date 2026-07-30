@@ -26,7 +26,7 @@ Reason:
 
 Related existing evidence:
 
-- `docs/phase-12-final-verification-record.md` records a prior source-level harness result of `259/259`;
+- `docs/audits/phase-12-final-verification-record.md` records a prior source-level harness result of `259/259`;
 - this report does not independently rerun or re-prove that count.
 
 ## 3. Engine Test Coverage Summary

@@ -27,8 +27,8 @@ This note records the small, reversible cleanup completed after the retired-page
 
 - `docs/README.md`
   Added links to:
-  - `docs/firestore-rules-sync-and-verification-plan.md`
-  - `docs/retired-page-navigation-cleanup-plan.md`
+  - `docs/plans/firestore-rules-sync-and-verification-plan.md`
+  - `docs/plans/retired-page-navigation-cleanup-plan.md`
 
 ## Visible page wording updated
 

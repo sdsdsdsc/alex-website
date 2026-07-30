@@ -1,5 +1,17 @@
 # Phase 13A Media, Evidence, and Rights Model
 
+## Historical status
+
+This document is preserved as the historical Phase 13A planning and design
+record for media, evidence, source credit, rights, visibility, retention, and
+Storage backup. It is not a controlling current policy. Later Phase 13
+implementation and verification records document the bounded work that followed,
+including the
+[media-rights metadata completion note](../audits/phase-13c-media-rights-metadata-completion-note.md).
+Reusable rights principles may be extracted into a dedicated policy only after
+a separate review; this historical plan does not perform or approve that
+extraction.
+
 This document sets the planning model for Phase 13 media, evidence, source credit, copyright, consent, visibility, retention, and Storage backup.
 
 It is a planning document only. It does not change application behavior, Firestore rules, Firebase Storage structure, export behavior, or live data.

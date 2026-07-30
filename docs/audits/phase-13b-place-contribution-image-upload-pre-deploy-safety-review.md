@@ -10,8 +10,8 @@ This note is a pre-deploy safety review only. No Firestore rules, Storage rules,
 
 PR #37 currently changes:
 
-- `docs/phase-13b-place-contribution-image-upload-plan.md`
-- `docs/phase-13b-place-contribution-image-upload-audit.md`
+- `docs/plans/phase-13b-place-contribution-image-upload-plan.md`
+- `docs/audits/phase-13b-place-contribution-image-upload-audit.md`
 - `firestore.rules`
 - `storage.rules`
 - `heritage-engine/place-contributions.js`

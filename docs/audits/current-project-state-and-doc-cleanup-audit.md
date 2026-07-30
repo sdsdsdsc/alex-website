@@ -28,9 +28,9 @@ Based on the inspected docs and source:
 
 ### Evidence that supports this
 
-- `docs/phase-12-final-verification-record.md` records live functional verification for Phase 12.
-- `docs/phase-13a-media-evidence-rights-model.md` exists and captures the current media/rights model.
-- `docs/phase-13b-storage-backup-media-audit-plan.md` exists and captures the current Storage backup/audit plan.
+- `docs/audits/phase-12-final-verification-record.md` records live functional verification for Phase 12.
+- `docs/plans/phase-13a-media-evidence-rights-model.md` preserves the historical media/rights planning model.
+- `docs/plans/phase-13b-storage-backup-media-audit-plan.md` exists and captures the current Storage backup/audit plan.
 - `my-nominations.js`, `public-auth.js`, `nominate-place.js`, `heritage-engine/nominations.js`, `manage-nominations.html`, and `firestore.rules` all reflect the signed-in nomination ownership model.
 
 ### Conflicts or lagging documentation
@@ -126,21 +126,21 @@ Based on the inspected docs and source:
 | `docs/README.md` | Docs index | Current | Now functions as the current documentation index and correctly foregrounds current verification, planning, reference, maintenance, and archive sections. | Keep as the primary docs index. |
 | `docs/project-status-checkpoint.md` | Main current-state checkpoint | Current with caveats | Strong overall orientation doc, but some “next phase” framing lags behind later completed verification/planning work. | Keep current, then revise in a later reset phase. |
 | `docs/site-structure.md` | System/page/data structure | Current with caveats | Mostly accurate for active pages and collections, but includes older roadmap/future wording and pre-Phase-12 assumptions. | Keep, then tighten to current-state-only language later. |
-| `docs/phase-12-final-verification-record.md` | Phase 12 verification record | Current | Best source for Phase 12 functional verification status. | Keep as a current milestone record. |
-| `docs/phase-13a-media-evidence-rights-model.md` | Media/rights planning | Current | New planning baseline for media, consent, visibility, and rights. | Keep current. |
-| `docs/phase-13b-storage-backup-media-audit-plan.md` | Storage backup and audit planning | Current | New planning baseline for Storage backup and orphan-file audit. | Keep current. |
+| `docs/audits/phase-12-final-verification-record.md` | Phase 12 verification record | Current | Best source for Phase 12 functional verification status. | Keep as a current milestone record. |
+| `docs/plans/phase-13a-media-evidence-rights-model.md` | Media/rights planning | Historical planning record | Preserves the Phase 13A planning baseline for media, consent, visibility, and rights. | Keep as historical planning. |
+| `docs/plans/phase-13b-storage-backup-media-audit-plan.md` | Storage backup and audit planning | Current | New planning baseline for Storage backup and orphan-file audit. | Keep current. |
 | `docs/release-smoke-test-matrix.md` | Release manual test matrix | Current | Still relevant for release assurance. | Keep current. |
-| `docs/firestore-rules-verification-plan.md` | Rules verification plan | Current | Still relevant because `firestore.rules` is a local review draft. | Keep current. |
+| `docs/plans/firestore-rules-verification-plan.md` | Rules verification plan | Current | Still relevant because `firestore.rules` is a local review draft. | Keep current. |
 | `docs/release-rollback-runbook.md` | Rollback/recovery plan | Current | Still relevant for controlled release recovery. | Keep current. |
-| `docs/archive/phase-12-design/phase-12a-public-account-model.md` | Phase 12 design/spec | Current historical design | Good design rationale, but no longer the latest status source. | Keep, but classify as design-history/reference later. |
-| `docs/phase-12e-auth-rules-release-checklist.md` | Phase 12 release checklist | Current with caveats | Still useful, but some items are now partly verified by later records. | Keep, later annotate completed vs still-pending items. |
-| `docs/phase-11a-live-readonly-backup-session-note.md` | Phase 11A session record | Current historical record | Still valid evidence for backup boundaries. | Keep as historical evidence. |
+| `docs/archive/phase-12a-public-account-model.md` | Phase 12 design/spec | Historical architecture/design | Good design rationale, but no longer the latest status source. | Keep as design-history/reference. |
+| `docs/plans/phase-12e-auth-rules-release-checklist.md` | Phase 12 release checklist | Current with caveats | Still useful, but some items are now partly verified by later records. | Keep, later annotate completed vs still-pending items. |
+| `docs/audits/phase-11a-live-readonly-backup-session-note.md` | Phase 11A session record | Current historical record | Still valid evidence for backup boundaries. | Keep as historical evidence. |
 | `docs/archive/phase-11a/phase-11a-live-vs-local-audit-worksheet.md` | Phase 11A audit worksheet | Archive candidate | Historical audit artifact, no longer a primary current-state doc. | Keep archived. |
 | `docs/archive/phase-11a/phase-11a-communityplaces-user-approval-proposal.md` | Phase 11A approval proposal | Archive candidate | Historical process document from an earlier stage. | Keep archived. |
 | `docs/archive/phase-11a/phase-11a-cleanup-closeout.md` | Phase 11A closeout | Outdated historical record | Still valid historically, but its “recommended next phase” is no longer current. | Keep as archived history. |
 | `docs/archive/old-roadmaps/alex-heritage-engine-roadmap.md` | Engine roadmap | Outdated / duplicate | Useful background, but much of the “future engine modules” work is already implemented and duplicated by `heritage-engine/README.md`. | Keep as archived history. |
-| `docs/local-heritage-listing-guidance.md` | Reference guidance | Current reference | Background/reference doc, not a status doc. | Keep as reference. |
-| `docs/archive/reference-experiments/cambridgeshire-local-heritage-list-skill.md` | Reference/inspiration | Archived reference | Appears more like supporting inspiration than active project instruction. | Keep archived for reference. |
+| `docs/policy/local-heritage-listing-guidance.md` | Reference guidance | Current reference | Background/reference doc, not a status doc. | Keep as reference. |
+| `docs/research/cambridgeshire-local-heritage-list-skill.md` | External reference/inspiration | Research guidance | Supporting inspiration rather than controlling project instruction. | Keep as research guidance. |
 | `heritage-engine/README.md` | Engine structure and safety boundary | Current with caveats | Mostly accurate, but its “Future Modules” section is partly stale because those modules now exist. | Keep, then update to remove stale future-module wording. |
 | `maintenance/README-gallery-cleanup.md` | Maintenance cleanup guidance | Current maintenance reference | Still relevant for maintenance safety, but not a current product-state doc. | Keep in maintenance; do not mix with current-state docs. |
 | `scripts/README-community-places-import.md` | Import utility doc | Current maintenance reference | Still relevant for maintenance/import, not normal feature work. | Keep as maintenance-only reference. |
@@ -153,9 +153,9 @@ Based on the inspected docs and source:
 The following documentation conflicts or lags were found:
 
 - `docs/README.md` still emphasizes older orientation and Phase 11A summaries, but does not surface:
-  - `docs/phase-12-final-verification-record.md`
-  - `docs/phase-13a-media-evidence-rights-model.md`
-  - `docs/phase-13b-storage-backup-media-audit-plan.md`
+  - `docs/audits/phase-12-final-verification-record.md`
+  - `docs/plans/phase-13a-media-evidence-rights-model.md`
+  - `docs/plans/phase-13b-storage-backup-media-audit-plan.md`
 
 - `docs/project-status-checkpoint.md` says the practical position is that Phase 12 source work is complete and release assurance is the highest-value next step. That was reasonable earlier, but the repo now also contains:
   - a Phase 12 final verification record;
@@ -229,7 +229,7 @@ The following documentation conflicts or lags were found:
   - `upload-article.html`
   - `maintenance/audit-article-storage.mjs`
   - `maintenance/delete-selected-article-files.mjs`
-  - `docs/phase-13b-storage-backup-media-audit-plan.md`
+  - `docs/plans/phase-13b-storage-backup-media-audit-plan.md`
 - Severity: `high`
 - Why it matters:
   - Article HTML and images are uploaded to Storage, but deletion of Firestore records does not by itself guarantee Storage cleanup.
