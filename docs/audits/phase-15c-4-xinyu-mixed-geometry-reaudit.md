@@ -2,7 +2,7 @@
 
 ## Historical status
 
-This document is preserved as the Phase 15C-4 mixed-geometry re-audit record. Its classification letters and single-Xieli batch recommendation reflect the policy used at that time and are superseded by [Phase 15C-6](./phase-15c-6-official-record-publication-policy-and-batch-plan.md). [Phase 15C-5](./phase-15c-5-xiabu-geometry-pilot.md) is the authoritative detailed Xiabu evidence record. Xiabu remains only a proposed future Point candidate and must not be implemented or published without explicit approval.
+This document is preserved as the Phase 15C-4 mixed-geometry re-audit record. Its classification letters and single-Xieli batch recommendation reflect the policy used at that time and are superseded by the historical [Phase 15C-6 batch plan](../plans/phase-15c-6-official-record-publication-policy-and-batch-plan.md), the later Xieli review, and the standalone [official-record publication policy](../policy/official-record-publication-policy.md). [Phase 15C-5](./phase-15c-5-xiabu-geometry-pilot.md) is the authoritative detailed Xiabu evidence record. Xiabu remains only a proposed future Point candidate and must not be implemented or published without explicit approval.
 
 ## Outcome
 
@@ -121,8 +121,8 @@ The Xieli DMS centre transcribes arithmetically to approximately `[114.919777778
 - Sixth-batch Xinyu promotion notice: <https://www.xysmuseum.com/183.html>
 - Municipal Yangtiangang description: <https://m.thepaper.cn/newsDetail_forward_17977164>
 - Current official Xinyu register: <https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml>
-- Existing Dagu Ling evidence review: [phase-14c-coordinate-evidence-and-review.md](./phase-14c-coordinate-evidence-and-review.md)
-- Existing published Xinyu Point evidence: [phase-15b-4-xinyu-official-marker-expansion.md](./phase-15b-4-xinyu-official-marker-expansion.md)
+- Existing Dagu Ling evidence review: [phase-14c-coordinate-evidence-and-review.md](../phase-14c-coordinate-evidence-and-review.md)
+- Existing published Xinyu Point evidence: [phase-15b-4-xinyu-official-marker-expansion.md](../phase-15b-4-xinyu-official-marker-expansion.md)
 
 Gaode is treated as provider evidence, not official geometry. Any new Gaode Point must preserve the original GCJ-02 coordinate and POI identity, use the existing deterministic inverse method, and undergo independent WGS84 locality review. This audit does not infer absence from a failed interactive search; it records unverified Gaode evidence as an evidence gap.
 
@@ -147,4 +147,4 @@ Rollback for this audit is documentation-only. No data regeneration or applicati
 
 ## Stop point
 
-No implementation, staging, commit, push, pull request, deployment, or data publication was performed at this historical stop point. The former single-Xieli next-step recommendation is superseded by the controlling Phase 15C-6 policy and batch plan.
+No implementation, staging, commit, push, pull request, deployment, or data publication was performed at this historical stop point. The former single-Xieli next-step recommendation is superseded by the historical Phase 15C-6 plan, Phase 15C-7 decision, and controlling [official-record publication policy](../policy/official-record-publication-policy.md).

@@ -20,7 +20,7 @@ No KML, KMZ, draft GeoJSON, Polygon, or MultiPolygon was created. The available 
 
 This audit changes no production source data, public-location decision, generated GeoJSON, application code, test, or live-map behavior.
 
-This document is the authoritative detailed Xiabu evidence record. [Phase 15C-6](./phase-15c-6-official-record-publication-policy-and-batch-plan.md) controls the current publication policy and proposed future batch; neither document approves implementation or publication.
+This document is the authoritative detailed Xiabu evidence record. [Phase 15C-6](../plans/phase-15c-6-official-record-publication-policy-and-batch-plan.md) preserves the historical proposed batch, while the standalone [official-record publication policy](../policy/official-record-publication-policy.md) controls current decisions. None of these documents approves implementation or publication.
 
 ## Official-source verification
 
