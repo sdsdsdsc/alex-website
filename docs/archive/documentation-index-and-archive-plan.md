@@ -1,5 +1,13 @@
 # Documentation Index and Archive Plan
 
+## Historical status
+
+This plan preserves the documentation-control approach used before the
+repository-wide organization pass. It is no longer controlling guidance. The
+current placement conventions are maintained in [docs/README.md](../README.md),
+and the resulting classification and moves are recorded in the
+[repository-wide documentation organization audit](../audits/repository-wide-documentation-organization-audit.md).
+
 ## 1. Purpose
 
 This document creates a documentation control plan before further feature work.
@@ -114,7 +122,7 @@ The following is the recommended current docs index for this project.
 
 ### Start here
 
-- `docs/current-project-state-and-doc-cleanup-audit.md`
+- `docs/audits/current-project-state-and-doc-cleanup-audit.md`
   Use this as the reset overview before more feature work. It gives the best current-state cleanup summary.
 
 - `docs/project-status-checkpoint.md`
@@ -125,27 +133,27 @@ The following is the recommended current docs index for this project.
 
 ### Current release and safety docs
 
-- `docs/phase-12-final-verification-record.md`
+- `docs/audits/phase-12-final-verification-record.md`
   Use this as the strongest current proof that Phase 12 is functionally verified for the current project stage.
 
 - `docs/release-smoke-test-matrix.md`
   Use this for repeatable pre-release public/admin manual verification.
 
-- `docs/firestore-rules-verification-plan.md`
+- `docs/plans/firestore-rules-verification-plan.md`
   Use this for controlled rules verification because local `firestore.rules` is still a review draft.
 
 - `docs/release-rollback-runbook.md`
   Use this for controlled rollback planning if release, rules, auth, nominations, or export behavior break.
 
-- `docs/phase-12e-auth-rules-release-checklist.md`
+- `docs/plans/phase-12e-auth-rules-release-checklist.md`
   Use this as a Phase 12-specific release checklist, but treat it as a supporting checklist rather than the top-level current-state authority.
 
 ### Current planning docs
 
-- `docs/phase-13a-media-evidence-rights-model.md`
+- `docs/plans/phase-13a-media-evidence-rights-model.md`
   Use this as the current planning baseline for media, evidence, rights, and visibility.
 
-- `docs/phase-13b-storage-backup-media-audit-plan.md`
+- `docs/plans/phase-13b-storage-backup-media-audit-plan.md`
   Use this as the current planning baseline for Storage backup, inventory, orphan-file auditing, and retention planning.
 
 ### Engine/reference docs
@@ -153,15 +161,15 @@ The following is the recommended current docs index for this project.
 - `heritage-engine/README.md`
   Use this for the engine layer boundary and module purpose, while noting it needs a later cleanup pass.
 
-- `docs/archive/phase-12-design/phase-12a-public-account-model.md`
+- `docs/archive/phase-12a-public-account-model.md`
   Use this as Phase 12 design rationale, not as the primary current status document.
 
-- `docs/local-heritage-listing-guidance.md`
+- `docs/policy/local-heritage-listing-guidance.md`
   Use this as a domain/reference guide.
 
 ### Historical milestone records still worth keeping visible for now
 
-- `docs/phase-11a-live-readonly-backup-session-note.md`
+- `docs/audits/phase-11a-live-readonly-backup-session-note.md`
   Use this as a historical evidence record for Firestore backup boundaries and Storage limitation notes.
 
 ## 4. Docs That Need Updating Later
@@ -172,11 +180,11 @@ The following is the recommended current docs index for this project.
 | `docs/project-status-checkpoint.md` | “Actual current phase” and “next immediate phase” framing lags behind the newer final verification and reset planning state. | Revise so it acknowledges Phase 12 functional verification and the reset-phase sequence now underway. | `high` |
 | `docs/site-structure.md` | Still describes public nominations partly as future workflow and contains older future-roadmap language. | Update to reflect the now-implemented signed-in nomination flow and separate current-state sections from future ideas more clearly. | `high` |
 | `heritage-engine/README.md` | “Future Modules” section still lists modules that already exist. Some phase-history wording is now stale. | Remove stale future-module language and recast the file as the current engine boundary/reference doc. | `high` |
-| `docs/phase-12e-auth-rules-release-checklist.md` | Still contains items that are now partly covered by later verification records. | Annotate which items are already functionally verified and which still depend on rules/deployment assurance. | `medium` |
-| `docs/archive/phase-12-design/phase-12a-public-account-model.md` | Still reads as a pre-implementation design/spec only. | Keep the design intent, but later label it more explicitly as a historical design baseline. | `medium` |
+| `docs/plans/phase-12e-auth-rules-release-checklist.md` | Still contains items that are now partly covered by later verification records. | Annotate which items are already functionally verified and which still depend on rules/deployment assurance. | `medium` |
+| `docs/archive/phase-12a-public-account-model.md` | Still reads as a pre-implementation design/spec only. | Keep the design intent, but later label it more explicitly as a historical design baseline. | `medium` |
 | `docs/archive/phase-11a/phase-11a-cleanup-closeout.md` | Its “recommended next phase” is no longer current. | Later relabel it clearly as historical closeout evidence if needed. | `medium` |
 | `docs/archive/old-roadmaps/alex-heritage-engine-roadmap.md` | Roadmap overlaps with implemented engine reality and newer engine README. | Later trim, relabel as historical roadmap, or keep in archived roadmap history. | `medium` |
-| `docs/phase-11a-live-readonly-backup-session-note.md` | Still useful, but its “recommended next step” is historical. | Keep visible for now as evidence, but later relabel as historical milestone record. | `low` |
+| `docs/audits/phase-11a-live-readonly-backup-session-note.md` | Still useful, but its “recommended next step” is historical. | Keep visible for now as evidence, but later relabel as historical milestone record. | `low` |
 
 ## 5. Archive Candidates
 
@@ -188,13 +196,13 @@ These files should probably move to archive locations later, but must not be mov
 | `docs/archive/phase-11a/phase-11a-communityplaces-user-approval-proposal.md` | `docs/archive/phase-11a/phase-11a-communityplaces-user-approval-proposal.md` | Historical approval/proposal artifact from an older phase. | `yes` |
 | `docs/archive/phase-11a/phase-11a-cleanup-closeout.md` | `docs/archive/phase-11a/phase-11a-cleanup-closeout.md` | Closeout is still valid historically, but it no longer belongs in the active current-doc layer. | `yes` |
 | `docs/archive/old-roadmaps/alex-heritage-engine-roadmap.md` | `docs/archive/old-roadmaps/alex-heritage-engine-roadmap.md` | Overlaps with the now-implemented engine state and newer engine README. | `yes` |
-| `docs/archive/reference-experiments/cambridgeshire-local-heritage-list-skill.md` | `docs/archive/reference-experiments/cambridgeshire-local-heritage-list-skill.md` | Appears more like supporting inspiration/reference than active project instruction. | `yes` |
-| `docs/archive/phase-12-design/phase-12a-public-account-model.md` | `docs/archive/phase-12-design/phase-12a-public-account-model.md` | Still useful as design rationale, but not the main current status source once docs are cleaned up. | `yes` |
+| `docs/research/cambridgeshire-local-heritage-list-skill.md` | `docs/research/cambridgeshire-local-heritage-list-skill.md` | Supporting external-reference research rather than controlling project policy. | `yes` |
+| `docs/archive/phase-12a-public-account-model.md` | `docs/archive/phase-12a-public-account-model.md` | Still useful as design rationale, but not the main current status source once docs are cleaned up. | `yes` |
 
 Notes:
 
-- `docs/phase-12-final-verification-record.md` should stay visible for now and should not be archived as ordinary old planning.
-- `docs/phase-13a-media-evidence-rights-model.md` and `docs/phase-13b-storage-backup-media-audit-plan.md` should stay visible as current planning docs.
+- `docs/audits/phase-12-final-verification-record.md` should stay visible for now and should not be archived as ordinary old planning.
+- `docs/plans/phase-13a-media-evidence-rights-model.md` and `docs/plans/phase-13b-storage-backup-media-audit-plan.md` should stay visible as historical planning records.
 - Existing `docs/archive/phase-9/`, `docs/archive/phase-10/`, and `docs/archive/phase-11a/` remain appropriate.
 
 ## 6. Maintenance-Only Docs
@@ -291,7 +299,7 @@ Future `docs/README.md` outline:
 ### Engine and Reference Docs
 
 - `../heritage-engine/README.md`
-- `archive/phase-12-design/phase-12a-public-account-model.md`
+- `archive/phase-12a-public-account-model.md`
 - `local-heritage-listing-guidance.md`
 
 ### Maintenance-Only Docs

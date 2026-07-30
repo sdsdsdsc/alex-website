@@ -1,5 +1,16 @@
 # Phase 12A — Public Account Model and Safety Design
 
+## Historical status
+
+This document is preserved as the historical Phase 12A architecture and safety
+design record. It is not current policy. Phase 12 subsequently implemented the
+bounded public registration, sign-in, nomination-ownership, owner-scoped
+`My nominations`, and private review/promotion model described here. See the
+[Phase 12 final verification record](../audits/phase-12-final-verification-record.md)
+for the completed functional evidence and the
+[project status checkpoint](../project-status-checkpoint.md) for the current
+implementation and remaining release-assurance status.
+
 ## Purpose
 
 This document defines the smallest safe public account model for Alex's Photo Board before any registration or login UI is implemented.

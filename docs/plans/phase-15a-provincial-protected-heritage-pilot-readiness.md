@@ -15,7 +15,7 @@ This phase does not:
 - change Firebase data, rules, indexes, Storage, Hosting, or configuration;
 - change deployment behavior or deploy anything.
 
-The older [`docs/phase-15a-firebase-rules-sync-readiness.md`](./phase-15a-firebase-rules-sync-readiness.md) concerns Firebase rules. It remains a separate, unchanged historical readiness record and must not be confused with this provincial-pilot decision.
+The older [`docs/plans/phase-15a-firebase-rules-sync-readiness.md`](./phase-15a-firebase-rules-sync-readiness.md) concerns Firebase rules. It remains a separate, unchanged historical readiness record and must not be confused with this provincial-pilot decision.
 
 ## 2. Current Map baseline
 

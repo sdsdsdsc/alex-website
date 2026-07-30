@@ -139,7 +139,7 @@ The form should be plain text only. Submitted replies should show a clear local 
 - `tests/firestore.rules.test.mjs`
 - `tests/storage.rules.test.mjs`, only if Storage rules change
 - `tests/browser-smoke.spec.mjs`
-- `docs/phase-13c-13d-image-promotion-replies-plan.md`
+- `docs/plans/phase-13c-13d-image-promotion-replies-plan.md`
 
 ## Tests
 

@@ -38,7 +38,7 @@ No external branding, exact layout, or reference text was copied.
 - `map.html`
 - `map.js`
 - `style.css`
-- `docs/phase-16a-heritage-map-explorer-polish-record.md`
+- `docs/audits/phase-16a-heritage-map-explorer-polish-record.md`
 
 ## Tests Run
 

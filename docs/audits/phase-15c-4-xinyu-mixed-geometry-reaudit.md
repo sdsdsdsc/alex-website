@@ -121,8 +121,8 @@ The Xieli DMS centre transcribes arithmetically to approximately `[114.919777778
 - Sixth-batch Xinyu promotion notice: <https://www.xysmuseum.com/183.html>
 - Municipal Yangtiangang description: <https://m.thepaper.cn/newsDetail_forward_17977164>
 - Current official Xinyu register: <https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml>
-- Existing Dagu Ling evidence review: [phase-14c-coordinate-evidence-and-review.md](../phase-14c-coordinate-evidence-and-review.md)
-- Existing published Xinyu Point evidence: [phase-15b-4-xinyu-official-marker-expansion.md](../phase-15b-4-xinyu-official-marker-expansion.md)
+- Existing Dagu Ling evidence review: [phase-14c-coordinate-evidence-and-review.md](./phase-14c-coordinate-evidence-and-review.md)
+- Existing published Xinyu Point evidence: [phase-15b-4-xinyu-official-marker-expansion.md](./phase-15b-4-xinyu-official-marker-expansion.md)
 
 Gaode is treated as provider evidence, not official geometry. Any new Gaode Point must preserve the original GCJ-02 coordinate and POI identity, use the existing deterministic inverse method, and undergo independent WGS84 locality review. This audit does not infer absence from a failed interactive search; it records unverified Gaode evidence as an evidence gap.
 

@@ -20,7 +20,7 @@ This verification did not use live Firebase data, did not deploy rules, and did 
 - `firestore.rules`
 - `engine-test.html`
 - `docs/project-status-checkpoint.md`
-- `docs/phase-13c-media-rights-metadata-completion-note.md`
+- `docs/audits/phase-13c-media-rights-metadata-completion-note.md`
 
 Additional search verification was also run across the repository for:
 
