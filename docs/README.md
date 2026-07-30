@@ -45,8 +45,12 @@ to the authoritative audit records and contain no duplicate evidence or policy.
 
 ## Current policy and standards
 
-The [official-record publication policy](./policy/official-record-publication-policy.md)
+The [Official Heritage spatial representation and publication policy](./policy/official-record-publication-policy.md)
 is the sole controlling authority for official heritage geometry publication.
+It records the five public Official Heritage types, evidence-led natural-form
+defaults, one-active-representation rule, project-interpretation standard, and
+future sidebar and filter direction. It applies only to Official Heritage;
+Community Heritage remains unchanged and Point-based.
 
 Other reusable policy and guidance:
 
@@ -66,6 +70,9 @@ Key groups include:
 - Firebase rules comparison and verification plans;
 - staging and Firebase Hosting preview plans from Phase 17;
 - release-assurance, navigation-cleanup, and engine-roadmap plans;
+- the current [Official Heritage mixed-geometry roadmap](./plans/official-heritage-mixed-geometry-roadmap.md),
+  which sequences the Xinyu Point re-audit, approved Point batch, research
+  pilot, schema, interface, and first production shape;
 - the historical [Phase 15C-6 complete-register audit and batch plan](./plans/phase-15c-6-official-record-publication-policy-and-batch-plan.md).
 
 ## Audits and verification records

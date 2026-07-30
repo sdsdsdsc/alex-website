@@ -4,6 +4,11 @@
 
 This document is preserved as the Phase 15C-4 mixed-geometry re-audit record. Its classification letters and single-Xieli batch recommendation reflect the policy used at that time and are superseded by the historical [Phase 15C-6 batch plan](../plans/phase-15c-6-official-record-publication-policy-and-batch-plan.md), the later Xieli review, and the standalone [official-record publication policy](../policy/official-record-publication-policy.md). [Phase 15C-5](./phase-15c-5-xiabu-geometry-pilot.md) is the authoritative detailed Xiabu evidence record. Xiabu remains only a proposed future Point candidate and must not be implemented or published without explicit approval.
 
+In particular, references below to Point-plus-shape publication, multiple
+active representations, routine building footprints, or the Xieli shape are
+historical findings only. Current policy allows one active public feature per
+official record or separately resolved component identity.
+
 ## Outcome
 
 This documentation-only re-audit applies an honest heritage-reference standard rather than requiring authority-supplied legal-boundary vertices for every non-Point feature. It does not change source datasets, public-location decisions, generated GeoJSON, application code, tests, or production behavior.

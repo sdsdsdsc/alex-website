@@ -4,7 +4,11 @@
 
 **Do not approve the proposed 60 × 60 metre generalized reference-area Polygon. Recommend a generalized reference Point only, subject to separate explicit implementation approval.**
 
-This is outcome **C - Point instead** among the four alternatives evaluated in this review. Under the controlling standalone publication policy, the equivalent future status is **Point now, shape later**: a generalized Point may be reconsidered for publication, while any area remains deferred until its datum and misleading risk are materially resolved.
+This is outcome **C - Point instead** among the four alternatives evaluated in
+this historical review. Under the controlling standalone publication policy,
+the equivalent future status is **Point now, shape later**: a generalized Point
+may be reconsidered for publication, while any later approved area would
+supersede the Point rather than appear alongside it.
 
 The Point recommendation is still research-only. Xieli remains unpublished. Xiabu remains unpublished. No production data, public-location decision, generated GeoJSON, application code, test, workflow, Firebase file, or package file changes in this phase.
 
