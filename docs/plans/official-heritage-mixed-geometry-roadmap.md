@@ -22,9 +22,11 @@ tests the union of provider-confirmed and plausible line/area identities
 against the minimum Point threshold. Under the current gates it finds 39
 unpublished candidates and no new passing Point: the exact ordered addition
 list for PR #69 is `[]`. Owner-supplied N07 evidence nevertheless establishes
-a concrete provider-located project-digitization case, so a separate
-non-substantive policy clarification is recommended before candidate
-re-evaluation. Neither audit publishes a record or authorizes implementation.
+a concrete provider-located project-digitization case. The separate
+[Phase 15C-12 policy clarification](../audits/phase-15c-12-provider-located-point-policy-clarification.md)
+now documents the proposed non-substantive interpretation before candidate
+re-evaluation. None of these audits publishes a record or authorizes
+implementation.
 
 ## Approved sequence
 
@@ -48,15 +50,17 @@ re-evaluation. Neither audit publishes a record or authorizes implementation.
    owner-supplied N07 provider-located physical-feature evidence, keep all 39
    operationally withheld, and recommend the next policy step. Documentation
    only; no policy, coordinate, runtime, data, schema, or publication change.
-6. **Next, separately approved policy clarification.** Clarify whether and how
-   documented, reproducible project digitization may satisfy the existing
-   coordinate requirement when raw provider coordinates are unavailable. The
-   recommended interpretation is non-substantive and must preserve all current
-   CRS, reconciliation, uncertainty, sensitivity, misleading-risk, provenance,
-   review, and approval gates.
-7. **Candidate re-evaluation.** Re-evaluate the bounded provider-located queue
-   only after the clarification is approved. Do not resume or expand PR #69
-   without a new candidate-specific publication instruction.
+6. **Current draft — separately approved policy clarification.** Define the
+   provider-located project-reviewed reference Point method for the case where
+   a provider identifies a specific physical feature but exposes no legitimate
+   raw feature coordinate. This documentation-only clarification preserves all
+   current identity, CRS, reconciliation, uncertainty, sensitivity,
+   misleading-risk, provenance, review, and approval gates and does not
+   digitize or approve a candidate.
+7. **Candidate re-evaluation after the clarification merges.** Re-evaluate only
+   the bounded priority queue N03, N07, N08, P22, M23, and M30. Any numerical
+   digitization belongs to that later evidence audit. Do not resume or expand
+   PR #69 without a new candidate-specific publication instruction.
 8. **Later representation-lifecycle schema and validation extension.** Extend
    the existing Phase 15C-1 schema and validation foundation for the
    one-active-representation model, stable identity, supersession, and
@@ -108,8 +112,11 @@ validation and rendering systems.
   candidate. Xieli remains a generalized-Point-only research result and is
   excluded from that batch pending its datum, styling, persistent-limitation,
   and sensitivity gates.
-- A separately approved policy clarification must precede re-evaluation of the
-  provider-located project-reviewed Point queue.
+- The current separately approved policy-clarification draft must merge before
+  the bounded provider-located project-reviewed Point queue is re-evaluated.
+- That later evidence audit may construct reproducible numerical Points for
+  N03, N07, N08, P22, M23, and M30, but the policy clarification itself may not
+  digitize or approve them.
 - Candidate re-evaluation must precede any instruction to resume or expand PR
   #69. PR #69 remains paused in the meantime.
 - Later representation-lifecycle extensions must land before the interface
@@ -134,7 +141,8 @@ validation and rendering systems.
 
 Draft PR #69 remains paused. The complete-list audit does not modify its
 branch, commit, files, or publication proposal. The fallback Point audit also
-leaves it unchanged and recommends no additional Point candidate.
+leaves it unchanged and recommends no additional Point candidate. The current
+policy-clarification draft likewise leaves PR #69 untouched.
 
 ## PR #67 exclusions
 
