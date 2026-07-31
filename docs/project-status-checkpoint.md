@@ -122,7 +122,7 @@ The engine boundary is coherent: Firebase initialization, reads/writes, DOM rend
 | Phase 15C-5 | Xiabu one-record geometry pilot | Evidence review complete; implementation not approved | Reconciles the Gaode, Baidu, and Google evidence; records the plaque transcription linking the public POI to 暴动举行地旧址; and recommends a provisional component-reference Point with documented uncertainty while rejecting Polygon, MultiPolygon, Point plus shape, and outline tracing. | Xiabu remains only a proposed future batch candidate. No production record, Point, shape, generated output, or application behavior changed. | Treat this as the detailed Xiabu evidence record. Do not implement or publish Xiabu without explicit approval. |
 | Phase 15C-6 | Official-record publication policy and batch plan | Historical policy-development and batch-planning record | Consolidated the historical audits and Xiabu pilot, developed the five-outcome model, and recorded the bounded proposed future batch and per-record limitations. The reusable policy now lives in the standalone official-record publication policy. | Planning and documentation only. Production remains unchanged and Point-only. | Preserve the complete historical plan; use the standalone policy for current decisions. Any implementation or publication requires new explicit approval. |
 | Phase 15C-7 | Xieli misleading-risk decision | Research recommendation complete; implementation not approved | Compares the theoretical 60 × 60 m generalized area, a 500 m uncertainty area, a generalized Point, and withholding at realistic zoom levels. Rejects both area representations because the square looks exact while its uncertainty lies outside the site-level view and the broader uncertainty area dominates close views. Recommends a generalized reference Point only, with 500 m uncertainty and explicit datum, footprint, archaeological-extent, and legal-boundary cautions. | Xieli and Xiabu remain unpublished. Production stays at five official Points and no real non-Point geometry. | Review the Point recommendation separately. Withhold Xieli if distinct generalized styling and persistent limitation wording cannot meet the policy gate. |
-| Official Heritage spatial policy and roadmap | Current controlling documentation | Defines five simplified public types, evidence-led natural forms, one active public representation per identity, authority-versus-project representation status, rejection gates, and future sidebar/filter logic. Records the approved PR #68–#73 sequence. | Documentation only. No runtime, data, schema, rendering, Community Heritage, export, Firebase, or production change. | Next eligible step is PR #68, the full Xinyu Point re-audit. Do not begin it within the policy PR. |
+| Official Heritage spatial policy and roadmap | Current controlling documentation | Defines five simplified public types, evidence-led natural forms, one active public representation per identity, authority-versus-project representation status, rejection gates, and future sidebar/filter logic. Records the approved PR #68–#73 sequence, with PRs #71–#72 extending the merged Phase 15C-1 validation and Phase 15C-2 rendering foundations rather than rebuilding them. | Documentation only. No runtime, data, schema, rendering, Community Heritage, export, Firebase, or production change. | Next eligible step is PR #68, the full Xinyu Point re-audit. Do not begin it within the policy PR. |
 | Phase 15 | Testing/staging/deployment/rollback | Partly done | Pure-helper browser harness, manual phase checks, Git workflow, and GitHub Pages deployment history exist. | No staging environment, automated CI, release checklist, smoke suite, rollback procedure, or deployed-rules verification record tied to releases. | Make this one of the next structural priorities. |
 | Phase 16 | Configuration system for other towns/cities | Not started | Some location helpers and generic place fields are reusable. | Tenant/config model, branding/content configuration, collection isolation, security model, onboarding, and migration strategy. | Do not begin before current single-site workflows are tested and documented. |
 | Phase 17 | Installation/admin/support documentation | Partly done | Docs index, site structure, engine README, import notes, maintenance notes, and phase closeouts exist. | No concise installation guide, environment inventory, admin operating manual, troubleshooting guide, support policy, or recovery playbook. | Build after deployment/testing conventions are settled. |
@@ -136,6 +136,12 @@ ongoing responsibility. The official layer remains off by default. Enabling it
 displays exactly five official Point markers; no real line, polygon, area, or
 other non-Point geometry is visible. Community Heritage remains Point-based and
 unchanged.
+
+Phase 15C-1 / PR #60 and Phase 15C-2 / PR #62 are already merged and
+production verified. They provide the multi-geometry validation foundation and
+synthetic-fixture-tested line and area renderer. They have not published real
+non-Point geometry or implemented the newly approved
+one-active-representation lifecycle.
 
 Phase 15C-3 is preserved as the historical strict audit, Phase 15C-4 as the
 historical mixed-geometry re-audit, Phase 15C-5 as the authoritative detailed
@@ -172,9 +178,11 @@ The current sequence is maintained in the
 1. complete the Xinyu Point re-audit;
 2. publish a separately approved Xinyu Point batch;
 3. inventory non-Point candidates and conduct a research-only pilot;
-4. implement the evidence-informed geometry schema and validation model;
-5. implement mixed-geometry presentation, Official Heritage controls,
-   provenance, and accessibility;
+4. extend the existing geometry schema and validators for stable identity,
+   active representation, supersession, and representation history;
+5. adapt the existing mixed-geometry renderer and Official Heritage controls
+   for the five-type model, active-representation selection, provenance, and
+   accessibility;
 6. publish and verify the first separately approved production shape; and
 7. consider context layers and later evidence-supported batches separately.
 

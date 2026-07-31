@@ -24,12 +24,17 @@ depends on evidence.
 4. **PR #70 — non-Point inventory and first pilot.** Create the candidate
    inventory, search for reusable authority and institutional sources, and
    conduct the first research-only shape pilot. No production shape.
-5. **PR #71 — geometry schema and validation.** Approve and implement the
-   geometry schema, active/superseded representation model, validation, and
-   history requirements informed by the pilot.
-6. **PR #72 — mixed-geometry interface.** Implement mixed-geometry rendering,
-   the Official Heritage sidebar, official filters, legend, provenance
-   presentation, and accessibility.
+5. **PR #71 — representation-lifecycle schema and validation extension.**
+   Extend the existing Phase 15C-1 schema and validation foundation for the
+   one-active-representation model, stable identity, supersession, and
+   representation history. Preserve and adapt the existing geometry validators
+   rather than create a new geometry system from scratch.
+6. **PR #72 — mixed-geometry interface adaptation.** Adapt and extend the
+   existing Phase 15C-2 mixed-geometry renderer and existing Official Heritage
+   controls for the new five-type sidebar and filter model,
+   active-representation selection, provenance presentation, and
+   accessibility. Preserve the already verified line and area rendering
+   foundation rather than rebuild mixed-geometry rendering.
 7. **PR #73 — first production shape.** Publish and verify the first separately
    approved evidence-supported production line or area.
 8. **Optional PR #74 — context layers.** Add separately controlled
@@ -37,13 +42,27 @@ depends on evidence.
 9. **Later PRs — evidence-supported batches.** Research, approve, publish, and
    verify additional shapes in bounded batches.
 
+## Existing technical baseline
+
+Phase 15C-1 / PR #60 already implemented and production-verified the Point,
+LineString, MultiLineString, Polygon, and MultiPolygon schema and validation
+foundation. Phase 15C-2 / PR #62 already implemented and production-verified
+line and area rendering with synthetic fixtures. Those foundations have not
+yet published real non-Point production geometry or implemented the newly
+approved one-active-representation lifecycle.
+
+PRs #71 and #72 therefore extend and adapt merged capabilities. They do not
+replace or rebuild the existing geometry validation and rendering systems.
+
 ## Dependency gates
 
 - PR #68 must finish before selecting PR #69's Point batch.
-- The PR #70 research pilot must finish before PR #71 fixes a runtime schema.
-- Schema and validation must land before mixed-geometry public presentation.
-- Rendering, filters, provenance, and accessibility must be ready before the
-  first real production shape.
+- The PR #70 research pilot must finish before PR #71 extends the runtime
+  schema for representation lifecycle.
+- The representation-lifecycle extensions must land before PR #72 adapts
+  public presentation to active-representation selection.
+- The adapted renderer, filters, provenance, and accessibility must be ready
+  before the first real production shape.
 - A production shape requires record-specific evidence and approval in
   addition to technical readiness.
 - Authority GIS should be sought before project tracing.

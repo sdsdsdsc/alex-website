@@ -72,7 +72,9 @@ Key groups include:
 - release-assurance, navigation-cleanup, and engine-roadmap plans;
 - the current [Official Heritage mixed-geometry roadmap](./plans/official-heritage-mixed-geometry-roadmap.md),
   which sequences the Xinyu Point re-audit, approved Point batch, research
-  pilot, schema, interface, and first production shape;
+  pilot, representation-lifecycle extensions to the existing schema,
+  adaptations to the existing mixed-geometry interface, and first production
+  shape;
 - the historical [Phase 15C-6 complete-register audit and batch plan](./plans/phase-15c-6-official-record-publication-policy-and-batch-plan.md).
 
 ## Audits and verification records
