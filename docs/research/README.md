@@ -20,4 +20,9 @@ the
 [future non-Point inventory](./phase-15c-10-xinyu-non-point-candidate-inventory.md),
 and the
 [fallback Point candidate matrix](./phase-15c-11-xinyu-fallback-point-candidate-matrix.md).
-They are documentation evidence only and are not application inputs.
+They are documentation evidence only and are not application inputs. The
+fallback matrix keeps all 39 candidates withheld under the present policy,
+while recording N07 as a provider-located physical-feature candidate whose
+numerical project-reviewed Point has not yet been digitized or approved. Its
+six-identity future research queue depends on a separate non-substantive policy
+clarification and does not add any candidate to paused PR #69.

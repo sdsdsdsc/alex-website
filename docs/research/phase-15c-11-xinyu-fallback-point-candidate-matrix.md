@@ -37,9 +37,11 @@ Independent corroboration:
 - `none` — no additional feature-specific corroboration recorded.
 
 These sources can corroborate identity or component structure without
-supplying a usable coordinate. `Raw/CRS` is `none / unresolved` for every
-candidate. Therefore conversion, WGS84 selection, and distance comparison are
-also unresolved for every candidate; no viewport/display-centre value is used.
+supplying an approved numerical Point. `Raw/CRS` is `none / unresolved` for
+every candidate. Therefore conversion, WGS84 selection, and distance
+comparison are also unresolved for every candidate; no viewport/display-centre
+or screenshot-pixel value is used. N07's owner-supplied visual evidence is
+recorded textually below; the commercial map screenshots are not committed.
 
 ## Candidate evidence and outcome
 
@@ -51,7 +53,7 @@ also unresolved for every candidate; no viewport/display-centre value is used.
 | N04 兴国调查会旧址; 渝水区罗坊镇彭家村 | point-like component | C: exact/locality / P: visitor-complex result does not isolate component | SC6 | reviewed-location-point for component only | Must remain separate from M30 museum; feature meaning unresolved | Withhold pending evidence |
 | N05 红一方面军总部旧址与朱德旧居; 渝水区罗坊镇院前村 | multipart component | C: headquarters/residence sublabels / P: related old-site labels | SC6 | visitor-reference-point only if one honest shared reference is evidenced | Two subfeatures; a single centre may misrepresent both | Withhold pending evidence |
 | N06 江西省苏维埃政府旧址与曾山旧居; 渝水区罗坊镇院前村 | multipart component | C: government/residence sublabels / P: related old-site labels | SC6 | visitor-reference-point only if one honest shared reference is evidenced | Two subfeatures; component topology and sensitivity unresolved | Withhold pending evidence |
-| N07 水西红三军团指挥部旧址; 高新区水西镇沙陂村 | point-like | C: exact/locality / C: exact revolutionary-site result in 水西镇 | SC8 | reviewed-location-point | Raw feature coordinate, uncertainty, access and fabric meaning unresolved | Withhold pending evidence |
+| N07 水西红三军团指挥部旧址; 高新区水西镇沙陂村 | point-like | C: exact/locality / C: exact revolutionary-site result in 水西镇; owner-supplied screenshots show exact-name markers on the same specific building/site context | SC8; provider-hosted building/entrance photographs | reviewed-location-point | Provider-located candidate confirmed; numerical project-reviewed Point not yet digitized or approved; uncertainty, access and fabric meaning unresolved | Withhold pending evidence |
 | N08 上高会战第58师师部遗址; 渝水区下村镇大桥村 | point-like | C: exact/locality / C: exact longer-form 74军第58师 result in 大桥村 | SC7 | reviewed-location-point | Must remain separate from P22; raw coordinate and uncertainty unresolved | Withhold pending evidence |
 | P01 棋盘山遗址; 渝水区罗坊镇章塘村 | areal | C: exact/locality / C: exact archaeological-site result | O | generalized-reference-point; archaeological site reference | Site extent, sensitivity and nearby-identity risk unresolved | Withhold pending evidence |
 | P02 袁州明代城墙砖窑址群（芦塘窑址）; 分宜县分宜镇芦塘村 | areal component | P: related 芦塘/kiln results / P: kiln/locality only | JX6 | generalized-reference-point for Xinyu 芦塘 component only | Cross-city parent, kiln components and extent unresolved | Withhold pending evidence |
@@ -85,6 +87,20 @@ also unresolved for every candidate; no viewport/display-centre value is used.
 | M30 罗坊会议纪念馆; 渝水区罗坊镇彭家村 | point-like visitor venue | C: exact museum/locality / C: exact museum with visitor-complex subresults | O | visitor-reference-point | Must not be substituted for N04 historic component | Withhold pending evidence |
 | M31 九龙山革命烈士纪念塔与墓; 仙女湖区九龙山乡黄田村 | areal/multipart | P: memorial/cemetery variant / C: exact memorial-landscape result | O | visitor-reference-point for memorial landscape only | Tower, graves, grounds, public-park boundary and sensitivity unresolved | Withhold pending evidence |
 
+## N07 owner-supplied visual-evidence record
+
+| Evidence dimension | Gaode | Baidu | Reconciled result |
+| --- | --- | --- | --- |
+| Identity | Exact `水西红三军团指挥部旧址` | Exact `水西红三军团指挥部旧址` | Exact cross-provider identity agreement |
+| Locality | 水西镇沙陂村委上首村小组; 沙陂村 context | 江西省新余市渝水区水西镇; 沙陂村 context | Official town/village context agrees |
+| Physical feature | Marker associated with a small specific building/site | Marker associated with a small specific building/site | Point-like physical candidate confirmed; provider outlines are not adopted |
+| Photography | Named historic entrance/building view | Building interior/entrance view | Strong provider-hosted visual support; not independent numerical evidence |
+| Coordinate status | No raw feature coordinate or CRS exposed | No raw feature coordinate or CRS exposed | No conversion, distance test, digitized Point, or approval possible in this PR |
+
+N07 therefore passes G2, but G4 and G5 remain Unresolved. Its precise status is
+**provider-located candidate confirmed; numerical project-reviewed Point not
+yet digitized or approved**.
+
 ## Gate decision matrix
 
 Statuses are `Pass`, `Conditional`, `Fail`, `Unresolved`, or `Not applicable`.
@@ -99,7 +115,7 @@ for every row, which is independently sufficient to require withholding.
 | N04 | Pass | Conditional | Conditional | Unresolved | Unresolved | Conditional | Conditional | Unresolved | Withhold |
 | N05 | Pass | Conditional | Conditional | Unresolved | Unresolved | Unresolved | Conditional | Unresolved | Withhold |
 | N06 | Pass | Conditional | Conditional | Unresolved | Unresolved | Unresolved | Conditional | Unresolved | Withhold |
-| N07 | Pass | Conditional | Conditional | Unresolved | Unresolved | Conditional | Conditional | Unresolved | Withhold |
+| N07 | Pass | Pass | Conditional | Unresolved | Unresolved | Conditional | Conditional | Unresolved | Withhold |
 | N08 | Pass | Conditional | Conditional | Unresolved | Unresolved | Conditional | Conditional | Unresolved | Withhold |
 | P01 | Pass | Conditional | Unresolved | Unresolved | Unresolved | Conditional | Unresolved | Unresolved | Withhold |
 | P02 | Pass | Fail | Conditional | Unresolved | Unresolved | Unresolved | Unresolved | Unresolved | Withhold |
@@ -136,7 +152,7 @@ for every row, which is independently sufficient to require withholding.
 Gate totals reconcile to 39 rows:
 
 - G1: 39 Pass;
-- G2: 19 Conditional, 20 Fail;
+- G2: 1 Pass, 18 Conditional, 20 Fail;
 - G3: 9 Conditional, 30 Unresolved;
 - G4: 39 Unresolved;
 - G5: 39 Unresolved;
@@ -158,3 +174,17 @@ Ordered candidate additions: `[]`.
 
 No row in this matrix authorizes publication. The paused PR #69 remains P19
 only and unchanged.
+
+## Future provider-located project-reviewed Point queue
+
+| Priority candidate | Evidence position | Remaining work and principal risk |
+| --- | --- | --- |
+| N03 | Exact cross-provider component/complex leads | Isolate the historic component, review photography, digitize reproducibly, and avoid parent/visitor-complex substitution. |
+| N07 | Exact cross-provider feature/locality/building and provider-hosted photographic agreement | Digitize or obtain a numerical Point under the separately clarified method; reconcile it and review access, fabric meaning, uncertainty, and misleading risk. |
+| N08 | Exact cross-provider headquarters lead in 大桥村 | Review the physical feature and photography, digitize reproducibly, and keep separate from P22. |
+| P22 | Exact cross-provider longer-form headquarters lead | Confirm the physical component, digitize reproducibly, and keep separate from N08; the address is insufficient. |
+| M23 | Exact cross-provider residence lead | Resolve residence versus entrance/visitor-facility meaning before digitization and risk review. |
+| M30 | Exact cross-provider museum/visitor-complex lead | Isolate the museum reference, digitize reproducibly, and prevent substitution for N04 or the whole complex. |
+
+This queue is not an addition list. All six identities remain operationally
+withheld, and PR #69 remains unchanged.

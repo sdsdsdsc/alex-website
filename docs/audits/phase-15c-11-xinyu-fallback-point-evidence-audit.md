@@ -9,25 +9,39 @@ or a plausible future line/area representation. It asks whether any identity
 can safely use an ordinary or generalized Point now, with a separately
 approved shape superseding that Point later.
 
-**Conclusion: no additional identity passes the Point publication gates.**
-All 39 candidates remain **Withhold pending evidence**. The future PR #69
-addition list is therefore exactly `[]`; the paused PR continues to contain
-only the previously approved Xiabu P19 proposal.
+**Present-policy conclusion: no additional identity passes the Point
+publication gates.** All 39 candidates remain **Withhold pending evidence**.
+The future PR #69 addition list is therefore exactly `[]`; the paused PR
+continues to contain only the previously approved Xiabu P19 proposal.
 
 This result does not say that the strong provider results are wrong. It says
-that none of the 39 candidates has a preserved, legitimate feature coordinate
-with a record-specific CRS, deterministic WGS84 conversion, independently
-reviewed public meaning, uncertainty, sensitivity decision, and
+that none of the 39 candidates yet has an approved reproducible numerical
+Point with a record-specific CRS, deterministic WGS84 conversion,
+independently reviewed public meaning, uncertainty, sensitivity decision, and
 misleading-risk clearance. Search-map viewport centres and Baidu Web Mercator
 display centres are not source POI coordinates and were not converted.
 
-Policy consistency conclusion:
+N07 is now the concrete policy case. Owner-supplied Gaode and Baidu screenshots
+confirm a provider-located, point-like physical candidate with exact-name,
+locality, building, and photographic agreement. They do not expose a numerical
+feature coordinate, approve a project digitization, or settle CRS,
+uncertainty, access, sensitivity, or misleading risk. Its precise status is:
 
-> **Existing policy applied successfully; no change required.**
+> **provider-located candidate confirmed; numerical project-reviewed Point not
+> yet digitized or approved**
 
-No policy wording is changed or proposed. The existing minimum Point threshold
-already makes the correct distinction between a useful provider identity lead
-and publishable spatial evidence.
+**Policy recommendation: non-substantive policy clarification recommended.**
+The current policy already permits a corroborated provider Point of Interest
+to support a Point and already permits reproducible project-reviewed
+interpretations. A separate, expressly approved clarification should state
+that documented project digitization may satisfy the existing reproducible
+coordinate gate when a provider does not expose its raw coordinate. That
+clarification must preserve, not remove, numerical capture, CRS, deterministic
+conversion, corroboration, uncertainty, sensitivity, misleading-risk, review,
+and approval requirements. This audit does not edit policy or approve any
+coordinate. A substantive amendment would be required if a future proposal
+instead weakened those gates or treated screenshot pixels, viewport centres,
+or undocumented estimates as coordinates.
 
 ## Controlling baseline and boundaries
 
@@ -106,7 +120,7 @@ the `N01` areal control. The visible results reinforced the earlier evidence:
 | --- | --- | --- |
 | N01 凤凰山铁矿遗址 | exact heritage result; `文物古迹`; 分宜县 215乡道 | Identity/locality lead only; no legitimate raw POI coordinate. |
 | N03 罗坊会议旧址 | exact old-site result plus separate 陈家闹红军驻地 result and visitor-complex results | Component/complex distinction remains necessary. |
-| N07 水西红三军团指挥部旧址 | exact revolutionary-site result in 水西镇 | Strong identity lead; no source coordinate or meaning decision. |
+| N07 水西红三军团指挥部旧址 | exact revolutionary-site result in 水西镇 | Provider-located candidate confirmed; numerical project-reviewed Point not yet digitized or approved. |
 | N08 第58师师部遗址 | exact longer-form result in 大桥村 | Strong identity lead; still separate from P22. |
 | P22 第十九集团军总司令部旧址 | exact longer-form result near 新余黄冈学校 | Strong identity lead; address is not a reviewed feature coordinate. |
 | M23 枫溪彭氏民居 | exact result, `旅游景点`, 233乡道西50米 | Strong POI lead; provider venue meaning and coordinate remain unresolved. |
@@ -121,10 +135,31 @@ Gaode place-detail retrieval presented a public slide-verification control
 during the focused recheck. It was not bypassed. Existing stable place IDs were
 retained, but no new raw value was claimed.
 
+### Owner-supplied N07 visual evidence
+
+On 2026-07-31 the repository owner supplied current Gaode and Baidu search-map
+screenshots for N07. They were reviewed as visual evidence but are not added to
+the repository: the audit needs only a textual record of the visible facts,
+while committing commercial map imagery and unrelated browser interface would
+create avoidable reproduction and privacy-review concerns.
+
+| Check | Observed evidence | Assessment |
+| --- | --- | --- |
+| Exact cross-provider identity | Both interfaces display `水西红三军团指挥部旧址`. | Pass for provider feature identification. |
+| Official locality | Gaode shows `水西镇沙陂村委上首村小组`; Baidu shows `江西省新余市渝水区水西镇`; both map contexts label 沙陂村. | Pass at the locality level. |
+| Physical feature | Each marker is associated with a specific small building/site, rather than a town or search viewport alone. | Pass for point-like candidate identification; no provider outline is adopted. |
+| Photography | Gaode shows the named historic entrance/building; Baidu shows a building interior/entrance image. | Strong provider-hosted visual corroboration, but not an independently sourced coordinate or designation record. |
+| Cross-provider visual location | Both results appear in the same village/river/building context. | Strong conditional agreement because no numerical provider-coordinate comparison is available. |
+| Numerical spatial evidence | Neither screenshot exposes a raw feature coordinate, source CRS, project digitization, or approved WGS84 selection. | G4 and G5 remain Unresolved; publication remains withheld. |
+
+The blue provider building/site outlines are contextual evidence only. They are
+not copied, traced, treated as licensed geometry, or interpreted as an official
+designation boundary.
+
 ### Coordinate and distance rule
 
-For every candidate, the legitimate raw-coordinate field is `not obtained`.
-Consequently:
+For every candidate, an approved reproducible numerical Point is `not
+obtained`. Consequently:
 
 - source CRS is unresolved;
 - no GCJ-02 or BD-09 value is asserted;
@@ -154,15 +189,17 @@ The matrix uses these gates:
 is also mandatory whenever sensitivity is relevant. Under the policy, any
 mandatory `Unresolved` result requires withholding. G4 and G5 are unresolved
 for every candidate, so no provider strength can by itself produce a
-publication recommendation.
+publication recommendation. N07 now passes G2 because the owner-supplied
+visual record identifies the physical feature; that improvement does not
+resolve any mandatory numerical or approval gate.
 
 ## Findings by candidate class
 
 ### Strong point-like or modern-site results
 
 `N03`, `N04`, `N07`, `N08`, `P05`, `P22`, `M13`, `M23`, and `M30` are the
-strongest ordinary-Point research leads. None has a publishable raw-coordinate
-chain. Additional identity-specific cautions remain:
+strongest ordinary-Point research leads. None has an approved reproducible
+numerical Point chain. Additional identity-specific cautions remain:
 
 - N03/N04 are components of one national parent and cannot be labelled as the
   entire designation.
@@ -265,12 +302,67 @@ Exact ordered additions to the paused PR #69 batch: **none (`[]`)**.
 The PR #69 proposal remains P19 only. This audit does not approve, modify,
 amend, rebase, merge, deploy, or close that draft.
 
+## Future provider-located project-reviewed Point queue
+
+The following queue is research prioritization only. It neither approves a
+coordinate nor changes the present-policy Withhold result.
+
+| ID | Available evidence | Cross-provider agreement | Photography | Point-like status | Coordinate/digitization work | Sensitivity or misleading risk |
+| --- | --- | --- | --- | --- | --- | --- |
+| N03 | Exact component results and official parent/component evidence | Exact or related results on both providers; complex distinction remains | Not yet reviewed for a reproducible feature workflow | Point-like historic component | Isolate the component and create or obtain a numerical reference Point | Do not substitute the visitor complex or entire national designation |
+| N07 | Exact results, official locality, owner-supplied building/context record | Strong exact-name and visual locality/building agreement | Provider-hosted entrance/building views reviewed | Confirmed point-like physical building/site candidate | Digitize or obtain a numerical Point under the separately clarified method | Review access, fabric meaning, uncertainty, and map-scale impression |
+| N08 | Exact result in 大桥村 plus official identity | Exact/longer-form results on both providers | Not yet reviewed | Point-like headquarters site | Isolate and numerically capture the feature reference | Keep separate from P22 and avoid venue substitution |
+| P22 | Exact longer-form results plus official locality | Exact/longer-form results on both providers | Not yet reviewed | Point-like headquarters site | Confirm the physical component and numerically capture it | Keep separate from N08; an address alone is not a Point |
+| M23 | Exact residence result and official identity | Exact results on both providers | Not yet reviewed | Point-like residence candidate | Resolve residence/entrance/visitor centre, then capture numerically | Tourism-centre or entrance substitution may mislead |
+| M30 | Exact museum results and official museum identity | Exact results on both providers | Not yet reviewed | Point-like visitor venue | Isolate and numerically capture the museum reference | Must not substitute for N04 or the larger visitor complex |
+
+## Proposed future digitization method
+
+A separate policy-clarification PR should evaluate and document all of these
+criteria before any queued candidate is re-evaluated:
+
+1. official identity and locality are reconciled;
+2. the provider result represents the heritage feature rather than only a
+   village, park, business, or viewport;
+3. two providers agree, or one provider is supported by equivalent independent
+   evidence;
+4. photographs, plaques, or architectural evidence identify the physical
+   feature;
+5. the marker corresponds to a specific building or site;
+6. source screenshots, provider references, and access dates are recorded,
+   with commercial imagery retained privately unless its publication rights
+   are established;
+7. a numerical Point is captured through a documented, reproducible project
+   method, recording the tool, operator, date, and repeatable placement rule;
+8. input and output CRS treatment and deterministic conversion, where
+   applicable, are documented;
+9. uncertainty is assigned honestly, including numerical reconciliation
+   against a second digitization or coordinate where available;
+10. sensitivity and access implications pass review;
+11. misleading-risk limitations, including component, extent, boundary, and
+    provider-venue limitations, are explicit; and
+12. the public representation is labelled
+    `project-reviewed-interpretation`, not authority-supplied, and receives a
+    separate candidate-specific publication approval.
+
+Reject the method for a candidate when the evidence is a locality-only result,
+village or community centroid, search viewport centre, manually estimated
+screenshot-pixel coordinate, unresolved same-name result, provider conflict,
+sensitive location without clearance, numerical Point without a reproducible
+method, or provider shape copied without provenance and rights. Also reject it
+when the feature cannot be reproducibly isolated, numerical reconciliations
+fail the approved tolerance, or the resulting Point would materially
+misrepresent the protected identity. One active representation and later
+supersession remain mandatory.
+
 ## Evidence needed to change an outcome
 
 For a point-like identity:
 
-1. preserve the feature-specific raw provider or institutional coordinate;
-2. record its asserted CRS and coordinate meaning;
+1. preserve a feature-specific raw provider/institutional coordinate or create
+   a documented, reproducible numerical project digitization under the
+   separately approved clarification;
+2. record its asserted or digitization CRS and coordinate meaning;
 3. add independent feature-specific corroboration;
 4. convert and reconcile it deterministically to WGS84;
 5. select a controlled Point meaning and honest uncertainty;

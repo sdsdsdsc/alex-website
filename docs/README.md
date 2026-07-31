@@ -103,7 +103,11 @@ Key groups include:
   readiness, and future-form research expansion.
 - [Phase 15C-11 Xinyu fallback Point evidence audit](./audits/phase-15c-11-xinyu-fallback-point-evidence-audit.md),
   the 39-candidate minimum-Point-gate review. It finds no new passing candidate
-  and leaves the paused PR #69 batch at Xiabu P19 only.
+  and leaves the paused PR #69 batch at Xiabu P19 only. Owner-supplied N07
+  evidence confirms a provider-located point-like physical candidate, but no
+  numerical project-reviewed Point is digitized or approved. The audit
+  recommends a separate non-substantive policy clarification followed by a
+  bounded provider-located candidate re-evaluation.
 
 Xiabu and Xieli remain unpublished. Production remains five official Point
 features with no published line or area geometry.
