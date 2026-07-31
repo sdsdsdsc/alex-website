@@ -1,5 +1,10 @@
 # Phase 15C-6 - Official-record publication policy and Xinyu batch plan
 
+> **Current audit:** This historical plan is superseded for current Point
+> readiness and PR #69 routing by the
+> [Phase 15C-8 complete Xinyu Point re-audit](../audits/phase-15c-8-xinyu-official-point-reaudit.md).
+> Its evidence remains part of the audit trail.
+
 ## Outcome and stop point
 
 This document is preserved as the historical Phase 15C-6 policy-development

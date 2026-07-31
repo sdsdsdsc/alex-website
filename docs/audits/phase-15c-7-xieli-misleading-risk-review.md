@@ -1,5 +1,11 @@
 # Phase 15C-7 - Xieli Site misleading-risk review
 
+> **Current routing:** The
+> [Phase 15C-8 complete Xinyu Point re-audit](./phase-15c-8-xinyu-official-point-reaudit.md)
+> preserves this review's generalized-Point-only conclusion and excludes
+> Xieli from the proposed PR #69 batch until its presentation and evidence
+> gates pass.
+
 ## Decision
 
 **Do not approve the proposed 60 × 60 metre generalized reference-area Polygon. Recommend a generalized reference Point only, subject to separate explicit implementation approval.**
