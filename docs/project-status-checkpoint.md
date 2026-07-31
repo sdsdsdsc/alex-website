@@ -123,7 +123,8 @@ The engine boundary is coherent: Firebase initialization, reads/writes, DOM rend
 | Phase 15C-6 | Official-record publication policy and batch plan | Historical policy-development and batch-planning record | Consolidated the historical audits and Xiabu pilot, developed the five-outcome model, and recorded the bounded proposed future batch and per-record limitations. The reusable policy now lives in the standalone official-record publication policy. | Planning and documentation only. Production remains unchanged and Point-only. | Preserve the complete historical plan; use the standalone policy for current decisions. Any implementation or publication requires new explicit approval. |
 | Phase 15C-7 | Xieli misleading-risk decision | Research recommendation complete; implementation not approved | Compares the theoretical 60 × 60 m generalized area, a 500 m uncertainty area, a generalized Point, and withholding at realistic zoom levels. Rejects both area representations because the square looks exact while its uncertainty lies outside the site-level view and the broader uncertainty area dominates close views. Recommends a generalized reference Point only, with 500 m uncertainty and explicit datum, footprint, archaeological-extent, and legal-boundary cautions. | Xieli and Xiabu remain unpublished. Production stays at five official Points and no real non-Point geometry. | Review the Point recommendation separately. Withhold Xieli if distinct generalized styling and persistent limitation wording cannot meet the policy gate. |
 | Phase 15C-8 / PR #68 | Complete Xinyu Official Heritage Point re-audit | Research and documentation complete; merged and production verified | Reconciles all 22 official provincial-register record/component rows, 21 distinct displayed designation names, the two parent/component complications, six overlapping Xinyu machine records, five public-location decisions, and five production Points. Applies the controlling natural-form, future non-Point, Point-readiness, operational-outcome, and PR #69 routing fields to every row. | Retains the five existing Points and proposes only the Xiabu 暴动举行地旧址 component as one ordinary Point for a separately approved PR #69. Xieli remains generalized-Point-only research and is excluded from that batch. No data, decision, generated GeoJSON, runtime, Community Heritage, or production change. | PR #69 was opened separately and is now paused; preserve its branch and head until new instruction. |
-| Phase 15C-10 | Complete 2025 Xinyu national/provincial/municipal list audit | Research documentation in progress; implementation not approved | Transcribes and reconciles all 62 official rows/separately named components across all three levels, records 58 designation identities and 62 proposed public identities, searches every identity on Gaode and Baidu, classifies Point readiness, and inventories 29 future non-Point candidates—8 lines and 21 areas—without drawing geometry. | Five production Points remain unchanged. P19 Xiabu remains the only unpublished ordinary-Point candidate and its draft PR #69 remains paused; P20 and Xieli still need evidence. P19 and P20 are point-like building components for which future non-Point representation is unnecessary. The 46 needs-more-evidence and 10 deferred-non-point identities remain operationally withheld. No runtime, source data, generated GeoJSON, Community Heritage, Firebase, or production change. | Review the documentation-only audit separately. Do not treat provider search results or the candidate register as implementation approval, and do not renumber the approved #69–#73 sequence. |
+| Phase 15C-10 / PR #70 | Complete 2025 Xinyu national/provincial/municipal list audit | Research documentation complete; merged and production verified | Transcribes and reconciles all 62 official rows/separately named components across all three levels, records 58 designation identities and 62 proposed public identities, searches every identity on Gaode and Baidu, classifies Point readiness, and inventories 29 future non-Point candidates—8 lines and 21 areas—without drawing geometry. | Five production Points remain unchanged. P19 Xiabu remains the only unpublished ordinary-Point candidate and its draft PR #69 remains paused; P20 and Xieli still need evidence. P19 and P20 are point-like building components for which future non-Point representation is unnecessary. The 46 needs-more-evidence and 10 deferred-non-point identities remain operationally withheld. No runtime, source data, generated GeoJSON, Community Heritage, Firebase, or production change. | Preserve the merged evidence baseline. Do not treat provider search results or the candidate register as implementation approval, and do not renumber the approved #69–#73 sequence. |
+| Phase 15C-11 | Xinyu fallback Point evidence audit | Documentation complete; implementation not approved | Constructs a reproducible 39-identity union from every unpublished provider-confirmed identity and every plausible future line/area candidate. Applies candidate-by-candidate identity, provider, independent-corroboration, raw-coordinate/CRS, conversion, meaning, uncertainty, sensitivity, and misleading-risk gates. | No candidate preserves a legitimate raw feature coordinate and record-specific CRS, so all 39 remain Withhold pending evidence. The exact ordered addition list for paused PR #69 is empty. No runtime, data, schema implementation, generated GeoJSON, rendering, Community Heritage, Firebase, deployment, or production change. | Review this documentation-only audit separately. Preserve P19 as the sole paused PR #69 proposal and require new evidence plus separate approval before adding any candidate. |
 | Official Heritage spatial policy and roadmap | Current controlling documentation | Defines five simplified public types, evidence-led natural forms, one active public representation per identity, authority-versus-project representation status, rejection gates, and future sidebar/filter logic. Records the approved PR #68–#73 sequence, with PRs #71–#72 extending the merged Phase 15C-1 validation and Phase 15C-2 rendering foundations rather than rebuilding them. | Documentation only. No runtime, data, schema, rendering, Community Heritage, export, Firebase, or production change. | Review PR #68 separately. PR #69 is eligible only after the audit is merged and a new implementation approval is given. |
 | Phase 15 | Testing/staging/deployment/rollback | Partly done | Pure-helper browser harness, manual phase checks, Git workflow, and GitHub Pages deployment history exist. | No staging environment, automated CI, release checklist, smoke suite, rollback procedure, or deployed-rules verification record tied to releases. | Make this one of the next structural priorities. |
 | Phase 16 | Configuration system for other towns/cities | Not started | Some location helpers and generic place fields are reusable. | Tenant/config model, branding/content configuration, collection isolation, security model, onboarding, and migration strategy. | Do not begin before current single-site workflows are tested and documented. |
@@ -157,7 +158,11 @@ preserving its conditional generalized-Point-only research result. The
 Phase 15C-10 documentation audit expands research coverage to all 62 national,
 provincial, and municipal rows/separately named components. It does not alter
 the Phase 15C-8 decision, and its broad non-Point register does not authorize
-the future PR #70 pilot. Draft PR #69 is paused with its branch and head
+implementation. Phase 15C-11 then tests the 39-identity union of
+provider-confirmed and plausible future line/area candidates against the
+minimum Point gate. Every candidate remains withheld because the legitimate
+raw-coordinate/CRS and WGS84 reconciliation chain is unresolved; the PR #69
+addition list is empty. Draft PR #69 is paused with its branch and head
 preserved.
 The
 standalone Official Heritage spatial
@@ -166,7 +171,8 @@ authority and removes simultaneous active Point-and-shape publication from the
 approved direction. Xiabu and Xieli remain unpublished. The practical position
 is: **Phase 15C-2 / PR 5B remains the production baseline; Phase 15C-8 / PR
 #68 is merged research documentation; draft PR #69 is safely paused; and the
-complete-list audit is documentation only.**
+merged complete-list audit and fallback Point audit authorize no additional
+publication.**
 
 ## 9. Stop / Pause List
 
@@ -201,10 +207,12 @@ The current sequence is maintained in the
 
 ## 11. Current bounded activity
 
-### Complete 2025 Xinyu list audit — documentation only
+### Xinyu fallback Point evidence audit — documentation only
 
-Review the national, provincial, and municipal research expansion in the
-[Phase 15C-10 audit](./audits/phase-15c-10-xinyu-complete-official-list-audit.md).
-It does not publish Xiabu, Xieli, or any other record and does not assume or
-consume an approved sequence number. Keep PR #69 paused and stop after this
+Review the 39-candidate publication-gate analysis in the
+[Phase 15C-11 audit](./audits/phase-15c-11-xinyu-fallback-point-evidence-audit.md)
+and its
+[candidate matrix](./research/phase-15c-11-xinyu-fallback-point-candidate-matrix.md).
+It recommends no additions to PR #69, publishes no record, and does not assume
+or consume an approved sequence number. Keep PR #69 paused and stop after this
 documentation PR unless a new instruction is given.

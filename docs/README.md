@@ -101,6 +101,9 @@ Key groups include:
 - [Phase 15C-10 complete 2025 Xinyu list audit](./audits/phase-15c-10-xinyu-complete-official-list-audit.md),
   the canonical 62-row national/provincial/municipal identity, provider,
   readiness, and future-form research expansion.
+- [Phase 15C-11 Xinyu fallback Point evidence audit](./audits/phase-15c-11-xinyu-fallback-point-evidence-audit.md),
+  the 39-candidate minimum-Point-gate review. It finds no new passing candidate
+  and leaves the paused PR #69 batch at Xiabu P19 only.
 
 Xiabu and Xieli remain unpublished. Production remains five official Point
 features with no published line or area geometry.
@@ -125,7 +128,10 @@ is preserved as a historical architecture and safety-design record.
   [provider matrix](./research/phase-15c-10-xinyu-provider-evidence-matrix.md)
   and the research-only
   [future non-Point candidate inventory](./research/phase-15c-10-xinyu-non-point-candidate-inventory.md),
-  containing 8 line and 21 area candidates.
+  containing 8 line and 21 area candidates, plus the
+  [fallback Point candidate matrix](./research/phase-15c-11-xinyu-fallback-point-candidate-matrix.md),
+  which reconciles all 39 unpublished candidates and records their publication
+  gates.
 - [docs/assets/](./assets/) contains documentation visuals, including the
   [Phase 15C-7 Xieli prototype comparison](./assets/phase-15c-7-xieli-prototype-comparison.svg).
 

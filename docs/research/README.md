@@ -14,4 +14,10 @@ The
 is retained here as reusable external-reference guidance. It is not controlling
 project policy.
 
-No Phase 15C research draft requires placement here at present.
+Current Phase 15C evidence records include the
+[complete Xinyu provider matrix](./phase-15c-10-xinyu-provider-evidence-matrix.md),
+the
+[future non-Point inventory](./phase-15c-10-xinyu-non-point-candidate-inventory.md),
+and the
+[fallback Point candidate matrix](./phase-15c-11-xinyu-fallback-point-candidate-matrix.md).
+They are documentation evidence only and are not application inputs.

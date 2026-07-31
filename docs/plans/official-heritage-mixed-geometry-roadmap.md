@@ -13,12 +13,16 @@ depends on evidence.
 
 The
 [complete 2025 Xinyu list audit](../audits/phase-15c-10-xinyu-complete-official-list-audit.md)
-is a documentation-only evidence expansion created while draft PR #69 is
-paused. It covers all national, provincial, and municipal rows/components and
-supplies a full provider matrix and a 29-candidate future non-Point register
-(8 lines and 21 areas). It
-does not take an approved sequence number, renumber the steps below, publish a
-record, or authorize the PR #70 shape pilot.
+is the merged documentation-only evidence expansion created while draft PR #69
+is paused. It covers all national, provincial, and municipal rows/components
+and supplies a full provider matrix and a 29-candidate future non-Point
+register (8 lines and 21 areas). The subsequent
+[fallback Point evidence audit](../audits/phase-15c-11-xinyu-fallback-point-evidence-audit.md)
+tests the union of provider-confirmed and plausible line/area identities
+against the minimum Point threshold. It finds 39 unpublished candidates and no
+new passing Point: the exact ordered addition list for PR #69 is `[]`.
+Neither interposed documentation audit takes an approved sequence number,
+renumbers the steps below, publishes a record, or authorizes implementation.
 
 ## Approved sequence
 
@@ -76,6 +80,10 @@ replace or rebuild the existing geometry validation and rendering systems.
 - The complete-list audit is an interposed research dependency only. Its
   readiness findings may narrow PR #69 or PR #70, but cannot expand either
   implementation scope without separate approval.
+- The fallback Point audit applies that dependency to 39 unpublished
+  candidates. All remain Withhold pending evidence because no candidate
+  preserves the mandatory raw-coordinate/CRS and WGS84 reconciliation chain.
+  It adds nothing to PR #69 and does not change the approved sequence.
 - The Phase 15C-8 audit recommends retaining the five production Points and
   proposes only the Xiabu `暴动举行地旧址` component as an ordinary PR #69
   candidate. Xieli remains a generalized-Point-only research result and is
@@ -104,7 +112,8 @@ replace or rebuild the existing geometry validation and rendering systems.
 - Xieli is not published.
 
 Draft PR #69 remains paused. The complete-list audit does not modify its
-branch, commit, files, or publication proposal.
+branch, commit, files, or publication proposal. The fallback Point audit also
+leaves it unchanged and recommends no additional Point candidate.
 
 ## PR #67 exclusions
 
