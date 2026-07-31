@@ -13,12 +13,18 @@ depends on evidence.
 
 The
 [complete 2025 Xinyu list audit](../audits/phase-15c-10-xinyu-complete-official-list-audit.md)
-is a documentation-only evidence expansion created while draft PR #69 is
-paused. It covers all national, provincial, and municipal rows/components and
-supplies a full provider matrix and a 29-candidate future non-Point register
-(8 lines and 21 areas). It
-does not take an approved sequence number, renumber the steps below, publish a
-record, or authorize the PR #70 shape pilot.
+is the merged documentation-only evidence expansion created while draft PR #69
+is paused. It covers all national, provincial, and municipal rows/components
+and supplies a full provider matrix and a 29-candidate future non-Point
+register (8 lines and 21 areas). The subsequent
+[fallback Point evidence audit](../audits/phase-15c-11-xinyu-fallback-point-evidence-audit.md)
+tests the union of provider-confirmed and plausible line/area identities
+against the minimum Point threshold. Under the current gates it finds 39
+unpublished candidates and no new passing Point: the exact ordered addition
+list for PR #69 is `[]`. Owner-supplied N07 evidence nevertheless establishes
+a concrete provider-located project-digitization case, so a separate
+non-substantive policy clarification is recommended before candidate
+re-evaluation. Neither audit publishes a record or authorizes implementation.
 
 ## Approved sequence
 
@@ -34,29 +40,44 @@ record, or authorize the PR #70 shape pilot.
 3. **PR #69 — approved Xinyu Point batch.** Publish only the separately
    approved Point candidates from the completed re-audit. This draft is
    currently paused with its topic branch and head preserved.
-4. **PR #70 — non-Point inventory and first pilot.** Create the candidate
-   inventory, search for reusable authority and institutional sources, and
-   conduct the first research-only shape pilot. The complete-list audit now
-   supplies the broad candidate inventory and provider baseline; PR #70 must
-   still select a bounded pilot, obtain candidate-specific authority evidence,
-   and perform the separately approved shape analysis. No production shape.
-5. **PR #71 — representation-lifecycle schema and validation extension.**
-   Extend the existing Phase 15C-1 schema and validation foundation for the
+4. **PR #70 — complete-list evidence expansion.** The merged documentation-only
+   audit supplies the full official-identity, provider-search, Point-readiness,
+   and future non-Point candidate baseline. It draws and publishes no shape.
+5. **PR #71 — fallback Point evidence audit and N07 clarification.** Apply the
+   current minimum Point gates to all 39 fallback candidates, record the
+   owner-supplied N07 provider-located physical-feature evidence, keep all 39
+   operationally withheld, and recommend the next policy step. Documentation
+   only; no policy, coordinate, runtime, data, schema, or publication change.
+6. **Next, separately approved policy clarification.** Clarify whether and how
+   documented, reproducible project digitization may satisfy the existing
+   coordinate requirement when raw provider coordinates are unavailable. The
+   recommended interpretation is non-substantive and must preserve all current
+   CRS, reconciliation, uncertainty, sensitivity, misleading-risk, provenance,
+   review, and approval gates.
+7. **Candidate re-evaluation.** Re-evaluate the bounded provider-located queue
+   only after the clarification is approved. Do not resume or expand PR #69
+   without a new candidate-specific publication instruction.
+8. **Later representation-lifecycle schema and validation extension.** Extend
+   the existing Phase 15C-1 schema and validation foundation for the
    one-active-representation model, stable identity, supersession, and
    representation history. Preserve and adapt the existing geometry validators
    rather than create a new geometry system from scratch.
-6. **PR #72 — mixed-geometry interface adaptation.** Adapt and extend the
-   existing Phase 15C-2 mixed-geometry renderer and existing Official Heritage
-   controls for the new five-type sidebar and filter model,
-   active-representation selection, provenance presentation, and
-   accessibility. Preserve the already verified line and area rendering
-   foundation rather than rebuild mixed-geometry rendering.
-7. **PR #73 — first production shape.** Publish and verify the first separately
-   approved evidence-supported production line or area.
-8. **Optional PR #74 — context layers.** Add separately controlled
-   administrative, historical-map, study-area, or other context layers.
-9. **Later PRs — evidence-supported batches.** Research, approve, publish, and
-   verify additional shapes in bounded batches.
+9. **Later mixed-geometry interface adaptation.** Adapt and extend the existing
+   Phase 15C-2 mixed-geometry renderer and existing Official Heritage controls
+   for the new five-type sidebar and filter model, active-representation
+   selection, provenance presentation, and accessibility. Preserve the already
+   verified line and area rendering foundation rather than rebuild it.
+10. **First production shape.** Publish and verify the first separately approved
+    evidence-supported production line or area.
+11. **Optional context layers.** Add separately controlled administrative,
+    historical-map, study-area, or other context layers.
+12. **Later evidence-supported batches.** Research, approve, publish, and verify
+    additional shapes in bounded batches.
+
+Future implementation PR numbers are intentionally unassigned. Assigning a
+number in advance would conflict with the actual interposed PR #70 and PR #71
+documentation work; it would not change the approved policy decisions or the
+relative order of the remaining work.
 
 ## Existing technical baseline
 
@@ -67,8 +88,9 @@ line and area rendering with synthetic fixtures. Those foundations have not
 yet published real non-Point production geometry or implemented the newly
 approved one-active-representation lifecycle.
 
-PRs #71 and #72 therefore extend and adapt merged capabilities. They do not
-replace or rebuild the existing geometry validation and rendering systems.
+The later lifecycle-schema and interface work therefore extends and adapts
+merged capabilities. It does not replace or rebuild the existing geometry
+validation and rendering systems.
 
 ## Dependency gates
 
@@ -76,15 +98,22 @@ replace or rebuild the existing geometry validation and rendering systems.
 - The complete-list audit is an interposed research dependency only. Its
   readiness findings may narrow PR #69 or PR #70, but cannot expand either
   implementation scope without separate approval.
+- The fallback Point audit applies that dependency to 39 unpublished
+  candidates. All remain Withhold pending evidence because no candidate has an
+  approved reproducible numerical Point/CRS and WGS84 reconciliation chain.
+  N07 now passes the physical provider-feature gate, but its Point is not yet
+  digitized or approved. The audit adds nothing to PR #69.
 - The Phase 15C-8 audit recommends retaining the five production Points and
   proposes only the Xiabu `暴动举行地旧址` component as an ordinary PR #69
   candidate. Xieli remains a generalized-Point-only research result and is
   excluded from that batch pending its datum, styling, persistent-limitation,
   and sensitivity gates.
-- The PR #70 research pilot must finish before PR #71 extends the runtime
-  schema for representation lifecycle.
-- The representation-lifecycle extensions must land before PR #72 adapts
-  public presentation to active-representation selection.
+- A separately approved policy clarification must precede re-evaluation of the
+  provider-located project-reviewed Point queue.
+- Candidate re-evaluation must precede any instruction to resume or expand PR
+  #69. PR #69 remains paused in the meantime.
+- Later representation-lifecycle extensions must land before the interface
+  adapts public presentation to active-representation selection.
 - The adapted renderer, filters, provenance, and accessibility must be ready
   before the first real production shape.
 - A production shape requires record-specific evidence and approval in
@@ -104,7 +133,8 @@ replace or rebuild the existing geometry validation and rendering systems.
 - Xieli is not published.
 
 Draft PR #69 remains paused. The complete-list audit does not modify its
-branch, commit, files, or publication proposal.
+branch, commit, files, or publication proposal. The fallback Point audit also
+leaves it unchanged and recommends no additional Point candidate.
 
 ## PR #67 exclusions
 
