@@ -107,6 +107,25 @@
         "translationStatus": "project-reviewed",
         "translationNote": "Project English interpretation describes the named wartime service organization; the official source supplies no English name."
       }
+    },
+    {
+      "recordId": "JX-XY-PCH-018",
+      "sourceSequence": 18,
+      "official": {
+        "officialNameZh": "下保农民暴动旧址——暴动举行地旧址",
+        "officialCategoryZh": "近现代重要史迹",
+        "officialLocationTextZh": "渝水区良山镇下保村",
+        "protectionLevelZh": "省级文物保护单位",
+        "officialDesignationNumber": "6-5-321",
+        "designationBatch": "第六批江西省文物保护单位",
+        "designationDate": null,
+        "periodZh": "1929"
+      },
+      "projectInterpretation": {
+        "projectNameEn": "Former Site of the Xiabu Peasant Uprising — Uprising Site",
+        "translationStatus": "project-reviewed",
+        "translationNote": "Project English interpretation identifies only the separately listed uprising-site component; the official source supplies no English name."
+      }
     }
   ]
 }

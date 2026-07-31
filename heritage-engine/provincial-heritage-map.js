@@ -2,17 +2,17 @@ import { getOfficialMapCategory } from "./official-map-categories.js?v=2026-07-2
 import {
   validateOfficialGeometry,
   validateOfficialGeometryMetadata
-} from "./official-geometry-schema.js?v=2026-07-28-official-geometry-schema-foundation";
+} from "./official-geometry-schema.js?v=2026-07-30-xiabu-component-point";
 import {
   getFeatureGeometryMeaning,
   getOfficialGeometryRenderPresentation,
   getOfficialGeometrySourceLabel,
   prepareOfficialGeometryRenderModels
-} from "./official-geometry-rendering.js?v=2026-07-28-official-geometry-rendering";
+} from "./official-geometry-rendering.js?v=2026-07-30-xiabu-component-point";
 
 const SUPPORTED_SCHEMA_VERSION = "2.0.0";
 const PROVINCIAL_HERITAGE_DATASET_ID = "jiangxi-provincial-protected-heritage-map";
-const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 15;
+const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 16;
 const PROVINCIAL_HERITAGE_LOADING_MESSAGE = "Loading provincial heritage preview…";
 const PROVINCIAL_HERITAGE_EMPTY_MESSAGE = "No approved provincial heritage locations are available to display yet.";
 const PROVINCIAL_HERITAGE_FAILURE_MESSAGE = "The provincial heritage preview could not be loaded.";
@@ -27,6 +27,7 @@ const SUPPORTED_LOCATION_MEANINGS = new Set([
   "heritage-compound-centre",
   "public-entrance",
   "visitor-reference",
+  "component-reference",
   "official-locality-centre",
   "representative-area"
 ]);
@@ -34,7 +35,8 @@ const REVIEWED_DISPLAY_MEANINGS = new Map([
   ["site-point", new Set(["heritage-feature"])],
   ["compound-centroid", new Set(["heritage-compound-centre"])],
   ["public-entrance", new Set(["public-entrance"])],
-  ["visitor-reference-point", new Set(["visitor-reference"])]
+  ["visitor-reference-point", new Set(["visitor-reference"])],
+  ["component-reference-point", new Set(["component-reference"])]
 ]);
 const GENERALIZED_DISPLAY_MEANINGS = new Map([
   ["generalized-locality", new Set(["official-locality-centre"])],
@@ -314,6 +316,8 @@ function buildProvincialMarkerAccessibleName(feature) {
     ? "Generalized official reference"
     : properties.displayLocationType === "visitor-reference-point"
       ? "Visitor reference point"
+      : properties.displayLocationType === "component-reference-point"
+        ? "Component reference point"
       : (
         properties.displayLocationType === "compound-centroid"
           || properties.publicLocationMeaning === "heritage-compound-centre"

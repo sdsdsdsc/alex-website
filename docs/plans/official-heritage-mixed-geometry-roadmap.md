@@ -23,7 +23,7 @@ depends on evidence.
    Research and audit only; its PR #69 batch is a recommendation, not
    publication approval.
 3. **PR #69 — approved Xinyu Point batch.** Publish only the separately
-   approved Point candidates from the completed re-audit.
+   approved Xiabu `暴动举行地旧址` component Point from the completed re-audit.
 4. **PR #70 — non-Point inventory and first pilot.** Create the candidate
    inventory, search for reusable authority and institutional sources, and
    conduct the first research-only shape pilot. No production shape.
@@ -59,12 +59,11 @@ replace or rebuild the existing geometry validation and rendering systems.
 
 ## Dependency gates
 
-- PR #68 must finish before selecting PR #69's Point batch.
-- The Phase 15C-8 audit recommends retaining the five production Points and
-  proposes only the Xiabu `暴动举行地旧址` component as an ordinary PR #69
-  candidate. Xieli remains a generalized-Point-only research result and is
-  excluded from that batch pending its datum, styling, persistent-limitation,
-  and sensitivity gates.
+- PR #68 completed before PR #69 selected its Point batch.
+- PR #69 adds only the Xiabu `暴动举行地旧址` component to the five retained
+  production Points. Xieli remains a generalized-Point-only research result
+  and is excluded pending its datum, styling, persistent-limitation, and
+  sensitivity gates.
 - The PR #70 research pilot must finish before PR #71 extends the runtime
   schema for representation lifecycle.
 - The representation-lifecycle extensions must land before PR #72 adapts
@@ -79,12 +78,13 @@ replace or rebuild the existing geometry validation and rendering systems.
 
 ## Current production baseline
 
-- five active Official Heritage Point features;
+- five active Official Heritage Point features in live production; PR #69's
+  generated dataset contains six pending separate review, merge, and deployment;
 - zero real line features;
 - zero real polygon features;
 - Official Heritage remains off by default;
 - Community Heritage remains unchanged and Point-based;
-- Xiabu is not published;
+- only Xiabu's `暴动举行地旧址` component is published;
 - Xieli is not published.
 
 ## PR #67 exclusions

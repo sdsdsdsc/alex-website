@@ -420,7 +420,10 @@ Every implementation or publication step requires its own approval and
 evidence. Later shape expansion is open-ended rather than guaranteed.
 
 Current production remains exactly five Official Heritage Point features and
-no real line or polygon features. Xiabu and Xieli remain unpublished.
+no real line or polygon features. PR #69's draft generated dataset adds only
+Xiabu's `暴动举行地旧址` component as a sixth Point pending review, merge, and
+deployment. The Xiabu parent and meeting-site component, Xieli, and all real
+line or polygon features remain unpublished.
 
 ## Explicit non-implementation boundary
 

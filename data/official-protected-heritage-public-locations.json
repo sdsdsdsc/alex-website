@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "datasetId": "official-protected-heritage-public-location-decisions",
   "projectMaintainer": "Alex's Photo Board",
-  "projectLastReviewedDate": "2026-07-27",
+  "projectLastReviewedDate": "2026-07-30",
   "decisions": [
     {
       "recordId": "JX-XY-PCH-001",
@@ -372,6 +372,77 @@
         "providerUrl": "https://www.amap.com/place/B0IATLWGUH"
       },
       "transformationOrReconciliationMethod": "The bounded audit retained Gaode POI B0IATLWGUH at 114.978214, 27.769586 GCJ-02 (iterative inverse result 114.973247, 27.772935). A mandatory recheck on 2026-07-27 confirmed the same POI ID, name, visitor photograph and Hengbanqiao address but rendered its current pin at 114.977746, 27.770564 GCJ-02. Using the standard deterministic iterative inverse GCJ-02 transform with Krasovsky 1940 constants a=6378245.0 and ee=0.00669342162296594323 and ten forward-residual iterations produced 114.972780, 27.773914 WGS84. That current result was adopted as the reviewed visitor reference after independent locality and imagery review; the earlier preliminary WGS84 candidate was not copied into GeoJSON."
+    },
+    {
+      "recordId": "JX-XY-PCH-018",
+      "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+      "identityConfidence": "confirmed",
+      "siteLocationConfidence": "Medium",
+      "locationEvidenceConfidence": "Medium",
+      "displayLocationType": "component-reference-point",
+      "locationPrecision": "approximate",
+      "publicLocationMeaning": "component-reference",
+      "publicationLocationPolicy": "approximate",
+      "sensitivityAssessment": "public-exact-acceptable",
+      "latitude": 27.66762,
+      "longitude": 114.99557,
+      "coordinateReferenceSystem": "WGS84",
+      "estimatedUncertaintyMeters": 150,
+      "generalizationRadiusMeters": null,
+      "publicLocationNote": "This reviewed Point identifies the publicly mapped location associated only with the 暴动举行地旧址 component of 下保农民暴动旧址. It does not represent the separately listed 暴动会议地旧址 component, a building footprint, entrance, centroid, complete protected extent or official/legal boundary. Estimated horizontal uncertainty is approximately 150 metres.",
+      "locationEvidenceSummary": "The current official Xinyu register separately lists the 暴动举行地旧址 component in Xiabu Village; the official designation reference 6-5-321 and a photographed protection plaque confirm the component identity. Baidu UID ba0c8d3a43ce938b13293507 and Gaode POI B0L1RCC3EM resolve to a 124-metre WGS84 cluster associated with the public uprising-site venue. The Baidu-derived point was selected without averaging because its plaque evidence is component-specific; the distinct 暴动会议地旧址 component remains unpublished.",
+      "reviewedBy": "project owner",
+      "reviewedDate": "2026-07-30",
+      "reviewStatus": "approved",
+      "projectLocationSources": [
+        {
+          "sourceId": "JX-XY-PCH-018-S01",
+          "sourceType": "official-record",
+          "sourceTitle": "新余市市级以上文物保护单位名录（2025年）",
+          "sourcePublisher": "新余市文化广电旅游局",
+          "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+          "sourceAccessedDate": "2026-07-30",
+          "supports": ["official-identity", "official-locality"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-018-S02",
+          "sourceType": "institutional-description",
+          "sourceTitle": "下保村红色旧址参观与现场教学报道",
+          "sourcePublisher": "江西工程学院",
+          "sourceUrl": "https://www.jxue.edu.cn/2026/0708/c21a47452/page.htm",
+          "sourceAccessedDate": "2026-07-30",
+          "supports": ["independent-identity", "visitor-information", "locality-match"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-018-S03",
+          "sourceType": "gaode-poi",
+          "sourceTitle": "下保农民暴动旧址 (B0L1RCC3EM)",
+          "sourcePublisher": "高德地图",
+          "sourceUrl": "https://www.amap.com/place/B0L1RCC3EM",
+          "sourceAccessedDate": "2026-07-30",
+          "supports": ["poi-name", "locality-match", "detailed-address"]
+        },
+        {
+          "sourceId": "JX-XY-PCH-018-S04",
+          "sourceType": "provider-comparison",
+          "sourceTitle": "下保农民暴动旧址 (ba0c8d3a43ce938b13293507)",
+          "sourcePublisher": "百度地图",
+          "sourceUrl": "https://j.map.baidu.com/t/NGXr3t",
+          "sourceAccessedDate": "2026-07-30",
+          "supports": ["poi-name", "locality-match", "venue-photograph", "detailed-address"]
+        }
+      ],
+      "originalProviderCoordinate": {
+        "provider": "百度地图",
+        "poiName": "下保农民暴动旧址",
+        "whatItRepresents": "Public POI associated with the uprising-site component through the photographed protection plaque; the provider pin is not treated as a footprint, entrance, complete extent or legal boundary.",
+        "latitude": 27.670165011,
+        "longitude": 115.007145335,
+        "coordinateReferenceSystem": "BD-09",
+        "coordinateReferenceSystemStatus": "documented",
+        "providerUrl": "https://j.map.baidu.com/t/NGXr3t"
+      },
+      "transformationOrReconciliationMethod": "Baidu UID ba0c8d3a43ce938b13293507 supplied Baidu Mercator 12802676.16, 3187429.36. Deterministic Baidu Mercator-to-BD-09 conversion produced 115.007145335, 27.670165011; deterministic BD-09-to-GCJ-02 conversion produced 115.000605641, 27.664348519; and the standard iterative inverse GCJ-02 transform produced 114.995569672, 27.667620470 WGS84, rounded to six decimals as 114.995570, 27.667620. Independently, Gaode POI B0L1RCC3EM supplied 114.999665, 27.665090 GCJ-02 and converted to 114.994632317, 27.668364844 WGS84. The two results are 124.0 metres apart. The Baidu-derived result was selected, not averaged, because its venue photograph shows the component-specific protection plaque; the separation and provider-pin ambiguity are represented by the 150-metre uncertainty."
     }
   ]
 }

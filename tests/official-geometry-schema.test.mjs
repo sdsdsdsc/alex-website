@@ -65,7 +65,8 @@ test("controlled geometry vocabularies remain bounded", () => {
     "Polygon",
     "MultiPolygon"
   ]);
-  assert.equal(OFFICIAL_GEOMETRY_MEANINGS.length, 11);
+  assert.equal(OFFICIAL_GEOMETRY_MEANINGS.length, 12);
+  assert.ok(OFFICIAL_GEOMETRY_MEANINGS.includes("component-reference-point"));
   assert.equal(OFFICIAL_GEOMETRY_SOURCE_TYPES.length, 6);
   assert.deepEqual(OFFICIAL_GEOMETRY_PRECISIONS, [
     "reviewed",

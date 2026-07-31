@@ -36,9 +36,9 @@ function makeValidEmpty() {
     metadata: {
       schemaVersion: "2.0.0",
       datasetId: "jiangxi-provincial-protected-heritage-map",
-      sourceRecordCount: 15,
+      sourceRecordCount: 16,
       featureCount: 0,
-      excludedRecordCount: 15,
+      excludedRecordCount: 16,
       generationStatus: "valid-empty",
       geometryProvenance: "Alex's Photo Board project coordinate review"
     },
@@ -95,7 +95,7 @@ function makeFeatureCollection(features) {
     metadata: {
       ...makeValidEmpty().metadata,
       featureCount: features.length,
-      excludedRecordCount: 15 - features.length,
+      excludedRecordCount: 16 - features.length,
       generationStatus: features.length === 0 ? "valid-empty" : "valid"
     },
     features
@@ -113,7 +113,7 @@ test("accepts the committed valid-empty contract", () => {
   const result = validateProvincialHeritageGeoJson(makeValidEmpty());
   assert.equal(result.status, "valid-empty");
   assert.equal(result.features.length, 0);
-  assert.equal(result.metadata.excludedRecordCount, 15);
+  assert.equal(result.metadata.excludedRecordCount, 16);
 });
 
 test("rejects an unsupported schema", () => {
@@ -149,7 +149,7 @@ test("rejects non-array features", () => {
 test("rejects the wrong source record count", () => {
   const value = makeValidEmpty();
   value.metadata.sourceRecordCount = 9;
-  expectInvalid(value, /sourceRecordCount must be 15/);
+  expectInvalid(value, /sourceRecordCount must be 16/);
 });
 
 test("rejects a feature count mismatch", () => {
@@ -421,17 +421,17 @@ test("publication collection validation fails atomically for a malformed child g
   );
 });
 
-test("accepts the committed five-marker Xinyu publication set", () => {
+test("accepts the committed six-marker Xinyu publication set", () => {
   const result = validateProvincialHeritageGeoJson(committedGeoJson);
   assert.equal(result.status, "valid");
-  assert.equal(result.features.length, 5);
+  assert.equal(result.features.length, 6);
   assert.equal(result.features[0].id, "JX-XY-PCH-001");
   assert.deepEqual(result.features[0].geometry.coordinates, [114.937042, 27.798123]);
   assert.equal(result.features[0].properties.markerClass, "reviewed");
   assert.equal(result.features[0].properties.estimatedUncertaintyMeters, 75);
   assert.deepEqual(
     result.features.map(({ id }) => id),
-    ["JX-XY-PCH-001", "JX-XY-PCH-008", "JX-XY-PCH-009", "JX-XY-PCH-014", "JX-XY-PCH-016"]
+    ["JX-XY-PCH-001", "JX-XY-PCH-008", "JX-XY-PCH-009", "JX-XY-PCH-014", "JX-XY-PCH-016", "JX-XY-PCH-018"]
   );
   assert.deepEqual(
     getPublishedOfficialMapCategories(result.features).map((category) => category.label),
@@ -448,7 +448,7 @@ test("accepts the committed five-marker Xinyu publication set", () => {
     ),
     {
       "ancient-buildings": 3,
-      "important-modern-historic-sites": 2
+      "important-modern-historic-sites": 3
     }
   );
 });

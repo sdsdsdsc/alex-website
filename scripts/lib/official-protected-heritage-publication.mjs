@@ -26,6 +26,7 @@ const DISPLAY_LOCATION_TYPES = new Set([
   "compound-centroid",
   "public-entrance",
   "visitor-reference-point",
+  "component-reference-point",
   "generalized-locality",
   "generalized-area-reference",
   "withheld"
@@ -42,6 +43,7 @@ const PUBLIC_LOCATION_MEANINGS = new Set([
   "heritage-compound-centre",
   "public-entrance",
   "visitor-reference",
+  "component-reference",
   "official-locality-centre",
   "representative-area",
   "withheld"
@@ -297,11 +299,13 @@ function validateXinyuCompanionDataset(dataset) {
           "periodZh"
         ].forEach((key) => validateNullableString(errors, record.official[key], `${path}.official.${key}`));
         validateIsoDate(errors, record.official.designationDate, `${path}.official.designationDate`, { nullable: true });
-        addError(
-          errors,
-          record.official.officialDesignationNumber === null,
-          `${path}.official.officialDesignationNumber must remain null; sourceSequence is not a designation number.`
-        );
+        if (record.official.officialDesignationNumber !== null) {
+          addError(
+            errors,
+            /^\d+-\d+-\d+$/.test(record.official.officialDesignationNumber),
+            `${path}.official.officialDesignationNumber must use the documented designation-number form.`
+          );
+        }
       }
 
       if (validateExactKeys(errors, record.projectInterpretation, XINYU_PROJECT_KEYS, `${path}.projectInterpretation`)) {
@@ -480,7 +484,8 @@ function validatePublicLocationDecision(errors, decision, path, recordIndex) {
       "site-point": ["heritage-feature"],
       "compound-centroid": ["heritage-compound-centre"],
       "public-entrance": ["public-entrance"],
-      "visitor-reference-point": ["visitor-reference"]
+      "visitor-reference-point": ["visitor-reference"],
+      "component-reference-point": ["component-reference"]
     };
     addError(
       errors,

@@ -12,12 +12,12 @@
       {
         "datasetId": "xinyu-provincial-protected-heritage-marker-pilot",
         "sourcePath": "data/xinyu-provincial-heritage-marker-pilot.json",
-        "recordCount": 5
+        "recordCount": 6
       }
     ],
     "publicLocationSource": "data/official-protected-heritage-public-locations.json",
-    "sourceRecordCount": 15,
-    "featureCount": 5,
+    "sourceRecordCount": 16,
+    "featureCount": 6,
     "excludedRecordCount": 10,
     "generationStatus": "valid",
     "deterministicSourceOrder": [
@@ -214,6 +214,44 @@
         "coordinates": [
           114.97278,
           27.773914
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "JX-XY-PCH-018",
+      "properties": {
+        "recordId": "JX-XY-PCH-018",
+        "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+        "officialNameZh": "下保农民暴动旧址——暴动举行地旧址",
+        "projectNameEn": "Former Site of the Xiabu Peasant Uprising — Uprising Site",
+        "projectEnglishStatus": "Alex's Photo Board project interpretation",
+        "protectionLevelZh": "省级文物保护单位",
+        "officialCategoryZh": "近现代重要史迹",
+        "officialLocationTextZh": "渝水区良山镇下保村",
+        "sourceTitleZh": "新余市市级以上文物保护单位名录（2025年）",
+        "sourceIssuerZh": "新余市文化广电旅游局",
+        "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+        "sourceAccessedDate": "2026-07-24",
+        "identityConfidence": "confirmed",
+        "siteLocationConfidence": "Medium",
+        "locationEvidenceConfidence": "Medium",
+        "displayLocationType": "component-reference-point",
+        "locationPrecision": "approximate",
+        "publicLocationMeaning": "component-reference",
+        "markerClass": "reviewed",
+        "estimatedUncertaintyMeters": 150,
+        "generalizationRadiusMeters": null,
+        "publicationLocationPolicy": "approximate",
+        "publicLocationNote": "This reviewed Point identifies the publicly mapped location associated only with the 暴动举行地旧址 component of 下保农民暴动旧址. It does not represent the separately listed 暴动会议地旧址 component, a building footprint, entrance, centroid, complete protected extent or official/legal boundary. Estimated horizontal uncertainty is approximately 150 metres.",
+        "coordinateReferenceSystem": "WGS84",
+        "projectLocationProvenance": "Alex's Photo Board reviewed public-location decision"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.99557,
+          27.66762
         ]
       }
     }

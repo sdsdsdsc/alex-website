@@ -35,7 +35,7 @@ import {
   buildProvincialMarkerAccessibleName,
   buildProvincialPopupData,
   validateProvincialHeritageGeoJson
-} from "./heritage-engine/provincial-heritage-map.js?v=2026-07-28-official-geometry-rendering";
+} from "./heritage-engine/provincial-heritage-map.js?v=2026-07-30-xiabu-component-point";
 import {
   COMMUNITY_MAP_CATEGORY_DEFINITIONS,
   buildCommunityMarkerAccessibleName,
@@ -48,7 +48,7 @@ import {
   getPublishedOfficialMapCategories
 } from "./heritage-engine/official-map-categories.js?v=2026-07-27-official-category-filters";
 
-const PROVINCIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-provincial-protected-heritage-map.geojson?v=2026-07-28-official-geometry-rendering";
+const PROVINCIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-provincial-protected-heritage-map.geojson?v=2026-07-30-xiabu-component-point";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -185,6 +185,7 @@ function buildProvincialHeritagePopup(feature) {
     "compound-centroid": "Compound reference point",
     "public-entrance": "Public entrance",
     "visitor-reference-point": "Visitor reference point",
+    "component-reference-point": "Component reference point",
     "generalized-locality": "General locality",
     "generalized-area-reference": "General area reference"
   };

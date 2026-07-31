@@ -1,7 +1,7 @@
 import {
   deriveLegacyPointGeometryMeaning,
   getOfficialGeometryMeaningLabel
-} from "./official-geometry-schema.js?v=2026-07-28-official-geometry-schema-foundation";
+} from "./official-geometry-schema.js?v=2026-07-30-xiabu-component-point";
 
 const OFFICIAL_GEOMETRY_SOURCE_PRESENTATION_LABELS = Object.freeze({
   "official-published-geometry": "Official published geometry",

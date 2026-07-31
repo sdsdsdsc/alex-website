@@ -308,3 +308,10 @@ zero lines or polygons.
 
 Stop after opening the draft documentation PR. Do not publish the proposed
 batch, merge this PR, deploy, or begin PR #69.
+
+## Subsequent implementation status
+
+PR #69 separately implements the approved recommendation for only the Xiabu
+`暴动举行地旧址` component as `JX-XY-PCH-018`. It does not publish the parent,
+the `暴动会议地旧址` component, Xieli, or any non-Point geometry. See the
+[Phase 15C-9 publication record](./phase-15c-9-xiabu-uprising-site-point-publication.md).
