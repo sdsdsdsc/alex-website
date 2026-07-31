@@ -95,6 +95,9 @@ Key groups include:
 - [Phase 15C-4 historical mixed-geometry re-audit](./audits/phase-15c-4-xinyu-mixed-geometry-reaudit.md);
 - [Phase 15C-5 authoritative Xiabu evidence record](./audits/phase-15c-5-xiabu-geometry-pilot.md);
 - [Phase 15C-7 authoritative Xieli misleading-risk review](./audits/phase-15c-7-xieli-misleading-risk-review.md).
+- [Phase 15C-8 complete Xinyu Official Heritage Point re-audit](./audits/phase-15c-8-xinyu-official-point-reaudit.md),
+  the current canonical 22-row policy assessment and research-only PR #69
+  batch recommendation.
 
 Xiabu and Xieli remain unpublished. Production remains five official Point
 features with no published line or area geometry.
