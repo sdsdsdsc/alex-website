@@ -15,7 +15,8 @@ The
 [complete 2025 Xinyu list audit](../audits/phase-15c-10-xinyu-complete-official-list-audit.md)
 is a documentation-only evidence expansion created while draft PR #69 is
 paused. It covers all national, provincial, and municipal rows/components and
-supplies a full provider matrix and future non-Point candidate register. It
+supplies a full provider matrix and a 29-candidate future non-Point register
+(8 lines and 21 areas). It
 does not take an approved sequence number, renumber the steps below, publish a
 record, or authorize the PR #70 shape pilot.
 

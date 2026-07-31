@@ -124,7 +124,8 @@ is preserved as a historical architecture and safety-design record.
 - Current Xinyu evidence records include the complete
   [provider matrix](./research/phase-15c-10-xinyu-provider-evidence-matrix.md)
   and the research-only
-  [future non-Point candidate inventory](./research/phase-15c-10-xinyu-non-point-candidate-inventory.md).
+  [future non-Point candidate inventory](./research/phase-15c-10-xinyu-non-point-candidate-inventory.md),
+  containing 8 line and 21 area candidates.
 - [docs/assets/](./assets/) contains documentation visuals, including the
   [Phase 15C-7 Xieli prototype comparison](./assets/phase-15c-7-xieli-prototype-comparison.svg).
 

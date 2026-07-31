@@ -67,6 +67,10 @@ Current research classifications are:
 - `deferred-non-point`.
 
 “Needs more evidence” and “deferred non-Point” both remain unpublished.
+Although the terminal `withhold` classification currently contains zero
+identities, all **46** `needs-more-evidence` identities and all **10**
+`deferred-non-point` identities are operationally withheld from public
+publication until their respective evidence and approval gates are passed.
 
 ## Source-count reconciliation
 
@@ -128,8 +132,8 @@ presentation decisions. `观音岩遗址` is provisionally Archaeological sites;
 | P16 | 省 15; 北伐军仰天岗战场遗址; 仙女湖区城北办事处 | 近现代重要史迹 → Parks, gardens & landscapes | battlefield, not interchangeable with memorial square/forest park | areal | evidence required | deferred-non-point |
 | P17 | 省 16; 上海劳动妇女战地服务团旧址; 渝水区珠珊镇沙头村 | 近现代重要史迹 → Buildings & structures | existing production identity | point-like | unnecessary | ready-ordinary-point |
 | P18 | 省 17; 中共花桥党支部旧址; 仙女湖区九龙山乡塔前分场 | 近现代重要史迹 → Buildings & structures | locality result is not building identity | point-like | unnecessary | needs-more-evidence |
-| P19 | 省 18a; 下保农民暴动旧址——暴动举行地旧址; 渝水区良山镇下保村 | 近现代重要史迹 → Buildings & structures | Xiabu component 1 only | point-like | evidence required only for footprint; ordinary Point sufficient now | ready-ordinary-point; PR #69 remains paused |
-| P20 | 省 18b; 下保农民暴动旧址——暴动会议地旧址; 渝水区良山镇下保村 | 近现代重要史迹 → Buildings & structures | Xiabu component 2; parent POI does not resolve component | point-like | evidence required | needs-more-evidence |
+| P19 | 省 18a; 下保农民暴动旧址——暴动举行地旧址; 渝水区良山镇下保村 | 近现代重要史迹 → Buildings & structures | Xiabu component 1 only | point-like | unnecessary | ready-ordinary-point; PR #69 remains paused |
+| P20 | 省 18b; 下保农民暴动旧址——暴动会议地旧址; 渝水区良山镇下保村 | 近现代重要史迹 → Buildings & structures | Xiabu component 2; parent POI does not resolve component | point-like | unnecessary | needs-more-evidence |
 | P21 | 省 19; 打鼓岭遗址; 渝水区罗坊镇周家村 | 古遗址 → Archaeological sites | same-name provider locality conflicts with official district/location | areal | evidence required | needs-more-evidence |
 | P22 | 省 20; 渝水周家上高会战中国军队第十九集团军总司令部旧址; 渝水区珠珊镇潭口村 | 近现代重要史迹 → Buildings & structures | distinct from N08 58th Division headquarters | point-like | unnecessary | needs-more-evidence |
 | M01 | 市 1; 碾糠山遗址; 渝水区南安乡南门村 | 古遗址 → Archaeological sites | independent designation | areal | evidence required | needs-more-evidence |
@@ -207,6 +211,11 @@ The six ordinary-Point rows are not six new publications. Five are the existing
 production Points. P19 remains only the approved-but-paused PR #69 proposal.
 This audit creates no implementation approval for another row.
 
+The terminal label `withhold` has zero rows, but **56 identities are still
+operationally withheld**: the 46 `needs-more-evidence` rows and the 10
+`deferred-non-point` rows cannot be published until their applicable evidence
+and approval gates pass.
+
 ## Ready-Point coordinate baseline
 
 The five production decisions remain authoritative and unchanged:
@@ -242,6 +251,14 @@ but do not expose a separate component label. The previously reviewed plaque
 photograph remains the component-specific evidence. The conclusion is
 unchanged: P19 is the only unpublished ordinary-Point candidate, P20 needs
 component-specific evidence, and PR #69 remains paused.
+
+Both Xiabu components are point-like buildings and have
+`futureNonPointRepresentation: unnecessary`. The reviewed ordinary Point is
+sufficient for P19. P20 still needs component-specific evidence before any
+Point can be approved. Neither belongs in the future non-Point inventory. If
+exceptional replacement geometry were ever separately justified and approved,
+the one-active-representation rule would require it to supersede the Point,
+never supplement or appear simultaneously with it.
 
 ### Xieli
 

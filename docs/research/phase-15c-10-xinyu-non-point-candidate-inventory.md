@@ -7,7 +7,7 @@ records where a future line or area could communicate the physical subject
 more honestly than a Point. It draws no geometry, copies no provider shape,
 changes no active representation, and approves no implementation.
 
-There are **31 candidates**: **8 LineString** and **23 Polygon/MultiPolygon**.
+There are **29 candidates**: **8 LineString** and **21 Polygon/MultiPolygon**.
 None is production-ready. The current production baseline remains five
 official Points and zero real lines or polygons.
 
@@ -20,9 +20,7 @@ Candidate meanings are controlled:
 - `archaeological extent` — evidence-based site extent, not a provider label
   halo or uncertainty buffer;
 - `landscape extent` — the verified cemetery, battlefield, or memorial
-  landscape, not a convenient park boundary; and
-- `component footprints` — distinct verified protected components, never a
-  bounding shape around unrelated points.
+  landscape, not a convenient park boundary.
 
 ## Common evidence controls
 
@@ -81,9 +79,6 @@ identity-specific issue stated explicitly.
 | P16 北伐军仰天岗战场遗址 | provincial; areal | Polygon/MultiPolygon; evidenced battlefield/protection extent | Expresses landscape-scale history | Official row; provider park/memorial vicinity only | G-A–G-E; military-history study or protection-range instrument | Severe false-precision risk; do not use forest-park boundary. |
 | M31 九龙山革命烈士纪念塔与墓 | municipal; areal/multipart | Polygon/MultiPolygon; memorial landscape and verified components | Captures tower, graves, and landscape relationship | Official row; exact/variant provider evidence | G-A–G-E; site plan distinguishing protected fabric and visitor grounds | Component and public-park boundary confusion risk. |
 | M28 观音岩遗址 | municipal; areal | Polygon/MultiPolygon; verified carving/site extent | Could show protected rock/site rather than locality | Official row; locality-only provider results | G-A–G-E; carving inventory, rock/site plan, sensitivity review | Provisional public type and extent both unresolved. |
-| P19 下保农民暴动旧址——暴动举行地旧址 | provincial component; point-like building | Polygon; protected component footprint | Future footprint could supplement the approved component-reference Point | Official row; prior plaque; two-provider parent evidence; paused Point candidate | G-A–G-E; building/parcel footprint from reusable authoritative source | Do not delay or replace the reviewed Point automatically; one-active-representation review required. |
-| P20 下保农民暴动旧址——暴动会议地旧址 | provincial component; point-like building | Polygon; protected component footprint | Could distinguish the second component from P19 | Official row; parent/locality provider results only | G-A–G-E plus component-specific identity proof | No Point or footprint until component is independently located. |
-
 ## Priorities and future gates
 
 Research priority is evidence quality, not provider visibility:
@@ -94,10 +89,17 @@ Research priority is evidence quality, not provider visibility:
 3. commission or locate measured bridge alignments, beginning with the already
    published P09 Point;
 4. obtain authoritative plans for P12, P16, and M31; and
-5. keep P19/P20 component evidence separate.
+5. keep P19/P20 out of this inventory: the ordinary Point is sufficient for
+   P19, while P20 needs component-specific evidence before any Point approval.
 
 Any future implementation must extend the already production-verified Phase
 15C-1 geometry validation foundation and Phase 15C-2 mixed-geometry renderer.
 It must also use the approved one-active-representation lifecycle once that
 later schema work exists. This inventory does not authorize a new geometry
 system, a synthetic shape, or a second simultaneous public representation.
+
+P19 and P20 are point-like building components with
+`futureNonPointRepresentation: unnecessary`. If exceptional replacement
+geometry were ever separately justified and approved for either identity, it
+would supersede the active Point under the one-active-representation rule; it
+would not supplement or appear simultaneously with that Point.
