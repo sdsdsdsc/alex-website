@@ -10,6 +10,11 @@ implementation batch. The standalone
 is now the controlling current authority. Nothing in this historical plan
 overrides that policy or constitutes implementation approval.
 
+Its former “Point plus shape now” outcome and multiple-active-representation
+schema discussion are explicitly superseded. Current policy permits one active
+public feature for each official record or separately resolved component
+identity; a later approved line or area supersedes the active Point.
+
 It does not add or publish the Xiabu Point. It does not change official source data, reviewed public-location decisions, generated GeoJSON, application code, tests, category mappings, Firebase, workflows, packages, or production behavior. Nothing in this document is implementation approval.
 
 The complete review universe is the current official register's provincial section: **20处22点**, represented by 22 listed record/component rows. The identity count needs care. The rows contain 21 distinct designation names because 袁州明代城墙砖窑址群 is a cross-city parent represented in Xinyu only by its 芦塘 component; the second extra listed point is the second component of 下保农民暴动旧址. This audit therefore preserves the register's published `20处22点` wording, audits all 22 rows, and does not manufacture one unsupported “designation total” from the display table. The current machine aggregate remains narrower: 15 joined records, five published Points, and ten exclusions. Only one of the ten Phase 14 exclusions, 打鼓岭遗址, is a Xinyu record; the other nine Phase 14 records are outside Xinyu and are not batch candidates here.
