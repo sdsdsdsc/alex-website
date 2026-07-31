@@ -96,8 +96,11 @@ Key groups include:
 - [Phase 15C-5 authoritative Xiabu evidence record](./audits/phase-15c-5-xiabu-geometry-pilot.md);
 - [Phase 15C-7 authoritative Xieli misleading-risk review](./audits/phase-15c-7-xieli-misleading-risk-review.md).
 - [Phase 15C-8 complete Xinyu Official Heritage Point re-audit](./audits/phase-15c-8-xinyu-official-point-reaudit.md),
-  the current canonical 22-row policy assessment and research-only PR #69
-  batch recommendation.
+  the canonical 22-row provincial policy assessment and research-only PR #69
+  batch recommendation;
+- [Phase 15C-10 complete 2025 Xinyu list audit](./audits/phase-15c-10-xinyu-complete-official-list-audit.md),
+  the canonical 62-row national/provincial/municipal identity, provider,
+  readiness, and future-form research expansion.
 
 Xiabu and Xieli remain unpublished. Production remains five official Point
 features with no published line or area geometry.
@@ -118,6 +121,11 @@ is preserved as a historical architecture and safety-design record.
   coordinate investigations, research GeoJSON, KML/KMZ, provider captures, and
   tracing notes. It includes the reusable external-reference
   [Cambridgeshire Local Heritage List research guide](./research/cambridgeshire-local-heritage-list-skill.md).
+- Current Xinyu evidence records include the complete
+  [provider matrix](./research/phase-15c-10-xinyu-provider-evidence-matrix.md)
+  and the research-only
+  [future non-Point candidate inventory](./research/phase-15c-10-xinyu-non-point-candidate-inventory.md),
+  containing 8 line and 21 area candidates.
 - [docs/assets/](./assets/) contains documentation visuals, including the
   [Phase 15C-7 Xieli prototype comparison](./assets/phase-15c-7-xieli-prototype-comparison.svg).
 

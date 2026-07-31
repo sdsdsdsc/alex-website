@@ -11,6 +11,15 @@ PR numbers are indicative if another pull request is created first. Every phase
 requires its own bounded approval. Later shape expansion is open-ended and
 depends on evidence.
 
+The
+[complete 2025 Xinyu list audit](../audits/phase-15c-10-xinyu-complete-official-list-audit.md)
+is a documentation-only evidence expansion created while draft PR #69 is
+paused. It covers all national, provincial, and municipal rows/components and
+supplies a full provider matrix and a 29-candidate future non-Point register
+(8 lines and 21 areas). It
+does not take an approved sequence number, renumber the steps below, publish a
+record, or authorize the PR #70 shape pilot.
+
 ## Approved sequence
 
 1. **PR #67 — spatial representation policy.** Finalize the policy, scope
@@ -23,10 +32,14 @@ depends on evidence.
    Research and audit only; its PR #69 batch is a recommendation, not
    publication approval.
 3. **PR #69 — approved Xinyu Point batch.** Publish only the separately
-   approved Point candidates from the completed re-audit.
+   approved Point candidates from the completed re-audit. This draft is
+   currently paused with its topic branch and head preserved.
 4. **PR #70 — non-Point inventory and first pilot.** Create the candidate
    inventory, search for reusable authority and institutional sources, and
-   conduct the first research-only shape pilot. No production shape.
+   conduct the first research-only shape pilot. The complete-list audit now
+   supplies the broad candidate inventory and provider baseline; PR #70 must
+   still select a bounded pilot, obtain candidate-specific authority evidence,
+   and perform the separately approved shape analysis. No production shape.
 5. **PR #71 — representation-lifecycle schema and validation extension.**
    Extend the existing Phase 15C-1 schema and validation foundation for the
    one-active-representation model, stable identity, supersession, and
@@ -60,6 +73,9 @@ replace or rebuild the existing geometry validation and rendering systems.
 ## Dependency gates
 
 - PR #68 must finish before selecting PR #69's Point batch.
+- The complete-list audit is an interposed research dependency only. Its
+  readiness findings may narrow PR #69 or PR #70, but cannot expand either
+  implementation scope without separate approval.
 - The Phase 15C-8 audit recommends retaining the five production Points and
   proposes only the Xiabu `暴动举行地旧址` component as an ordinary PR #69
   candidate. Xieli remains a generalized-Point-only research result and is
@@ -86,6 +102,9 @@ replace or rebuild the existing geometry validation and rendering systems.
 - Community Heritage remains unchanged and Point-based;
 - Xiabu is not published;
 - Xieli is not published.
+
+Draft PR #69 remains paused. The complete-list audit does not modify its
+branch, commit, files, or publication proposal.
 
 ## PR #67 exclusions
 
