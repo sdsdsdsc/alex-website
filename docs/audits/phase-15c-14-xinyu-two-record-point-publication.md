@@ -15,10 +15,10 @@ completes.
 
 ## Proposed records
 
-| Audit ID | Record ID | Official identity | WGS84 Point | Uncertainty | Meaning and status |
-| --- | --- | --- | --- | ---: | --- |
-| P19 | `JX-XY-PCH-018` | 下保农民暴动旧址——暴动举行地旧址 | `[114.995570, 27.667620]` | 150 m | Component-specific reference Point; project-reviewed public-location decision |
-| N07 | `JX-XY-NCH-007` | 水西红三军团指挥部旧址 | `[115.011333, 27.805882]` | 100 m | `provider-located-project-reviewed-reference-point`; `project-reviewed-interpretation` |
+| Audit ID | Record ID | Official identity | Official designation level | WGS84 Point | Uncertainty | Meaning and status |
+| --- | --- | --- | --- | --- | ---: | --- |
+| P19 | `JX-XY-PCH-018` | 下保农民暴动旧址——暴动举行地旧址 | Provincial | `[114.995570, 27.667620]` | 150 m | Component-specific reference Point; project-reviewed public-location decision |
+| N07 | `JX-XY-NCH-007` | 水西红三军团指挥部旧址 | National | `[115.011333, 27.805882]` | 100 m | `provider-located-project-reviewed-reference-point`; `project-reviewed-interpretation` |
 
 P19 continues to identify only the separately listed 暴动举行地旧址
 component. It does not represent the Xiabu parent designation, the
@@ -50,14 +50,28 @@ beyond its 100 m uncertainty.
 
 No provider screenshot, map tile, commercial outline, or imagery is committed.
 
-## Backward-compatible model treatment
+## Authority-neutral model and compatibility treatment
 
-The existing Xinyu companion file keeps its established dataset identifier and
-path so the five production records and P19 retain their identifiers and source
-relationships. N07 receives the level-specific stable ID `JX-XY-NCH-007` and
-its per-record national protection level and designation fields. The validator
-therefore accepts both established `PCH` and national `NCH` Xinyu record IDs;
-this does not redesign the dataset or alter any existing identity.
+The canonical mixed-level source is
+`data/xinyu-official-heritage-records.json`. The canonical generated public
+aggregate is `data/jiangxi-official-protected-heritage-map.geojson`, and the
+Map and primary Open Data link consume that file. It contains all seven Points:
+one national record and six provincial records.
+
+The historical `data/xinyu-provincial-heritage-marker-pilot.json` and
+`data/jiangxi-provincial-protected-heritage-map.geojson` paths remain as
+provincial-only compatibility contracts. They contain the six provincial
+Points and exclude N07. Validation rejects a national or municipal record in
+that compatibility source. The application imports the authority-neutral
+`heritage-engine/official-heritage-map.js`; the historical provincial module
+remains a compatibility implementation/re-export boundary without leaking
+provincial wording into the combined public interface.
+
+N07 retains the level-specific stable ID `JX-XY-NCH-007`; the six provincial
+features retain their `PCH` IDs. The canonical `official.protectionLevelZh`
+field preserves the official source level and is validated against the ID
+prefix. This architecture changes no feature identity, coordinate, or spatial
+meaning.
 
 N07 alone uses explicit Point geometry metadata so the required evidence method
 and representation status are visible and validated. Legacy Point metadata
@@ -73,9 +87,16 @@ derivation remains unchanged for the other six proposed branch features.
 - existing five production Points: unchanged;
 - P19: exactly one feature;
 - N07: exactly one feature; and
-- Community Heritage, Firebase, mixed-geometry lifecycle, sidebar design,
+- Community Heritage, Firebase, mixed-geometry lifecycle,
   Xieli, the Xiabu parent and meeting-site component, and the five withheld
   Phase 15C-13 candidates: unchanged or unpublished.
+
+The draft interface now uses one default-off **Show Official Heritage** switch,
+followed by the existing official-category controls. Official designation
+level appears in each popup rather than as a sidebar filter. The four-item
+informational guide covers project-reviewed reference Points, generalized
+reference Points, reviewed lines and areas, and approximate or generalized
+geometry; only the seven project-reviewed Points are currently populated.
 
 ## Stop point
 

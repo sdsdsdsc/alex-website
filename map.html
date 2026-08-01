@@ -17,7 +17,7 @@
   <!-- Firebase -->
   <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="script.js" defer></script>
-  <script type="module" src="map.js?v=2026-08-01-xinyu-point-batch" defer></script>
+  <script type="module" src="map.js?v=2026-08-01-official-authority-neutral" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#mapWorkspace">Skip to map and list alternatives</a>
@@ -167,11 +167,11 @@
             </fieldset>
 
             <fieldset class="map-layers-group" aria-describedby="officialLayerHelp">
-              <legend>Official protected heritage</legend>
-              <label class="map-layer-toggle" for="provincialHeritageLayerToggle">
-                <input id="provincialHeritageLayerToggle" type="checkbox">
+              <legend>Official Heritage</legend>
+              <label class="map-layer-toggle" for="officialHeritageLayerToggle">
+                <input id="officialHeritageLayerToggle" type="checkbox">
                 <span class="map-layer-symbol map-layer-symbol--official-filled" aria-hidden="true"></span>
-                <span>Provincial protected heritage</span>
+                <span>Show Official Heritage</span>
               </label>
               <p class="map-layers-group__help" id="officialLayerHelp">Off by default. Loaded only when selected.</p>
               <p class="map-layers-group__help" id="officialCategoryAvailability">Categories become available after the official layer is loaded.</p>
@@ -183,29 +183,29 @@
                   <span>All official categories</span>
                 </label>
                 <div class="map-layer-category-list" id="officialCategoryList"></div>
-                <p class="map-layers-group__help" id="officialCategoryDisabledHelp" hidden>Turn on Provincial protected heritage to change category selections.</p>
+                <p class="map-layers-group__help" id="officialCategoryDisabledHelp" hidden>Turn on Official Heritage to change category selections.</p>
                 <p class="map-layer-category-status" id="officialCategoryStatus" role="status" aria-live="polite">0 of 0 published official locations displayed.</p>
               </div>
             </fieldset>
 
-            <section class="map-layers-group" aria-labelledby="locationDisplayTitle">
-              <h4 id="locationDisplayTitle">Location display</h4>
-              <ul class="map-layer-legend" aria-label="Official heritage location symbols">
+            <section class="map-layers-group" aria-labelledby="officialHeritageSymbolsTitle">
+              <h4 id="officialHeritageSymbolsTitle">Official Heritage map symbols</h4>
+              <ul class="map-layer-legend" aria-label="Official Heritage map symbols">
                 <li>
                   <span class="map-layer-symbol map-layer-symbol--official-filled" aria-hidden="true"></span>
-                  <span><strong>Reviewed official locations</strong><small>Project-reviewed public reference</small></span>
+                  <span><strong>Project-reviewed reference Points</strong><small id="officialReviewedPointStatus">Currently displayed count is reported after loading.</small></span>
                 </li>
                 <li>
                   <span class="map-layer-symbol map-layer-symbol--official-general" aria-hidden="true"></span>
-                  <span><strong>General official references</strong><small>Legend only; none are currently published</small></span>
+                  <span><strong>Generalized reference Points</strong><small>Hollow diamond. Supported; none currently published.</small></span>
                 </li>
                 <li>
                   <span class="map-layer-symbol map-layer-symbol--official-reviewed-geometry" aria-hidden="true"></span>
-                  <span><strong>Reviewed lines and boundaries</strong><small>Solid orange line; restrained area fill</small></span>
+                  <span><strong>Reviewed lines and areas</strong><small>Solid line or restrained fill. Supported; none currently published. The popup states whether geometry is authority-supplied or a project-reviewed interpretation.</small></span>
                 </li>
                 <li>
                   <span class="map-layer-symbol map-layer-symbol--official-qualified-geometry" aria-hidden="true"></span>
-                  <span><strong>Approximate or generalized geometry</strong><small>Dashed line and lighter fill; meaning is stated in the record popup</small></span>
+                  <span><strong>Approximate or generalized geometry</strong><small>Dashed line or lighter fill. Supported; none currently published. The popup explains its meaning, uncertainty and limitations.</small></span>
                 </li>
               </ul>
             </section>
@@ -217,8 +217,9 @@
                 <p>Community records are contributed and maintained by this local project. Search and Filters apply to these records only. Map categories use asset type first, with the legacy category field as a fallback; unknown values use the fallback symbol.</p>
               </details>
               <details>
-                <summary>About official heritage markers</summary>
-                <p>Official source facts are separate from project-produced locations. Filled diamonds are reviewed locations; hollow diamonds are general references. Solid lines and restrained fills identify reviewed line or boundary references; dashed, lighter geometry identifies approximate, generalized, or uncertainty meanings. The popup states the controlled meaning and provenance. Category glyphs and English labels are project presentation aids derived only from validated published Map features. Category choices affect Map visibility only and do not change official source values. Project locations and geometry are not official designation coordinates or legal boundaries.</p>
+                <summary>About Official Heritage representations</summary>
+                <p>Official Heritage records come from national, provincial or municipal registers. The authority of a heritage record is separate from the authority of its map representation. The current map displays seven project-reviewed reference Points. Each popup states the record’s official designation level, geometry meaning, provenance, uncertainty and limitations. A project-reviewed Point is not an authority-supplied coordinate, surveyed heritage extent or legal protection boundary. Each official identity has one active public representation. If an approved line or area later supersedes a Point, only the new active representation will be displayed. Public category names and symbols support map browsing and do not replace the original official classification.</p>
+                <p>The symbol guide describes both representations currently displayed and representation styles supported for future publication. An entry marked “none currently published” is informational and does not indicate that such geometry is presently available.</p>
               </details>
             </section>
           </section>
@@ -226,7 +227,7 @@
           <section class="map-explorer-section map-explorer-section--info" id="mapInfoToolPanel" data-tool-panel="help" role="tabpanel" aria-labelledby="mapInfoTab" tabindex="-1" hidden>
             <h3 id="mapHelpTitle">Map guide</h3>
             <p class="map-explorer-section__text">Use the search and filters to focus the map, then open a place record for full details.</p>
-            <p class="map-explorer-section__text">Use Layers to show or hide community and official heritage markers. Layer choices remain active when you switch tabs.</p>
+            <p class="map-explorer-section__text">Use Layers to show or hide community records and Official Heritage representations. Layer choices remain active when you switch tabs.</p>
 
             <div class="map-explorer-cta" aria-labelledby="mapNominationTitle">
               <h3 id="mapNominationTitle">Nominate a place</h3>
@@ -255,13 +256,13 @@
         </header>
 
         <div class="map-stage">
-          <div class="provincial-heritage-map-status">
-            <p id="provincialHeritageStatus" role="status" aria-live="polite">No heritage records displayed.</p>
-            <p id="provincialHeritageError" role="alert" hidden></p>
+          <div class="official-heritage-map-status">
+            <p id="officialHeritageStatus" role="status" aria-live="polite">No heritage records displayed.</p>
+            <p id="officialHeritageError" role="alert" hidden></p>
           </div>
 
           <div id="map" class="map-canvas map-search-canvas" role="region" aria-labelledby="mapSearchTitle" aria-describedby="mapAccessibleDescription"></div>
-          <p class="visually-hidden" id="mapAccessibleDescription">Interactive heritage map. Keyboard-accessible community and optional official protected heritage features open record summaries. Official features distinguish reviewed, approximate, generalized, and uncertainty meanings. Every matching community record is also available through the Places list above.</p>
+          <p class="visually-hidden" id="mapAccessibleDescription">Interactive heritage map. Keyboard-accessible community records and optional Official Heritage representations open record summaries. Official representations distinguish reviewed, approximate, generalized, and uncertainty meanings. Every matching community record is also available through the Places list above.</p>
         </div>
       </section>
     </div>

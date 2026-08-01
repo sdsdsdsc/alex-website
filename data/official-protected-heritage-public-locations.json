@@ -6,7 +6,7 @@
   "decisions": [
     {
       "recordId": "JX-XY-PCH-001",
-      "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+      "sourceDatasetId": "xinyu-official-heritage-records",
       "identityConfidence": "confirmed",
       "siteLocationConfidence": "Medium",
       "locationEvidenceConfidence": "Medium",
@@ -91,7 +91,7 @@
     },
     {
       "recordId": "JX-XY-PCH-008",
-      "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+      "sourceDatasetId": "xinyu-official-heritage-records",
       "identityConfidence": "confirmed",
       "siteLocationConfidence": "Medium",
       "locationEvidenceConfidence": "Medium",
@@ -162,7 +162,7 @@
     },
     {
       "recordId": "JX-XY-PCH-009",
-      "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+      "sourceDatasetId": "xinyu-official-heritage-records",
       "identityConfidence": "confirmed",
       "siteLocationConfidence": "High",
       "locationEvidenceConfidence": "Medium",
@@ -233,7 +233,7 @@
     },
     {
       "recordId": "JX-XY-PCH-014",
-      "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+      "sourceDatasetId": "xinyu-official-heritage-records",
       "identityConfidence": "confirmed",
       "siteLocationConfidence": "Medium",
       "locationEvidenceConfidence": "Medium",
@@ -304,7 +304,7 @@
     },
     {
       "recordId": "JX-XY-PCH-016",
-      "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+      "sourceDatasetId": "xinyu-official-heritage-records",
       "identityConfidence": "confirmed",
       "siteLocationConfidence": "Medium",
       "locationEvidenceConfidence": "Medium",
@@ -375,7 +375,7 @@
     },
     {
       "recordId": "JX-XY-PCH-018",
-      "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+      "sourceDatasetId": "xinyu-official-heritage-records",
       "identityConfidence": "confirmed",
       "siteLocationConfidence": "Medium",
       "locationEvidenceConfidence": "Medium",
@@ -446,7 +446,7 @@
     },
     {
       "recordId": "JX-XY-NCH-007",
-      "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+      "sourceDatasetId": "xinyu-official-heritage-records",
       "identityConfidence": "confirmed",
       "siteLocationConfidence": "High",
       "locationEvidenceConfidence": "Medium",

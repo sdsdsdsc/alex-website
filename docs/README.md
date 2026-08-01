@@ -49,8 +49,10 @@ The [Official Heritage spatial representation and publication policy](./policy/o
 is the sole controlling authority for official heritage geometry publication.
 It records the five public Official Heritage types, evidence-led natural-form
 defaults, one-active-representation rule, project-interpretation standard,
-provider-located project-reviewed reference Point evidence method, and future
-sidebar and filter direction. The clarification preserves the existing
+  provider-located project-reviewed reference Point evidence method, and future
+  sidebar and filter direction. It also requires truthful record-level
+  national/provincial/municipal designation values and authority-neutral
+  wording for combined datasets. The clarification preserves the existing
 publication gates and does not create a runtime type or approve a candidate. It
 applies only to Official Heritage; Community Heritage remains unchanged and
 Point-based.
@@ -126,6 +128,9 @@ Key groups include:
 - [Phase 15C-14 Xinyu two-record Point publication proposal](./audits/phase-15c-14-xinyu-two-record-point-publication.md),
   the current draft PR #69 implementation record for the separately approved
   P19 and N07 batch.
+- [Phase 15C-15 Official Heritage authority-neutrality audit](./audits/phase-15c-15-official-heritage-authority-neutrality-audit.md),
+  the terminology classification, canonical mixed-level data architecture,
+  provincial-only compatibility contract, and interface correction record.
 
 The draft branch dataset contains the five retained production Points plus P19
 and N07: seven official Point features and no line or area geometry. Live

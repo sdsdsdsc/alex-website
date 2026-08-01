@@ -28,14 +28,14 @@ import {
   writeSharedDiscoveryState
 } from "./heritage-engine/search.js";
 import {
-  PROVINCIAL_HERITAGE_EMPTY_MESSAGE,
-  PROVINCIAL_HERITAGE_FAILURE_MESSAGE,
-  PROVINCIAL_HERITAGE_LOADING_MESSAGE,
-  buildProvincialFeatureAccessibleName,
-  buildProvincialMarkerAccessibleName,
-  buildProvincialPopupData,
-  validateProvincialHeritageGeoJson
-} from "./heritage-engine/provincial-heritage-map.js?v=2026-08-01-xinyu-point-batch";
+  OFFICIAL_HERITAGE_EMPTY_MESSAGE,
+  OFFICIAL_HERITAGE_FAILURE_MESSAGE,
+  OFFICIAL_HERITAGE_LOADING_MESSAGE,
+  buildOfficialFeatureAccessibleName,
+  buildOfficialMarkerAccessibleName,
+  buildOfficialPopupData,
+  validateOfficialHeritageGeoJson
+} from "./heritage-engine/official-heritage-map.js?v=2026-08-01-official-authority-neutral";
 import {
   COMMUNITY_MAP_CATEGORY_DEFINITIONS,
   buildCommunityMarkerAccessibleName,
@@ -48,7 +48,7 @@ import {
   getPublishedOfficialMapCategories
 } from "./heritage-engine/official-map-categories.js?v=2026-07-27-official-category-filters";
 
-const PROVINCIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-provincial-protected-heritage-map.geojson?v=2026-08-01-xinyu-point-batch";
+const OFFICIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-official-protected-heritage-map.geojson?v=2026-08-01-official-authority-neutral";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -72,13 +72,13 @@ function makeBluePinIcon(categoryKey) {
   });
 }
 
-function makeProvincialHeritageIcon(markerClass = "reviewed", categoryKey) {
+function makeOfficialHeritageIcon(markerClass = "reviewed", categoryKey) {
   const category = getOfficialMapCategoryByKey(categoryKey);
   return L.divIcon({
     className: [
-      "provincial-heritage-map-marker",
-      `provincial-heritage-map-marker--${markerClass}`,
-      `provincial-heritage-map-marker--${category.key}`
+      "official-heritage-map-marker",
+      `official-heritage-map-marker--${markerClass}`,
+      `official-heritage-map-marker--${category.key}`
     ].join(" "),
     html: category.glyphSvg,
     iconSize: [34, 34],
@@ -161,17 +161,17 @@ function buildCommunityPlacePopupHtml(record) {
   `;
 }
 
-function buildProvincialHeritagePopup(feature) {
-  const data = buildProvincialPopupData(feature);
+function buildOfficialHeritagePopup(feature) {
+  const data = buildOfficialPopupData(feature);
   const isPoint = data.geometryType === "Point";
   const article = document.createElement("article");
-  article.className = "map-point-card map-point-card--record provincial-heritage-map-popup__content";
+  article.className = "map-point-card map-point-card--record official-heritage-map-popup__content";
 
   const title = document.createElement("h3");
   title.textContent = data.projectNameEn;
 
   const officialName = document.createElement("p");
-  officialName.className = "provincial-heritage-map-popup__official-name";
+  officialName.className = "official-heritage-map-popup__official-name";
   officialName.append("Official name: ");
   const officialNameValue = document.createElement("span");
   officialNameValue.lang = "zh-Hans";
@@ -179,7 +179,7 @@ function buildProvincialHeritagePopup(feature) {
   officialName.appendChild(officialNameValue);
 
   const locationBadge = document.createElement("p");
-  locationBadge.className = "provincial-heritage-map-popup__badge";
+  locationBadge.className = "official-heritage-map-popup__badge";
   const badgeLabels = {
     "site-point": data.locationPrecision === "approximate" ? "Approximate site location" : "Reviewed site location",
     "compound-centroid": "Compound reference point",
@@ -199,7 +199,7 @@ function buildProvincialHeritagePopup(feature) {
   facts.className = "map-point-card__facts";
   const factRows = isPoint
     ? [
-      ["Protection level", data.protectionLevelZh, "zh-Hans"],
+      ["Official designation level", data.officialDesignationLevelLabel],
       ["Official category", data.officialCategoryZh, "zh-Hans"],
       ["Official location", data.officialLocationTextZh, "zh-Hans"],
       ["Displayed location", data.markerClass === "generalized" ? "Generalized area reference" : "Reviewed approximate location"],
@@ -210,7 +210,9 @@ function buildProvincialHeritagePopup(feature) {
         ? [
             ["Geometry meaning", data.geometryMeaningLabel],
             ...(data.representationStatus
-              ? [["Representation status", data.representationStatus]]
+              ? [["Representation status", data.representationStatus === "project-reviewed-interpretation"
+                ? "Project-reviewed interpretation"
+                : data.representationStatus]]
               : []),
             ...(data.geometrySourceTypeLabel && data.geometrySourceLabel
               ? [["Geometry provenance", `${data.geometrySourceTypeLabel}: ${data.geometrySourceLabel}`]]
@@ -224,7 +226,7 @@ function buildProvincialHeritagePopup(feature) {
       ["Source accessed", data.sourceAccessedDate]
     ]
     : [
-      ["Protection level", data.protectionLevelZh, "zh-Hans"],
+      ["Official designation level", data.officialDesignationLevelLabel],
       ["Official category", data.officialCategoryZh, "zh-Hans"],
       ["Official location", data.officialLocationTextZh, "zh-Hans"],
       ["Geometry type", data.geometryType],
@@ -252,13 +254,13 @@ function buildProvincialHeritagePopup(feature) {
   });
 
   const provenance = document.createElement("p");
-  provenance.className = "provincial-heritage-map-popup__provenance";
+  provenance.className = "official-heritage-map-popup__provenance";
   provenance.textContent = isPoint
     ? data.coordinateProvenance
     : data.geometryReviewNotes;
 
   const locationNote = document.createElement("p");
-  locationNote.className = "provincial-heritage-map-popup__location-note";
+  locationNote.className = "official-heritage-map-popup__location-note";
   locationNote.textContent = isPoint
     ? data.publicLocationNote
     : data.geometryCaution || data.publicLocationNote;
@@ -303,24 +305,25 @@ function initCommunityMap({
   const customFilters = Array.from(document.querySelectorAll(".map-custom-filter"));
   const mapNominationToggle = document.getElementById("mapNominationToggle");
   const mapNominationStatus = document.getElementById("mapNominationStatus");
-  const provincialStatusEl = document.getElementById("provincialHeritageStatus");
-  const provincialErrorEl = document.getElementById("provincialHeritageError");
+  const officialStatusEl = document.getElementById("officialHeritageStatus");
+  const officialErrorEl = document.getElementById("officialHeritageError");
   const communityLayerToggle = document.getElementById("communityHeritageLayerToggle");
   const communityCategoryToggles = Array.from(
     document.querySelectorAll("[data-community-map-category]")
   );
   const communityCategoryStatusEl = document.getElementById("communityCategoryStatus");
-  const provincialLayerToggle = document.getElementById("provincialHeritageLayerToggle");
+  const officialLayerToggle = document.getElementById("officialHeritageLayerToggle");
   const officialCategoryAvailabilityEl = document.getElementById("officialCategoryAvailability");
   const officialCategoryControlsEl = document.getElementById("officialCategoryControls");
   const officialCategoryAllToggle = document.getElementById("officialCategoryAll");
   const officialCategoryListEl = document.getElementById("officialCategoryList");
   const officialCategoryDisabledHelpEl = document.getElementById("officialCategoryDisabledHelp");
   const officialCategoryStatusEl = document.getElementById("officialCategoryStatus");
+  const officialReviewedPointStatusEl = document.getElementById("officialReviewedPointStatus");
 
   const map = L.map(containerId).setView(fallbackCenter, 13);
   const communityLayer = L.layerGroup().addTo(map);
-  const provincialLayer = L.layerGroup();
+  const officialLayer = L.layerGroup();
   const baseLayers = createBaseLayers();
   const markersById = new Map();
   const selectedCommunityCategoryKeys = new Set(
@@ -333,12 +336,12 @@ function initCommunityMap({
 
   let allPublicRecords = [];
   let isNominationPickMode = false;
-  let provincialLoadPromise = null;
-  let lastProvincialAnnouncement = "";
-  let displayedProvincialMarkerCount = null;
-  let provincialLayerState = "off";
-  let publishedProvincialFeatures = [];
-  let publishedProvincialRenderModels = [];
+  let officialLoadPromise = null;
+  let lastOfficialAnnouncement = "";
+  let displayedOfficialMarkerCount = null;
+  let officialLayerState = "off";
+  let publishedOfficialFeatures = [];
+  let publishedOfficialRenderModels = [];
   let availableOfficialCategories = [];
   let officialCategoriesInitialized = false;
   const selectedOfficialCategoryKeys = new Set();
@@ -405,37 +408,37 @@ function initCommunityMap({
 
   function getVisibleLayerStatus() {
     const communityVisible = map.hasLayer(communityLayer);
-    const provincialVisible = map.hasLayer(provincialLayer);
+    const officialVisible = map.hasLayer(officialLayer);
     const communityCount = communityVisible ? communityLayer.getLayers().length : 0;
-    const provincialCount = provincialVisible && Number.isInteger(displayedProvincialMarkerCount)
-      ? displayedProvincialMarkerCount
+    const officialCount = officialVisible && Number.isInteger(displayedOfficialMarkerCount)
+      ? displayedOfficialMarkerCount
       : 0;
     const communityLabel = `${communityCount} community ${communityCount === 1 ? "record" : "records"}`;
-    const provincialLabel = `${provincialCount} provincial heritage ${provincialCount === 1 ? "location" : "locations"}`;
+    const officialLabel = `${officialCount} official heritage ${officialCount === 1 ? "location" : "locations"}`;
 
-    if (provincialVisible && provincialLayerState === "loading") {
-      return `${PROVINCIAL_HERITAGE_LOADING_MESSAGE} ${communityVisible ? `${communityLabel} displayed.` : ""}`.trim();
+    if (officialVisible && officialLayerState === "loading") {
+      return `${OFFICIAL_HERITAGE_LOADING_MESSAGE} ${communityVisible ? `${communityLabel} displayed.` : ""}`.trim();
     }
-    if (provincialVisible && provincialLayerState === "valid-empty") {
+    if (officialVisible && officialLayerState === "valid-empty") {
       return communityVisible
-        ? `${communityLabel} displayed. ${PROVINCIAL_HERITAGE_EMPTY_MESSAGE}`
-        : PROVINCIAL_HERITAGE_EMPTY_MESSAGE;
+        ? `${communityLabel} displayed. ${OFFICIAL_HERITAGE_EMPTY_MESSAGE}`
+        : OFFICIAL_HERITAGE_EMPTY_MESSAGE;
     }
-    if (communityCount > 0 && provincialCount > 0) {
-      return `${communityLabel} and ${provincialLabel} displayed.`;
+    if (communityCount > 0 && officialCount > 0) {
+      return `${communityLabel} and ${officialLabel} displayed.`;
     }
     if (communityCount > 0) return `${communityLabel} displayed.`;
-    if (provincialCount > 0) return `${provincialLabel} displayed.`;
+    if (officialCount > 0) return `${officialLabel} displayed.`;
     return "No heritage records displayed.";
   }
 
   function updateVisibleLayerStatus(announcementKey = "") {
-    if (!provincialStatusEl) return;
+    if (!officialStatusEl) return;
     const message = getVisibleLayerStatus();
-    provincialStatusEl.hidden = false;
-    if (lastProvincialAnnouncement !== announcementKey || provincialStatusEl.textContent !== message) {
-      provincialStatusEl.textContent = message;
-      lastProvincialAnnouncement = announcementKey;
+    officialStatusEl.hidden = false;
+    if (lastOfficialAnnouncement !== announcementKey || officialStatusEl.textContent !== message) {
+      officialStatusEl.textContent = message;
+      lastOfficialAnnouncement = announcementKey;
     }
   }
 
@@ -454,17 +457,17 @@ function initCommunityMap({
   }
 
   function updateOfficialCategoryStatus() {
-    if (!officialCategoryStatusEl || publishedProvincialFeatures.length === 0) return;
-    const visibleCount = map.hasLayer(provincialLayer)
-      ? publishedProvincialFeatures.filter((feature) => {
+    if (!officialCategoryStatusEl || publishedOfficialFeatures.length === 0) return;
+    const visibleCount = map.hasLayer(officialLayer)
+      ? publishedOfficialFeatures.filter((feature) => {
         const category = getOfficialMapCategory(feature.properties.officialCategoryZh);
         return category && selectedOfficialCategoryKeys.has(category.key);
       }).length
       : 0;
-    const locationLabel = publishedProvincialFeatures.length === 1
+    const locationLabel = publishedOfficialFeatures.length === 1
       ? "published official location"
       : "published official locations";
-    officialCategoryStatusEl.textContent = `${visibleCount} of ${publishedProvincialFeatures.length} ${locationLabel} displayed.`;
+    officialCategoryStatusEl.textContent = `${visibleCount} of ${publishedOfficialFeatures.length} ${locationLabel} displayed.`;
   }
 
   function showOfficialCategoryAvailability(message) {
@@ -503,7 +506,13 @@ function initCommunityMap({
   }
 
   function initializeOfficialCategories(features) {
-    publishedProvincialFeatures = features;
+    publishedOfficialFeatures = features;
+    if (officialReviewedPointStatusEl) {
+      const reviewedPointCount = features.filter(({ geometry, properties }) => (
+        geometry?.type === "Point" && properties?.markerClass === "reviewed"
+      )).length;
+      officialReviewedPointStatusEl.textContent = `Filled diamond. Currently displayed: ${reviewedPointCount}.`;
+    }
     availableOfficialCategories = getPublishedOfficialMapCategories(features);
 
     if (availableOfficialCategories.length === 0) {
@@ -524,18 +533,18 @@ function initCommunityMap({
     updateOfficialCategoryStatus();
   }
 
-  function showProvincialError() {
-    if (!provincialErrorEl) return;
-    provincialErrorEl.hidden = false;
+  function showOfficialError() {
+    if (!officialErrorEl) return;
+    officialErrorEl.hidden = false;
     if (
-      lastProvincialAnnouncement !== "failure"
-      || provincialErrorEl.textContent !== PROVINCIAL_HERITAGE_FAILURE_MESSAGE
+      lastOfficialAnnouncement !== "failure"
+      || officialErrorEl.textContent !== OFFICIAL_HERITAGE_FAILURE_MESSAGE
     ) {
-      provincialErrorEl.textContent = PROVINCIAL_HERITAGE_FAILURE_MESSAGE;
-      lastProvincialAnnouncement = "failure";
+      officialErrorEl.textContent = OFFICIAL_HERITAGE_FAILURE_MESSAGE;
+      lastOfficialAnnouncement = "failure";
     }
-    publishedProvincialFeatures = [];
-    publishedProvincialRenderModels = [];
+    publishedOfficialFeatures = [];
+    publishedOfficialRenderModels = [];
     availableOfficialCategories = [];
     selectedOfficialCategoryKeys.clear();
     officialCategoriesInitialized = false;
@@ -553,12 +562,12 @@ function initCommunityMap({
     communityCategoryToggles.forEach((toggle) => {
       toggle.checked = selectedCommunityCategoryKeys.has(toggle.dataset.communityMapCategory);
     });
-    if (provincialLayerToggle) {
-      provincialLayerToggle.checked = map.hasLayer(provincialLayer) && provincialLayerState !== "failed";
-      provincialLayerToggle.setAttribute("aria-invalid", String(provincialLayerState === "failed"));
+    if (officialLayerToggle) {
+      officialLayerToggle.checked = map.hasLayer(officialLayer) && officialLayerState !== "failed";
+      officialLayerToggle.setAttribute("aria-invalid", String(officialLayerState === "failed"));
     }
-    const officialCategoriesEnabled = map.hasLayer(provincialLayer)
-      && provincialLayerState === "valid";
+    const officialCategoriesEnabled = map.hasLayer(officialLayer)
+      && officialLayerState === "valid";
     if (officialCategoryDisabledHelpEl) {
       officialCategoryDisabledHelpEl.hidden = officialCategoriesEnabled
         || availableOfficialCategories.length === 0;
@@ -579,12 +588,12 @@ function initCommunityMap({
     });
   }
 
-  function buildProvincialPointLayer(feature) {
+  function buildOfficialPointLayer(feature) {
       const [longitude, latitude] = feature.geometry.coordinates;
-      const markerName = buildProvincialMarkerAccessibleName(feature);
+      const markerName = buildOfficialMarkerAccessibleName(feature);
       const category = getOfficialMapCategory(feature.properties.officialCategoryZh);
       const marker = L.marker([latitude, longitude], {
-        icon: makeProvincialHeritageIcon(feature.properties.markerClass, category.key),
+        icon: makeOfficialHeritageIcon(feature.properties.markerClass, category.key),
         title: markerName,
         alt: markerName,
         keyboard: true,
@@ -593,8 +602,8 @@ function initCommunityMap({
       marker.on("add", () => {
         marker.getElement()?.setAttribute("aria-label", markerName);
       });
-      marker.bindPopup(buildProvincialHeritagePopup(feature), {
-        className: "community-map-popup provincial-heritage-map-popup",
+      marker.bindPopup(buildOfficialHeritagePopup(feature), {
+        className: "community-map-popup official-heritage-map-popup",
         closeButton: true,
         autoClose: true
       });
@@ -628,98 +637,98 @@ function initCommunityMap({
     });
   }
 
-  function buildProvincialGeometryLayer(renderModel) {
+  function buildOfficialGeometryLayer(renderModel) {
     const { feature, presentation } = renderModel;
     if (presentation.renderer === "point") {
-      return buildProvincialPointLayer(feature);
+      return buildOfficialPointLayer(feature);
     }
     const latLngs = convertOfficialCoordinatesToLatLngs(feature.geometry.coordinates);
     const layer = presentation.renderer === "line"
       ? L.polyline(latLngs, presentation.pathOptions)
       : L.polygon(latLngs, presentation.pathOptions);
-    const accessibleName = buildProvincialFeatureAccessibleName(feature);
+    const accessibleName = buildOfficialFeatureAccessibleName(feature);
     decorateOfficialGeometryLayer(layer, accessibleName, feature.id);
-    layer.bindPopup(buildProvincialHeritagePopup(feature), {
-      className: "community-map-popup provincial-heritage-map-popup",
+    layer.bindPopup(buildOfficialHeritagePopup(feature), {
+      className: "community-map-popup official-heritage-map-popup",
       closeButton: true,
       autoClose: true
     });
     return layer;
   }
 
-  function renderProvincialFeatures() {
-    const visibleModels = publishedProvincialRenderModels.filter(({ feature }) => {
+  function renderOfficialFeatures() {
+    const visibleModels = publishedOfficialRenderModels.filter(({ feature }) => {
       const category = getOfficialMapCategory(feature.properties.officialCategoryZh);
       return category && selectedOfficialCategoryKeys.has(category.key);
     });
     let renderedLayers;
     try {
-      renderedLayers = visibleModels.map(buildProvincialGeometryLayer);
+      renderedLayers = visibleModels.map(buildOfficialGeometryLayer);
     } catch (error) {
-      console.error("Error rendering provincial heritage preview:", error);
-      provincialLayer.clearLayers();
-      displayedProvincialMarkerCount = null;
-      provincialLayerState = "failed";
-      map.removeLayer(provincialLayer);
+      console.error("Error rendering official heritage preview:", error);
+      officialLayer.clearLayers();
+      displayedOfficialMarkerCount = null;
+      officialLayerState = "failed";
+      map.removeLayer(officialLayer);
       syncLayerControls();
-      showProvincialError();
+      showOfficialError();
       return;
     }
-    provincialLayer.clearLayers();
-    renderedLayers.forEach((layer) => layer.addTo(provincialLayer));
-    displayedProvincialMarkerCount = visibleModels.length;
+    officialLayer.clearLayers();
+    renderedLayers.forEach((layer) => layer.addTo(officialLayer));
+    displayedOfficialMarkerCount = visibleModels.length;
     updateOfficialCategoryStatus();
     syncLayerControls();
-    updateVisibleLayerStatus(`valid-${displayedProvincialMarkerCount}`);
+    updateVisibleLayerStatus(`valid-${displayedOfficialMarkerCount}`);
   }
 
-  function getProvincialHeritageResult() {
-    if (provincialLoadPromise) return provincialLoadPromise;
+  function getOfficialHeritageResult() {
+    if (officialLoadPromise) return officialLoadPromise;
 
-    provincialLoadPromise = (async () => {
-      const response = await fetch(PROVINCIAL_HERITAGE_GEOJSON_URL);
+    officialLoadPromise = (async () => {
+      const response = await fetch(OFFICIAL_HERITAGE_GEOJSON_URL);
       if (!response.ok) {
-        throw new Error(`Provincial heritage GeoJSON request failed with HTTP ${response.status}.`);
+        throw new Error(`Official heritage GeoJSON request failed with HTTP ${response.status}.`);
       }
       const value = await response.json();
       return {
         ok: true,
-        value: validateProvincialHeritageGeoJson(value)
+        value: validateOfficialHeritageGeoJson(value)
       };
     })().catch((error) => ({
       ok: false,
       error
     }));
 
-    return provincialLoadPromise;
+    return officialLoadPromise;
   }
 
-  async function activateProvincialHeritageLayer() {
-    if (!provincialLoadPromise) {
-      provincialLayerState = "loading";
-      if (provincialErrorEl) provincialErrorEl.hidden = true;
+  async function activateOfficialHeritageLayer() {
+    if (!officialLoadPromise) {
+      officialLayerState = "loading";
+      if (officialErrorEl) officialErrorEl.hidden = true;
       updateVisibleLayerStatus("loading");
     }
 
-    const result = await getProvincialHeritageResult();
-    if (!map.hasLayer(provincialLayer)) return;
+    const result = await getOfficialHeritageResult();
+    if (!map.hasLayer(officialLayer)) return;
 
-    provincialLayer.clearLayers();
+    officialLayer.clearLayers();
     if (!result.ok) {
-      console.error("Error loading provincial heritage preview:", result.error);
-      provincialLayerState = "failed";
-      displayedProvincialMarkerCount = null;
-      map.removeLayer(provincialLayer);
+      console.error("Error loading official heritage preview:", result.error);
+      officialLayerState = "failed";
+      displayedOfficialMarkerCount = null;
+      map.removeLayer(officialLayer);
       syncLayerControls();
-      showProvincialError();
+      showOfficialError();
       return;
     }
 
     if (result.value.status === "valid-empty") {
-      provincialLayerState = "valid-empty";
-      displayedProvincialMarkerCount = 0;
-      publishedProvincialFeatures = [];
-      publishedProvincialRenderModels = [];
+      officialLayerState = "valid-empty";
+      displayedOfficialMarkerCount = 0;
+      publishedOfficialFeatures = [];
+      publishedOfficialRenderModels = [];
       availableOfficialCategories = [];
       showOfficialCategoryAvailability("No published official categories are available.");
       syncLayerControls();
@@ -727,10 +736,10 @@ function initCommunityMap({
       return;
     }
 
-    provincialLayerState = "valid";
-    publishedProvincialRenderModels = result.value.renderModels;
+    officialLayerState = "valid";
+    publishedOfficialRenderModels = result.value.renderModels;
     initializeOfficialCategories(result.value.features);
-    renderProvincialFeatures();
+    renderOfficialFeatures();
   }
 
   function setActiveToolPanel(panelKey, { moveFocus = true } = {}) {
@@ -1198,8 +1207,8 @@ function initCommunityMap({
     } else {
       selectedOfficialCategoryKeys.clear();
     }
-    if (map.hasLayer(provincialLayer) && provincialLayerState === "valid") {
-      renderProvincialFeatures();
+    if (map.hasLayer(officialLayer) && officialLayerState === "valid") {
+      renderOfficialFeatures();
     } else {
       syncLayerControls();
       updateOfficialCategoryStatus();
@@ -1215,21 +1224,21 @@ function initCommunityMap({
     } else {
       selectedOfficialCategoryKeys.delete(categoryKey);
     }
-    if (map.hasLayer(provincialLayer) && provincialLayerState === "valid") {
-      renderProvincialFeatures();
+    if (map.hasLayer(officialLayer) && officialLayerState === "valid") {
+      renderOfficialFeatures();
     } else {
       syncLayerControls();
       updateOfficialCategoryStatus();
     }
   });
 
-  provincialLayerToggle?.addEventListener("change", () => {
-    if (provincialLayerToggle.checked) {
-      provincialLayerState = "loading";
-      if (provincialErrorEl) provincialErrorEl.hidden = true;
-      provincialLayer.addTo(map);
+  officialLayerToggle?.addEventListener("change", () => {
+    if (officialLayerToggle.checked) {
+      officialLayerState = "loading";
+      if (officialErrorEl) officialErrorEl.hidden = true;
+      officialLayer.addTo(map);
     } else {
-      map.removeLayer(provincialLayer);
+      map.removeLayer(officialLayer);
     }
     syncLayerControls();
   });
@@ -1265,9 +1274,9 @@ function initCommunityMap({
       updateVisibleLayerStatus("community-layer-added");
       return;
     }
-    if (event.layer === provincialLayer) {
+    if (event.layer === officialLayer) {
       syncLayerControls();
-      activateProvincialHeritageLayer();
+      activateOfficialHeritageLayer();
     }
   });
 
@@ -1277,16 +1286,16 @@ function initCommunityMap({
       updateVisibleLayerStatus("community-layer-removed");
       return;
     }
-    if (event.layer === provincialLayer) {
-      provincialLayer.clearLayers();
-      displayedProvincialMarkerCount = null;
-      if (provincialLayerState !== "failed") {
-        provincialLayerState = "off";
-        if (provincialErrorEl) provincialErrorEl.hidden = true;
+    if (event.layer === officialLayer) {
+      officialLayer.clearLayers();
+      displayedOfficialMarkerCount = null;
+      if (officialLayerState !== "failed") {
+        officialLayerState = "off";
+        if (officialErrorEl) officialErrorEl.hidden = true;
       }
       syncLayerControls();
       updateOfficialCategoryStatus();
-      updateVisibleLayerStatus(`provincial-layer-removed-${provincialLayerState}`);
+      updateVisibleLayerStatus(`official-layer-removed-${officialLayerState}`);
     }
   });
 

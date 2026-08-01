@@ -99,6 +99,14 @@ The later lifecycle-schema and interface work therefore extends and adapts
 merged capabilities. It does not replace or rebuild the existing geometry
 validation and rendering systems.
 
+Draft PR #69 establishes `data/xinyu-official-heritage-records.json` and
+`data/jiangxi-official-protected-heritage-map.geojson` as the authority-neutral
+canonical source and aggregate. The Map consumes the latter. The historical
+provincial source and generated URL remain as a validated provincial-only
+compatibility contract with six Points and no N07. This container correction
+does not change the approved sequence, publication gates, coordinates, or
+representation meanings.
+
 ## Dependency gates
 
 - PR #68 must finish before selecting PR #69's Point batch.

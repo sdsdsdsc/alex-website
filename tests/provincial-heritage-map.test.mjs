@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const helper = await import(new URL(
-  "../heritage-engine/provincial-heritage-map.js",
+  "../heritage-engine/official-heritage-map.js",
   import.meta.url
 ));
 const categoryHelper = await import(new URL(
@@ -11,17 +11,17 @@ const categoryHelper = await import(new URL(
   import.meta.url
 ));
 const committedGeoJson = JSON.parse(await readFile(
-  new URL("../data/jiangxi-provincial-protected-heritage-map.geojson", import.meta.url),
+  new URL("../data/jiangxi-official-protected-heritage-map.geojson", import.meta.url),
   "utf8"
 ));
 
 const {
-  ProvincialHeritageMapValidationError,
-  buildProvincialFeatureAccessibleName,
-  buildProvincialMarkerAccessibleName,
-  buildProvincialPopupData,
-  validateProvincialHeritageGeoJson,
-  validateProvincialHeritagePublicationGeoJson
+  OfficialHeritageMapValidationError,
+  buildOfficialFeatureAccessibleName,
+  buildOfficialMarkerAccessibleName,
+  buildOfficialPopupData,
+  validateOfficialHeritageGeoJson,
+  validateOfficialHeritagePublicationGeoJson
 } = helper;
 const {
   OFFICIAL_MAP_CATEGORY_DEFINITIONS,
@@ -35,7 +35,7 @@ function makeValidEmpty() {
     type: "FeatureCollection",
     metadata: {
       schemaVersion: "2.0.0",
-      datasetId: "jiangxi-provincial-protected-heritage-map",
+      datasetId: "jiangxi-official-protected-heritage-map",
       sourceRecordCount: 17,
       featureCount: 0,
       excludedRecordCount: 17,
@@ -104,13 +104,13 @@ function makeFeatureCollection(features) {
 
 function expectInvalid(value, pattern) {
   assert.throws(
-    () => validateProvincialHeritageGeoJson(value),
-    (error) => error instanceof ProvincialHeritageMapValidationError && pattern.test(error.message)
+    () => validateOfficialHeritageGeoJson(value),
+    (error) => error instanceof OfficialHeritageMapValidationError && pattern.test(error.message)
   );
 }
 
 test("accepts the committed valid-empty contract", () => {
-  const result = validateProvincialHeritageGeoJson(makeValidEmpty());
+  const result = validateOfficialHeritageGeoJson(makeValidEmpty());
   assert.equal(result.status, "valid-empty");
   assert.equal(result.features.length, 0);
   assert.equal(result.metadata.excludedRecordCount, 17);
@@ -185,6 +185,18 @@ test("rejects missing, blank, and non-string official categories", () => {
     expectInvalid(
       makeFeatureCollection([feature]),
       /properties\.officialCategoryZh must be a non-empty string/
+    );
+  });
+});
+
+test("rejects missing and unknown official designation levels", () => {
+  const missing = makeValidFeature();
+  delete missing.properties.protectionLevelZh;
+  const unknown = makeValidFeature({ properties: { protectionLevelZh: "县级文物保护单位" } });
+  [missing, unknown].forEach((feature) => {
+    expectInvalid(
+      makeFeatureCollection([feature]),
+      /protectionLevelZh must identify a controlled national, provincial, or municipal designation level/
     );
   });
 });
@@ -286,7 +298,7 @@ test("rejects withheld publication", () => {
 
 test("accepts a synthetic High exact Point", () => {
   const feature = makeValidFeature();
-  const result = validateProvincialHeritageGeoJson(makeFeatureCollection([feature]));
+  const result = validateOfficialHeritageGeoJson(makeFeatureCollection([feature]));
   assert.equal(result.status, "valid");
   assert.deepEqual(result.features[0].geometry.coordinates, [113.8825, 27.6202]);
   assert.equal(result.features[0].properties.markerClass, "reviewed");
@@ -353,7 +365,7 @@ test("publication validation accepts future supported geometries with explicit m
         coordinates: entry.coordinates
       }
     });
-    const result = validateProvincialHeritagePublicationGeoJson(makeFeatureCollection([feature]));
+    const result = validateOfficialHeritagePublicationGeoJson(makeFeatureCollection([feature]));
     assert.equal(result.status, "valid");
     assert.equal(result.features[0].geometry.type, entry.type);
   });
@@ -376,10 +388,10 @@ test("production Map validation prepares supported non-Point rendering", () => {
       coordinates: [[113.88, 27.62], [113.89, 27.63]]
     }
   });
-  const publication = validateProvincialHeritagePublicationGeoJson(
+  const publication = validateOfficialHeritagePublicationGeoJson(
     makeFeatureCollection([feature])
   );
-  const production = validateProvincialHeritageGeoJson(makeFeatureCollection([feature]));
+  const production = validateOfficialHeritageGeoJson(makeFeatureCollection([feature]));
   assert.equal(publication.status, "valid");
   assert.equal(production.status, "valid");
   assert.equal(production.renderModels.length, 1);
@@ -411,18 +423,18 @@ test("publication collection validation fails atomically for a malformed child g
     }
   });
   assert.throws(
-    () => validateProvincialHeritagePublicationGeoJson(
+    () => validateOfficialHeritagePublicationGeoJson(
       makeFeatureCollection([validPoint, invalidArea])
     ),
     (error) => (
-      error instanceof ProvincialHeritageMapValidationError
+      error instanceof OfficialHeritageMapValidationError
       && /must be closed/.test(error.message)
     )
   );
 });
 
 test("accepts the committed seven-marker Xinyu publication set", () => {
-  const result = validateProvincialHeritageGeoJson(committedGeoJson);
+  const result = validateOfficialHeritageGeoJson(committedGeoJson);
   assert.equal(result.status, "valid");
   assert.equal(result.features.length, 7);
   assert.equal(result.features[0].id, "JX-XY-NCH-007");
@@ -463,14 +475,14 @@ test("accepts a synthetic Medium approximate Point", () => {
       publicLocationMeaning: "heritage-compound-centre"
     }
   });
-  const result = validateProvincialHeritageGeoJson(makeFeatureCollection([feature]));
+  const result = validateOfficialHeritageGeoJson(makeFeatureCollection([feature]));
   assert.equal(result.features[0].properties.locationEvidenceConfidence, "Medium");
   assert.equal(result.features[0].properties.locationPrecision, "approximate");
 });
 
 test("preserves GeoJSON longitude-latitude order", () => {
   const feature = makeValidFeature({ geometry: { coordinates: [114.25, 28.75] } });
-  const result = validateProvincialHeritageGeoJson(makeFeatureCollection([feature]));
+  const result = validateOfficialHeritageGeoJson(makeFeatureCollection([feature]));
   const [longitude, latitude] = result.features[0].geometry.coordinates;
   assert.equal(longitude, 114.25);
   assert.equal(latitude, 28.75);
@@ -488,7 +500,7 @@ test("accepts a generalized marker with explicit radius", () => {
       generalizationRadiusMeters: 1500
     }
   });
-  assert.equal(validateProvincialHeritageGeoJson(makeFeatureCollection([generalized])).status, "valid");
+  assert.equal(validateOfficialHeritageGeoJson(makeFeatureCollection([generalized])).status, "valid");
 });
 
 test("rejects missing, zero, negative, and non-finite uncertainty", () => {
@@ -618,8 +630,8 @@ test("builds a descriptive accessible marker name", () => {
     }
   });
   assert.equal(
-    buildProvincialMarkerAccessibleName(feature),
-    "Open official protected heritage record: Test Archaeological Site (测试遗址); Map category: Ancient buildings; Approximate site location"
+    buildOfficialMarkerAccessibleName(feature),
+    "Open Official Heritage record: Test Archaeological Site (测试遗址); Official designation level: Provincial; Map category: Ancient buildings; Approximate site location"
   );
 });
 
@@ -634,8 +646,8 @@ test("accessible marker names distinguish visitor references from feature points
     }
   });
   assert.equal(
-    buildProvincialMarkerAccessibleName(visitorReference),
-    "Open official protected heritage record: Test Archaeological Site (测试遗址); Map category: Ancient buildings; Visitor reference point"
+    buildOfficialMarkerAccessibleName(visitorReference),
+    "Open Official Heritage record: Test Archaeological Site (测试遗址); Official designation level: Provincial; Map category: Ancient buildings; Visitor reference point"
   );
 });
 
@@ -649,10 +661,10 @@ test("compound-centroid accessible names identify an approximate project-reviewe
       publicLocationMeaning: "heritage-compound-centre"
     }
   });
-  const accessibleName = buildProvincialMarkerAccessibleName(compoundReference);
+  const accessibleName = buildOfficialMarkerAccessibleName(compoundReference);
   assert.equal(
     accessibleName,
-    "Open official protected heritage record: Test Archaeological Site (测试遗址); Map category: Ancient buildings; Compound reference point (approximate project-reviewed location)"
+    "Open Official Heritage record: Test Archaeological Site (测试遗址); Official designation level: Provincial; Map category: Ancient buildings; Compound reference point (approximate project-reviewed location)"
   );
   assert.doesNotMatch(accessibleName, /; Approximate reviewed location$/);
 });
@@ -670,8 +682,8 @@ test("generalized and unknown-category accessible names retain both meanings", (
     }
   });
   assert.equal(
-    buildProvincialMarkerAccessibleName(generalized),
-    "Open official protected heritage record: Test Archaeological Site (测试遗址); Map category: Other official heritage; Generalized official reference"
+    buildOfficialMarkerAccessibleName(generalized),
+    "Open Official Heritage record: Test Archaeological Site (测试遗址); Official designation level: Provincial; Map category: Other official heritage; Generalized official reference"
   );
 });
 
@@ -698,15 +710,16 @@ test("non-Point accessible names include category and controlled geometry meanin
     }
   });
   assert.equal(
-    buildProvincialFeatureAccessibleName(feature),
-    "Open official protected heritage record: Test Archaeological Site (测试遗址); Map category: Ancient buildings; Generalized project reference area"
+    buildOfficialFeatureAccessibleName(feature),
+    "Open Official Heritage record: Test Archaeological Site (测试遗址); Official designation level: Provincial; Map category: Ancient buildings; Generalized project reference area"
   );
 });
 
 test("builds provenance-safe popup display data", () => {
-  const popup = buildProvincialPopupData(makeValidFeature());
+  const popup = buildOfficialPopupData(makeValidFeature());
   assert.equal(popup.projectNameEn, "Test Archaeological Site");
   assert.equal(popup.officialNameZh, "测试遗址");
+  assert.equal(popup.officialDesignationLevelLabel, "Provincial");
   assert.equal(popup.locationEvidenceConfidence, "High");
   assert.equal(popup.markerClass, "reviewed");
   assert.equal(popup.sourceUrl, "https://example.gov.cn/source");
@@ -715,7 +728,7 @@ test("builds provenance-safe popup display data", () => {
 });
 
 test("builds qualified non-Point popup data with safe geometry provenance", () => {
-  const popup = buildProvincialPopupData(makeValidFeature({
+  const popup = buildOfficialPopupData(makeValidFeature({
     properties: {
       geometryMeaning: "approximate-boundary",
       geometrySourceType: "project-reviewed-digitization",
@@ -745,7 +758,7 @@ test("builds qualified non-Point popup data with safe geometry provenance", () =
 });
 
 test("popup display data does not expose an invalid source URL", () => {
-  const popup = buildProvincialPopupData(makeValidFeature({
+  const popup = buildOfficialPopupData(makeValidFeature({
     properties: { sourceUrl: "javascript:alert(1)" }
   }));
   assert.equal(popup.sourceUrl, null);

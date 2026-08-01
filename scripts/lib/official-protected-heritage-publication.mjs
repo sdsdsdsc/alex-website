@@ -9,15 +9,25 @@ import {
 } from "../../heritage-engine/official-geometry-schema.js";
 
 const AGGREGATE_SCHEMA_VERSION = "2.0.0";
-const AGGREGATE_DATASET_ID = "jiangxi-provincial-protected-heritage-map";
+const AGGREGATE_DATASET_ID = "jiangxi-official-protected-heritage-map";
 const PHASE_14_DATASET_ID = "jiangxi-provincial-protected-heritage-pilot";
 const PHASE_14_SOURCE_PATH = "data/jiangxi-provincial-heritage-pilot.json";
-const XINYU_DATASET_ID = "xinyu-provincial-protected-heritage-marker-pilot";
-const XINYU_SOURCE_PATH = "data/xinyu-provincial-heritage-marker-pilot.json";
+const XINYU_DATASET_ID = "xinyu-official-heritage-records";
+const XINYU_SOURCE_PATH = "data/xinyu-official-heritage-records.json";
+const LEGACY_PROVINCIAL_DATASET_ID = "xinyu-provincial-protected-heritage-marker-pilot";
+const LEGACY_PROVINCIAL_SOURCE_PATH = "data/xinyu-provincial-heritage-marker-pilot.json";
+const LEGACY_PROVINCIAL_AGGREGATE_DATASET_ID = "jiangxi-provincial-protected-heritage-map";
+const LEGACY_PROVINCIAL_AGGREGATE_SOURCE_PATH = "data/jiangxi-provincial-protected-heritage-map.geojson";
 const PUBLIC_LOCATION_DATASET_ID = "official-protected-heritage-public-location-decisions";
 const PUBLIC_LOCATION_SOURCE_PATH = "data/official-protected-heritage-public-locations.json";
-const AGGREGATE_SOURCE_PATH = "data/jiangxi-provincial-protected-heritage-map.geojson";
+const AGGREGATE_SOURCE_PATH = "data/jiangxi-official-protected-heritage-map.geojson";
 const PROJECT_GEOMETRY_PROVENANCE = "Alex's Photo Board reviewed public-location decision";
+
+const OFFICIAL_DESIGNATION_LEVELS = new Map([
+  ["全国重点文物保护单位", { code: "national", label: "National", idPrefix: "NCH" }],
+  ["省级文物保护单位", { code: "provincial", label: "Provincial", idPrefix: "PCH" }],
+  ["市级文物保护单位", { code: "municipal", label: "Municipal", idPrefix: "MCH" }]
+]);
 
 const IDENTITY_CONFIDENCES = new Set(["confirmed", "probable", "unresolved"]);
 const LOCATION_CONFIDENCES = new Set(["High", "Medium", "Low", "None"]);
@@ -90,6 +100,14 @@ const SOURCE_SUPPORTS = new Set([
 ]);
 
 const XINYU_TOP_LEVEL_KEYS = [
+  "schemaVersion",
+  "datasetId",
+  "recordType",
+  "dataLayer",
+  "provenance",
+  "records"
+];
+const LEGACY_PROVINCIAL_TOP_LEVEL_KEYS = [
   "schemaVersion",
   "datasetId",
   "recordType",
@@ -278,10 +296,9 @@ function validateXinyuCompanionDataset(dataset) {
   addError(errors, dataset.schemaVersion === "1.0.0", "xinyuDataset.schemaVersion is unsupported.");
   addError(errors, dataset.datasetId === XINYU_DATASET_ID, "xinyuDataset.datasetId is unsupported.");
   addError(errors, dataset.recordType === "official-reference", "xinyuDataset.recordType must be official-reference.");
-  addError(errors, dataset.protectionLevelCode === "provincial", "xinyuDataset.protectionLevelCode must be provincial.");
   addError(
     errors,
-    dataset.dataLayer === "provincial-protected-heritage-marker-pilot",
+    dataset.dataLayer === "official-heritage-records",
     "xinyuDataset.dataLayer is unsupported."
   );
 
@@ -308,7 +325,7 @@ function validateXinyuCompanionDataset(dataset) {
       const path = `xinyuDataset.records[${index}]`;
       if (!validateExactKeys(errors, record, XINYU_RECORD_KEYS, path)) return;
       validateNonEmptyString(errors, record.recordId, `${path}.recordId`);
-      addError(errors, /^JX-XY-(?:NCH|PCH)-\d{3}$/.test(record.recordId), `${path}.recordId is not a stable Xinyu pilot ID.`);
+      addError(errors, /^JX-XY-(?:NCH|PCH|MCH)-\d{3}$/.test(record.recordId), `${path}.recordId is not a stable Xinyu official ID.`);
       addError(errors, Number.isInteger(record.sourceSequence) && record.sourceSequence > 0, `${path}.sourceSequence must be a positive integer.`);
 
       if (validateExactKeys(errors, record.official, XINYU_OFFICIAL_KEYS, `${path}.official`)) {
@@ -318,6 +335,19 @@ function validateXinyuCompanionDataset(dataset) {
           "officialLocationTextZh",
           "protectionLevelZh"
         ].forEach((key) => validateNonEmptyString(errors, record.official[key], `${path}.official.${key}`));
+        const level = OFFICIAL_DESIGNATION_LEVELS.get(record.official.protectionLevelZh);
+        addError(
+          errors,
+          Boolean(level),
+          `${path}.official.protectionLevelZh must identify a controlled national, provincial, or municipal designation level.`
+        );
+        if (level && typeof record.recordId === "string") {
+          addError(
+            errors,
+            record.recordId.includes(`-${level.idPrefix}-`),
+            `${path}.official.protectionLevelZh contradicts the record ID authority level.`
+          );
+        }
         [
           "officialDesignationNumber",
           "designationBatch",
@@ -349,6 +379,45 @@ function validateXinyuCompanionDataset(dataset) {
     valid: errors.length === 0,
     errors,
     recordCount: Array.isArray(dataset.records) ? dataset.records.length : 0
+  };
+}
+
+function validateProvincialCompatibilityDataset(dataset) {
+  const errors = [];
+  if (!validateExactKeys(errors, dataset, LEGACY_PROVINCIAL_TOP_LEVEL_KEYS, "legacyProvincialDataset")) {
+    return { valid: false, errors, recordCount: 0 };
+  }
+  addError(errors, dataset.datasetId === LEGACY_PROVINCIAL_DATASET_ID, "legacyProvincialDataset.datasetId is unsupported.");
+  addError(errors, dataset.protectionLevelCode === "provincial", "legacyProvincialDataset.protectionLevelCode must be provincial.");
+  addError(
+    errors,
+    dataset.dataLayer === "provincial-protected-heritage-marker-pilot",
+    "legacyProvincialDataset.dataLayer is unsupported."
+  );
+  const normalized = {
+    schemaVersion: dataset.schemaVersion,
+    datasetId: XINYU_DATASET_ID,
+    recordType: dataset.recordType,
+    dataLayer: "official-heritage-records",
+    provenance: dataset.provenance,
+    records: dataset.records
+  };
+  const normalizedResult = validateXinyuCompanionDataset(normalized);
+  normalizedResult.errors.forEach((error) => errors.push(`Legacy provincial source: ${error}`));
+  if (Array.isArray(dataset.records)) {
+    dataset.records.forEach((record, index) => {
+      addError(
+        errors,
+        record?.official?.protectionLevelZh === "省级文物保护单位",
+        `legacyProvincialDataset.records[${index}] must contain only provincial records.`
+      );
+    });
+  }
+  return {
+    valid: errors.length === 0,
+    errors,
+    recordCount: Array.isArray(dataset.records) ? dataset.records.length : 0,
+    normalized
   };
 }
 
@@ -751,6 +820,64 @@ function generateOfficialProtectedHeritageMap({
   return { geojson, exclusions, hardErrorCount: 0 };
 }
 
+function generateProvincialCompatibilityMap({
+  phase14Dataset,
+  legacyProvincialDataset,
+  publicLocationDataset
+}) {
+  const legacyResult = validateProvincialCompatibilityDataset(legacyProvincialDataset);
+  if (!legacyResult.valid) {
+    throw new OfficialProtectedHeritagePublicationError(legacyResult.errors);
+  }
+  const legacyIds = new Set(legacyProvincialDataset.records.map(({ recordId }) => recordId));
+  const filteredLocations = {
+    ...publicLocationDataset,
+    decisions: publicLocationDataset.decisions.filter(({ recordId }) => legacyIds.has(recordId))
+  };
+  const generated = generateOfficialProtectedHeritageMap({
+    phase14Dataset,
+    xinyuDataset: legacyResult.normalized,
+    publicLocationDataset: filteredLocations
+  });
+  const features = generated.geojson.features.map((feature) => ({
+    ...feature,
+    properties: {
+      ...feature.properties,
+      sourceDatasetId: LEGACY_PROVINCIAL_DATASET_ID
+    }
+  }));
+  const sourceDatasets = [
+    {
+      datasetId: PHASE_14_DATASET_ID,
+      sourcePath: PHASE_14_SOURCE_PATH,
+      recordCount: phase14Dataset.records.length
+    },
+    {
+      datasetId: LEGACY_PROVINCIAL_DATASET_ID,
+      sourcePath: LEGACY_PROVINCIAL_SOURCE_PATH,
+      recordCount: legacyProvincialDataset.records.length
+    }
+  ];
+  return {
+    ...generated,
+    geojson: {
+      ...generated.geojson,
+      metadata: {
+        ...generated.geojson.metadata,
+        datasetId: LEGACY_PROVINCIAL_AGGREGATE_DATASET_ID,
+        sourceDatasets,
+        sourceRecordCount: phase14Dataset.records.length + legacyProvincialDataset.records.length,
+        featureCount: features.length,
+        excludedRecordCount: generated.exclusions.length,
+        deterministicSourceOrder: sourceDatasets.map(({ datasetId }) => datasetId),
+        compatibilityStatus: "provincial-only-legacy-public-url",
+        canonicalCombinedDataset: AGGREGATE_SOURCE_PATH
+      },
+      features
+    }
+  };
+}
+
 function serializeJson(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
@@ -763,6 +890,11 @@ export {
   IDENTITY_CONFIDENCES,
   LOCATION_CONFIDENCES,
   LOCATION_PRECISIONS,
+  LEGACY_PROVINCIAL_AGGREGATE_DATASET_ID,
+  LEGACY_PROVINCIAL_AGGREGATE_SOURCE_PATH,
+  LEGACY_PROVINCIAL_DATASET_ID,
+  LEGACY_PROVINCIAL_SOURCE_PATH,
+  OFFICIAL_DESIGNATION_LEVELS,
   OfficialProtectedHeritagePublicationError,
   PHASE_14_DATASET_ID,
   PROJECT_GEOMETRY_PROVENANCE,
@@ -774,9 +906,11 @@ export {
   assertAggregateInputs,
   deriveMarkerClass,
   generateOfficialProtectedHeritageMap,
+  generateProvincialCompatibilityMap,
   isGeneralizedDecision,
   serializeJson,
   validateGeneratedFeatureGeometry,
   validatePublicLocationDataset,
+  validateProvincialCompatibilityDataset,
   validateXinyuCompanionDataset
 };
