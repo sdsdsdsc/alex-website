@@ -24,9 +24,11 @@ unpublished candidates and no new passing Point: the exact ordered addition
 list for PR #69 is `[]`. Owner-supplied N07 evidence nevertheless establishes
 a concrete provider-located project-digitization case. The separate
 [Phase 15C-12 policy clarification](../audits/phase-15c-12-provider-located-point-policy-clarification.md)
-now documents the proposed non-substantive interpretation before candidate
-re-evaluation. None of these audits publishes a record or authorizes
-implementation.
+is merged and documents the non-substantive interpretation. The current
+[Phase 15C-13 six-candidate audit](../audits/phase-15c-13-xinyu-priority-point-digitization-audit.md)
+applies it to N03, N07, N08, P22, M23, and M30. It recommends N07 as one
+Point-ready research result and keeps the other five withheld. None of these
+audits publishes a record or authorizes implementation.
 
 ## Approved sequence
 
@@ -50,17 +52,18 @@ implementation.
    owner-supplied N07 provider-located physical-feature evidence, keep all 39
    operationally withheld, and recommend the next policy step. Documentation
    only; no policy, coordinate, runtime, data, schema, or publication change.
-6. **Current draft — separately approved policy clarification.** Define the
+6. **PR #72 — provider-located Point policy clarification.** Define the
    provider-located project-reviewed reference Point method for the case where
    a provider identifies a specific physical feature but exposes no legitimate
    raw feature coordinate. This documentation-only clarification preserves all
    current identity, CRS, reconciliation, uncertainty, sensitivity,
    misleading-risk, provenance, review, and approval gates and does not
    digitize or approve a candidate.
-7. **Candidate re-evaluation after the clarification merges.** Re-evaluate only
-   the bounded priority queue N03, N07, N08, P22, M23, and M30. Any numerical
-   digitization belongs to that later evidence audit. Do not resume or expand
-   PR #69 without a new candidate-specific publication instruction.
+7. **Current draft — bounded candidate re-evaluation.** Re-evaluate only N03,
+   N07, N08, P22, M23, and M30. The resulting documentation-only audit records
+   one reproducible N07 Point-ready recommendation and five withheld outcomes.
+   Its proposed future PR #69 batch is `P19, N07`, but it does not publish N07
+   or modify PR #69; either action needs a new candidate-specific instruction.
 8. **Later representation-lifecycle schema and validation extension.** Extend
    the existing Phase 15C-1 schema and validation foundation for the
    one-active-representation model, stable identity, supersession, and
@@ -112,13 +115,14 @@ validation and rendering systems.
   candidate. Xieli remains a generalized-Point-only research result and is
   excluded from that batch pending its datum, styling, persistent-limitation,
   and sensitivity gates.
-- The current separately approved policy-clarification draft must merge before
-  the bounded provider-located project-reviewed Point queue is re-evaluated.
-- That later evidence audit may construct reproducible numerical Points for
-  N03, N07, N08, P22, M23, and M30, but the policy clarification itself may not
-  digitize or approve them.
-- Candidate re-evaluation must precede any instruction to resume or expand PR
-  #69. PR #69 remains paused in the meantime.
+- PR #72 merged the separately approved policy clarification before the bounded
+  queue was re-evaluated.
+- The current Phase 15C-13 evidence audit may construct reproducible numerical
+  Points for only N03, N07, N08, P22, M23, and M30. It records a passing
+  numerical recommendation only for N07 and proposes a future ordered PR #69
+  batch of `P19, N07`, but does not itself publish it or change the draft.
+- A new candidate-specific instruction is required before N07 publication or
+  any change to paused PR #69. PR #69 remains paused in the meantime.
 - Later representation-lifecycle extensions must land before the interface
   adapts public presentation to active-representation selection.
 - The adapted renderer, filters, provenance, and accessibility must be ready
@@ -141,8 +145,10 @@ validation and rendering systems.
 
 Draft PR #69 remains paused. The complete-list audit does not modify its
 branch, commit, files, or publication proposal. The fallback Point audit also
-leaves it unchanged and recommends no additional Point candidate. The current
-policy-clarification draft likewise leaves PR #69 untouched.
+leaves it unchanged and recommends no additional Point candidate. PR #72 and
+the current six-candidate audit likewise leave PR #69 untouched; the latter's
+N07 recommendation belongs only to the separately proposed future `P19, N07`
+batch and is not automatically part of the existing draft.
 
 ## PR #67 exclusions
 
