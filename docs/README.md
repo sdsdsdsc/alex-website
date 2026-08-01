@@ -48,9 +48,12 @@ to the authoritative audit records and contain no duplicate evidence or policy.
 The [Official Heritage spatial representation and publication policy](./policy/official-record-publication-policy.md)
 is the sole controlling authority for official heritage geometry publication.
 It records the five public Official Heritage types, evidence-led natural-form
-defaults, one-active-representation rule, project-interpretation standard, and
-future sidebar and filter direction. It applies only to Official Heritage;
-Community Heritage remains unchanged and Point-based.
+defaults, one-active-representation rule, project-interpretation standard,
+provider-located project-reviewed reference Point evidence method, and future
+sidebar and filter direction. The clarification preserves the existing
+publication gates and does not create a runtime type or approve a candidate. It
+applies only to Official Heritage; Community Heritage remains unchanged and
+Point-based.
 
 Other reusable policy and guidance:
 
@@ -108,6 +111,11 @@ Key groups include:
   numerical project-reviewed Point is digitized or approved. The audit
   recommends a separate non-substantive policy clarification followed by a
   bounded provider-located candidate re-evaluation.
+- [Phase 15C-12 provider-located Point policy clarification](./audits/phase-15c-12-provider-located-point-policy-clarification.md),
+  the non-substantive decision record defining the feature-identification,
+  numerical-construction, reproducibility, CRS, uncertainty, sensitivity,
+  misleading-risk, provenance, and public-wording gates. It approves no
+  coordinate or candidate and leaves paused PR #69 unchanged.
 
 Xiabu and Xieli remain unpublished. Production remains five official Point
 features with no published line or area geometry.
