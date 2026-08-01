@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "datasetId": "official-protected-heritage-public-location-decisions",
   "projectMaintainer": "Alex's Photo Board",
-  "projectLastReviewedDate": "2026-07-30",
+  "projectLastReviewedDate": "2026-08-01",
   "decisions": [
     {
       "recordId": "JX-XY-PCH-001",
@@ -443,6 +443,106 @@
         "providerUrl": "https://j.map.baidu.com/t/NGXr3t"
       },
       "transformationOrReconciliationMethod": "Baidu UID ba0c8d3a43ce938b13293507 supplied Baidu Mercator 12802676.16, 3187429.36. Deterministic Baidu Mercator-to-BD-09 conversion produced 115.007145335, 27.670165011; deterministic BD-09-to-GCJ-02 conversion produced 115.000605641, 27.664348519; and the standard iterative inverse GCJ-02 transform produced 114.995569672, 27.667620470 WGS84, rounded to six decimals as 114.995570, 27.667620. Independently, Gaode POI B0L1RCC3EM supplied 114.999665, 27.665090 GCJ-02 and converted to 114.994632317, 27.668364844 WGS84. The two results are 124.0 metres apart. The Baidu-derived result was selected, not averaged, because its venue photograph shows the component-specific protection plaque; the separation and provider-pin ambiguity are represented by the 150-metre uncertainty."
+    },
+    {
+      "recordId": "JX-XY-NCH-007",
+      "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+      "identityConfidence": "confirmed",
+      "siteLocationConfidence": "High",
+      "locationEvidenceConfidence": "Medium",
+      "displayLocationType": "site-point",
+      "locationPrecision": "approximate",
+      "publicLocationMeaning": "heritage-feature",
+      "publicationLocationPolicy": "approximate",
+      "sensitivityAssessment": "public-exact-acceptable",
+      "latitude": 27.805882,
+      "longitude": 115.011333,
+      "coordinateReferenceSystem": "WGS84",
+      "estimatedUncertaintyMeters": 100,
+      "generalizationRadiusMeters": null,
+      "geometryMeaning": "provider-located-project-reviewed-reference-point",
+      "representationStatus": "project-reviewed-interpretation",
+      "publicLocationNote": "Project-reviewed reference location based on the official record, mapped-provider evidence and documented project digitization. It identifies the mapped heritage feature but is not an authority-supplied coordinate, surveyed heritage extent, building footprint, legal protection boundary or guaranteed visitor entrance. Estimated horizontal uncertainty is approximately 100 metres.",
+      "locationEvidenceSummary": "The national designation 8-0617-5-101 and the current Xinyu register identify 水西红三军团指挥部旧址 in Shuixi. Xinyu Museum, Jiangxi University of Engineering and People's Daily Jiangxi evidence reconcile the feature to the Liao/Shabei ancestral hall in Shabei Village. Gaode POI B0IDTHR05Y and Baidu UID 3de126b7771f4438d1f49ef3 agree on the exact identity, locality and building/site presentation. The retained WGS84 reference was independently reviewed against OpenStreetMap locality context.",
+      "reviewedBy": "project owner",
+      "reviewedDate": "2026-07-31",
+      "reviewStatus": "approved",
+      "projectLocationSources": [
+        {
+          "sourceId": "JX-XY-NCH-007-S01",
+          "sourceType": "official-record",
+          "sourceTitle": "新余市市级以上文物保护单位名录（2025年）",
+          "sourcePublisher": "新余市文化广电旅游局",
+          "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+          "sourceAccessedDate": "2026-07-31",
+          "supports": ["official-identity", "official-locality"]
+        },
+        {
+          "sourceId": "JX-XY-NCH-007-S02",
+          "sourceType": "official-record",
+          "sourceTitle": "国务院关于核定并公布第八批全国重点文物保护单位的通知",
+          "sourcePublisher": "国家文物局",
+          "sourceUrl": "https://www.ncha.gov.cn/art/2019/10/18/art_2289_157100.html",
+          "sourceAccessedDate": "2026-07-31",
+          "supports": ["official-identity", "official-locality"]
+        },
+        {
+          "sourceId": "JX-XY-NCH-007-S03",
+          "sourceType": "institutional-description",
+          "sourceTitle": "水西红三军团指挥部旧址",
+          "sourcePublisher": "江西省新余市博物馆",
+          "sourceUrl": "https://www.xysmuseum.com/183.html",
+          "sourceAccessedDate": "2026-07-31",
+          "supports": ["independent-identity", "locality-match"]
+        },
+        {
+          "sourceId": "JX-XY-NCH-007-S04",
+          "sourceType": "institutional-description",
+          "sourceTitle": "红色走读实践活动中的水西红三军团指挥部旧址",
+          "sourcePublisher": "江西工程学院",
+          "sourceUrl": "https://www.jxue.edu.cn/2025/0506/c21a39124/page.htm",
+          "sourceAccessedDate": "2026-07-31",
+          "supports": ["independent-identity", "compound-description", "locality-match"]
+        },
+        {
+          "sourceId": "JX-XY-NCH-007-S05",
+          "sourceType": "gaode-poi",
+          "sourceTitle": "水西红三军团指挥部旧址 (B0IDTHR05Y)",
+          "sourcePublisher": "高德地图",
+          "sourceUrl": "https://www.amap.com/place/B0IDTHR05Y",
+          "sourceAccessedDate": "2026-07-31",
+          "supports": ["poi-name", "locality-match", "venue-photograph", "detailed-address"]
+        },
+        {
+          "sourceId": "JX-XY-NCH-007-S06",
+          "sourceType": "provider-comparison",
+          "sourceTitle": "水西红三军团指挥部旧址 (3de126b7771f4438d1f49ef3)",
+          "sourcePublisher": "百度地图",
+          "sourceUrl": "https://map.baidu.com/poi/%E6%B0%B4%E8%A5%BF%E7%BA%A2%E4%B8%89%E5%86%9B%E5%9B%A2%E6%8C%87%E6%8C%A5%E9%83%A8%E6%97%A7%E5%9D%80?uid=3de126b7771f4438d1f49ef3",
+          "sourceAccessedDate": "2026-07-31",
+          "supports": ["poi-name", "locality-match", "venue-photograph"]
+        },
+        {
+          "sourceId": "JX-XY-NCH-007-S07",
+          "sourceType": "provider-comparison",
+          "sourceTitle": "WGS84 basemap review centred on the Shuixi Red Army Third Corps headquarters reference",
+          "sourcePublisher": "OpenStreetMap contributors",
+          "sourceUrl": "https://www.openstreetmap.org/?mlat=27.805882&mlon=115.011333#map=18/27.805882/115.011333",
+          "sourceAccessedDate": "2026-07-31",
+          "supports": ["wgs84-reference", "locality-match"]
+        }
+      ],
+      "originalProviderCoordinate": {
+        "provider": "高德地图",
+        "poiName": "水西红三军团指挥部旧址",
+        "whatItRepresents": "Exact-name provider location for the mapped ancestral-hall heritage feature in Shabei Village; the provider point is not treated as an authority coordinate, footprint, entrance, protected extent or legal boundary.",
+        "latitude": 27.802641,
+        "longitude": 115.016436,
+        "coordinateReferenceSystem": "GCJ-02",
+        "coordinateReferenceSystemStatus": "documented",
+        "providerUrl": "https://www.amap.com/place/B0IDTHR05Y"
+      },
+      "transformationOrReconciliationMethod": "Gaode POI B0IDTHR05Y supplied 115.016436, 27.802641 in GCJ-02 longitude/latitude order. The repository-established deterministic inverse GCJ-02 transform used Krasovsky 1940 constants a=6378245.0 and ee=0.00669342162296594323 with ten forward-residual correction iterations, producing 115.01133320220836, 27.805881566984727 WGS84 and the retained six-decimal Point 115.011333, 27.805882. Forward transformation reproduces the provider input at retained precision. Exact-name Baidu identity/locality/building evidence, institutional ancestral-hall descriptions and independent OpenStreetMap WGS84 locality review completed the reconciliation; the 100-metre uncertainty covers provider placement, basemap reconciliation, transformation and rounding."
     }
   ]
 }

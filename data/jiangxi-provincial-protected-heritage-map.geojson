@@ -12,12 +12,12 @@
       {
         "datasetId": "xinyu-provincial-protected-heritage-marker-pilot",
         "sourcePath": "data/xinyu-provincial-heritage-marker-pilot.json",
-        "recordCount": 6
+        "recordCount": 7
       }
     ],
     "publicLocationSource": "data/official-protected-heritage-public-locations.json",
-    "sourceRecordCount": 16,
-    "featureCount": 6,
+    "sourceRecordCount": 17,
+    "featureCount": 7,
     "excludedRecordCount": 10,
     "generationStatus": "valid",
     "deterministicSourceOrder": [
@@ -27,6 +27,53 @@
     "geometryProvenance": "Alex's Photo Board reviewed public-location decision"
   },
   "features": [
+    {
+      "type": "Feature",
+      "id": "JX-XY-NCH-007",
+      "properties": {
+        "recordId": "JX-XY-NCH-007",
+        "sourceDatasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+        "officialNameZh": "水西红三军团指挥部旧址",
+        "projectNameEn": "Former Site of the Shuixi Red Army Third Corps Headquarters",
+        "projectEnglishStatus": "Alex's Photo Board project interpretation",
+        "protectionLevelZh": "全国重点文物保护单位",
+        "officialCategoryZh": "近现代重要史迹",
+        "officialLocationTextZh": "高新区水西镇沙陂村",
+        "sourceTitleZh": "新余市市级以上文物保护单位名录（2025年）",
+        "sourceIssuerZh": "新余市文化广电旅游局",
+        "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+        "sourceAccessedDate": "2026-07-24",
+        "identityConfidence": "confirmed",
+        "siteLocationConfidence": "High",
+        "locationEvidenceConfidence": "Medium",
+        "displayLocationType": "site-point",
+        "locationPrecision": "approximate",
+        "publicLocationMeaning": "heritage-feature",
+        "markerClass": "reviewed",
+        "estimatedUncertaintyMeters": 100,
+        "generalizationRadiusMeters": null,
+        "publicationLocationPolicy": "approximate",
+        "publicLocationNote": "Project-reviewed reference location based on the official record, mapped-provider evidence and documented project digitization. It identifies the mapped heritage feature but is not an authority-supplied coordinate, surveyed heritage extent, building footprint, legal protection boundary or guaranteed visitor entrance. Estimated horizontal uncertainty is approximately 100 metres.",
+        "coordinateReferenceSystem": "WGS84",
+        "projectLocationProvenance": "Alex's Photo Board reviewed public-location decision",
+        "geometryMeaning": "provider-located-project-reviewed-reference-point",
+        "representationStatus": "project-reviewed-interpretation",
+        "geometrySourceType": "project-reviewed-digitization",
+        "geometrySourceLabel": "Project-reviewed provider-located reference Point",
+        "geometrySourceUrl": "https://www.amap.com/place/B0IDTHR05Y",
+        "geometryReviewedAt": "2026-07-31",
+        "geometryReviewNotes": "Project-reviewed reference location based on the official record, mapped-provider evidence and documented project digitization. It identifies the mapped heritage feature but is not an authority-supplied coordinate, surveyed heritage extent, building footprint, legal protection boundary or guaranteed visitor entrance. Estimated horizontal uncertainty is approximately 100 metres.",
+        "geometryPrecision": "approximate",
+        "horizontalUncertaintyMetres": 100
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          115.011333,
+          27.805882
+        ]
+      }
+    },
     {
       "type": "Feature",
       "id": "JX-XY-PCH-001",

@@ -2,17 +2,17 @@ import { getOfficialMapCategory } from "./official-map-categories.js?v=2026-07-2
 import {
   validateOfficialGeometry,
   validateOfficialGeometryMetadata
-} from "./official-geometry-schema.js?v=2026-07-30-xiabu-component-point";
+} from "./official-geometry-schema.js?v=2026-08-01-xinyu-point-batch";
 import {
   getFeatureGeometryMeaning,
   getOfficialGeometryRenderPresentation,
   getOfficialGeometrySourceLabel,
   prepareOfficialGeometryRenderModels
-} from "./official-geometry-rendering.js?v=2026-07-30-xiabu-component-point";
+} from "./official-geometry-rendering.js?v=2026-08-01-xinyu-point-batch";
 
 const SUPPORTED_SCHEMA_VERSION = "2.0.0";
 const PROVINCIAL_HERITAGE_DATASET_ID = "jiangxi-provincial-protected-heritage-map";
-const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 16;
+const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 17;
 const PROVINCIAL_HERITAGE_LOADING_MESSAGE = "Loading provincial heritage preview…";
 const PROVINCIAL_HERITAGE_EMPTY_MESSAGE = "No approved provincial heritage locations are available to display yet.";
 const PROVINCIAL_HERITAGE_FAILURE_MESSAGE = "The provincial heritage preview could not be loaded.";
@@ -164,6 +164,13 @@ function validateFeature(feature, index, seenIds) {
           && properties.estimatedUncertaintyMeters > 0,
         `${path}.properties.estimatedUncertaintyMeters must be a positive finite number.`
       );
+      if (properties.geometryMeaning === "provider-located-project-reviewed-reference-point") {
+        addError(
+          errors,
+          properties.representationStatus === "project-reviewed-interpretation",
+          `${path}.properties.representationStatus must identify a project-reviewed interpretation.`
+        );
+      }
     }
     addError(
       errors,
@@ -312,7 +319,9 @@ function buildProvincialMarkerAccessibleName(feature) {
     : "";
   const category = getOfficialMapCategory(properties.officialCategoryZh);
   const categoryLabel = category?.label || "Other official heritage";
-  const locationLabel = properties.markerClass === "generalized"
+  const locationLabel = properties.geometryMeaning
+    ? getOfficialGeometryRenderPresentation(feature).meaningLabel
+    : properties.markerClass === "generalized"
     ? "Generalized official reference"
     : properties.displayLocationType === "visitor-reference-point"
       ? "Visitor reference point"
@@ -395,6 +404,7 @@ function buildProvincialPopupData(feature) {
     geometrySourceUrl: normalizeHttpsUrl(properties.geometrySourceUrl),
     geometryReviewedAt: String(properties.geometryReviewedAt || "").trim(),
     geometryReviewNotes: String(properties.geometryReviewNotes || "").trim(),
+    representationStatus: String(properties.representationStatus || "").trim(),
     geometryCaution: geometryType !== "Point" && (isProjectGeometry || isQualifiedGeometry)
       ? PROJECT_GEOMETRY_CAUTION
       : ""

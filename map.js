@@ -35,7 +35,7 @@ import {
   buildProvincialMarkerAccessibleName,
   buildProvincialPopupData,
   validateProvincialHeritageGeoJson
-} from "./heritage-engine/provincial-heritage-map.js?v=2026-07-30-xiabu-component-point";
+} from "./heritage-engine/provincial-heritage-map.js?v=2026-08-01-xinyu-point-batch";
 import {
   COMMUNITY_MAP_CATEGORY_DEFINITIONS,
   buildCommunityMarkerAccessibleName,
@@ -48,7 +48,7 @@ import {
   getPublishedOfficialMapCategories
 } from "./heritage-engine/official-map-categories.js?v=2026-07-27-official-category-filters";
 
-const PROVINCIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-provincial-protected-heritage-map.geojson?v=2026-07-30-xiabu-component-point";
+const PROVINCIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-provincial-protected-heritage-map.geojson?v=2026-08-01-xinyu-point-batch";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -190,7 +190,9 @@ function buildProvincialHeritagePopup(feature) {
     "generalized-area-reference": "General area reference"
   };
   locationBadge.textContent = isPoint
-    ? badgeLabels[data.displayLocationType] || "Reviewed official location"
+    ? (data.representationStatus ? data.geometryMeaningLabel : null)
+      || badgeLabels[data.displayLocationType]
+      || "Reviewed official location"
     : data.geometryMeaningLabel;
 
   const facts = document.createElement("dl");
@@ -204,6 +206,17 @@ function buildProvincialHeritagePopup(feature) {
       ["Location meaning", data.publicLocationMeaning],
       ["Location evidence", data.locationEvidenceConfidence],
       ["Estimated location uncertainty", `${data.estimatedUncertaintyMeters} metres`],
+      ...(data.geometryMeaning
+        ? [
+            ["Geometry meaning", data.geometryMeaningLabel],
+            ...(data.representationStatus
+              ? [["Representation status", data.representationStatus]]
+              : []),
+            ...(data.geometrySourceTypeLabel && data.geometrySourceLabel
+              ? [["Geometry provenance", `${data.geometrySourceTypeLabel}: ${data.geometrySourceLabel}`]]
+              : [])
+          ]
+        : []),
       ...(data.markerClass === "generalized"
         ? [["Generalization radius", `${data.generalizationRadiusMeters} metres`]]
         : []),

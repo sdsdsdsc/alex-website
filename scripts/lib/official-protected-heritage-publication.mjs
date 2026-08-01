@@ -56,6 +56,13 @@ const SENSITIVITY_ASSESSMENTS = new Set([
   "restricted",
   "unresolved"
 ]);
+const REPRESENTATION_STATUSES = new Set([
+  "authority-published",
+  "project-reviewed-interpretation"
+]);
+const EXPLICIT_POINT_GEOMETRY_MEANINGS = new Set([
+  "provider-located-project-reviewed-reference-point"
+]);
 const SOURCE_TYPES = new Set([
   "official-record",
   "institutional-description",
@@ -143,6 +150,10 @@ const PUBLIC_LOCATION_DECISION_KEYS = [
   "originalProviderCoordinate",
   "transformationOrReconciliationMethod"
 ];
+const PUBLIC_LOCATION_DECISION_OPTIONAL_KEYS = [
+  "geometryMeaning",
+  "representationStatus"
+];
 const PUBLIC_LOCATION_SOURCE_KEYS = [
   "sourceId",
   "sourceType",
@@ -192,6 +203,20 @@ function validateExactKeys(errors, value, expectedKeys, path) {
     `${path} must contain exactly: ${expected.join(", ")}.`
   );
   return true;
+}
+
+function validateRequiredAndOptionalKeys(errors, value, requiredKeys, optionalKeys, path) {
+  if (!isPlainObject(value)) {
+    errors.push(`${path} must be an object.`);
+    return false;
+  }
+  const actual = new Set(Object.keys(value));
+  const allowed = new Set([...requiredKeys, ...optionalKeys]);
+  const missing = requiredKeys.filter((key) => !actual.has(key));
+  const unexpected = [...actual].filter((key) => !allowed.has(key));
+  addError(errors, missing.length === 0, `${path} is missing required keys: ${missing.join(", ")}.`);
+  addError(errors, unexpected.length === 0, `${path} contains unsupported keys: ${unexpected.join(", ")}.`);
+  return missing.length === 0 && unexpected.length === 0;
 }
 
 function validateNonEmptyString(errors, value, path) {
@@ -283,7 +308,7 @@ function validateXinyuCompanionDataset(dataset) {
       const path = `xinyuDataset.records[${index}]`;
       if (!validateExactKeys(errors, record, XINYU_RECORD_KEYS, path)) return;
       validateNonEmptyString(errors, record.recordId, `${path}.recordId`);
-      addError(errors, /^JX-XY-PCH-\d{3}$/.test(record.recordId), `${path}.recordId is not a stable Xinyu pilot ID.`);
+      addError(errors, /^JX-XY-(?:NCH|PCH)-\d{3}$/.test(record.recordId), `${path}.recordId is not a stable Xinyu pilot ID.`);
       addError(errors, Number.isInteger(record.sourceSequence) && record.sourceSequence > 0, `${path}.sourceSequence must be a positive integer.`);
 
       if (validateExactKeys(errors, record.official, XINYU_OFFICIAL_KEYS, `${path}.official`)) {
@@ -302,7 +327,7 @@ function validateXinyuCompanionDataset(dataset) {
         if (record.official.officialDesignationNumber !== null) {
           addError(
             errors,
-            /^\d+-\d+-\d+$/.test(record.official.officialDesignationNumber),
+            /^\d+(?:-\d+){2,3}$/.test(record.official.officialDesignationNumber),
             `${path}.official.officialDesignationNumber must use the documented designation-number form.`
           );
         }
@@ -406,7 +431,13 @@ function deriveMarkerClass(decision) {
 }
 
 function validatePublicLocationDecision(errors, decision, path, recordIndex) {
-  if (!validateExactKeys(errors, decision, PUBLIC_LOCATION_DECISION_KEYS, path)) return;
+  if (!validateRequiredAndOptionalKeys(
+    errors,
+    decision,
+    PUBLIC_LOCATION_DECISION_KEYS,
+    PUBLIC_LOCATION_DECISION_OPTIONAL_KEYS,
+    path
+  )) return;
   validateNonEmptyString(errors, decision.recordId, `${path}.recordId`);
   validateNonEmptyString(errors, decision.sourceDatasetId, `${path}.sourceDatasetId`);
   addError(errors, IDENTITY_CONFIDENCES.has(decision.identityConfidence), `${path}.identityConfidence is unknown.`);
@@ -424,6 +455,25 @@ function validatePublicLocationDecision(errors, decision, path, recordIndex) {
   validateIsoDate(errors, decision.reviewedDate, `${path}.reviewedDate`);
   addError(errors, decision.reviewStatus === "approved", `${path}.reviewStatus must be approved.`);
   validateNonEmptyString(errors, decision.transformationOrReconciliationMethod, `${path}.transformationOrReconciliationMethod`);
+  const hasGeometryMeaning = decision.geometryMeaning !== undefined;
+  const hasRepresentationStatus = decision.representationStatus !== undefined;
+  addError(
+    errors,
+    hasGeometryMeaning === hasRepresentationStatus,
+    `${path}.geometryMeaning and representationStatus must be supplied together.`
+  );
+  if (hasGeometryMeaning) {
+    addError(
+      errors,
+      EXPLICIT_POINT_GEOMETRY_MEANINGS.has(decision.geometryMeaning),
+      `${path}.geometryMeaning is unsupported.`
+    );
+    addError(
+      errors,
+      REPRESENTATION_STATUSES.has(decision.representationStatus),
+      `${path}.representationStatus is unsupported.`
+    );
+  }
 
   const officialRecord = recordIndex.get(decision.recordId);
   addError(errors, Boolean(officialRecord), `${path}.recordId does not reference an official record.`);
@@ -576,36 +626,50 @@ function buildFeature(recordId, record, decision) {
   const official = record.official;
   const project = record.projectInterpretation;
   const markerClass = deriveMarkerClass(decision);
+  const properties = {
+    recordId,
+    sourceDatasetId: record.sourceDatasetId,
+    officialNameZh: official.officialNameZh,
+    projectNameEn: project.projectNameEn,
+    projectEnglishStatus: "Alex's Photo Board project interpretation",
+    protectionLevelZh: official.protectionLevelZh,
+    officialCategoryZh: official.officialCategoryZh,
+    officialLocationTextZh: official.officialLocationTextZh,
+    sourceTitleZh: record.officialSource.sourceTitleZh,
+    sourceIssuerZh: record.officialSource.sourceIssuerZh,
+    sourceUrl: record.officialSource.sourceUrl,
+    sourceAccessedDate: record.officialSource.sourceAccessedDate,
+    identityConfidence: decision.identityConfidence,
+    siteLocationConfidence: decision.siteLocationConfidence,
+    locationEvidenceConfidence: decision.locationEvidenceConfidence,
+    displayLocationType: decision.displayLocationType,
+    locationPrecision: decision.locationPrecision,
+    publicLocationMeaning: decision.publicLocationMeaning,
+    markerClass,
+    estimatedUncertaintyMeters: decision.estimatedUncertaintyMeters,
+    generalizationRadiusMeters: decision.generalizationRadiusMeters,
+    publicationLocationPolicy: decision.publicationLocationPolicy,
+    publicLocationNote: decision.publicLocationNote,
+    coordinateReferenceSystem: decision.coordinateReferenceSystem,
+    projectLocationProvenance: PROJECT_GEOMETRY_PROVENANCE
+  };
+  if (decision.geometryMeaning) {
+    Object.assign(properties, {
+      geometryMeaning: decision.geometryMeaning,
+      representationStatus: decision.representationStatus,
+      geometrySourceType: "project-reviewed-digitization",
+      geometrySourceLabel: "Project-reviewed provider-located reference Point",
+      geometrySourceUrl: decision.originalProviderCoordinate.providerUrl,
+      geometryReviewedAt: decision.reviewedDate,
+      geometryReviewNotes: decision.publicLocationNote,
+      geometryPrecision: "approximate",
+      horizontalUncertaintyMetres: decision.estimatedUncertaintyMeters
+    });
+  }
   return {
     type: "Feature",
     id: recordId,
-    properties: {
-      recordId,
-      sourceDatasetId: record.sourceDatasetId,
-      officialNameZh: official.officialNameZh,
-      projectNameEn: project.projectNameEn,
-      projectEnglishStatus: "Alex's Photo Board project interpretation",
-      protectionLevelZh: official.protectionLevelZh,
-      officialCategoryZh: official.officialCategoryZh,
-      officialLocationTextZh: official.officialLocationTextZh,
-      sourceTitleZh: record.officialSource.sourceTitleZh,
-      sourceIssuerZh: record.officialSource.sourceIssuerZh,
-      sourceUrl: record.officialSource.sourceUrl,
-      sourceAccessedDate: record.officialSource.sourceAccessedDate,
-      identityConfidence: decision.identityConfidence,
-      siteLocationConfidence: decision.siteLocationConfidence,
-      locationEvidenceConfidence: decision.locationEvidenceConfidence,
-      displayLocationType: decision.displayLocationType,
-      locationPrecision: decision.locationPrecision,
-      publicLocationMeaning: decision.publicLocationMeaning,
-      markerClass,
-      estimatedUncertaintyMeters: decision.estimatedUncertaintyMeters,
-      generalizationRadiusMeters: decision.generalizationRadiusMeters,
-      publicationLocationPolicy: decision.publicationLocationPolicy,
-      publicLocationNote: decision.publicLocationNote,
-      coordinateReferenceSystem: decision.coordinateReferenceSystem,
-      projectLocationProvenance: PROJECT_GEOMETRY_PROVENANCE
-    },
+    properties,
     geometry: {
       type: "Point",
       coordinates: [decision.longitude, decision.latitude]

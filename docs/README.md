@@ -123,11 +123,15 @@ Key groups include:
   records one Point-ready research recommendation—N07 at a documented
   project-reviewed WGS84 reference Point—and keeps N03, N08, P22, M23, and M30
   withheld. It publishes nothing and leaves paused PR #69 unchanged.
+- [Phase 15C-14 Xinyu two-record Point publication proposal](./audits/phase-15c-14-xinyu-two-record-point-publication.md),
+  the current draft PR #69 implementation record for the separately approved
+  P19 and N07 batch.
 
-The approved Xiabu `暴动举行地旧址` component is now represented in the
-generated publication dataset; the parent, meeting-site component, and Xieli
-remain unpublished. The dataset contains six official Point features and no
-published line or area geometry.
+The draft branch dataset contains the five retained production Points plus P19
+and N07: seven official Point features and no line or area geometry. Live
+production remains five Points at the pre-PR #69 hash until separate merge and
+deployment approval. The Xiabu parent, meeting-site component, Xieli, and the
+five withheld Phase 15C-13 candidates remain unpublished.
 
 ## Archived history
 

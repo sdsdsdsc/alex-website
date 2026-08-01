@@ -4,8 +4,8 @@ import { readFile } from "node:fs/promises";
 const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
-const MAP_PAGE_VERSION = "2026-07-30-xiabu-component-point";
-const PROVINCIAL_HERITAGE_PREVIEW_VERSION = "2026-07-30-xiabu-component-point";
+const MAP_PAGE_VERSION = "2026-08-01-xinyu-point-batch";
+const PROVINCIAL_HERITAGE_PREVIEW_VERSION = "2026-08-01-xinyu-point-batch";
 const OFFICIAL_CATEGORY_VERSION = "2026-07-27-official-category-filters";
 const PROVINCIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-provincial-protected-heritage-map.geojson*";
 const COMMITTED_PROVINCIAL_HERITAGE = JSON.parse(await readFile(
@@ -122,9 +122,9 @@ function makeSyntheticProvincialCollection(features = []) {
     metadata: {
       schemaVersion: "2.0.0",
       datasetId: "jiangxi-provincial-protected-heritage-map",
-      sourceRecordCount: 16,
+      sourceRecordCount: 17,
       featureCount: features.length,
-      excludedRecordCount: 16 - features.length,
+      excludedRecordCount: 17 - features.length,
       generationStatus: features.length === 0 ? "valid-empty" : "valid",
       geometryProvenance: "Alex's Photo Board project coordinate review"
     },
@@ -465,7 +465,7 @@ test("provincial preview is lazy, default-off, valid-empty, cached, and map-stab
   expect(await getRenderedMapState(page)).toEqual(beforeEnable);
 });
 
-test("production-sized official fixture renders six accessible markers across responsive and 200% zoom checks", async ({ page }) => {
+test("production-sized official fixture renders seven accessible markers across responsive and 200% zoom checks", async ({ page }) => {
   const appErrors = [];
   page.on("console", (message) => {
     if (message.type() === "error" && isAppOwnedConsoleError(message.text())) {
@@ -487,8 +487,8 @@ test("production-sized official fixture renders six accessible markers across re
   });
   await expect(officialToggle).not.toBeChecked();
   await officialToggle.click();
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(6);
-  await expect(page.locator("#provincialHeritageStatus")).toContainText("6 provincial heritage locations");
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(7);
+  await expect(page.locator("#provincialHeritageStatus")).toContainText("7 provincial heritage locations");
 
   const compoundMarker = page.getByRole("button", {
     name: "Open official protected heritage record: Xinyu Confucian Temple (新余孔庙); Map category: Ancient buildings; Compound reference point (approximate project-reviewed location)",
@@ -525,6 +525,26 @@ test("production-sized official fixture renders six accessible markers across re
   await expect(xiabuPopup).toContainText("暴动会议地旧址");
   await expect(xiabuPopup).toContainText("150 metres");
   await expect(xiabuPopup).toContainText("building footprint");
+  await expect(xiabuPopup).not.toContainText("Representation status");
+  await expect(xiabuPopup).not.toContainText("Geometry provenance");
+
+  const n07Marker = page.getByRole("button", {
+    name: "Open official protected heritage record: Former Site of the Shuixi Red Army Third Corps Headquarters (水西红三军团指挥部旧址); Map category: Important modern historic sites; Provider-located project-reviewed reference point",
+    exact: true
+  });
+  await expect(n07Marker).toHaveCount(1);
+  await n07Marker.focus();
+  await n07Marker.press("Enter");
+  const n07Popup = page.locator(".provincial-heritage-map-popup").filter({
+    hasText: "Former Site of the Shuixi Red Army Third Corps Headquarters"
+  });
+  await expect(n07Popup).toContainText("Provider-located project-reviewed reference point");
+  await expect(n07Popup).toContainText("project-reviewed-interpretation");
+  await expect(n07Popup).toContainText("Project-reviewed digitization");
+  await expect(n07Popup).toContainText("100 metres");
+  await expect(n07Popup).toContainText("not an authority-supplied coordinate");
+  await expect(n07Popup).toContainText("building footprint");
+  await expect(n07Popup).toContainText("legal protection boundary");
 
   const visitorMarker = page.getByRole("button", {
     name: "Open official protected heritage record: Fu Baoshi Former Residence (傅抱石故居); Map category: Important modern historic sites; Visitor reference point",
@@ -563,7 +583,7 @@ test("production-sized official fixture renders six accessible markers across re
     { width: 844, height: 390 }
   ]) {
     await page.setViewportSize(viewport);
-    await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(6);
+    await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(7);
     await expect(officialToggle).toBeChecked();
     expect(await page.evaluate(() => (
       document.documentElement.scrollWidth <= document.documentElement.clientWidth
@@ -572,7 +592,7 @@ test("production-sized official fixture renders six accessible markers across re
   await page.evaluate(() => {
     document.documentElement.style.zoom = "2";
   });
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(6);
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(7);
   await expect(officialToggle).toBeChecked();
   expect(await page.evaluate(() => (
     document.documentElement.scrollWidth <= document.documentElement.clientWidth
@@ -815,7 +835,7 @@ test("official categories are published-only tri-state visibility controls with 
   expect(provincialRequestCount).toBe(0);
 
   await officialLayer.click();
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(6);
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(7);
   expect(provincialRequestCount).toBe(1);
   const officialAll = layersPanel.getByRole("checkbox", {
     name: "All official categories",
@@ -844,11 +864,11 @@ test("official categories are published-only tri-state visibility controls with 
   })).toHaveCount(0);
   await expect(page.locator("[data-official-map-category]")).toHaveCount(2);
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "6 of 6 published official locations displayed."
+    "7 of 7 published official locations displayed."
   );
   await expect(page.locator(".provincial-heritage-map-marker--ancient-buildings")).toHaveCount(3);
-  await expect(page.locator(".provincial-heritage-map-marker--important-modern-historic-sites")).toHaveCount(3);
-  await expect(page.locator(".provincial-heritage-map-marker .official-map-marker__glyph")).toHaveCount(6);
+  await expect(page.locator(".provincial-heritage-map-marker--important-modern-historic-sites")).toHaveCount(4);
+  await expect(page.locator(".provincial-heritage-map-marker .official-map-marker__glyph")).toHaveCount(7);
 
   await ancientBuildings.focus();
   await expect(ancientBuildings).toBeFocused();
@@ -857,9 +877,9 @@ test("official categories are published-only tri-state visibility controls with 
   await expect(modernSites).toBeChecked();
   await expect(officialAll).not.toBeChecked();
   await expect(officialAll).toHaveJSProperty("indeterminate", true);
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(3);
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(4);
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "3 of 6 published official locations displayed."
+    "4 of 7 published official locations displayed."
   );
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
   await expect(communityParent).toBeChecked();
@@ -868,7 +888,7 @@ test("official categories are published-only tri-state visibility controls with 
   expect(provincialRequestCount).toBe(1);
 
   await page.getByRole("tab", { name: "Search", exact: true }).click();
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(3);
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(4);
   await openMapLayersTab(page);
   await expect(ancientBuildings).not.toBeChecked();
   await expect(modernSites).toBeChecked();
@@ -882,11 +902,11 @@ test("official categories are published-only tri-state visibility controls with 
   await expect(modernSites).toBeDisabled();
   await expect(page.locator("#officialCategoryDisabledHelp")).toBeVisible();
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "0 of 6 published official locations displayed."
+    "0 of 7 published official locations displayed."
   );
 
   await officialLayer.click();
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(3);
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(4);
   await expect(officialAll).toBeEnabled();
   await expect(officialAll).toHaveJSProperty("indeterminate", true);
   await expect(ancientBuildings).not.toBeChecked();
@@ -896,19 +916,19 @@ test("official categories are published-only tri-state visibility controls with 
 
   await officialAll.click();
   await expect(officialAll).toBeChecked();
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(6);
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(7);
   await officialAll.click();
   await expect(officialAll).not.toBeChecked();
   await expect(officialAll).toHaveJSProperty("indeterminate", false);
   await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(0);
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "0 of 6 published official locations displayed."
+    "0 of 7 published official locations displayed."
   );
   await officialAll.click();
   await expect(officialAll).toBeChecked();
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(6);
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(7);
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "6 of 6 published official locations displayed."
+    "7 of 7 published official locations displayed."
   );
   expect(page.url()).toBe(beforeEnableUrl);
   expect(await getRenderedMapState(page)).toEqual(beforeEnableMapState);
@@ -1202,20 +1222,20 @@ test("Layers tab controls overlays while Leaflet retains basemap selection only"
 
   await setOverlayChecked(page, "Provincial protected heritage", true);
   await expect(page.locator("#provincialHeritageStatus")).toHaveText(
-    "6 provincial heritage locations displayed."
+    "7 provincial heritage locations displayed."
   );
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(6);
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(7);
 
   await setOverlayChecked(page, "All community records", true);
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
   await expect(page.locator("#provincialHeritageStatus")).toHaveText(
-    new RegExp(`${communityCount} community records? and 6 provincial heritage locations displayed\\.`)
+    new RegExp(`${communityCount} community records? and 7 provincial heritage locations displayed\\.`)
   );
 
   await page.getByRole("tab", { name: "Search" }).click();
   await expect(page.locator("#mapLayersToolPanel")).toBeHidden();
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(6);
+  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(7);
   await page.getByRole("tab", { name: "Layers" }).click();
   await expect(communityToggle).toBeChecked();
   await expect(provincialToggle).toBeChecked();
