@@ -116,6 +116,11 @@ Key groups include:
   numerical-construction, reproducibility, CRS, uncertainty, sensitivity,
   misleading-risk, provenance, and public-wording gates. It approves no
   coordinate or candidate and leaves paused PR #69 unchanged.
+- [Phase 15C-13 Xinyu priority Point digitization audit](./audits/phase-15c-13-xinyu-priority-point-digitization-audit.md),
+  the bounded six-candidate re-evaluation after the policy clarification. It
+  records one Point-ready research recommendation—N07 at a documented
+  project-reviewed WGS84 reference Point—and keeps N03, N08, P22, M23, and M30
+  withheld. It publishes nothing and leaves paused PR #69 unchanged.
 
 Xiabu and Xieli remain unpublished. Production remains five official Point
 features with no published line or area geometry.
@@ -143,7 +148,10 @@ is preserved as a historical architecture and safety-design record.
   containing 8 line and 21 area candidates, plus the
   [fallback Point candidate matrix](./research/phase-15c-11-xinyu-fallback-point-candidate-matrix.md),
   which reconciles all 39 unpublished candidates and records their publication
-  gates.
+  gates, and the bounded
+  [priority Point candidate matrix](./research/phase-15c-13-xinyu-priority-point-candidate-matrix.md),
+  which records the refreshed provider, CRS, numerical-construction, risk, and
+  outcome evidence for exactly N03, N07, N08, P22, M23, and M30.
 - [docs/assets/](./assets/) contains documentation visuals, including the
   [Phase 15C-7 Xieli prototype comparison](./assets/phase-15c-7-xieli-prototype-comparison.svg).
 

@@ -19,13 +19,15 @@ Current Phase 15C evidence records include the
 the
 [future non-Point inventory](./phase-15c-10-xinyu-non-point-candidate-inventory.md),
 and the
-[fallback Point candidate matrix](./phase-15c-11-xinyu-fallback-point-candidate-matrix.md).
+[fallback Point candidate matrix](./phase-15c-11-xinyu-fallback-point-candidate-matrix.md),
+plus the
+[six-candidate priority Point matrix](./phase-15c-13-xinyu-priority-point-candidate-matrix.md).
 They are documentation evidence only and are not application inputs. The
-fallback matrix keeps all 39 candidates withheld under the present policy,
-while recording N07 as a provider-located physical-feature candidate whose
-numerical project-reviewed Point has not yet been digitized or approved. Its
-six-identity future research queue—N03, N07, N08, P22, M23, and M30—may be
-re-evaluated only after the separate
+fallback matrix is the preserved Phase 15C-11 baseline that kept all 39
+candidates withheld while recording N07 as a provider-located
+physical-feature candidate. The separately merged
 [provider-located Point policy clarification](../audits/phase-15c-12-provider-located-point-policy-clarification.md)
-merges. Any numerical digitization belongs to that later evidence audit. The
-clarification adds no candidate to paused PR #69.
+then authorized a bounded evidence re-evaluation. Phase 15C-13 applies that
+method to exactly N03, N07, N08, P22, M23, and M30: N07 receives one documented
+Point-ready research recommendation, while the other five remain withheld.
+Nothing in these research files is published or added to paused PR #69.
