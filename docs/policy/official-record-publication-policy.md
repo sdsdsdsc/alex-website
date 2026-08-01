@@ -127,7 +127,9 @@ Minimum threshold:
 
 - official identity, category, and locality match;
 - an explicit and defensible Point meaning;
-- a reproducible source coordinate and recorded source CRS;
+- a reproducible numerical Point and recorded source/output CRS, obtained from
+  a legitimate source coordinate or an approved documented project-digitization
+  method;
 - documented and tested deterministic conversion where required;
 - WGS84 reconciliation with no serious unresolved mismatch;
 - accepted uncertainty, sensitivity, and misleading risk; and
@@ -256,6 +258,153 @@ A project-reviewed interpretation must:
 
 A provider Point of Interest may support a Point after corroboration. It does
 not by itself support a footprint, compound, alignment, or legal boundary.
+
+## Provider-located project-reviewed reference Points
+
+A **provider-located project-reviewed reference Point** is a policy evidence
+method for constructing a numerical Point when a mapped provider identifies a
+specific heritage feature but does not expose a legitimate raw feature
+coordinate. It is not a new GeoJSON type, `geometryMeaning`, runtime enum, or
+lower publication threshold. The active representation remains a Point with an
+existing controlled Point meaning and the policy-level representation status
+`project-reviewed-interpretation`.
+
+Legitimate provider-owned feature coordinates remain preferable when they are
+available and their CRS and feature meaning can be established. Project
+digitization is a controlled fallback, not permission to treat any visible pin,
+viewport, highlighted area, or map centre as provider-supplied geometry.
+
+### Three distinct decisions
+
+The evidence record must keep these decisions separate:
+
+1. **Feature identification:** determine whether the provider result identifies
+   the exact official record or separately resolved component and a specific
+   point-like physical feature.
+2. **Numerical construction:** construct a reproducible WGS84 Point using one
+   of the accepted methods below and record its complete coordinate chain.
+3. **Publication approval:** separately review meaning, uncertainty,
+   sensitivity, access implications, misleading risk, provenance, wording, and
+   one-active-representation effects before publication.
+
+Passing feature identification does not approve a coordinate. Constructing a
+coordinate does not approve publication.
+
+### Feature-identification and corroboration gate
+
+The exact official identity, designation level, category, locality,
+parent/component relationship, and intended public identity must first be
+resolved. Useful provider evidence may include an exact or reconciled name,
+feature-specific category and address, a stable provider identifier, provider
+photographs showing the relevant plaque or distinctive physical fabric, and a
+recorded access date.
+
+A provider result is not feature-specific merely because it is near or named
+after the same village, community, township, park, business, museum, visitor
+complex, road, administrative area, or search viewport. Same-name and
+parent/component confusion must be rejected or resolved explicitly.
+
+Feature identification requires either:
+
+- two genuinely useful independent mapped providers; or
+- one strong mapped provider plus independent feature-specific official,
+  institutional, archival, plaque, reliable photographic, documented field, or
+  other maintained evidence.
+
+Circular provider copies and sources that only repeat the same unverified claim
+do not provide independent corroboration.
+
+### Accepted numerical construction methods
+
+After the feature-identification gate passes, a project-reviewed Point may be
+constructed by:
+
+- locating the same physical feature in a coordinate-aware provider
+  environment with a known CRS and digitizing the Point there;
+- reproducibly matching the provider feature to a suitable WGS84 reference
+  basemap and digitizing the same feature;
+- a documented field observation or survey; or
+- another documented method that preserves the input reference, source and
+  output CRS, construction steps, reviewer, and uncertainty.
+
+The reproducibility record must identify the provider and stable feature
+identifier or URL, access date, evidence used to establish the feature,
+digitization environment and reference basemap, input and output CRS, original
+and output coordinates at retained precision, every conversion or transfer
+step, rounding, reviewer and review date, uncertainty rationale, and enough
+detail for another reviewer to repeat the result.
+
+The CRS chain must never be inferred silently. GCJ-02, BD-09, provider-owned
+projected coordinates, Web Mercator display coordinates, and WGS84 must remain
+distinct. Each transformation must identify its algorithm or tool and be
+tested. A feature transferred between basemaps must record how corresponding
+physical evidence was matched and what displacement or ambiguity remained.
+
+### Prohibited coordinate substitutes
+
+The following do not satisfy the numerical-construction gate:
+
+- screenshot pixels or coordinates read from an image without a documented
+  georeferencing method;
+- guessed longitude/latitude values or undocumented map clicks;
+- search-result, map, administrative-area, or URL viewport centres;
+- Web Mercator or other display centres not asserted to be feature coordinates;
+- centres of provider-highlighted areas, villages, communities, townships,
+  parks, visitor complexes, parcels, or roads; and
+- provider shapes whose feature identity, meaning, or reuse rights are
+  unresolved.
+
+### Meaning, provenance, uncertainty, and public wording
+
+This evidence method must use an existing controlled Point meaning:
+`heritage-feature-point`, `component-reference-point`,
+`visitor-reference-point`, `entrance-reference-point`, or
+`generalized-reference-point`. The method label does not create a new meaning
+and must not turn a visitor or compound reference into a feature centroid,
+footprint, protected extent, or legal boundary.
+
+The representation is project-created even when the official record and
+provider feature are genuine. Its policy-level representation status is
+`project-reviewed-interpretation`; it must never be described as an
+authority-supplied coordinate. Uncertainty must be specific to the evidence and
+method, including provider placement, basemap transfer, identity ambiguity,
+conversion, digitization, and rounding. There is no default or universally
+"low" uncertainty for this method.
+
+Sensitivity review must address archaeological or burial vulnerability,
+private or restricted access, resident privacy, harm or theft risk, visitor
+safety, and whether a generalized or withheld result is more appropriate.
+Misleading-risk review must test the Point at public map scales and confirm that
+its meaning and limitations remain clear.
+
+Any future public presentation of this method must include wording equivalent
+to:
+
+> Project-reviewed reference location based on the official record,
+> mapped-provider evidence, and documented project digitization. It is not an
+> authority-supplied coordinate, surveyed heritage extent, or legal protection
+> boundary.
+
+That limitation must be available through the future popup or record detail,
+accessible name or adjacent accessible description, provenance presentation,
+and legend/help where the method is explained. This policy does not implement
+those interface changes.
+
+### Non-approving N07 example and shape boundary
+
+The Phase 15C-11 N07 evidence is the motivating example. It establishes a
+provider-located point-like physical candidate through cross-provider identity,
+locality, and photographic agreement. It does not contain or approve a
+numerical Point, CRS chain, uncertainty, sensitivity decision, misleading-risk
+decision, or publication decision. Any later digitization and re-evaluation
+must be separately approved work.
+
+This clarification changes no shape-evidence rule. Provider-located Point
+evidence does not support a building footprint, compound, route, alignment,
+archaeological extent, surveyed extent, or legal boundary. If exceptional
+replacement geometry is later independently justified and approved, it
+supersedes the Point under the one-active-representation rule rather than
+appearing simultaneously.
 
 ## Evidence, uncertainty, and rejection rules
 
@@ -439,3 +588,4 @@ add empty coordinates, placeholder geometries, migrations, or real records.
 - [Phase 15C-5 Xiabu evidence pilot](../audits/phase-15c-5-xiabu-geometry-pilot.md)
 - [Phase 15C-6 historical policy and batch-planning record](../plans/phase-15c-6-official-record-publication-policy-and-batch-plan.md)
 - [Phase 15C-7 Xieli misleading-risk review](../audits/phase-15c-7-xieli-misleading-risk-review.md)
+- [Phase 15C-12 provider-located Point policy clarification](../audits/phase-15c-12-provider-located-point-policy-clarification.md)

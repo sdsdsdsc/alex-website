@@ -48,9 +48,12 @@ to the authoritative audit records and contain no duplicate evidence or policy.
 The [Official Heritage spatial representation and publication policy](./policy/official-record-publication-policy.md)
 is the sole controlling authority for official heritage geometry publication.
 It records the five public Official Heritage types, evidence-led natural-form
-defaults, one-active-representation rule, project-interpretation standard, and
-future sidebar and filter direction. It applies only to Official Heritage;
-Community Heritage remains unchanged and Point-based.
+defaults, one-active-representation rule, project-interpretation standard,
+provider-located project-reviewed reference Point evidence method, and future
+sidebar and filter direction. The clarification preserves the existing
+publication gates and does not create a runtime type or approve a candidate. It
+applies only to Official Heritage; Community Heritage remains unchanged and
+Point-based.
 
 Other reusable policy and guidance:
 
@@ -96,10 +99,30 @@ Key groups include:
 - [Phase 15C-5 authoritative Xiabu evidence record](./audits/phase-15c-5-xiabu-geometry-pilot.md);
 - [Phase 15C-7 authoritative Xieli misleading-risk review](./audits/phase-15c-7-xieli-misleading-risk-review.md).
 - [Phase 15C-8 complete Xinyu Official Heritage Point re-audit](./audits/phase-15c-8-xinyu-official-point-reaudit.md),
-  the current canonical 22-row policy assessment and research-only PR #69
+  the canonical 22-row provincial policy assessment and research-only PR #69
   batch recommendation;
 - [Phase 15C-9 Xiabu uprising-site Point publication](./audits/phase-15c-9-xiabu-uprising-site-point-publication.md),
-  the bounded implementation record for the single approved component Point.
+  the bounded draft implementation record for the single approved component Point;
+- [Phase 15C-10 complete 2025 Xinyu list audit](./audits/phase-15c-10-xinyu-complete-official-list-audit.md),
+  the canonical 62-row national/provincial/municipal identity, provider,
+  readiness, and future-form research expansion.
+- [Phase 15C-11 Xinyu fallback Point evidence audit](./audits/phase-15c-11-xinyu-fallback-point-evidence-audit.md),
+  the 39-candidate minimum-Point-gate review. It finds no new passing candidate
+  and leaves the paused PR #69 batch at Xiabu P19 only. Owner-supplied N07
+  evidence confirms a provider-located point-like physical candidate, but no
+  numerical project-reviewed Point is digitized or approved. The audit
+  recommends a separate non-substantive policy clarification followed by a
+  bounded provider-located candidate re-evaluation.
+- [Phase 15C-12 provider-located Point policy clarification](./audits/phase-15c-12-provider-located-point-policy-clarification.md),
+  the non-substantive decision record defining the feature-identification,
+  numerical-construction, reproducibility, CRS, uncertainty, sensitivity,
+  misleading-risk, provenance, and public-wording gates. It approves no
+  coordinate or candidate and leaves paused PR #69 unchanged.
+- [Phase 15C-13 Xinyu priority Point digitization audit](./audits/phase-15c-13-xinyu-priority-point-digitization-audit.md),
+  the bounded six-candidate re-evaluation after the policy clarification. It
+  records one Point-ready research recommendation—N07 at a documented
+  project-reviewed WGS84 reference Point—and keeps N03, N08, P22, M23, and M30
+  withheld. It publishes nothing and leaves paused PR #69 unchanged.
 
 The approved Xiabu `暴动举行地旧址` component is now represented in the
 generated publication dataset; the parent, meeting-site component, and Xieli
@@ -122,6 +145,17 @@ is preserved as a historical architecture and safety-design record.
   coordinate investigations, research GeoJSON, KML/KMZ, provider captures, and
   tracing notes. It includes the reusable external-reference
   [Cambridgeshire Local Heritage List research guide](./research/cambridgeshire-local-heritage-list-skill.md).
+- Current Xinyu evidence records include the complete
+  [provider matrix](./research/phase-15c-10-xinyu-provider-evidence-matrix.md)
+  and the research-only
+  [future non-Point candidate inventory](./research/phase-15c-10-xinyu-non-point-candidate-inventory.md),
+  containing 8 line and 21 area candidates, plus the
+  [fallback Point candidate matrix](./research/phase-15c-11-xinyu-fallback-point-candidate-matrix.md),
+  which reconciles all 39 unpublished candidates and records their publication
+  gates, and the bounded
+  [priority Point candidate matrix](./research/phase-15c-13-xinyu-priority-point-candidate-matrix.md),
+  which records the refreshed provider, CRS, numerical-construction, risk, and
+  outcome evidence for exactly N03, N07, N08, P22, M23, and M30.
 - [docs/assets/](./assets/) contains documentation visuals, including the
   [Phase 15C-7 Xieli prototype comparison](./assets/phase-15c-7-xieli-prototype-comparison.svg).
 
