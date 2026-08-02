@@ -69,23 +69,36 @@ audits publishes a record or authorizes implementation.
    55 identities left unpublished after PR #69, distinguish uncertainty from
    deliberate generalization, reconstruct Xieli's classification history, and
    apply the existing gate without publishing a candidate. The research result
-   is zero currently eligible Generalized Points; Xieli and Qipanshan remain
-   potentially suitable pending specific evidence and separate approval.
-9. **Later representation-lifecycle schema and validation extension.** Extend
+   was zero eligible Generalized Points under that gate; Xieli and Qipanshan
+   received historical outcome B pending specific evidence and approval.
+9. **Phase 15C-17 — candidate-neutral Generalized Point policy
+   recalibration.** Recalibrate the numerical gate so a bounded, useful,
+   documented general vicinity or controlled multi-datum envelope may support
+   an honest representative Point without weakening identity, locality,
+   sensitivity, misleading-risk, transparency, review, or approval gates.
+   Documentation only; it changes no Phase 15C-16 candidate outcome.
+10. **Later PR #76-equivalent whole-universe reassessment.** After Phase
+   15C-17 is approved and merged, rescreen all 55 currently unpublished Xinyu
+   identities under R1–R13. Give each identity exactly one A–E outcome,
+   reconcile duplicates and parent/components, deeply evaluate every passing
+   screen, and propose a publication-review batch only from outcome A. Xieli
+   and Qipanshan are historical priorities, not a predetermined shortlist.
+   Publish nothing in this audit.
+11. **Later representation-lifecycle schema and validation extension.** Extend
    the existing Phase 15C-1 schema and validation foundation for the
    one-active-representation model, stable identity, supersession, and
    representation history. Preserve and adapt the existing geometry validators
    rather than create a new geometry system from scratch.
-10. **Later mixed-geometry interface adaptation.** Adapt and extend the existing
+12. **Later mixed-geometry interface adaptation.** Adapt and extend the existing
    Phase 15C-2 mixed-geometry renderer and existing Official Heritage controls
    for the new five-type sidebar and filter model, active-representation
    selection, provenance presentation, and accessibility. Preserve the already
    verified line and area rendering foundation rather than rebuild it.
-11. **First production shape.** Publish and verify the first separately approved
+13. **First production shape.** Publish and verify the first separately approved
     evidence-supported production line or area.
-12. **Optional context layers.** Add separately controlled administrative,
+14. **Optional context layers.** Add separately controlled administrative,
     historical-map, study-area, or other context layers.
-13. **Later evidence-supported batches.** Research, approve, publish, and verify
+15. **Later evidence-supported batches.** Research, approve, publish, and verify
     additional shapes in bounded batches.
 
 Future implementation PR numbers are intentionally unassigned. Assigning a
@@ -128,7 +141,9 @@ representation meanings.
   proposes only the Xiabu `暴动举行地旧址` component as an ordinary PR #69
   candidate. It historically classified Xieli as a conditional
   generalized-Point-only research result and excluded it from that batch.
-  Phase 15C-16 now controls Xieli's eligibility status.
+  Phase 15C-16 preserves Xieli's last candidate-specific outcome under the
+  prior gate. Phase 15C-17 changes no candidate status; the later 55-identity
+  reassessment must apply the recalibrated gate.
 - Merged PR #69 adds P19 and N07 to the five retained production Points. Its
   seven-Point authority-neutral canonical aggregate is production verified.
 - PR #72 merged the separately approved policy clarification before the bounded
@@ -139,9 +154,19 @@ representation meanings.
   publish it.
 - Separate candidate-specific approval authorized N07 for PR #69; its merged
   publication does not authorize any further record or representation.
-- Phase 15C-16 finds zero currently eligible Generalized reference Points. Its
+- Under the gate applied during Phase 15C-16, zero Generalized reference Points
+  were eligible. Its
   two outcome-B candidates require named evidence upgrades and a later,
   separately approved publication review; it does not create a batch.
+- Phase 15C-17 preserves that historical result while recalibrating the future
+  gate. It evaluates no candidate and creates no batch.
+- The later PR #76-equivalent audit must rescreen all 55 unpublished identities
+  without preselecting the Phase 15C-16 shortlist. It must publish nothing and
+  may propose only outcome-A candidates for later review.
+- Before any Phase 15C-17-based publication, a separate implementation must
+  resolve the current schema and presentation gap for recording source and
+  transformation uncertainty, intentional generalization, support-area extent,
+  final precision, and persistent limitations as distinct concepts.
 - Later representation-lifecycle extensions must land before the interface
   adapts public presentation to active-representation selection.
 - The adapted renderer, filters, provenance, and accessibility must be ready
@@ -167,8 +192,9 @@ representation meanings.
 
 The complete-list, fallback-Point, policy-clarification, and six-candidate
 audits remain historical evidence records. PR #69 subsequently published the
-approved ordered `P19, N07` batch. Phase 15C-16 adds research documentation
-only and leaves that production result unchanged.
+approved ordered `P19, N07` batch. Phase 15C-16 remains the historically valid
+audit of its prior gate. Phase 15C-17 recalibrates future eligibility without
+reassessing a candidate or changing production.
 
 ## PR #67 exclusions
 

@@ -221,30 +221,63 @@ Spatial generalization is a deliberate, documented reduction, displacement,
 rounding, gridding, broadening, or general-area meaning used for an evidential,
 sensitivity, privacy, access, or publication reason.
 
+The controlling Phase 15C-17 distinction is:
+
+```text
+source-coordinate and transformation uncertainty
+≠ intentional spatial generalization
+≠ supported general-vicinity extent
+```
+
 A large uncertainty value does not by itself create a Generalized reference
 Point. Generalization must not repair an unresolved identity, unknown feature,
 unverified provider result, viewport centre, village label, arbitrary centroid,
-or undocumented CRS assumption. A Generalized reference Point requires:
+or undocumented CRS assumption.
+
+A Generalized reference Point is a deliberate representative marker for a
+documented, reasonably limited support area or a deliberately coarsened or
+displaced location. Its controlled meaning is equivalent to **representative
+location for the documented general vicinity of the official heritage
+identity**. It does not claim the exact feature, centre, entrance, surveyed
+position, surviving component, site extent, building footprint, or legal
+protection boundary.
+
+The complete, controlling R1–R13 gate and construction-method decisions are in
+the [Phase 15C-17 policy recalibration](./phase-15c-17-generalized-point-policy-recalibration.md).
+A Generalized reference Point requires:
 
 - confirmed official identity and parent/component treatment;
-- reliable evidence for the correct general area;
+- trustworthy identity-to-locality linkage;
+- a bounded support area that remains useful and non-misleading at normal map
+  scales;
 - a legitimate generalization purpose recorded before construction;
-- the original spatial basis and source CRS or datum;
-- a documented, reproducible WGS84 construction and deliberate
-  generalization method;
-- separate records for source uncertainty, transformation uncertainty,
-  intentional generalization distance or precision, final horizontal
-  uncertainty, and retained coordinate precision;
+- an approved, independently reproducible WGS84 construction from a legitimate
+  coordinate or documented support area;
+- separate records for source-coordinate uncertainty, transformation
+  uncertainty, intentional generalization, supported-area extent, displayed
+  precision, and public limitation;
 - an existing controlled generalized Point meaning and truthful limitations;
 - sensitivity, privacy, access, and misleading-risk review;
+- a natural-form decision confirming that one Point is honest and useful;
 - one-active-representation and later-supersession treatment; and
 - a named evidence reviewer, accountable person or project role, review date,
-  and unresolved approval requirement.
+  policy version, construction method, limitations, and unresolved approval
+  requirement.
 
-If the source CRS or numerical basis is unknown, generalization may proceed
-only when an existing policy-permitted uncertainty treatment is explicitly
-justified and reproducible. It must not silently relabel the input or use one
-large uncertainty number to conceal an undocumented method. A research
+The spatial basis may be a reusable bounded area rather than a feature-level
+coordinate. An official or institutionally published coordinate with an
+unstated datum may be used only through the Phase 15C-17 bounded
+multi-interpretation method: preserve the original, justify a finite plausible
+datum set, reproducibly convert every accepted interpretation, cover the full
+envelope and source precision, choose the representative Point
+deterministically, and pass the scale/usefulness test. Unbounded ambiguity,
+silent relabelling, convenient datum selection, and one large unexplained
+uncertainty value remain prohibited.
+
+A whole-city or whole-county centroid ordinarily fails. Linear, areal, and
+multipart identities are assessed rather than automatically included or
+excluded; use a line, area, or withholding when one Point would privilege a
+component, invent a centre, or obscure the identity's natural form. A research
 recommendation is not publication approval.
 
 ### Line and area meanings
@@ -647,8 +680,11 @@ features—one national and six provincial—and no Generalized reference Point,
 real line, or polygon feature. Merged PR #69 published only Xiabu's
 `暴动举行地旧址` component and N07 beyond the former five-Point baseline. The
 Xiabu parent and meeting-site component, Xieli, Qipanshan, and all real line or
-polygon features remain unpublished. Phase 15C-16 approves no generalized
-Point candidate or future publication batch.
+polygon features remain unpublished. Under the policy applied during Phase
+15C-16, zero generalized Point candidates were eligible and its future batch
+was empty. Phase 15C-17 changes no historical outcome or candidate status; a
+separate whole-universe reassessment must rescreen all 55 unpublished
+identities under the recalibrated gate.
 
 ## Explicit non-implementation boundary
 
@@ -666,3 +702,4 @@ add empty coordinates, placeholder geometries, migrations, or real records.
 - [Phase 15C-7 Xieli misleading-risk review](../audits/phase-15c-7-xieli-misleading-risk-review.md)
 - [Phase 15C-12 provider-located Point policy clarification](../audits/phase-15c-12-provider-located-point-policy-clarification.md)
 - [Phase 15C-16 Generalized reference Point eligibility audit](../audits/phase-15c-16-xinyu-generalized-point-eligibility-audit.md)
+- [Phase 15C-17 Generalized reference Point policy recalibration](./phase-15c-17-generalized-point-policy-recalibration.md)
