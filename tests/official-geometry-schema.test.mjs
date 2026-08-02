@@ -65,7 +65,9 @@ test("controlled geometry vocabularies remain bounded", () => {
     "Polygon",
     "MultiPolygon"
   ]);
-  assert.equal(OFFICIAL_GEOMETRY_MEANINGS.length, 11);
+  assert.equal(OFFICIAL_GEOMETRY_MEANINGS.length, 13);
+  assert.ok(OFFICIAL_GEOMETRY_MEANINGS.includes("component-reference-point"));
+  assert.ok(OFFICIAL_GEOMETRY_MEANINGS.includes("provider-located-project-reviewed-reference-point"));
   assert.equal(OFFICIAL_GEOMETRY_SOURCE_TYPES.length, 6);
   assert.deepEqual(OFFICIAL_GEOMETRY_PRECISIONS, [
     "reviewed",
@@ -75,6 +77,23 @@ test("controlled geometry vocabularies remain bounded", () => {
   ]);
   assert.deepEqual(GEOMETRY_MEANINGS_BY_TYPE.MultiLineString, GEOMETRY_MEANINGS_BY_TYPE.LineString);
   assert.deepEqual(GEOMETRY_MEANINGS_BY_TYPE.MultiPolygon, GEOMETRY_MEANINGS_BY_TYPE.Polygon);
+});
+
+test("accepts provider-located project-reviewed Point metadata", () => {
+  const result = validateOfficialGeometryMetadata(makeMetadata({
+    geometryMeaning: "provider-located-project-reviewed-reference-point",
+    geometrySourceType: "project-reviewed-digitization",
+    geometrySourceLabel: "Project-reviewed provider-located reference Point",
+    geometryReviewedAt: "2026-07-31",
+    geometryReviewNotes: "Project-reviewed reference; not an authority coordinate or boundary.",
+    geometryPrecision: "approximate",
+    horizontalUncertaintyMetres: 100
+  }), "Point");
+  assert.equal(result.valid, true, result.errors.join("; "));
+  assert.equal(
+    getOfficialGeometryMeaningLabel("provider-located-project-reviewed-reference-point"),
+    "Provider-located project-reviewed reference point"
+  );
 });
 
 test("accepts every supported GeoJSON geometry type", () => {

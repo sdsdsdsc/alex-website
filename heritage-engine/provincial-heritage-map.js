@@ -2,22 +2,27 @@ import { getOfficialMapCategory } from "./official-map-categories.js?v=2026-07-2
 import {
   validateOfficialGeometry,
   validateOfficialGeometryMetadata
-} from "./official-geometry-schema.js?v=2026-07-28-official-geometry-schema-foundation";
+} from "./official-geometry-schema.js?v=2026-08-01-xinyu-point-batch";
 import {
   getFeatureGeometryMeaning,
   getOfficialGeometryRenderPresentation,
   getOfficialGeometrySourceLabel,
   prepareOfficialGeometryRenderModels
-} from "./official-geometry-rendering.js?v=2026-07-28-official-geometry-rendering";
+} from "./official-geometry-rendering.js?v=2026-08-01-xinyu-point-batch";
 
 const SUPPORTED_SCHEMA_VERSION = "2.0.0";
-const PROVINCIAL_HERITAGE_DATASET_ID = "jiangxi-provincial-protected-heritage-map";
-const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 15;
-const PROVINCIAL_HERITAGE_LOADING_MESSAGE = "Loading provincial heritage preview…";
-const PROVINCIAL_HERITAGE_EMPTY_MESSAGE = "No approved provincial heritage locations are available to display yet.";
-const PROVINCIAL_HERITAGE_FAILURE_MESSAGE = "The provincial heritage preview could not be loaded.";
+const PROVINCIAL_HERITAGE_DATASET_ID = "jiangxi-official-protected-heritage-map";
+const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 17;
+const PROVINCIAL_HERITAGE_LOADING_MESSAGE = "Loading Official Heritage…";
+const PROVINCIAL_HERITAGE_EMPTY_MESSAGE = "No approved Official Heritage locations are available to display yet.";
+const PROVINCIAL_HERITAGE_FAILURE_MESSAGE = "Official Heritage could not be loaded.";
 const PROJECT_COORDINATE_PROVENANCE = "Displayed location: Alex's Photo Board reviewed public-location decision, not an official designation coordinate.";
 const PROJECT_GEOMETRY_CAUTION = "This geometry is a project reference or approximation, not an official legal boundary.";
+const OFFICIAL_DESIGNATION_LEVELS = new Map([
+  ["全国重点文物保护单位", "National"],
+  ["省级文物保护单位", "Provincial"],
+  ["市级文物保护单位", "Municipal"]
+]);
 
 const SUPPORTED_CONFIDENCE = new Set(["High", "Medium"]);
 const SUPPORTED_PUBLICATION_POLICIES = new Set(["exact", "approximate", "generalized"]);
@@ -27,6 +32,7 @@ const SUPPORTED_LOCATION_MEANINGS = new Set([
   "heritage-compound-centre",
   "public-entrance",
   "visitor-reference",
+  "component-reference",
   "official-locality-centre",
   "representative-area"
 ]);
@@ -34,7 +40,8 @@ const REVIEWED_DISPLAY_MEANINGS = new Map([
   ["site-point", new Set(["heritage-feature"])],
   ["compound-centroid", new Set(["heritage-compound-centre"])],
   ["public-entrance", new Set(["public-entrance"])],
-  ["visitor-reference-point", new Set(["visitor-reference"])]
+  ["visitor-reference-point", new Set(["visitor-reference"])],
+  ["component-reference-point", new Set(["component-reference"])]
 ]);
 const GENERALIZED_DISPLAY_MEANINGS = new Map([
   ["generalized-locality", new Set(["official-locality-centre"])],
@@ -43,8 +50,8 @@ const GENERALIZED_DISPLAY_MEANINGS = new Map([
 
 class ProvincialHeritageMapValidationError extends Error {
   constructor(errors) {
-    super(`Provincial heritage GeoJSON validation failed:\n- ${errors.join("\n- ")}`);
-    this.name = "ProvincialHeritageMapValidationError";
+    super(`Official Heritage GeoJSON validation failed:\n- ${errors.join("\n- ")}`);
+    this.name = "OfficialHeritageMapValidationError";
     this.errors = errors;
   }
 }
@@ -71,6 +78,10 @@ function normalizeHttpsUrl(value) {
   } catch {
     return null;
   }
+}
+
+function getOfficialDesignationLevelLabel(value) {
+  return OFFICIAL_DESIGNATION_LEVELS.get(String(value || "").trim()) || null;
 }
 
 function validateFeature(feature, index, seenIds) {
@@ -127,6 +138,11 @@ function validateFeature(feature, index, seenIds) {
     addError(errors, isNonEmptyString(properties.officialCategoryZh), `${path}.properties.officialCategoryZh must be a non-empty string.`);
     addError(
       errors,
+      getOfficialDesignationLevelLabel(properties.protectionLevelZh) !== null,
+      `${path}.properties.protectionLevelZh must identify a controlled national, provincial, or municipal designation level.`
+    );
+    addError(
+      errors,
       isNonEmptyString(properties.sourceTitleZh) || isNonEmptyString(properties.sourceIssuerZh),
       `${path}.properties must include an official source title or issuer.`
     );
@@ -162,6 +178,13 @@ function validateFeature(feature, index, seenIds) {
           && properties.estimatedUncertaintyMeters > 0,
         `${path}.properties.estimatedUncertaintyMeters must be a positive finite number.`
       );
+      if (properties.geometryMeaning === "provider-located-project-reviewed-reference-point") {
+        addError(
+          errors,
+          properties.representationStatus === "project-reviewed-interpretation",
+          `${path}.properties.representationStatus must identify a project-reviewed interpretation.`
+        );
+      }
     }
     addError(
       errors,
@@ -304,16 +327,22 @@ function buildProvincialMarkerAccessibleName(feature) {
   const properties = feature?.properties || {};
   const title = isNonEmptyString(properties.projectNameEn)
     ? properties.projectNameEn.trim()
-    : "Untitled provincial heritage record";
+    : "Untitled Official Heritage record";
   const officialName = isNonEmptyString(properties.officialNameZh)
     ? ` (${properties.officialNameZh.trim()})`
     : "";
   const category = getOfficialMapCategory(properties.officialCategoryZh);
   const categoryLabel = category?.label || "Other official heritage";
-  const locationLabel = properties.markerClass === "generalized"
+  const officialDesignationLevel = getOfficialDesignationLevelLabel(properties.protectionLevelZh)
+    || "Unknown";
+  const locationLabel = properties.geometryMeaning
+    ? getOfficialGeometryRenderPresentation(feature).meaningLabel
+    : properties.markerClass === "generalized"
     ? "Generalized official reference"
     : properties.displayLocationType === "visitor-reference-point"
       ? "Visitor reference point"
+      : properties.displayLocationType === "component-reference-point"
+        ? "Component reference point"
       : (
         properties.displayLocationType === "compound-centroid"
           || properties.publicLocationMeaning === "heritage-compound-centre"
@@ -324,7 +353,7 @@ function buildProvincialMarkerAccessibleName(feature) {
         : properties.publicationLocationPolicy === "approximate"
           ? "Approximate reviewed location"
           : "Reviewed location";
-  return `Open official protected heritage record: ${title}${officialName}; Map category: ${categoryLabel}; ${locationLabel}`;
+  return `Open Official Heritage record: ${title}${officialName}; Official designation level: ${officialDesignationLevel}; Map category: ${categoryLabel}; ${locationLabel}`;
 }
 
 function buildProvincialFeatureAccessibleName(feature) {
@@ -334,14 +363,16 @@ function buildProvincialFeatureAccessibleName(feature) {
   const properties = feature?.properties || {};
   const title = isNonEmptyString(properties.projectNameEn)
     ? properties.projectNameEn.trim()
-    : "Untitled provincial heritage record";
+    : "Untitled Official Heritage record";
   const officialName = isNonEmptyString(properties.officialNameZh)
     ? ` (${properties.officialNameZh.trim()})`
     : "";
   const category = getOfficialMapCategory(properties.officialCategoryZh);
   const categoryLabel = category?.label || "Other official heritage";
+  const officialDesignationLevel = getOfficialDesignationLevelLabel(properties.protectionLevelZh)
+    || "Unknown";
   const presentation = getOfficialGeometryRenderPresentation(feature);
-  return `Open official protected heritage record: ${title}${officialName}; Map category: ${categoryLabel}; ${presentation.meaningLabel}`;
+  return `Open Official Heritage record: ${title}${officialName}; Official designation level: ${officialDesignationLevel}; Map category: ${categoryLabel}; ${presentation.meaningLabel}`;
 }
 
 function buildProvincialPopupData(feature) {
@@ -366,6 +397,7 @@ function buildProvincialPopupData(feature) {
     projectNameEn: String(properties.projectNameEn || "").trim(),
     officialNameZh: String(properties.officialNameZh || "").trim(),
     protectionLevelZh: String(properties.protectionLevelZh || "").trim(),
+    officialDesignationLevelLabel: getOfficialDesignationLevelLabel(properties.protectionLevelZh) || "Unknown",
     officialCategoryZh: String(properties.officialCategoryZh || "").trim(),
     officialLocationTextZh: String(properties.officialLocationTextZh || "").trim(),
     locationEvidenceConfidence: String(properties.locationEvidenceConfidence || "").trim(),
@@ -391,6 +423,7 @@ function buildProvincialPopupData(feature) {
     geometrySourceUrl: normalizeHttpsUrl(properties.geometrySourceUrl),
     geometryReviewedAt: String(properties.geometryReviewedAt || "").trim(),
     geometryReviewNotes: String(properties.geometryReviewNotes || "").trim(),
+    representationStatus: String(properties.representationStatus || "").trim(),
     geometryCaution: geometryType !== "Point" && (isProjectGeometry || isQualifiedGeometry)
       ? PROJECT_GEOMETRY_CAUTION
       : ""
@@ -411,4 +444,19 @@ export {
   buildProvincialPopupData,
   validateProvincialHeritageGeoJson,
   validateProvincialHeritagePublicationGeoJson
+};
+
+export {
+  PROVINCIAL_HERITAGE_DATASET_ID as OFFICIAL_HERITAGE_DATASET_ID,
+  PROVINCIAL_HERITAGE_EMPTY_MESSAGE as OFFICIAL_HERITAGE_EMPTY_MESSAGE,
+  PROVINCIAL_HERITAGE_FAILURE_MESSAGE as OFFICIAL_HERITAGE_FAILURE_MESSAGE,
+  PROVINCIAL_HERITAGE_LOADING_MESSAGE as OFFICIAL_HERITAGE_LOADING_MESSAGE,
+  PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT as OFFICIAL_HERITAGE_SOURCE_RECORD_COUNT,
+  ProvincialHeritageMapValidationError as OfficialHeritageMapValidationError,
+  buildProvincialFeatureAccessibleName as buildOfficialFeatureAccessibleName,
+  buildProvincialMarkerAccessibleName as buildOfficialMarkerAccessibleName,
+  buildProvincialPopupData as buildOfficialPopupData,
+  getOfficialDesignationLevelLabel,
+  validateProvincialHeritageGeoJson as validateOfficialHeritageGeoJson,
+  validateProvincialHeritagePublicationGeoJson as validateOfficialHeritagePublicationGeoJson
 };

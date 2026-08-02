@@ -47,6 +47,43 @@ to Official Heritage records derived from official government or institutional
 heritage sources. Official records must remain separate from Community
 Heritage in data, filtering, presentation, and public counts.
 
+### Official designation level and combined datasets
+
+The combined Official Heritage layer may contain records from national,
+provincial, and municipal registers. Every official record must retain its
+official designation level. Combined datasets, controls, counts, and public
+labels use authority-neutral **Official Heritage** terminology. A
+level-specific dataset may contain only records from that level. Official
+designation level remains separate from geometry meaning, geometry source,
+and representation status.
+
+The canonical record field is `official.protectionLevelZh`; publication maps
+its controlled Chinese source value to the corresponding public label:
+
+| Source value | Controlled level | Public label |
+| --- | --- | --- |
+| `全国重点文物保护单位` | `national` | National |
+| `省级文物保护单位` | `provincial` | Provincial |
+| `市级文物保护单位` | `municipal` | Municipal |
+
+The following invariants apply:
+
+- every published record has one valid controlled official designation level;
+- an authority-neutral aggregate may contain multiple levels;
+- a national-only, provincial-only, or municipal-only dataset rejects records
+  from other levels;
+- aggregate wording must not collapse mixed-level records into one level;
+- every record retains its original official level and category;
+- unknown, missing, or ID-contradictory level values fail validation and remain
+  unpublished until resolved; and
+- official designation level is independent of geometry meaning, geometry
+  source, and representation status.
+
+A nationally designated record may use project-reviewed geometry. National
+designation does not make that geometry an authority-supplied coordinate.
+Likewise, a project-reviewed area is not an official or legal protection
+boundary unless authoritative evidence explicitly supports that meaning.
+
 ## Public Official Heritage types
 
 The future public interface uses five simplified types:
@@ -490,6 +527,9 @@ boundaries, historical maps, project or study areas, and geographic context.
 Contextual geometry must remain separate from record-specific geometry.
 
 Do not provide public geometry-type checkboxes for Point, line, or Polygon.
+Do not provide designation-level checkboxes by default: designation level is
+record metadata presented in the record popup, not the primary map-browsing
+dimension.
 Geometry is a representation method, not a public heritage category. Do not
 make representation-status values primary public filter checkboxes initially.
 Communicate provenance through styling, legends, popups, accessible
@@ -569,7 +609,10 @@ Every implementation or publication step requires its own approval and
 evidence. Later shape expansion is open-ended rather than guaranteed.
 
 Current production remains exactly five Official Heritage Point features and
-no real line or polygon features. Xiabu and Xieli remain unpublished.
+no real line or polygon features. PR #69's draft generated dataset adds only
+Xiabu's `暴动举行地旧址` component as a sixth Point pending review, merge, and
+deployment. The Xiabu parent and meeting-site component, Xieli, and all real
+line or polygon features remain unpublished.
 
 ## Explicit non-implementation boundary
 

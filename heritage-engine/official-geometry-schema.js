@@ -10,6 +10,8 @@ const OFFICIAL_GEOMETRY_MEANINGS = Object.freeze([
   "reviewed-location-point",
   "visitor-reference-point",
   "compound-reference-point",
+  "component-reference-point",
+  "provider-located-project-reviewed-reference-point",
   "approximate-site-point",
   "generalized-reference-point",
   "reviewed-line",
@@ -52,6 +54,8 @@ const GEOMETRY_MEANINGS_BY_TYPE = Object.freeze({
     "reviewed-location-point",
     "visitor-reference-point",
     "compound-reference-point",
+    "component-reference-point",
+    "provider-located-project-reviewed-reference-point",
     "approximate-site-point",
     "generalized-reference-point"
   ]),
@@ -75,6 +79,8 @@ const GEOMETRY_MEANING_PRESENTATION_LABELS = Object.freeze({
   "reviewed-location-point": "Reviewed location",
   "visitor-reference-point": "Visitor reference point",
   "compound-reference-point": "Compound reference point",
+  "component-reference-point": "Component reference point",
+  "provider-located-project-reviewed-reference-point": "Provider-located project-reviewed reference point",
   "approximate-site-point": "Approximate site location",
   "generalized-reference-point": "Generalized project reference point",
   "reviewed-line": "Reviewed line",
@@ -87,6 +93,7 @@ const GEOMETRY_MEANING_PRESENTATION_LABELS = Object.freeze({
 
 const REQUIRED_PRECISION_BY_MEANING = Object.freeze({
   "reviewed-location-point": "reviewed",
+  "provider-located-project-reviewed-reference-point": "approximate",
   "approximate-site-point": "approximate",
   "generalized-reference-point": "generalized",
   "reviewed-line": "reviewed",
@@ -250,6 +257,12 @@ function validateOfficialGeometry(geometry, { path = "geometry" } = {}) {
 }
 
 function deriveLegacyPointGeometryMeaning(properties = {}) {
+  if (
+    properties.displayLocationType === "component-reference-point"
+    || properties.publicLocationMeaning === "component-reference"
+  ) {
+    return "component-reference-point";
+  }
   if (
     properties.displayLocationType === "visitor-reference-point"
     || properties.publicLocationMeaning === "visitor-reference"

@@ -1,9 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "datasetId": "xinyu-provincial-protected-heritage-marker-pilot",
+  "datasetId": "xinyu-official-heritage-records",
   "recordType": "official-reference",
-  "protectionLevelCode": "provincial",
-  "dataLayer": "provincial-protected-heritage-marker-pilot",
+  "dataLayer": "official-heritage-records",
   "provenance": {
     "officialSourceTitleZh": "新余市市级以上文物保护单位名录（2025年）",
     "publishingAuthorityZh": "新余市文化广电旅游局",
@@ -125,6 +124,25 @@
         "projectNameEn": "Former Site of the Xiabu Peasant Uprising — Uprising Site",
         "translationStatus": "project-reviewed",
         "translationNote": "Project English interpretation identifies only the separately listed uprising-site component; the official source supplies no English name."
+      }
+    },
+    {
+      "recordId": "JX-XY-NCH-007",
+      "sourceSequence": 4,
+      "official": {
+        "officialNameZh": "水西红三军团指挥部旧址",
+        "officialCategoryZh": "近现代重要史迹",
+        "officialLocationTextZh": "高新区水西镇沙陂村",
+        "protectionLevelZh": "全国重点文物保护单位",
+        "officialDesignationNumber": "8-0617-5-101",
+        "designationBatch": "第八批全国重点文物保护单位",
+        "designationDate": null,
+        "periodZh": null
+      },
+      "projectInterpretation": {
+        "projectNameEn": "Former Site of the Shuixi Red Army Third Corps Headquarters",
+        "translationStatus": "project-reviewed",
+        "translationNote": "Project English interpretation follows the official designation; institutional sources identify the physical feature as the Liao ancestral hall, also described as Shabei ancestral hall. The official sources supply no English name."
       }
     }
   ]

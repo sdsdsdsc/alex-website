@@ -4,12 +4,12 @@ import { readFile } from "node:fs/promises";
 const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
-const MAP_PAGE_VERSION = "2026-07-28-official-geometry-rendering";
-const PROVINCIAL_HERITAGE_PREVIEW_VERSION = "2026-07-28-official-geometry-rendering";
+const MAP_PAGE_VERSION = "2026-08-01-official-authority-neutral";
+const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-01-official-authority-neutral";
 const OFFICIAL_CATEGORY_VERSION = "2026-07-27-official-category-filters";
-const PROVINCIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-provincial-protected-heritage-map.geojson*";
-const COMMITTED_PROVINCIAL_HERITAGE = JSON.parse(await readFile(
-  new URL("../data/jiangxi-provincial-protected-heritage-map.geojson", import.meta.url),
+const OFFICIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-official-protected-heritage-map.geojson*";
+const COMMITTED_OFFICIAL_HERITAGE = JSON.parse(await readFile(
+  new URL("../data/jiangxi-official-protected-heritage-map.geojson", import.meta.url),
   "utf8"
 ));
 const SMOKE_PAGES = [
@@ -71,7 +71,7 @@ function isAppOwnedConsoleError(message) {
   return true;
 }
 
-function makeSyntheticProvincialFeature({
+function makeSyntheticOfficialFeature({
   id = "JX-PCH-7-001",
   confidence = "High",
   publicationPolicy = "exact",
@@ -116,15 +116,15 @@ function makeSyntheticProvincialFeature({
   };
 }
 
-function makeSyntheticProvincialCollection(features = []) {
+function makeSyntheticOfficialCollection(features = []) {
   return {
     type: "FeatureCollection",
     metadata: {
       schemaVersion: "2.0.0",
-      datasetId: "jiangxi-provincial-protected-heritage-map",
-      sourceRecordCount: 15,
+      datasetId: "jiangxi-official-protected-heritage-map",
+      sourceRecordCount: 17,
       featureCount: features.length,
-      excludedRecordCount: 15 - features.length,
+      excludedRecordCount: 17 - features.length,
       generationStatus: features.length === 0 ? "valid-empty" : "valid",
       geometryProvenance: "Alex's Photo Board project coordinate review"
     },
@@ -145,7 +145,7 @@ function makeSyntheticOfficialGeometryFeature({
   geometryPrecision,
   horizontalUncertaintyMetres = null
 }) {
-  const feature = makeSyntheticProvincialFeature({ id, officialCategoryZh });
+  const feature = makeSyntheticOfficialFeature({ id, officialCategoryZh });
   feature.properties.projectNameEn = title;
   feature.properties.officialNameZh = officialNameZh;
   Object.assign(feature.properties, {
@@ -165,7 +165,7 @@ function makeSyntheticOfficialGeometryFeature({
 }
 
 function makeSyntheticOfficialGeometryCollection() {
-  return makeSyntheticProvincialCollection([
+  return makeSyntheticOfficialCollection([
     makeSyntheticOfficialGeometryFeature({
       id: "JX-SYN-GEO-001",
       title: "Reviewed Canal Route",
@@ -397,14 +397,14 @@ test("map exposes a complete state-preserving non-map alternative", async ({ pag
   await expect(page.locator(".map-search-heading__alternative")).toContainText("records without map coordinates");
 });
 
-test("provincial preview is lazy, default-off, valid-empty, cached, and map-stable", async ({ page }) => {
-  let provincialRequestCount = 0;
-  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, async (route) => {
-    provincialRequestCount += 1;
+test("official preview is lazy, default-off, valid-empty, cached, and map-stable", async ({ page }) => {
+  let officialRequestCount = 0;
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, async (route) => {
+    officialRequestCount += 1;
     await route.fulfill({
       status: 200,
       contentType: "application/geo+json",
-      body: JSON.stringify(makeSyntheticProvincialCollection())
+      body: JSON.stringify(makeSyntheticOfficialCollection())
     });
   });
 
@@ -417,16 +417,21 @@ test("provincial preview is lazy, default-off, valid-empty, cached, and map-stab
   await expect(page.getByRole("tab", { name: "Layers" })).toHaveAttribute("aria-selected", "false");
   await expect(page.locator("#mapLayersToolPanel")).toBeHidden();
   await expect(page.locator("#mapLayersToolPanel")).toContainText("Community heritage");
-  await expect(page.locator("#mapLayersToolPanel")).toContainText("Official protected heritage");
-  await expect(page.locator("#mapLayersToolPanel")).toContainText("Location display");
+  await expect(page.locator("#mapLayersToolPanel")).toContainText("Show Official Heritage");
+  await expect(page.locator("#mapLayersToolPanel")).toContainText("Official Heritage map symbols");
   await expect(page.locator("#mapLayersToolPanel")).toContainText("Additional information");
-  await expect(page.locator("#mapLayersToolPanel")).toContainText("Reviewed official locations");
-  await expect(page.locator("#mapLayersToolPanel")).toContainText("General official references");
+  await expect(page.locator("#mapLayersToolPanel")).toContainText("Project-reviewed reference Points");
+  await expect(page.locator("#mapLayersToolPanel")).toContainText("Generalized reference Points");
+  await expect(page.locator("#mapLayersToolPanel")).toContainText("Reviewed lines and areas");
+  await expect(page.locator("#mapLayersToolPanel")).toContainText("Approximate or generalized geometry");
+  await expect(page.locator("#mapLayersToolPanel")).toContainText("About Official Heritage representations");
+  await expect(page.locator("#mapLayersToolPanel")).not.toContainText("Reviewed lines and boundaries");
+  await expect(page.locator("#mapLayersToolPanel").getByRole("checkbox", { name: /National|Provincial|Municipal/ })).toHaveCount(0);
   await expect(page.locator(".leaflet-control-layers-overlays input")).toHaveCount(0);
   await page.waitForTimeout(250);
-  expect(provincialRequestCount).toBe(0);
-  await expect(page.locator("#provincialHeritageStatus")).toHaveText(/\d+ community records? displayed\./);
-  await expect(page.locator("#provincialHeritageError")).toBeHidden();
+  expect(officialRequestCount).toBe(0);
+  await expect(page.locator("#officialHeritageStatus")).toHaveText(/\d+ community records? displayed\./);
+  await expect(page.locator("#officialHeritageError")).toBeHidden();
 
   await openMapLayersTab(page);
   await expect(page.locator("#officialCategoryAvailability")).toHaveText(
@@ -435,63 +440,66 @@ test("provincial preview is lazy, default-off, valid-empty, cached, and map-stab
   await expect(page.locator("#officialCategoryControls")).toBeHidden();
   await expect(page.locator("[data-official-map-category]")).toHaveCount(0);
   const communityOverlay = getOverlayCheckbox(page, "All community records");
-  const provincialOverlay = getOverlayCheckbox(page, "Provincial protected heritage");
+  const officialOverlay = getOverlayCheckbox(page, "Show Official Heritage");
   await expect(communityOverlay).toBeChecked();
-  await expect(provincialOverlay).not.toBeChecked();
+  await expect(officialOverlay).not.toBeChecked();
 
   const beforeEnable = await getRenderedMapState(page);
-  await getOverlayCheckbox(page, "Provincial protected heritage").click();
-  await expect(page.locator("#provincialHeritageStatus")).toContainText(
-    "No approved provincial heritage locations are available to display yet."
+  await getOverlayCheckbox(page, "Show Official Heritage").click();
+  await expect(page.locator("#officialHeritageStatus")).toContainText(
+    "No approved Official Heritage locations are available to display yet."
   );
-  await expect(page.locator("#provincialHeritageError")).toBeHidden();
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(0);
+  await expect(page.locator("#officialHeritageError")).toBeHidden();
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(0);
   await expect(page.locator("#officialCategoryAvailability")).toHaveText(
     "No published official categories are available."
   );
   await expect(page.locator("#officialCategoryControls")).toBeHidden();
   await expect(page.locator("[data-official-map-category]")).toHaveCount(0);
-  expect(provincialRequestCount).toBe(1);
+  expect(officialRequestCount).toBe(1);
   expect(await getRenderedMapState(page)).toEqual(beforeEnable);
 
-  await setOverlayChecked(page, "Provincial protected heritage", false);
-  await expect(page.locator("#provincialHeritageStatus")).toContainText("community");
-  await expect(page.locator("#provincialHeritageError")).toBeHidden();
-  await getOverlayCheckbox(page, "Provincial protected heritage").click();
-  await expect(page.locator("#provincialHeritageStatus")).toContainText(
-    "No approved provincial heritage locations are available to display yet."
+  await setOverlayChecked(page, "Show Official Heritage", false);
+  await expect(page.locator("#officialHeritageStatus")).toContainText("community");
+  await expect(page.locator("#officialHeritageError")).toBeHidden();
+  await getOverlayCheckbox(page, "Show Official Heritage").click();
+  await expect(page.locator("#officialHeritageStatus")).toContainText(
+    "No approved Official Heritage locations are available to display yet."
   );
-  expect(provincialRequestCount).toBe(1);
+  expect(officialRequestCount).toBe(1);
   expect(await getRenderedMapState(page)).toEqual(beforeEnable);
 });
 
-test("production-sized official fixture renders five accessible markers across responsive and 200% zoom checks", async ({ page }) => {
+test("production-sized official fixture renders seven accessible markers across responsive and 200% zoom checks", async ({ page }) => {
   const appErrors = [];
   page.on("console", (message) => {
     if (message.type() === "error" && isAppOwnedConsoleError(message.text())) {
       appErrors.push(message.text());
     }
   });
-  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
     status: 200,
     contentType: "application/geo+json",
-    body: JSON.stringify(COMMITTED_PROVINCIAL_HERITAGE)
+    body: JSON.stringify(COMMITTED_OFFICIAL_HERITAGE)
   }));
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   const layersPanel = await openMapLayersTab(page);
   const officialToggle = layersPanel.getByRole("checkbox", {
-    name: "Provincial protected heritage",
+    name: "Show Official Heritage",
     exact: true
   });
   await expect(officialToggle).not.toBeChecked();
   await officialToggle.click();
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(5);
-  await expect(page.locator("#provincialHeritageStatus")).toContainText("5 provincial heritage locations");
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
+  await expect(page.locator("#officialHeritageStatus")).toContainText("7 official heritage locations");
+  await expect(page.locator("#officialReviewedPointStatus")).toHaveText(
+    "Filled diamond. Currently displayed: 7."
+  );
 
   const compoundMarker = page.getByRole("button", {
-    name: "Open official protected heritage record: Xinyu Confucian Temple (新余孔庙); Map category: Ancient buildings; Compound reference point (approximate project-reviewed location)",
+    name: "Open Official Heritage record: Xinyu Confucian Temple (新余孔庙); Official designation level: Provincial; Map category: Ancient buildings; Compound reference point (approximate project-reviewed location)",
     exact: true
   });
   await expect(compoundMarker).toHaveCount(1);
@@ -506,20 +514,62 @@ test("production-sized official fixture renders five accessible markers across r
   await compoundMarker.focus();
   await expect(compoundMarker).toBeFocused();
   await compoundMarker.press("Enter");
-  const compoundPopup = page.locator(".provincial-heritage-map-popup").filter({
+  const compoundPopup = page.locator(".official-heritage-map-popup").filter({
     hasText: "Xinyu Confucian Temple"
   });
   await expect(compoundPopup).toContainText("Compound reference point");
 
+  const xiabuMarker = page.getByRole("button", {
+    name: "Open Official Heritage record: Former Site of the Xiabu Peasant Uprising — Uprising Site (下保农民暴动旧址——暴动举行地旧址); Official designation level: Provincial; Map category: Important modern historic sites; Component reference point",
+    exact: true
+  });
+  await expect(xiabuMarker).toHaveCount(1);
+  await xiabuMarker.focus();
+  await xiabuMarker.press("Enter");
+  const xiabuPopup = page.locator(".official-heritage-map-popup").filter({
+    hasText: "Former Site of the Xiabu Peasant Uprising"
+  });
+  await expect(xiabuPopup).toContainText("Component reference point");
+  await expect(xiabuPopup).toContainText("暴动会议地旧址");
+  await expect(xiabuPopup).toContainText("150 metres");
+  await expect(xiabuPopup).toContainText("building footprint");
+  await expect(xiabuPopup.locator(".map-point-card__facts > div").filter({
+    has: page.locator("dt", { hasText: /^Official designation level$/ })
+  }).locator("dd")).toHaveText("Provincial");
+  await expect(xiabuPopup).not.toContainText("Protection level");
+  await expect(xiabuPopup).not.toContainText("Representation status");
+  await expect(xiabuPopup).not.toContainText("Geometry provenance");
+
+  const n07Marker = page.getByRole("button", {
+    name: "Open Official Heritage record: Former Site of the Shuixi Red Army Third Corps Headquarters (水西红三军团指挥部旧址); Official designation level: National; Map category: Important modern historic sites; Provider-located project-reviewed reference point",
+    exact: true
+  });
+  await expect(n07Marker).toHaveCount(1);
+  await n07Marker.focus();
+  await n07Marker.press("Enter");
+  const n07Popup = page.locator(".official-heritage-map-popup").filter({
+    hasText: "Former Site of the Shuixi Red Army Third Corps Headquarters"
+  });
+  await expect(n07Popup).toContainText("Provider-located project-reviewed reference point");
+  await expect(n07Popup.locator(".map-point-card__facts > div").filter({
+    has: page.locator("dt", { hasText: /^Official designation level$/ })
+  }).locator("dd")).toHaveText("National");
+  await expect(n07Popup).toContainText("Project-reviewed interpretation");
+  await expect(n07Popup).toContainText("Project-reviewed digitization");
+  await expect(n07Popup).toContainText("100 metres");
+  await expect(n07Popup).toContainText("not an authority-supplied coordinate");
+  await expect(n07Popup).toContainText("building footprint");
+  await expect(n07Popup).toContainText("legal protection boundary");
+
   const visitorMarker = page.getByRole("button", {
-    name: "Open official protected heritage record: Fu Baoshi Former Residence (傅抱石故居); Map category: Important modern historic sites; Visitor reference point",
+    name: "Open Official Heritage record: Fu Baoshi Former Residence (傅抱石故居); Official designation level: Provincial; Map category: Important modern historic sites; Visitor reference point",
     exact: true
   });
   await expect(visitorMarker).toHaveCount(1);
   await visitorMarker.focus();
   await expect(visitorMarker).toBeFocused();
   await visitorMarker.press("Enter");
-  const visitorPopup = page.locator(".provincial-heritage-map-popup").filter({
+  const visitorPopup = page.locator(".official-heritage-map-popup").filter({
     hasText: "Fu Baoshi Former Residence"
   });
   await expect(visitorPopup).toContainText("Visitor reference point");
@@ -528,14 +578,14 @@ test("production-sized official fixture renders five accessible markers across r
   );
 
   const bridgeMarker = page.getByRole("button", {
-    name: "Open official protected heritage record: Rongquan Bridge (蓉泉桥); Map category: Ancient buildings; Approximate site location",
+    name: "Open Official Heritage record: Rongquan Bridge (蓉泉桥); Official designation level: Provincial; Map category: Ancient buildings; Approximate site location",
     exact: true
   });
   await expect(bridgeMarker).toHaveCount(1);
   await bridgeMarker.focus();
   await expect(bridgeMarker).toBeFocused();
   await bridgeMarker.press("Enter");
-  const bridgePopup = page.locator(".provincial-heritage-map-popup").filter({
+  const bridgePopup = page.locator(".official-heritage-map-popup").filter({
     hasText: "Rongquan Bridge"
   });
   await expect(bridgePopup).toContainText("Approximate site location");
@@ -548,7 +598,7 @@ test("production-sized official fixture renders five accessible markers across r
     { width: 844, height: 390 }
   ]) {
     await page.setViewportSize(viewport);
-    await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(5);
+    await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
     await expect(officialToggle).toBeChecked();
     expect(await page.evaluate(() => (
       document.documentElement.scrollWidth <= document.documentElement.clientWidth
@@ -557,7 +607,7 @@ test("production-sized official fixture renders five accessible markers across r
   await page.evaluate(() => {
     document.documentElement.style.zoom = "2";
   });
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(5);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
   await expect(officialToggle).toBeChecked();
   expect(await page.evaluate(() => (
     document.documentElement.scrollWidth <= document.documentElement.clientWidth
@@ -567,15 +617,15 @@ test("production-sized official fixture renders five accessible markers across r
 
 test("validated official line and area geometries render with accessible meaning-driven interaction", async ({ page }) => {
   test.setTimeout(60000);
-  let provincialRequestCount = 0;
+  let officialRequestCount = 0;
   const appErrors = [];
   page.on("console", (message) => {
     if (message.type() === "error" && isAppOwnedConsoleError(message.text())) {
       appErrors.push(message.text());
     }
   });
-  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => {
-    provincialRequestCount += 1;
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => {
+    officialRequestCount += 1;
     return route.fulfill({
       status: 200,
       contentType: "application/geo+json",
@@ -591,12 +641,12 @@ test("validated official line and area geometries render with accessible meaning
   await expect(page.locator(".community-map-pin")).toHaveCount(initialCommunityCount);
   const layersPanel = await openMapLayersTab(page);
   const officialLayer = layersPanel.getByRole("checkbox", {
-    name: "Provincial protected heritage",
+    name: "Show Official Heritage",
     exact: true
   });
   await expect(officialLayer).not.toBeChecked();
   await expect(page.locator(".official-heritage-geometry")).toHaveCount(0);
-  expect(provincialRequestCount).toBe(0);
+  expect(officialRequestCount).toBe(0);
 
   await officialLayer.click();
   await expect(page.locator(".official-heritage-geometry")).toHaveCount(6);
@@ -604,12 +654,12 @@ test("validated official line and area geometries render with accessible meaning
     "6 of 6 published official locations displayed."
   );
   await expect(page.locator(".community-map-pin")).toHaveCount(initialCommunityCount);
-  expect(provincialRequestCount).toBe(1);
+  expect(officialRequestCount).toBe(1);
   expect(page.url()).toBe(initialUrl);
   expect(await getRenderedMapState(page)).toEqual(initialMapState);
 
   const reviewedLine = page.getByRole("button", {
-    name: "Open official protected heritage record: Reviewed Canal Route (审定水道); Map category: Ancient buildings; Reviewed line",
+    name: "Open Official Heritage record: Reviewed Canal Route (审定水道); Official designation level: Provincial; Map category: Ancient buildings; Reviewed line",
     exact: true
   });
   const approximateMultiLine = page.getByRole("button", {
@@ -653,7 +703,7 @@ test("validated official line and area geometries render with accessible meaning
   await expect(page.locator(".official-heritage-geometry--uncertainty-area")).toHaveAttribute("stroke-dasharray", "2 8");
 
   await reviewedLine.dispatchEvent("click");
-  const reviewedLinePopup = page.locator(".provincial-heritage-map-popup").filter({
+  const reviewedLinePopup = page.locator(".official-heritage-map-popup").filter({
     hasText: "Reviewed Canal Route"
   });
   await expect(reviewedLinePopup).toContainText("Reviewed line");
@@ -672,7 +722,7 @@ test("validated official line and area geometries render with accessible meaning
     outlineWidth: "4px"
   });
   await generalizedArea.press("Enter");
-  const generalizedPopup = page.locator(".provincial-heritage-map-popup").filter({
+  const generalizedPopup = page.locator(".official-heritage-map-popup").filter({
     hasText: "Generalized Heritage Areas"
   });
   await expect(generalizedPopup).toContainText("Generalized project reference area");
@@ -688,7 +738,7 @@ test("validated official line and area geometries render with accessible meaning
 
   await uncertaintyArea.focus();
   await uncertaintyArea.press("Space");
-  await expect(page.locator(".provincial-heritage-map-popup").filter({
+  await expect(page.locator(".official-heritage-map-popup").filter({
     hasText: "Heritage Uncertainty Area"
   })).toContainText("Uncertainty area");
 
@@ -701,7 +751,7 @@ test("validated official line and area geometries render with accessible meaning
     exact: true
   });
   await page.keyboard.press("Escape");
-  await expect(page.locator(".provincial-heritage-map-popup")).toHaveCount(0);
+  await expect(page.locator(".official-heritage-map-popup")).toHaveCount(0);
   const beforeCategoryFilterState = await getRenderedMapState(page);
   await ancientBuildings.focus();
   await ancientBuildings.press("Space");
@@ -711,7 +761,7 @@ test("validated official line and area geometries render with accessible meaning
   );
   await expect(officialAll).toHaveJSProperty("indeterminate", true);
   await expect(page.locator(".community-map-pin")).toHaveCount(initialCommunityCount);
-  expect(provincialRequestCount).toBe(1);
+  expect(officialRequestCount).toBe(1);
   expect(page.url()).toBe(initialUrl);
   expect(await getRenderedMapState(page)).toEqual(beforeCategoryFilterState);
 
@@ -721,7 +771,7 @@ test("validated official line and area geometries render with accessible meaning
   await expect(page.locator(".official-heritage-geometry")).toHaveCount(3);
   await expect(ancientBuildings).not.toBeChecked();
   await expect(officialAll).toHaveJSProperty("indeterminate", true);
-  expect(provincialRequestCount).toBe(1);
+  expect(officialRequestCount).toBe(1);
 
   await ancientBuildings.click();
   await expect(page.locator(".official-heritage-geometry")).toHaveCount(6);
@@ -750,34 +800,34 @@ test("unsupported official geometry meaning fails the complete layer atomically"
   const valid = makeSyntheticOfficialGeometryCollection().features[0];
   const invalid = makeSyntheticOfficialGeometryCollection().features[2];
   invalid.properties.geometryMeaning = "reviewed-line";
-  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
     status: 200,
     contentType: "application/geo+json",
-    body: JSON.stringify(makeSyntheticProvincialCollection([valid, invalid]))
+    body: JSON.stringify(makeSyntheticOfficialCollection([valid, invalid]))
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   const communityCount = await waitForCommunityMapReady(page);
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
   await openMapLayersTab(page);
-  await getOverlayCheckbox(page, "Provincial protected heritage").click();
-  await expect(page.locator("#provincialHeritageError")).toHaveText(
-    "The provincial heritage preview could not be loaded."
+  await getOverlayCheckbox(page, "Show Official Heritage").click();
+  await expect(page.locator("#officialHeritageError")).toHaveText(
+    "Official Heritage could not be loaded."
   );
   await expect(page.locator(".official-heritage-geometry")).toHaveCount(0);
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(0);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(0);
   await expect(page.locator("#officialCategoryControls")).toBeHidden();
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
 });
 
 test("official categories are published-only tri-state visibility controls with persistent cached selections", async ({ page }) => {
   test.setTimeout(60000);
-  let provincialRequestCount = 0;
-  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => {
-    provincialRequestCount += 1;
+  let officialRequestCount = 0;
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => {
+    officialRequestCount += 1;
     return route.fulfill({
       status: 200,
       contentType: "application/geo+json",
-      body: JSON.stringify(COMMITTED_PROVINCIAL_HERITAGE)
+      body: JSON.stringify(COMMITTED_OFFICIAL_HERITAGE)
     });
   });
 
@@ -793,15 +843,15 @@ test("official categories are published-only tri-state visibility controls with 
     exact: true
   });
   const officialLayer = layersPanel.getByRole("checkbox", {
-    name: "Provincial protected heritage",
+    name: "Show Official Heritage",
     exact: true
   });
   await expect(page.locator("#officialCategoryControls")).toBeHidden();
-  expect(provincialRequestCount).toBe(0);
+  expect(officialRequestCount).toBe(0);
 
   await officialLayer.click();
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(5);
-  expect(provincialRequestCount).toBe(1);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
+  expect(officialRequestCount).toBe(1);
   const officialAll = layersPanel.getByRole("checkbox", {
     name: "All official categories",
     exact: true
@@ -829,11 +879,11 @@ test("official categories are published-only tri-state visibility controls with 
   })).toHaveCount(0);
   await expect(page.locator("[data-official-map-category]")).toHaveCount(2);
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "5 of 5 published official locations displayed."
+    "7 of 7 published official locations displayed."
   );
-  await expect(page.locator(".provincial-heritage-map-marker--ancient-buildings")).toHaveCount(3);
-  await expect(page.locator(".provincial-heritage-map-marker--important-modern-historic-sites")).toHaveCount(2);
-  await expect(page.locator(".provincial-heritage-map-marker .official-map-marker__glyph")).toHaveCount(5);
+  await expect(page.locator(".official-heritage-map-marker--ancient-buildings")).toHaveCount(3);
+  await expect(page.locator(".official-heritage-map-marker--important-modern-historic-sites")).toHaveCount(4);
+  await expect(page.locator(".official-heritage-map-marker .official-map-marker__glyph")).toHaveCount(7);
 
   await ancientBuildings.focus();
   await expect(ancientBuildings).toBeFocused();
@@ -842,66 +892,66 @@ test("official categories are published-only tri-state visibility controls with 
   await expect(modernSites).toBeChecked();
   await expect(officialAll).not.toBeChecked();
   await expect(officialAll).toHaveJSProperty("indeterminate", true);
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(2);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(4);
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "2 of 5 published official locations displayed."
+    "4 of 7 published official locations displayed."
   );
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
   await expect(communityParent).toBeChecked();
   expect(page.url()).toBe(beforeEnableUrl);
   expect(await getRenderedMapState(page)).toEqual(beforeEnableMapState);
-  expect(provincialRequestCount).toBe(1);
+  expect(officialRequestCount).toBe(1);
 
   await page.getByRole("tab", { name: "Search", exact: true }).click();
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(2);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(4);
   await openMapLayersTab(page);
   await expect(ancientBuildings).not.toBeChecked();
   await expect(modernSites).toBeChecked();
 
   await officialLayer.click();
   await expect(officialLayer).not.toBeChecked();
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(0);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(0);
   await expect(page.locator("#officialCategoryControls")).toBeVisible();
   await expect(officialAll).toBeDisabled();
   await expect(ancientBuildings).toBeDisabled();
   await expect(modernSites).toBeDisabled();
   await expect(page.locator("#officialCategoryDisabledHelp")).toBeVisible();
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "0 of 5 published official locations displayed."
+    "0 of 7 published official locations displayed."
   );
 
   await officialLayer.click();
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(2);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(4);
   await expect(officialAll).toBeEnabled();
   await expect(officialAll).toHaveJSProperty("indeterminate", true);
   await expect(ancientBuildings).not.toBeChecked();
   await expect(modernSites).toBeChecked();
   await expect(page.locator("#officialCategoryDisabledHelp")).toBeHidden();
-  expect(provincialRequestCount).toBe(1);
+  expect(officialRequestCount).toBe(1);
 
   await officialAll.click();
   await expect(officialAll).toBeChecked();
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(5);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
   await officialAll.click();
   await expect(officialAll).not.toBeChecked();
   await expect(officialAll).toHaveJSProperty("indeterminate", false);
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(0);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(0);
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "0 of 5 published official locations displayed."
+    "0 of 7 published official locations displayed."
   );
   await officialAll.click();
   await expect(officialAll).toBeChecked();
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(5);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "5 of 5 published official locations displayed."
+    "7 of 7 published official locations displayed."
   );
   expect(page.url()).toBe(beforeEnableUrl);
   expect(await getRenderedMapState(page)).toEqual(beforeEnableMapState);
-  expect(provincialRequestCount).toBe(1);
+  expect(officialRequestCount).toBe(1);
 });
 
-test("provincial preview isolates HTTP failure from community markers", async ({ page }) => {
-  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+test("official preview isolates HTTP failure from community markers", async ({ page }) => {
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
     status: 503,
     contentType: "text/plain",
     body: "Unavailable"
@@ -910,77 +960,77 @@ test("provincial preview isolates HTTP failure from community markers", async ({
   const communityCount = await waitForCommunityMapReady(page);
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
   await openMapLayersTab(page);
-  await getOverlayCheckbox(page, "Provincial protected heritage").click();
-  await expect(page.locator("#provincialHeritageError")).toHaveText(
-    "The provincial heritage preview could not be loaded."
+  await getOverlayCheckbox(page, "Show Official Heritage").click();
+  await expect(page.locator("#officialHeritageError")).toHaveText(
+    "Official Heritage could not be loaded."
   );
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(0);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(0);
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
-  await expect(getOverlayCheckbox(page, "Provincial protected heritage")).not.toBeChecked();
+  await expect(getOverlayCheckbox(page, "Show Official Heritage")).not.toBeChecked();
   await expect(page.locator("#officialCategoryControls")).toBeHidden();
   await expect(page.locator("[data-official-map-category]")).toHaveCount(0);
 });
 
-test("provincial preview rejects invalid JSON", async ({ page }) => {
-  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+test("official preview rejects invalid JSON", async ({ page }) => {
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
     status: 200,
     contentType: "application/geo+json",
     body: "{"
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   await openMapLayersTab(page);
-  await getOverlayCheckbox(page, "Provincial protected heritage").click();
-  await expect(page.locator("#provincialHeritageError")).toHaveText(
-    "The provincial heritage preview could not be loaded."
+  await getOverlayCheckbox(page, "Show Official Heritage").click();
+  await expect(page.locator("#officialHeritageError")).toHaveText(
+    "Official Heritage could not be loaded."
   );
   await expect(page.locator("#officialCategoryControls")).toBeHidden();
   await expect(page.locator("[data-official-map-category]")).toHaveCount(0);
 });
 
-test("provincial preview rejects malformed metadata", async ({ page }) => {
-  const malformed = makeSyntheticProvincialCollection();
+test("official preview rejects malformed metadata", async ({ page }) => {
+  const malformed = makeSyntheticOfficialCollection();
   malformed.metadata.datasetId = "wrong-dataset";
-  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
     status: 200,
     contentType: "application/geo+json",
     body: JSON.stringify(malformed)
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   await openMapLayersTab(page);
-  await getOverlayCheckbox(page, "Provincial protected heritage").click();
-  await expect(page.locator("#provincialHeritageError")).toHaveText(
-    "The provincial heritage preview could not be loaded."
+  await getOverlayCheckbox(page, "Show Official Heritage").click();
+  await expect(page.locator("#officialHeritageError")).toHaveText(
+    "Official Heritage could not be loaded."
   );
   await expect(page.locator("#officialCategoryControls")).toBeHidden();
   await expect(page.locator("[data-official-map-category]")).toHaveCount(0);
 });
 
-test("provincial preview rejects the complete layer when one feature is invalid", async ({ page }) => {
-  const validFeature = makeSyntheticProvincialFeature();
-  const invalidFeature = makeSyntheticProvincialFeature({
+test("official preview rejects the complete layer when one feature is invalid", async ({ page }) => {
+  const validFeature = makeSyntheticOfficialFeature();
+  const invalidFeature = makeSyntheticOfficialFeature({
     id: "JX-PCH-7-002",
     coordinates: [181, 27.6202]
   });
-  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
     status: 200,
     contentType: "application/geo+json",
-    body: JSON.stringify(makeSyntheticProvincialCollection([validFeature, invalidFeature]))
+    body: JSON.stringify(makeSyntheticOfficialCollection([validFeature, invalidFeature]))
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   await openMapLayersTab(page);
-  await getOverlayCheckbox(page, "Provincial protected heritage").click();
-  await expect(page.locator("#provincialHeritageError")).toHaveText(
-    "The provincial heritage preview could not be loaded."
+  await getOverlayCheckbox(page, "Show Official Heritage").click();
+  await expect(page.locator("#officialHeritageError")).toHaveText(
+    "Official Heritage could not be loaded."
   );
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(0);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(0);
   await expect(page.locator("#officialCategoryControls")).toBeHidden();
   await expect(page.locator("[data-official-map-category]")).toHaveCount(0);
 });
 
-test("provincial preview rejects missing, blank, and non-string official categories", async ({ page }) => {
+test("official preview rejects missing, blank, and non-string official categories", async ({ page }) => {
   let invalidCategoryValue;
-  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => {
-    const feature = makeSyntheticProvincialFeature();
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => {
+    const feature = makeSyntheticOfficialFeature();
     if (invalidCategoryValue === undefined) {
       delete feature.properties.officialCategoryZh;
     } else {
@@ -989,7 +1039,7 @@ test("provincial preview rejects missing, blank, and non-string official categor
     return route.fulfill({
       status: 200,
       contentType: "application/geo+json",
-      body: JSON.stringify(makeSyntheticProvincialCollection([feature]))
+      body: JSON.stringify(makeSyntheticOfficialCollection([feature]))
     });
   });
 
@@ -997,19 +1047,19 @@ test("provincial preview rejects missing, blank, and non-string official categor
     invalidCategoryValue = invalidValue;
     await page.goto("/map.html", { waitUntil: "domcontentloaded" });
     await openMapLayersTab(page);
-    await getOverlayCheckbox(page, "Provincial protected heritage").click();
-    await expect(page.locator("#provincialHeritageError")).toHaveText(
-      "The provincial heritage preview could not be loaded."
+    await getOverlayCheckbox(page, "Show Official Heritage").click();
+    await expect(page.locator("#officialHeritageError")).toHaveText(
+      "Official Heritage could not be loaded."
     );
-    await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(0);
+    await expect(page.locator(".official-heritage-map-marker")).toHaveCount(0);
     await expect(page.locator("#officialCategoryControls")).toBeHidden();
     await expect(page.locator("[data-official-map-category]")).toHaveCount(0);
   }
 });
 
-test("provincial preview renders a synthetic exact Point without changing community bounds", async ({ page }) => {
-  const collection = makeSyntheticProvincialCollection([makeSyntheticProvincialFeature()]);
-  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+test("official preview renders a synthetic exact Point without changing community bounds", async ({ page }) => {
+  const collection = makeSyntheticOfficialCollection([makeSyntheticOfficialFeature()]);
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
     status: 200,
     contentType: "application/geo+json",
     body: JSON.stringify(collection)
@@ -1019,54 +1069,58 @@ test("provincial preview renders a synthetic exact Point without changing commun
   await expect(page.locator(".official-heritage-map-legend")).toHaveCount(0);
   await openMapLayersTab(page);
   const layersPanel = page.locator("#mapLayersToolPanel");
-  await expect(layersPanel).toContainText("Reviewed official locations");
-  await expect(layersPanel).toContainText("General official references");
-  await expect(layersPanel).toContainText("Official source facts are separate from project-produced locations");
-  await expect(layersPanel).toContainText("not official designation coordinates or legal boundaries");
+  await expect(layersPanel).toContainText("Project-reviewed reference Points");
+  await expect(layersPanel).toContainText("Generalized reference Points");
+  await expect(layersPanel).toContainText("About Official Heritage representations");
+  await expect(layersPanel).toContainText("authority of a heritage record is separate from the authority of its map representation");
+  await expect(layersPanel).toContainText("not an authority-supplied coordinate, surveyed heritage extent or legal protection boundary");
   await page.getByRole("tab", { name: "Search" }).click();
   const beforeEnable = await getRenderedMapState(page);
   await openMapLayersTab(page);
-  await setOverlayChecked(page, "Provincial protected heritage", true);
-  await expect(page.locator("#provincialHeritageStatus")).toHaveText(
-    /\d+ community records? and 1 provincial heritage location displayed\./
+  await setOverlayChecked(page, "Show Official Heritage", true);
+  await expect(page.locator("#officialHeritageStatus")).toHaveText(
+    /\d+ community records? and 1 official heritage location displayed\./
   );
-  const marker = page.locator(".provincial-heritage-map-marker");
+  await expect(page.locator("#officialReviewedPointStatus")).toHaveText(
+    "Filled diamond. Currently displayed: 1."
+  );
+  const marker = page.locator(".official-heritage-map-marker");
   await expect(marker).toHaveCount(1);
-  await expect(marker).toHaveClass(/provincial-heritage-map-marker--ancient-buildings/);
+  await expect(marker).toHaveClass(/official-heritage-map-marker--ancient-buildings/);
   await expect(marker.locator(".official-map-marker__glyph")).toHaveCount(1);
   await expect(marker).toHaveAttribute(
     "aria-label",
-    "Open official protected heritage record: Test Archaeological Site (测试遗址); Map category: Ancient buildings; Reviewed location"
+    "Open Official Heritage record: Test Archaeological Site (测试遗址); Official designation level: Provincial; Map category: Ancient buildings; Reviewed location"
   );
   const afterEnable = await getRenderedMapState(page);
   expect(afterEnable).toEqual(beforeEnable);
   await marker.focus();
   await marker.press("Enter");
-  await expect(page.locator(".provincial-heritage-map-popup")).toContainText("Test Archaeological Site");
-  await expect(page.locator(".provincial-heritage-map-popup [lang='zh-Hans']").first()).toHaveText("测试遗址");
-  await expect(page.locator(".provincial-heritage-map-popup")).toContainText("not an official designation coordinate");
+  await expect(page.locator(".official-heritage-map-popup")).toContainText("Test Archaeological Site");
+  await expect(page.locator(".official-heritage-map-popup [lang='zh-Hans']").first()).toHaveText("测试遗址");
+  await expect(page.locator(".official-heritage-map-popup")).toContainText("not an official designation coordinate");
 });
 
 test("an unknown non-empty official category uses the static Other presentation without changing source text", async ({ page }) => {
-  const feature = makeSyntheticProvincialFeature({
+  const feature = makeSyntheticOfficialFeature({
     officialCategoryZh: "未来类别<script>alert(1)</script>"
   });
-  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
     status: 200,
     contentType: "application/geo+json",
-    body: JSON.stringify(makeSyntheticProvincialCollection([feature]))
+    body: JSON.stringify(makeSyntheticOfficialCollection([feature]))
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
   const layersPanel = await openMapLayersTab(page);
-  await getOverlayCheckbox(page, "Provincial protected heritage").click();
+  await getOverlayCheckbox(page, "Show Official Heritage").click();
   await expect(layersPanel.getByRole("checkbox", {
     name: "Other official heritage",
     exact: true
   })).toBeChecked();
   await expect(page.locator("[data-official-map-category]")).toHaveCount(1);
-  await expect(page.locator(".provincial-heritage-map-marker--other-official-heritage")).toHaveCount(1);
-  await expect(page.locator(".provincial-heritage-map-marker script")).toHaveCount(0);
+  await expect(page.locator(".official-heritage-map-marker--other-official-heritage")).toHaveCount(1);
+  await expect(page.locator(".official-heritage-map-marker script")).toHaveCount(0);
   const marker = page.getByRole("button", {
     name: /Map category: Other official heritage; Reviewed location$/
   });
@@ -1076,64 +1130,64 @@ test("an unknown non-empty official category uses the static Other presentation 
   );
   await marker.focus();
   await marker.press("Enter");
-  const popup = page.locator(".provincial-heritage-map-popup");
+  const popup = page.locator(".official-heritage-map-popup");
   await expect(popup).toContainText("未来类别<script>alert(1)</script>");
   await expect(popup).toContainText("Reviewed approximate location");
   await expect(popup).toContainText("heritage-feature");
 });
 
-test("provincial preview labels a synthetic approximate Point", async ({ page }) => {
-  const feature = makeSyntheticProvincialFeature({
+test("official preview labels a synthetic approximate Point", async ({ page }) => {
+  const feature = makeSyntheticOfficialFeature({
     confidence: "Medium",
     publicationPolicy: "approximate"
   });
-  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
     status: 200,
     contentType: "application/geo+json",
-    body: JSON.stringify(makeSyntheticProvincialCollection([feature]))
+    body: JSON.stringify(makeSyntheticOfficialCollection([feature]))
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   const layersPanel = await openMapLayersTab(page);
   const communityCheckbox = layersPanel.getByRole("checkbox", { name: "All community records", exact: true });
-  const provincialCheckbox = layersPanel.getByRole("checkbox", { name: "Provincial protected heritage", exact: true });
+  const officialCheckbox = layersPanel.getByRole("checkbox", { name: "Show Official Heritage", exact: true });
   await expect(communityCheckbox).toBeVisible();
   await expect(communityCheckbox).toBeEnabled();
   await expect(communityCheckbox).toBeChecked();
-  await expect(provincialCheckbox).toBeVisible();
-  await expect(provincialCheckbox).toBeEnabled();
-  await expect(provincialCheckbox).not.toBeChecked();
-  await setOverlayChecked(page, "Provincial protected heritage", true);
-  const marker = page.locator(".provincial-heritage-map-marker");
+  await expect(officialCheckbox).toBeVisible();
+  await expect(officialCheckbox).toBeEnabled();
+  await expect(officialCheckbox).not.toBeChecked();
+  await setOverlayChecked(page, "Show Official Heritage", true);
+  const marker = page.locator(".official-heritage-map-marker");
   await expect(marker).toHaveAttribute("aria-label", /Map category: Ancient buildings; Approximate site location$/);
   await marker.focus();
   await marker.press("Enter");
-  await expect(page.locator(".provincial-heritage-map-popup")).toContainText("Approximate site location");
-  await expect(page.locator(".provincial-heritage-map-popup")).toContainText("Medium");
+  await expect(page.locator(".official-heritage-map-popup")).toContainText("Approximate site location");
+  await expect(page.locator(".official-heritage-map-popup")).toContainText("Medium");
 });
 
-test("provincial preview distinguishes a generalized marker and explains its radius", async ({ page }) => {
-  const feature = makeSyntheticProvincialFeature({
+test("official preview distinguishes a generalized marker and explains its radius", async ({ page }) => {
+  const feature = makeSyntheticOfficialFeature({
     confidence: "Medium",
     publicationPolicy: "generalized",
     markerClass: "generalized"
   });
-  await page.route(PROVINCIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
     status: 200,
     contentType: "application/geo+json",
-    body: JSON.stringify(makeSyntheticProvincialCollection([feature]))
+    body: JSON.stringify(makeSyntheticOfficialCollection([feature]))
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   const layersPanel = await openMapLayersTab(page);
   const communityCheckbox = layersPanel.getByRole("checkbox", { name: "All community records", exact: true });
-  const provincialCheckbox = layersPanel.getByRole("checkbox", { name: "Provincial protected heritage", exact: true });
+  const officialCheckbox = layersPanel.getByRole("checkbox", { name: "Show Official Heritage", exact: true });
   await expect(communityCheckbox).toBeVisible();
   await expect(communityCheckbox).toBeEnabled();
   await expect(communityCheckbox).toBeChecked();
-  await expect(provincialCheckbox).toBeVisible();
-  await expect(provincialCheckbox).toBeEnabled();
-  await expect(provincialCheckbox).not.toBeChecked();
-  await setOverlayChecked(page, "Provincial protected heritage", true);
-  const marker = page.locator(".provincial-heritage-map-marker--generalized");
+  await expect(officialCheckbox).toBeVisible();
+  await expect(officialCheckbox).toBeEnabled();
+  await expect(officialCheckbox).not.toBeChecked();
+  await setOverlayChecked(page, "Show Official Heritage", true);
+  const marker = page.locator(".official-heritage-map-marker--generalized");
   await expect(marker).toHaveAttribute("aria-label", /Map category: Ancient buildings; Generalized official reference$/);
   await expect(marker.locator(".official-map-marker__glyph")).toHaveCount(1);
   const generalizedPresentation = await marker.evaluate((element) => ({
@@ -1146,7 +1200,7 @@ test("provincial preview distinguishes a generalized marker and explains its rad
   expect(generalizedPresentation.glyphStroke).toBe("rgb(169, 71, 0)");
   await marker.focus();
   await marker.press("Enter");
-  const popup = page.locator(".provincial-heritage-map-popup");
+  const popup = page.locator(".official-heritage-map-popup");
   await expect(popup).toContainText("General locality");
   const uncertaintyRow = popup.locator(".map-point-card__facts > div").filter({
     has: page.locator("dt", { hasText: /^Estimated location uncertainty$/ })
@@ -1165,9 +1219,9 @@ test("Layers tab controls overlays while Leaflet retains basemap selection only"
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
   await openMapLayersTab(page);
   const communityToggle = getOverlayCheckbox(page, "All community records");
-  const provincialToggle = getOverlayCheckbox(page, "Provincial protected heritage");
+  const officialToggle = getOverlayCheckbox(page, "Show Official Heritage");
   await expect(communityToggle).toBeChecked();
-  await expect(provincialToggle).not.toBeChecked();
+  await expect(officialToggle).not.toBeChecked();
   await expect(page.locator(".leaflet-control-layers-overlays input")).toHaveCount(0);
 
   const basemapToggle = page.locator(".leaflet-control-layers-toggle");
@@ -1183,27 +1237,27 @@ test("Layers tab controls overlays while Leaflet retains basemap selection only"
   expect(communityCount).toBeGreaterThan(0);
   await setOverlayChecked(page, "All community records", false);
   await expect(page.locator(".community-map-pin")).toHaveCount(0);
-  await expect(page.locator("#provincialHeritageStatus")).toHaveText("No heritage records displayed.");
+  await expect(page.locator("#officialHeritageStatus")).toHaveText("No heritage records displayed.");
 
-  await setOverlayChecked(page, "Provincial protected heritage", true);
-  await expect(page.locator("#provincialHeritageStatus")).toHaveText(
-    "5 provincial heritage locations displayed."
+  await setOverlayChecked(page, "Show Official Heritage", true);
+  await expect(page.locator("#officialHeritageStatus")).toHaveText(
+    "7 official heritage locations displayed."
   );
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(5);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
 
   await setOverlayChecked(page, "All community records", true);
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
-  await expect(page.locator("#provincialHeritageStatus")).toHaveText(
-    new RegExp(`${communityCount} community records? and 5 provincial heritage locations displayed\\.`)
+  await expect(page.locator("#officialHeritageStatus")).toHaveText(
+    new RegExp(`${communityCount} community records? and 7 official heritage locations displayed\\.`)
   );
 
   await page.getByRole("tab", { name: "Search" }).click();
   await expect(page.locator("#mapLayersToolPanel")).toBeHidden();
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
-  await expect(page.locator(".provincial-heritage-map-marker")).toHaveCount(5);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
   await page.getByRole("tab", { name: "Layers" }).click();
   await expect(communityToggle).toBeChecked();
-  await expect(provincialToggle).toBeChecked();
+  await expect(officialToggle).toBeChecked();
 });
 
 test("community categories are accessible tri-state Map visibility controls", async ({ page }) => {
@@ -1403,13 +1457,13 @@ test("Map and Places expose only the supported structured discovery filters", as
   expect(cacheVersions.mapHtml).toContain(`map.js?v=${MAP_PAGE_VERSION}`);
   expect(cacheVersions.mapSource).toContain('./heritage-engine/maps.js?v=2026-07-14-pr41-review-fixes');
   expect(cacheVersions.mapSource).toContain(
-    `./heritage-engine/provincial-heritage-map.js?v=${PROVINCIAL_HERITAGE_PREVIEW_VERSION}`
+    `./heritage-engine/official-heritage-map.js?v=${OFFICIAL_HERITAGE_PREVIEW_VERSION}`
   );
   expect(cacheVersions.mapSource).toContain(
     `./heritage-engine/official-map-categories.js?v=${OFFICIAL_CATEGORY_VERSION}`
   );
   expect(cacheVersions.mapSource).toContain(
-    `./data/jiangxi-provincial-protected-heritage-map.geojson?v=${PROVINCIAL_HERITAGE_PREVIEW_VERSION}`
+    `./data/jiangxi-official-protected-heritage-map.geojson?v=${OFFICIAL_HERITAGE_PREVIEW_VERSION}`
   );
   expect(cacheVersions.mapSource).not.toContain('./heritage-engine/maps.js?v=2026-06-20-releasepolish');
 });
