@@ -21,7 +21,9 @@ the
 and the
 [fallback Point candidate matrix](./phase-15c-11-xinyu-fallback-point-candidate-matrix.md),
 plus the
-[six-candidate priority Point matrix](./phase-15c-13-xinyu-priority-point-candidate-matrix.md).
+[six-candidate priority Point matrix](./phase-15c-13-xinyu-priority-point-candidate-matrix.md),
+and the
+[Generalized reference Point eligibility matrix](./phase-15c-16-xinyu-generalized-point-candidate-matrix.md).
 They are documentation evidence only and are not application inputs. The
 fallback matrix is the preserved Phase 15C-11 baseline that kept all 39
 candidates withheld while recording N07 as a provider-located
@@ -30,4 +32,8 @@ physical-feature candidate. The separately merged
 then authorized a bounded evidence re-evaluation. Phase 15C-13 applies that
 method to exactly N03, N07, N08, P22, M23, and M30: N07 receives one documented
 Point-ready research recommendation, while the other five remain withheld.
-Nothing in these research files is published or added to paused PR #69.
+Phase 15C-16 then screens all 55 identities left unpublished after PR #69 and
+shortlists only Xieli and Qipanshan for detailed Generalized Point review. Both
+remain potentially suitable pending specific evidence; zero Generalized Points
+are currently eligible or published. Nothing in these research files is an
+application input or publication approval.

@@ -1,8 +1,14 @@
 # Phase 15C-8 — complete Xinyu Official Heritage Point re-audit
 
+> **Current routing:** This audit remains the canonical historical provincial
+> Point-readiness baseline. PR #69 later published P19 and N07. The
+> [Phase 15C-16 Generalized reference Point eligibility audit](./phase-15c-16-xinyu-generalized-point-eligibility-audit.md)
+> now controls Xieli's generalized-reference-Point route and finds it
+> potentially suitable in principle but not presently eligible.
+
 ## Decision and stop point
 
-This is the current canonical Point-readiness audit for the complete Xinyu
+This is the historical canonical Point-readiness audit for the complete Xinyu
 Official Heritage provincial-register review universe. It applies the
 [controlling publication policy](../policy/official-record-publication-policy.md)
 to all 22 listed record/component rows and recommends a bounded later PR #69

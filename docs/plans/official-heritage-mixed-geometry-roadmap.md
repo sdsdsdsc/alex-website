@@ -41,9 +41,10 @@ audits publishes a record or authorizes implementation.
    [canonical Phase 15C-8 audit](../audits/phase-15c-8-xinyu-official-point-reaudit.md).
    Research and audit only; its PR #69 batch is a recommendation, not
    publication approval.
-3. **PR #69 — approved Xinyu Point batch.** The current draft proposes only the
-   separately approved P19 `暴动举行地旧址` component Point and N07
-   水西红三军团指挥部旧址 Point. It remains unmerged and undeployed.
+3. **PR #69 — approved Xinyu Point batch.** The merged implementation publishes
+   only the separately approved P19 `暴动举行地旧址` component Point and N07
+   水西红三军团指挥部旧址 Point. It is production verified with
+   seven ordinary Points and no Generalized Point, line, or area.
 4. **PR #70 — complete-list evidence expansion.** The merged documentation-only
    audit supplies the full official-identity, provider-search, Point-readiness,
    and future non-Point candidate baseline. It draws and publishes no shape.
@@ -64,21 +65,27 @@ audits publishes a record or authorizes implementation.
    one reproducible N07 Point-ready recommendation and five withheld outcomes.
    It did not itself publish N07 or modify PR #69; a later candidate-specific
    instruction approved the exact `P19, N07` draft implementation batch.
-8. **Later representation-lifecycle schema and validation extension.** Extend
+8. **Phase 15C-16 — focused Generalized Point eligibility audit.** Screen the
+   55 identities left unpublished after PR #69, distinguish uncertainty from
+   deliberate generalization, reconstruct Xieli's classification history, and
+   apply the existing gate without publishing a candidate. The research result
+   is zero currently eligible Generalized Points; Xieli and Qipanshan remain
+   potentially suitable pending specific evidence and separate approval.
+9. **Later representation-lifecycle schema and validation extension.** Extend
    the existing Phase 15C-1 schema and validation foundation for the
    one-active-representation model, stable identity, supersession, and
    representation history. Preserve and adapt the existing geometry validators
    rather than create a new geometry system from scratch.
-9. **Later mixed-geometry interface adaptation.** Adapt and extend the existing
+10. **Later mixed-geometry interface adaptation.** Adapt and extend the existing
    Phase 15C-2 mixed-geometry renderer and existing Official Heritage controls
    for the new five-type sidebar and filter model, active-representation
    selection, provenance presentation, and accessibility. Preserve the already
    verified line and area rendering foundation rather than rebuild it.
-10. **First production shape.** Publish and verify the first separately approved
+11. **First production shape.** Publish and verify the first separately approved
     evidence-supported production line or area.
-11. **Optional context layers.** Add separately controlled administrative,
+12. **Optional context layers.** Add separately controlled administrative,
     historical-map, study-area, or other context layers.
-12. **Later evidence-supported batches.** Research, approve, publish, and verify
+13. **Later evidence-supported batches.** Research, approve, publish, and verify
     additional shapes in bounded batches.
 
 Future implementation PR numbers are intentionally unassigned. Assigning a
@@ -99,7 +106,7 @@ The later lifecycle-schema and interface work therefore extends and adapts
 merged capabilities. It does not replace or rebuild the existing geometry
 validation and rendering systems.
 
-Draft PR #69 establishes `data/xinyu-official-heritage-records.json` and
+Merged PR #69 establishes `data/xinyu-official-heritage-records.json` and
 `data/jiangxi-official-protected-heritage-map.geojson` as the authority-neutral
 canonical source and aggregate. The Map consumes the latter. The historical
 provincial source and generated URL remain as a validated provincial-only
@@ -113,26 +120,28 @@ representation meanings.
 - The complete-list audit is an interposed research dependency only. Its
   readiness findings may narrow PR #69 or PR #70, but cannot expand either
   implementation scope without separate approval.
-- The fallback Point audit applies that dependency to 39 unpublished
-  candidates. All remain Withhold pending evidence because no candidate has an
-  approved reproducible numerical Point/CRS and WGS84 reconciliation chain.
-  N07 now passes the physical provider-feature gate, but its Point is not yet
-  digitized or approved. The audit adds nothing to PR #69.
+- The fallback Point audit historically applied that dependency to 39 then-
+  unpublished candidates. At that audit boundary all remained Withhold pending
+  evidence; N07 passed only the physical provider-feature gate. The audit
+  itself added nothing to PR #69.
 - The Phase 15C-8 audit recommends retaining the five production Points and
   proposes only the Xiabu `暴动举行地旧址` component as an ordinary PR #69
-  candidate. Xieli remains a generalized-Point-only research result and is
-  excluded from that batch pending its datum, styling, persistent-limitation,
-  and sensitivity gates.
-- The current draft PR #69 branch adds P19 and N07 to the five retained
-  production Points. It remains pending review, merge, and deployment.
+  candidate. It historically classified Xieli as a conditional
+  generalized-Point-only research result and excluded it from that batch.
+  Phase 15C-16 now controls Xieli's eligibility status.
+- Merged PR #69 adds P19 and N07 to the five retained production Points. Its
+  seven-Point authority-neutral canonical aggregate is production verified.
 - PR #72 merged the separately approved policy clarification before the bounded
   queue was re-evaluated.
-- The current Phase 15C-13 evidence audit may construct reproducible numerical
-  Points for only N03, N07, N08, P22, M23, and M30. It records a passing
-  numerical recommendation only for N07 and proposes a future ordered PR #69
-  batch of `P19, N07`, but does not itself publish it or change the draft.
-- Separate candidate-specific approval now authorizes N07 for inclusion in the
-  draft PR #69 branch. That approval does not authorize merging or deployment.
+- The merged Phase 15C-13 evidence audit was bounded to N03, N07, N08, P22,
+  M23, and M30. It recorded a passing numerical recommendation only for N07
+  and proposed the later-approved `P19, N07` PR #69 batch, but did not itself
+  publish it.
+- Separate candidate-specific approval authorized N07 for PR #69; its merged
+  publication does not authorize any further record or representation.
+- Phase 15C-16 finds zero currently eligible Generalized reference Points. Its
+  two outcome-B candidates require named evidence upgrades and a later,
+  separately approved publication review; it does not create a batch.
 - Later representation-lifecycle extensions must land before the interface
   adapts public presentation to active-representation selection.
 - The adapted renderer, filters, provenance, and accessibility must be ready
@@ -145,21 +154,21 @@ representation meanings.
 
 ## Current production baseline
 
-- five active Official Heritage Point features in live production; PR #69's
-  generated dataset contains seven pending separate review, merge, and deployment;
+- seven active ordinary Official Heritage Point features in live production:
+  one national and six provincial;
+- zero Generalized reference Points;
 - zero real line features;
 - zero real polygon features;
 - Official Heritage remains off by default;
 - Community Heritage remains unchanged and Point-based;
-- Xiabu and N07 remain unpublished in live production; the draft branch
-  contains exactly those two approved additions pending review;
-- Xieli is not published.
+- P19 and N07 are production verified; the Xiabu parent and meeting-site
+  component remain unpublished;
+- Xieli and Qipanshan are not published.
 
 The complete-list, fallback-Point, policy-clarification, and six-candidate
-audits remain historical evidence records and did not themselves modify PR
-#69. The later candidate-specific implementation approval now permits the
-draft branch to propose the ordered `P19, N07` batch. Live production remains
-unchanged until separate merge approval.
+audits remain historical evidence records. PR #69 subsequently published the
+approved ordered `P19, N07` batch. Phase 15C-16 adds research documentation
+only and leaves that production result unchanged.
 
 ## PR #67 exclusions
 
