@@ -1,20 +1,23 @@
 # Phase 15C-7 - Xieli Site misleading-risk review
 
 > **Current routing:** The
-> [Phase 15C-8 complete Xinyu Point re-audit](./phase-15c-8-xinyu-official-point-reaudit.md)
-> preserves this review's generalized-Point-only conclusion and excludes
-> Xieli from the proposed PR #69 batch until its presentation and evidence
-> gates pass.
+> [Phase 15C-16 Generalized reference Point eligibility audit](./phase-15c-16-xinyu-generalized-point-eligibility-audit.md)
+> preserves this review's misleading-risk evidence but supersedes its
+> conditional recommendation for current routing. Xieli is potentially
+> suitable in principle, not presently eligible: its source datum and a
+> reproducible generalized-location method remain unresolved, and the earlier
+> `500 m` uncertainty cannot substitute for unknown-CRS stress testing.
 
 ## Decision
 
 **Do not approve the proposed 60 × 60 metre generalized reference-area Polygon. Recommend a generalized reference Point only, subject to separate explicit implementation approval.**
 
 This is outcome **C - Point instead** among the four alternatives evaluated in
-this historical review. Under the controlling standalone publication policy,
-the equivalent future status is **Point now, shape later**: a generalized Point
-may be reconsidered for publication, while any later approved area would
-supersede the Point rather than appear alongside it.
+this historical review. It is retained as the phase's historical conclusion,
+not a current eligibility approval. Under the controlling standalone
+publication policy, a generalized Point may be reconsidered only after all
+current gates pass; any later approved area would supersede the Point rather
+than appear alongside it.
 
 The Point recommendation is still research-only. Xieli remains unpublished. Xiabu remains unpublished. No production data, public-location decision, generated GeoJSON, application code, test, workflow, Firebase file, or package file changes in this phase.
 

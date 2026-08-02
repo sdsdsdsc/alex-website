@@ -213,6 +213,40 @@ valid review result.
 footprint is positively identified and the centroid is reproducibly calculated
 from that footprint.
 
+### Generalized reference Point eligibility
+
+Coordinate uncertainty and spatial generalization are separate decisions.
+Coordinate uncertainty estimates positional error around the intended Point.
+Spatial generalization is a deliberate, documented reduction, displacement,
+rounding, gridding, broadening, or general-area meaning used for an evidential,
+sensitivity, privacy, access, or publication reason.
+
+A large uncertainty value does not by itself create a Generalized reference
+Point. Generalization must not repair an unresolved identity, unknown feature,
+unverified provider result, viewport centre, village label, arbitrary centroid,
+or undocumented CRS assumption. A Generalized reference Point requires:
+
+- confirmed official identity and parent/component treatment;
+- reliable evidence for the correct general area;
+- a legitimate generalization purpose recorded before construction;
+- the original spatial basis and source CRS or datum;
+- a documented, reproducible WGS84 construction and deliberate
+  generalization method;
+- separate records for source uncertainty, transformation uncertainty,
+  intentional generalization distance or precision, final horizontal
+  uncertainty, and retained coordinate precision;
+- an existing controlled generalized Point meaning and truthful limitations;
+- sensitivity, privacy, access, and misleading-risk review;
+- one-active-representation and later-supersession treatment; and
+- a named evidence reviewer, accountable person or project role, review date,
+  and unresolved approval requirement.
+
+If the source CRS or numerical basis is unknown, generalization may proceed
+only when an existing policy-permitted uncertainty treatment is explicitly
+justified and reproducible. It must not silently relabel the input or use one
+large uncertainty number to conceal an undocumented method. A research
+recommendation is not publication approval.
+
 ### Line and area meanings
 
 Possible narrow project-reviewed meanings include:
@@ -608,11 +642,13 @@ The policy-to-production sequence is maintained in the
 Every implementation or publication step requires its own approval and
 evidence. Later shape expansion is open-ended rather than guaranteed.
 
-Current production remains exactly five Official Heritage Point features and
-no real line or polygon features. PR #69's draft generated dataset adds only
-Xiabu's `暴动举行地旧址` component as a sixth Point pending review, merge, and
-deployment. The Xiabu parent and meeting-site component, Xieli, and all real
-line or polygon features remain unpublished.
+Current production contains exactly seven ordinary Official Heritage Point
+features—one national and six provincial—and no Generalized reference Point,
+real line, or polygon feature. Merged PR #69 published only Xiabu's
+`暴动举行地旧址` component and N07 beyond the former five-Point baseline. The
+Xiabu parent and meeting-site component, Xieli, Qipanshan, and all real line or
+polygon features remain unpublished. Phase 15C-16 approves no generalized
+Point candidate or future publication batch.
 
 ## Explicit non-implementation boundary
 
@@ -629,3 +665,4 @@ add empty coordinates, placeholder geometries, migrations, or real records.
 - [Phase 15C-6 historical policy and batch-planning record](../plans/phase-15c-6-official-record-publication-policy-and-batch-plan.md)
 - [Phase 15C-7 Xieli misleading-risk review](../audits/phase-15c-7-xieli-misleading-risk-review.md)
 - [Phase 15C-12 provider-located Point policy clarification](../audits/phase-15c-12-provider-located-point-policy-clarification.md)
+- [Phase 15C-16 Generalized reference Point eligibility audit](../audits/phase-15c-16-xinyu-generalized-point-eligibility-audit.md)

@@ -49,11 +49,12 @@ The [Official Heritage spatial representation and publication policy](./policy/o
 is the sole controlling authority for official heritage geometry publication.
 It records the five public Official Heritage types, evidence-led natural-form
 defaults, one-active-representation rule, project-interpretation standard,
-  provider-located project-reviewed reference Point evidence method, and future
-  sidebar and filter direction. It also requires truthful record-level
-  national/provincial/municipal designation values and authority-neutral
-  wording for combined datasets. The clarification preserves the existing
-publication gates and does not create a runtime type or approve a candidate. It
+provider-located project-reviewed reference Point evidence method, explicit
+coordinate-uncertainty-versus-generalization distinction, and future sidebar
+and filter direction. It also requires truthful record-level
+national/provincial/municipal designation values and authority-neutral wording
+for combined datasets. These clarifications preserve the existing publication
+gates and do not create a runtime type or approve a candidate. The policy
 applies only to Official Heritage; Community Heritage remains unchanged and
 Point-based.
 
@@ -126,17 +127,22 @@ Key groups include:
   project-reviewed WGS84 reference Point—and keeps N03, N08, P22, M23, and M30
   withheld. It publishes nothing and leaves paused PR #69 unchanged.
 - [Phase 15C-14 Xinyu two-record Point publication proposal](./audits/phase-15c-14-xinyu-two-record-point-publication.md),
-  the current draft PR #69 implementation record for the separately approved
-  P19 and N07 batch.
+  the merged PR #69 implementation record for the separately approved P19 and
+  N07 batch.
 - [Phase 15C-15 Official Heritage authority-neutrality audit](./audits/phase-15c-15-official-heritage-authority-neutrality-audit.md),
   the terminology classification, canonical mixed-level data architecture,
   provincial-only compatibility contract, and interface correction record.
+- [Phase 15C-16 Xinyu Generalized reference Point eligibility audit](./audits/phase-15c-16-xinyu-generalized-point-eligibility-audit.md),
+  the focused 55-unpublished-identity screen and two-candidate gate review. It
+  finds zero currently eligible Generalized reference Points; Xieli and
+  Qipanshan remain potentially suitable only after specific evidence and
+  separate approval.
 
-The draft branch dataset contains the five retained production Points plus P19
-and N07: seven official Point features and no line or area geometry. Live
-production remains five Points at the pre-PR #69 hash until separate merge and
-deployment approval. The Xiabu parent, meeting-site component, Xieli, and the
-five withheld Phase 15C-13 candidates remain unpublished.
+PR #69 is merged and production verified. The canonical dataset contains the
+five retained Points plus P19 and N07: seven ordinary Official Heritage Point
+features, one national and six provincial, with no Generalized Point, line, or
+area geometry. The Xiabu parent, meeting-site component, Xieli, Qipanshan, and
+the five withheld Phase 15C-13 candidates remain unpublished.
 
 ## Archived history
 
