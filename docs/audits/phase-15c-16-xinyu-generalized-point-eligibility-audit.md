@@ -7,6 +7,13 @@
 > does not change any conclusion here. Candidate eligibility must be
 > reassessed separately across all 55 unpublished identities; no outcome or
 > shortlist changes automatically.
+>
+> **Later result:** The separate
+> [Phase 15C-18 complete-universe reassessment](./phase-15c-18-xinyu-generalized-point-reassessment.md)
+> subsequently applied Phase 15C-17 to all 55 identities. It records one new
+> Outcome A, eight Outcome B, 36 Outcome C and ten Outcome D findings. Those
+> later results do not alter this audit's historical zero-eligible conclusion
+> under the policy applied here.
 
 ## Decision and scope
 

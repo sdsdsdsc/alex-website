@@ -77,13 +77,13 @@ audits publishes a record or authorizes implementation.
    an honest representative Point without weakening identity, locality,
    sensitivity, misleading-risk, transparency, review, or approval gates.
    Documentation only; it changes no Phase 15C-16 candidate outcome.
-10. **Later PR #76-equivalent whole-universe reassessment.** After Phase
-   15C-17 is approved and merged, rescreen all 55 currently unpublished Xinyu
-   identities under R1–R13. Give each identity exactly one A–E outcome,
-   reconcile duplicates and parent/components, deeply evaluate every passing
-   screen, and propose a publication-review batch only from outcome A. Xieli
-   and Qipanshan are historical priorities, not a predetermined shortlist.
-   Publish nothing in this audit.
+10. **Phase 15C-18 / PR #76-equivalent whole-universe reassessment.** The
+   documentation-only reassessment individually rescreens all 55 unpublished
+   Xinyu identities under R1–R13, reconciles duplicates and
+   parent/components, and deeply evaluates the nine identities passing Stage
+   1. Its A/B/C/D/E totals are `1/8/36/10/0`; P04 Xieli is the only Outcome A
+   and the future publication-review batch is `[P04]`. This is evidence
+   eligibility, not publication approval. The audit publishes nothing.
 11. **Later representation-lifecycle schema and validation extension.** Extend
    the existing Phase 15C-1 schema and validation foundation for the
    one-active-representation model, stable identity, supersession, and
@@ -142,8 +142,8 @@ representation meanings.
   candidate. It historically classified Xieli as a conditional
   generalized-Point-only research result and excluded it from that batch.
   Phase 15C-16 preserves Xieli's last candidate-specific outcome under the
-  prior gate. Phase 15C-17 changes no candidate status; the later 55-identity
-  reassessment must apply the recalibrated gate.
+  prior gate. Phase 15C-17 itself changes no candidate status; Phase 15C-18
+  later applied the recalibrated gate to all 55 unpublished identities.
 - Merged PR #69 adds P19 and N07 to the five retained production Points. Its
   seven-Point authority-neutral canonical aggregate is production verified.
 - PR #72 merged the separately approved policy clarification before the bounded
@@ -160,9 +160,9 @@ representation meanings.
   separately approved publication review; it does not create a batch.
 - Phase 15C-17 preserves that historical result while recalibrating the future
   gate. It evaluates no candidate and creates no batch.
-- The later PR #76-equivalent audit must rescreen all 55 unpublished identities
-  without preselecting the Phase 15C-16 shortlist. It must publish nothing and
-  may propose only outcome-A candidates for later review.
+- Phase 15C-18 completes the required all-55 reassessment without preselecting
+  the Phase 15C-16 shortlist. It proposes only P04, the sole Outcome A, for a
+  later publication review and publishes nothing.
 - Before any Phase 15C-17-based publication, a separate implementation must
   resolve the current schema and presentation gap for recording source and
   transformation uncertainty, intentional generalization, support-area extent,
@@ -194,7 +194,9 @@ The complete-list, fallback-Point, policy-clarification, and six-candidate
 audits remain historical evidence records. PR #69 subsequently published the
 approved ordered `P19, N07` batch. Phase 15C-16 remains the historically valid
 audit of its prior gate. Phase 15C-17 recalibrates future eligibility without
-reassessing a candidate or changing production.
+reassessing a candidate or changing production. Phase 15C-18 separately
+applies that gate to all 55 identities, finds P04 evidence eligible, and leaves
+production unchanged pending technical and candidate-specific approval.
 
 ## PR #67 exclusions
 

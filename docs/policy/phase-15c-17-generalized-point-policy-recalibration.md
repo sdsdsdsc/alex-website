@@ -24,9 +24,9 @@ one active representation, and separate publication approval remain mandatory.
 This record evaluates no candidate. It does not change any Phase 15C-16
 outcome, create a shortlist, approve a coordinate, or authorize publication.
 
-Policy decision date: `2026-08-02`. This record remains a draft policy change
-until its pull request is separately approved and merged. Candidate reviews
-must name their own evidence reviewer and accountable project owner or role.
+Policy decision date: `2026-08-02`. PR #75 approved and merged this
+candidate-neutral policy record. Candidate reviews must name their own evidence
+reviewer and accountable project owner or role.
 
 ## Why the previous gate was disproportionate
 
@@ -324,10 +324,9 @@ shortlist, outcomes, or empty batch. No candidate automatically changes
 outcome. Current eligibility can be determined only by the separate
 whole-universe reassessment below.
 
-## Required later whole-universe reassessment
+## Required whole-universe reassessment and later result
 
-After this policy is approved and merged, a separate PR #76-equivalent audit
-must:
+The separate PR #76-equivalent audit is required to:
 
 1. rescreen all 55 currently unpublished Xinyu identities, not only prior
    priority candidates;
@@ -339,9 +338,19 @@ must:
 6. propose a publication-review batch only from outcome A; and
 7. publish nothing.
 
-The reassessment must not assume how many candidates will qualify. Any later
+The reassessment does not assume how many candidates will qualify. Any later
 implementation remains separately approved and must first close the schema and
 presentation gap described above.
+
+The draft
+[Phase 15C-18 complete-universe reassessment](../audits/phase-15c-18-xinyu-generalized-point-reassessment.md)
+documents that required work without changing this candidate-neutral policy.
+It individually reassesses all 55 identities and records A/B/C/D/E
+totals of `1/8/36/10/0`. P04 Xieli is evidence eligible for a separate
+publication proposal; it is not publication approved, and no Generalized Point
+was added to production. The Phase 15C-18 implementation-contract findings
+provide candidate-specific input for the separately approved technical work
+required below.
 
 ## Preserved safeguards and non-implementation boundary
 
@@ -361,7 +370,9 @@ no Generalized Point, line, or area and begins no shape pilot.
 
 ## Limitations and unresolved questions
 
-- No candidate has tested the recalibrated gate.
+- Phase 15C-18 has now tested the gate across the complete 55-identity
+  unpublished universe; its one Outcome A remains unimplemented and
+  unpublished.
 - The later schema design must decide how to serialize the distinct R7
   quantities without breaking the existing Point and mixed-geometry contracts.
 - The later interface design must confirm that the existing hollow diamond,

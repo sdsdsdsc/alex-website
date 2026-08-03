@@ -143,12 +143,17 @@ Key groups include:
   the focused 55-unpublished-identity screen and two-candidate gate review. It
   found zero eligible Generalized reference Points under its then-current
   gate; Xieli and Qipanshan received historical outcome B.
+- [Phase 15C-18 complete-universe Xinyu Generalized reference Point reassessment](./audits/phase-15c-18-xinyu-generalized-point-reassessment.md),
+  the documentation-only application of Phase 15C-17 to every one of the 55
+  unpublished identities. It records A/B/C/D/E totals of `1/8/36/10/0`, finds
+  P04 Xieli evidence eligible for a separate publication proposal, and
+  publishes nothing.
 
 Phase 15C-16 remains historically valid under its then-current gate. Phase
-15C-17 recalibrates future eligibility but reassesses no identity. A later
-documentation-only PR #76-equivalent audit must rescreen all 55 unpublished
-identities and give each exactly one controlled outcome before any publication
-proposal can be considered.
+15C-17 recalibrates future eligibility but reassesses no identity. Phase
+15C-18 separately completes the required all-55 reassessment. Its single
+Outcome A is a research eligibility result only; a technical contract and
+candidate-specific owner approval are still required before publication.
 
 PR #69 is merged and production verified. The canonical dataset contains the
 five retained Points plus P19 and N07: seven ordinary Official Heritage Point
@@ -182,7 +187,9 @@ is preserved as a historical architecture and safety-design record.
   gates, and the bounded
   [priority Point candidate matrix](./research/phase-15c-13-xinyu-priority-point-candidate-matrix.md),
   which records the refreshed provider, CRS, numerical-construction, risk, and
-  outcome evidence for exactly N03, N07, N08, P22, M23, and M30.
+  outcome evidence for exactly N03, N07, N08, P22, M23, and M30, plus the
+  [Phase 15C-18 complete screening matrix](./research/phase-15c-18-xinyu-generalized-point-screening-matrix.md)
+  and [detailed Stage 2 matrix](./research/phase-15c-18-xinyu-generalized-point-detailed-matrix.md).
 - [docs/assets/](./assets/) contains documentation visuals, including the
   [Phase 15C-7 Xieli prototype comparison](./assets/phase-15c-7-xieli-prototype-comparison.svg).
 
