@@ -24,6 +24,12 @@ plus the
 [six-candidate priority Point matrix](./phase-15c-13-xinyu-priority-point-candidate-matrix.md),
 and the
 [Generalized reference Point eligibility matrix](./phase-15c-16-xinyu-generalized-point-candidate-matrix.md).
+The [Phase 15C-18 complete screening matrix](./phase-15c-18-xinyu-generalized-point-screening-matrix.md)
+then records an individual R1–R13 screen and exactly one A–E result for all 55
+unpublished identities. Its companion
+[detailed Stage 2 matrix](./phase-15c-18-xinyu-generalized-point-detailed-matrix.md)
+records the nine-candidate method, numerical, scale, sensitivity,
+misleading-risk and implementation-requirement review.
 They are documentation evidence only and are not application inputs. The
 fallback matrix is the preserved Phase 15C-11 baseline that kept all 39
 candidates withheld while recording N07 as a provider-located
@@ -43,4 +49,7 @@ The later
 does not alter that historical result or this matrix. It requires a separate
 whole-universe reassessment of all 55 unpublished identities under the revised
 R1–R13 gate, with exactly one A–E outcome per identity and no predetermined
-shortlist. That future audit must publish nothing.
+shortlist. Phase 15C-18 completes that separate requirement and records totals
+of one A, eight B, 36 C, ten D and zero E. P04 Xieli is evidence eligible for a
+separate publication proposal, not approved or published; production remains
+at seven ordinary Points and zero Generalized Points or non-Point geometries.
