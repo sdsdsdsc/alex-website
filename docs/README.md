@@ -58,6 +58,13 @@ gates and do not create a runtime type or approve a candidate. The policy
 applies only to Official Heritage; Community Heritage remains unchanged and
 Point-based.
 
+The candidate-neutral
+[Phase 15C-17 Generalized reference Point policy recalibration](./policy/phase-15c-17-generalized-point-policy-recalibration.md)
+is the controlling detailed eligibility model for hollow-diamond markers. It
+defines the R1–R13 gate, bounded-support and unknown-datum-envelope decisions,
+method classifications, scale/usefulness test, A–E outcomes, and the current
+schema/presentation gap. It changes no candidate outcome or production record.
+
 Other reusable policy and guidance:
 
 - [Local heritage listing guidance](./policy/local-heritage-listing-guidance.md)
@@ -134,9 +141,14 @@ Key groups include:
   provincial-only compatibility contract, and interface correction record.
 - [Phase 15C-16 Xinyu Generalized reference Point eligibility audit](./audits/phase-15c-16-xinyu-generalized-point-eligibility-audit.md),
   the focused 55-unpublished-identity screen and two-candidate gate review. It
-  finds zero currently eligible Generalized reference Points; Xieli and
-  Qipanshan remain potentially suitable only after specific evidence and
-  separate approval.
+  found zero eligible Generalized reference Points under its then-current
+  gate; Xieli and Qipanshan received historical outcome B.
+
+Phase 15C-16 remains historically valid under its then-current gate. Phase
+15C-17 recalibrates future eligibility but reassesses no identity. A later
+documentation-only PR #76-equivalent audit must rescreen all 55 unpublished
+identities and give each exactly one controlled outcome before any publication
+proposal can be considered.
 
 PR #69 is merged and production verified. The canonical dataset contains the
 five retained Points plus P19 and N07: seven ordinary Official Heritage Point

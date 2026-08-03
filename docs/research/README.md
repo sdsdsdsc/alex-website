@@ -34,6 +34,13 @@ method to exactly N03, N07, N08, P22, M23, and M30: N07 receives one documented
 Point-ready research recommendation, while the other five remain withheld.
 Phase 15C-16 then screens all 55 identities left unpublished after PR #69 and
 shortlists only Xieli and Qipanshan for detailed Generalized Point review. Both
-remain potentially suitable pending specific evidence; zero Generalized Points
-are currently eligible or published. Nothing in these research files is an
-application input or publication approval.
+received historical outcome B and zero candidates were eligible under the
+Phase 15C-16 gate. Zero Generalized Points are published. Nothing in these
+research files is an application input or publication approval.
+
+The later
+[Phase 15C-17 policy recalibration](../policy/phase-15c-17-generalized-point-policy-recalibration.md)
+does not alter that historical result or this matrix. It requires a separate
+whole-universe reassessment of all 55 unpublished identities under the revised
+R1–R13 gate, with exactly one A–E outcome per identity and no predetermined
+shortlist. That future audit must publish nothing.

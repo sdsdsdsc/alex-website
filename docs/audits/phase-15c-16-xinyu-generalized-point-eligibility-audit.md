@@ -1,5 +1,13 @@
 # Phase 15C-16 — Xinyu Generalized reference Point eligibility audit
 
+> **Historical-policy note:** This audit remains an accurate application of
+> the gate controlling during Phase 15C-16: zero Generalized reference Points
+> were eligible. The later candidate-neutral
+> [Phase 15C-17 policy recalibration](../policy/phase-15c-17-generalized-point-policy-recalibration.md)
+> does not change any conclusion here. Candidate eligibility must be
+> reassessed separately across all 55 unpublished identities; no outcome or
+> shortlist changes automatically.
+
 ## Decision and scope
 
 This documentation-only audit asks whether any of the **55 currently
