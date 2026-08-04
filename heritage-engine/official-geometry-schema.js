@@ -46,8 +46,23 @@ const OFFICIAL_GEOMETRY_METADATA_FIELDS = Object.freeze([
   "geometryReviewedAt",
   "geometryReviewNotes",
   "geometryPrecision",
-  "horizontalUncertaintyMetres"
+  "horizontalUncertaintyMetres",
+  "generalizedPointContract"
 ]);
+
+const GENERALIZED_POINT_CONTRACT_VERSION = "phase-15c-19-v1";
+const GENERALIZED_POINT_MANDATORY_LIMITATION = "Generalized reference location. This marker represents the documented general vicinity of the heritage record. It does not show the exact feature, centre, entrance, extent, or legal protection boundary.";
+const GENERALIZED_POINT_BASIS_TYPES = new Set([
+  "documented-support-area",
+  "identity-linked-coordinate",
+  "restricted-coordinate"
+]);
+const GENERALIZED_POINT_PRECISION_KINDS = new Set([
+  "stated-accuracy",
+  "notation-resolution",
+  "estimated-from-source"
+]);
+const GENERALIZED_POINT_PUBLICATION_DECISIONS = new Set(["approved-for-publication"]);
 
 const GEOMETRY_MEANINGS_BY_TYPE = Object.freeze({
   Point: Object.freeze([
@@ -119,6 +134,190 @@ function isNonEmptyString(value) {
 
 function addError(errors, condition, message) {
   if (!condition) errors.push(message);
+}
+
+function hasExactKeys(value, keys) {
+  return isPlainObject(value)
+    && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...keys].sort());
+}
+
+function validateExactObject(errors, value, keys, path) {
+  addError(errors, hasExactKeys(value, keys), `${path} must contain exactly: ${[...keys].sort().join(", ")}.`);
+  return isPlainObject(value);
+}
+
+function validateFiniteNonNegative(errors, value, path) {
+  addError(errors, Number.isFinite(value) && value >= 0, `${path} must be a finite non-negative number.`);
+}
+
+function hasProhibitedExactClaim(value) {
+  return typeof value === "string"
+    && /(?:shows?|marks?|is) (?:an? |the )?(?:exact (?:feature|centre|center|entrance|extent)|official (?:legal )?boundary|legal protection boundary)/i.test(value);
+}
+
+function validateGeneralizedPointContract(contract, { path = "generalizedPointContract" } = {}) {
+  const errors = [];
+  const topLevelKeys = [
+    "contractVersion", "originalSpatialBasis", "sourceCoordinatePrecision",
+    "datumInterpretations", "multiInterpretationEnvelope", "supportArea",
+    "representativePoint", "intentionalGeneralization", "displayedCoordinatePrecision",
+    "outwardCoverageMetres", "provenance", "mandatoryPublicLimitation",
+    "candidateSpecificLimitation", "review", "representation"
+  ];
+  if (!validateExactObject(errors, contract, topLevelKeys, path)) {
+    return { valid: false, errors };
+  }
+
+  addError(errors, contract.contractVersion === GENERALIZED_POINT_CONTRACT_VERSION, `${path}.contractVersion is unsupported.`);
+
+  const basis = contract.originalSpatialBasis;
+  if (validateExactObject(errors, basis, [
+    "basisType", "sourceNotation", "coordinateReferenceSystem", "methodBasis",
+    "publicEvidenceReference", "restrictedEvidenceReference"
+  ], `${path}.originalSpatialBasis`)) {
+    addError(errors, GENERALIZED_POINT_BASIS_TYPES.has(basis.basisType), `${path}.originalSpatialBasis.basisType is unsupported.`);
+    ["sourceNotation", "coordinateReferenceSystem", "methodBasis"].forEach((key) => {
+      addError(errors, isNonEmptyString(basis[key]), `${path}.originalSpatialBasis.${key} must be a non-empty string.`);
+    });
+    const reference = basis.publicEvidenceReference;
+    if (validateExactObject(errors, reference, ["label", "url"], `${path}.originalSpatialBasis.publicEvidenceReference`)) {
+      addError(errors, isNonEmptyString(reference.label), `${path}.originalSpatialBasis.publicEvidenceReference.label must be a non-empty string.`);
+      addError(errors, isSafeHttpsUrl(reference.url), `${path}.originalSpatialBasis.publicEvidenceReference.url must be a valid HTTPS URL.`);
+    }
+    const restricted = basis.restrictedEvidenceReference;
+    if (restricted !== null) {
+      if (validateExactObject(errors, restricted, ["referenceId", "custodian", "accessStatus"], `${path}.originalSpatialBasis.restrictedEvidenceReference`)) {
+        ["referenceId", "custodian", "accessStatus"].forEach((key) => {
+          addError(errors, isNonEmptyString(restricted[key]), `${path}.originalSpatialBasis.restrictedEvidenceReference.${key} must be a non-empty string.`);
+        });
+      }
+      addError(
+        errors,
+        !Object.keys(restricted || {}).some((key) => /coordinate|latitude|longitude/i.test(key)),
+        `${path}.originalSpatialBasis.restrictedEvidenceReference must not expose restricted coordinates.`
+      );
+    }
+  }
+
+  const sourcePrecision = contract.sourceCoordinatePrecision;
+  if (validateExactObject(errors, sourcePrecision, ["kind", "metres", "explanation"], `${path}.sourceCoordinatePrecision`)) {
+    addError(errors, GENERALIZED_POINT_PRECISION_KINDS.has(sourcePrecision.kind), `${path}.sourceCoordinatePrecision.kind is unsupported.`);
+    validateFiniteNonNegative(errors, sourcePrecision.metres, `${path}.sourceCoordinatePrecision.metres`);
+    addError(errors, isNonEmptyString(sourcePrecision.explanation), `${path}.sourceCoordinatePrecision.explanation must be a non-empty string.`);
+  }
+
+  addError(errors, Array.isArray(contract.datumInterpretations) && contract.datumInterpretations.length > 0, `${path}.datumInterpretations must be a non-empty array.`);
+  if (Array.isArray(contract.datumInterpretations)) {
+    const names = [];
+    contract.datumInterpretations.forEach((interpretation, index) => {
+      const itemPath = `${path}.datumInterpretations[${index}]`;
+      if (!validateExactObject(errors, interpretation, ["datum", "rationale", "transformationMethod", "frameAllowanceMetres"], itemPath)) return;
+      ["datum", "rationale", "transformationMethod"].forEach((key) => {
+        addError(errors, isNonEmptyString(interpretation[key]), `${itemPath}.${key} must be a non-empty string.`);
+      });
+      validateFiniteNonNegative(errors, interpretation.frameAllowanceMetres, `${itemPath}.frameAllowanceMetres`);
+      names.push(interpretation.datum);
+    });
+    addError(errors, new Set(names).size === names.length, `${path}.datumInterpretations must not repeat a datum.`);
+  }
+
+  const envelope = contract.multiInterpretationEnvelope;
+  if (validateExactObject(errors, envelope, ["applicable", "method", "maximumSeparationMetres"], `${path}.multiInterpretationEnvelope`)) {
+    addError(errors, typeof envelope.applicable === "boolean", `${path}.multiInterpretationEnvelope.applicable must be boolean.`);
+    addError(errors, isNonEmptyString(envelope.method), `${path}.multiInterpretationEnvelope.method must be a non-empty string.`);
+    validateFiniteNonNegative(errors, envelope.maximumSeparationMetres, `${path}.multiInterpretationEnvelope.maximumSeparationMetres`);
+    if (envelope.applicable) {
+      addError(errors, contract.datumInterpretations.length >= 2, `${path}.multiInterpretationEnvelope requires at least two datum interpretations.`);
+      addError(errors, envelope.maximumSeparationMetres > 0, `${path}.multiInterpretationEnvelope.maximumSeparationMetres must be positive when applicable.`);
+    } else {
+      addError(errors, envelope.method === "not-applicable" && envelope.maximumSeparationMetres === 0, `${path}.multiInterpretationEnvelope must use the explicit not-applicable zero form.`);
+    }
+  }
+
+  const support = contract.supportArea;
+  if (validateExactObject(errors, support, ["meaning", "shape", "extentDescription", "maximumDistanceFromRepresentativeMetres", "sourceReferenceLabel", "sourceReferenceUrl"], `${path}.supportArea`)) {
+    ["meaning", "shape", "extentDescription", "sourceReferenceLabel"].forEach((key) => {
+      addError(errors, isNonEmptyString(support[key]), `${path}.supportArea.${key} must be a non-empty string.`);
+    });
+    addError(errors, isSafeHttpsUrl(support.sourceReferenceUrl), `${path}.supportArea.sourceReferenceUrl must be a valid HTTPS URL.`);
+    addError(errors, Number.isFinite(support.maximumDistanceFromRepresentativeMetres) && support.maximumDistanceFromRepresentativeMetres > 0, `${path}.supportArea.maximumDistanceFromRepresentativeMetres must be positive.`);
+  }
+
+  const representative = contract.representativePoint;
+  if (validateExactObject(errors, representative, ["method", "methodVersion", "selectionRule"], `${path}.representativePoint`)) {
+    ["method", "methodVersion", "selectionRule"].forEach((key) => {
+      addError(errors, isNonEmptyString(representative[key]), `${path}.representativePoint.${key} must be a non-empty string.`);
+    });
+  }
+
+  const generalization = contract.intentionalGeneralization;
+  if (validateExactObject(errors, generalization, ["method", "displacementMetres", "explanation"], `${path}.intentionalGeneralization`)) {
+    ["method", "explanation"].forEach((key) => {
+      addError(errors, isNonEmptyString(generalization[key]), `${path}.intentionalGeneralization.${key} must be a non-empty string.`);
+    });
+    validateFiniteNonNegative(errors, generalization.displacementMetres, `${path}.intentionalGeneralization.displacementMetres`);
+  }
+
+  const displayedPrecision = contract.displayedCoordinatePrecision;
+  if (validateExactObject(errors, displayedPrecision, ["decimalPlaces", "approximateResolutionMetres"], `${path}.displayedCoordinatePrecision`)) {
+    addError(errors, Number.isInteger(displayedPrecision.decimalPlaces) && displayedPrecision.decimalPlaces >= 0 && displayedPrecision.decimalPlaces <= 4, `${path}.displayedCoordinatePrecision.decimalPlaces must be an integer from 0 to 4.`);
+    addError(errors, Number.isFinite(displayedPrecision.approximateResolutionMetres) && displayedPrecision.approximateResolutionMetres > 0, `${path}.displayedCoordinatePrecision.approximateResolutionMetres must be positive.`);
+    const minimumResolution = 100000 * (10 ** -displayedPrecision.decimalPlaces);
+    addError(errors, displayedPrecision.approximateResolutionMetres >= minimumResolution, `${path}.displayedCoordinatePrecision.approximateResolutionMetres is sharper than the declared decimal precision supports.`);
+  }
+
+  addError(errors, Number.isFinite(contract.outwardCoverageMetres) && contract.outwardCoverageMetres > 0, `${path}.outwardCoverageMetres must be positive.`);
+  const maximumFrameAllowance = Array.isArray(contract.datumInterpretations)
+    ? Math.max(0, ...contract.datumInterpretations.map(({ frameAllowanceMetres }) => Number.isFinite(frameAllowanceMetres) ? frameAllowanceMetres : 0))
+    : 0;
+  const minimumCoverage = (support?.maximumDistanceFromRepresentativeMetres || 0)
+    + (sourcePrecision?.metres || 0)
+    + maximumFrameAllowance
+    + (generalization?.displacementMetres || 0);
+  addError(errors, contract.outwardCoverageMetres >= minimumCoverage, `${path}.outwardCoverageMetres does not cover the separately recorded support, source precision, transformation, and generalization quantities.`);
+
+  const provenance = contract.provenance;
+  if (validateExactObject(errors, provenance, ["spatialBasis", "limitation"], `${path}.provenance`)) {
+    ["spatialBasis", "limitation"].forEach((key) => {
+      const reference = provenance[key];
+      const refPath = `${path}.provenance.${key}`;
+      if (!validateExactObject(errors, reference, ["label", "url", "accessedDate"], refPath)) return;
+      addError(errors, isNonEmptyString(reference.label), `${refPath}.label must be a non-empty string.`);
+      addError(errors, isSafeHttpsUrl(reference.url), `${refPath}.url must be a valid HTTPS URL.`);
+      addError(errors, isIsoDate(reference.accessedDate), `${refPath}.accessedDate must use a valid YYYY-MM-DD date.`);
+    });
+  }
+
+  addError(errors, contract.mandatoryPublicLimitation === GENERALIZED_POINT_MANDATORY_LIMITATION, `${path}.mandatoryPublicLimitation must use the controlled public wording.`);
+  addError(errors, isNonEmptyString(contract.candidateSpecificLimitation) && contract.candidateSpecificLimitation !== contract.mandatoryPublicLimitation, `${path}.candidateSpecificLimitation must be a separate additive limitation.`);
+  addError(
+    errors,
+    typeof contract.candidateSpecificLimitation === "string"
+      && !hasProhibitedExactClaim(contract.candidateSpecificLimitation),
+    `${path}.candidateSpecificLimitation must not claim an exact feature, centre, entrance, extent, or legal boundary.`
+  );
+
+  const review = contract.review;
+  if (validateExactObject(errors, review, ["evidenceReviewer", "reviewDate", "policyVersion", "accountableRole", "publicationDecision"], `${path}.review`)) {
+    ["evidenceReviewer", "accountableRole"].forEach((key) => addError(errors, isNonEmptyString(review[key]), `${path}.review.${key} must be a non-empty string.`));
+    addError(errors, isIsoDate(review.reviewDate), `${path}.review.reviewDate must use a valid YYYY-MM-DD date.`);
+    addError(errors, review.policyVersion === "Phase 15C-17", `${path}.review.policyVersion must be Phase 15C-17.`);
+    addError(errors, GENERALIZED_POINT_PUBLICATION_DECISIONS.has(review.publicationDecision), `${path}.review.publicationDecision is unsupported.`);
+  }
+
+  const representation = contract.representation;
+  if (validateExactObject(errors, representation, ["identityId", "representationId", "status", "supersedesRepresentationIds", "supersessionHistoryReference"], `${path}.representation`)) {
+    ["identityId", "representationId", "supersessionHistoryReference"].forEach((key) => addError(errors, isNonEmptyString(representation[key]), `${path}.representation.${key} must be a non-empty string.`));
+    addError(errors, representation.status === "active", `${path}.representation.status must be active.`);
+    addError(errors, Array.isArray(representation.supersedesRepresentationIds), `${path}.representation.supersedesRepresentationIds must be an array.`);
+    if (Array.isArray(representation.supersedesRepresentationIds)) {
+      addError(errors, new Set(representation.supersedesRepresentationIds).size === representation.supersedesRepresentationIds.length, `${path}.representation.supersedesRepresentationIds must not contain duplicates.`);
+      representation.supersedesRepresentationIds.forEach((value, index) => addError(errors, isNonEmptyString(value), `${path}.representation.supersedesRepresentationIds[${index}] must be a non-empty string.`));
+      addError(errors, !representation.supersedesRepresentationIds.includes(representation.representationId), `${path}.representation cannot supersede itself.`);
+    }
+  }
+
+  return { valid: errors.length === 0, errors };
 }
 
 function isSafeHttpsUrl(value) {
@@ -402,6 +601,22 @@ function validateOfficialGeometryMetadata(
     );
   }
 
+  const isGeneralizedPoint = geometryType === "Point" && properties.geometryMeaning === "generalized-reference-point";
+  addError(
+    errors,
+    isGeneralizedPoint === (properties.generalizedPointContract !== undefined),
+    `${path}.generalizedPointContract must be present only for generalized-reference-point Point geometry.`
+  );
+  if (isGeneralizedPoint) {
+    addError(errors, properties.geometrySourceType === "project-generalized-reference", `${path}.geometrySourceType must be project-generalized-reference for a Generalized reference Point.`);
+    errors.push(...validateGeneralizedPointContract(properties.generalizedPointContract, {
+      path: `${path}.generalizedPointContract`
+    }).errors);
+    const coverage = properties.generalizedPointContract?.outwardCoverageMetres;
+    addError(errors, properties.horizontalUncertaintyMetres === coverage, `${path}.horizontalUncertaintyMetres must equal generalizedPointContract.outwardCoverageMetres as the legacy outward-coverage summary.`);
+    addError(errors, !hasProhibitedExactClaim(properties.geometryReviewNotes), `${path}.geometryReviewNotes must not claim an exact feature, centre, entrance, extent, or legal boundary.`);
+  }
+
   return {
     valid: errors.length === 0,
     errors,
@@ -421,9 +636,12 @@ export {
   OFFICIAL_GEOMETRY_PRECISIONS,
   OFFICIAL_GEOMETRY_SOURCE_TYPES,
   OFFICIAL_GEOMETRY_TYPES,
+  GENERALIZED_POINT_CONTRACT_VERSION,
+  GENERALIZED_POINT_MANDATORY_LIMITATION,
   deriveLegacyPointGeometryMeaning,
   getOfficialGeometryMeaningLabel,
   hasGeometryMetadata,
   validateOfficialGeometry,
-  validateOfficialGeometryMetadata
+  validateOfficialGeometryMetadata,
+  validateGeneralizedPointContract
 };

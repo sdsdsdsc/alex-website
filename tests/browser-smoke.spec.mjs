@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+import { makeSyntheticGeneralizedPointContract } from "./fixtures/generalized-point-contract.mjs";
 
 const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
-const MAP_PAGE_VERSION = "2026-08-01-official-authority-neutral";
-const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-01-official-authority-neutral";
+const MAP_PAGE_VERSION = "2026-08-04-generalized-point-contract";
+const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-04-generalized-point-contract";
 const OFFICIAL_CATEGORY_VERSION = "2026-07-27-official-category-filters";
 const OFFICIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-official-protected-heritage-map.geojson*";
 const COMMITTED_OFFICIAL_HERITAGE = JSON.parse(await readFile(
@@ -77,11 +78,11 @@ function makeSyntheticOfficialFeature({
   publicationPolicy = "exact",
   markerClass = "reviewed",
   officialCategoryZh = "古建筑",
-  estimatedUncertaintyMeters = markerClass === "generalized" ? 900 : 20,
-  generalizationRadiusMeters = markerClass === "generalized" ? 1500 : null,
+  estimatedUncertaintyMeters = markerClass === "generalized" ? 40 : 20,
+  generalizationRadiusMeters = markerClass === "generalized" ? 40 : null,
   coordinates = [113.8825, 27.6202]
 } = {}) {
-  return {
+  const feature = {
     type: "Feature",
     id,
     properties: {
@@ -114,6 +115,21 @@ function makeSyntheticOfficialFeature({
       coordinates
     }
   };
+  if (markerClass === "generalized") {
+    Object.assign(feature.properties, {
+      geometryMeaning: "generalized-reference-point",
+      representationStatus: "project-reviewed-interpretation",
+      geometrySourceType: "project-generalized-reference",
+      geometrySourceLabel: "Synthetic project Generalized reference Point",
+      geometrySourceUrl: "https://example.gov.cn/synthetic-generalized-point",
+      geometryReviewedAt: "2026-08-04",
+      geometryReviewNotes: "Synthetic Generalized reference Point; not an exact feature or boundary.",
+      geometryPrecision: "generalized",
+      horizontalUncertaintyMetres: 40,
+      generalizedPointContract: makeSyntheticGeneralizedPointContract({ identityId: id })
+    });
+  }
+  return feature;
 }
 
 function makeSyntheticOfficialCollection(features = []) {
@@ -1078,6 +1094,8 @@ test("official preview renders a synthetic exact Point without changing communit
   const beforeEnable = await getRenderedMapState(page);
   await openMapLayersTab(page);
   await setOverlayChecked(page, "Show Official Heritage", true);
+  await expect(layersPanel).toContainText("Generalized reference Points");
+  await expect(layersPanel).toContainText("Hollow diamond. Supported; none currently published.");
   await expect(page.locator("#officialHeritageStatus")).toHaveText(
     /\d+ community records? and 1 official heritage location displayed\./
   );
@@ -1165,7 +1183,7 @@ test("official preview labels a synthetic approximate Point", async ({ page }) =
   await expect(page.locator(".official-heritage-map-popup")).toContainText("Medium");
 });
 
-test("official preview distinguishes a generalized marker and explains its radius", async ({ page }) => {
+test("synthetic non-Xinyu Generalized Point exposes the complete persistent and accessible contract", async ({ page }) => {
   const feature = makeSyntheticOfficialFeature({
     confidence: "Medium",
     publicationPolicy: "generalized",
@@ -1188,7 +1206,8 @@ test("official preview distinguishes a generalized marker and explains its radiu
   await expect(officialCheckbox).not.toBeChecked();
   await setOverlayChecked(page, "Show Official Heritage", true);
   const marker = page.locator(".official-heritage-map-marker--generalized");
-  await expect(marker).toHaveAttribute("aria-label", /Map category: Ancient buildings; Generalized official reference$/);
+  await expect(marker).toHaveAttribute("aria-label", /Generalized project reference point; Generalized reference location\./);
+  await expect(marker).toHaveAttribute("aria-label", /Synthetic candidate limitation/);
   await expect(marker.locator(".official-map-marker__glyph")).toHaveCount(1);
   const generalizedPresentation = await marker.evaluate((element) => ({
     background: getComputedStyle(element, "::before").backgroundColor,
@@ -1201,15 +1220,32 @@ test("official preview distinguishes a generalized marker and explains its radiu
   await marker.focus();
   await marker.press("Enter");
   const popup = page.locator(".official-heritage-map-popup");
-  await expect(popup).toContainText("General locality");
-  const uncertaintyRow = popup.locator(".map-point-card__facts > div").filter({
-    has: page.locator("dt", { hasText: /^Estimated location uncertainty$/ })
-  });
-  const radiusRow = popup.locator(".map-point-card__facts > div").filter({
-    has: page.locator("dt", { hasText: /^Generalization radius$/ })
-  });
-  await expect(uncertaintyRow.locator("dd")).toHaveText("900 metres");
-  await expect(radiusRow.locator("dd")).toHaveText("1500 metres");
+  await expect(popup).toContainText("Generalized project reference point");
+  await expect(popup.locator(".official-heritage-map-popup__generalized-limitation")).toHaveText(
+    "Generalized reference location. This marker represents the documented general vicinity of the heritage record. It does not show the exact feature, centre, entrance, extent, or legal protection boundary."
+  );
+  await expect(popup.locator(".official-heritage-map-popup__candidate-limitation")).toContainText("source datum is unstated");
+  const expectedRows = new Map([
+    ["Support-area meaning", "Documented synthetic general vicinity; not the heritage extent or protection boundary."],
+    ["Representative-Point method", "minimum-enclosing-circle-centre"],
+    ["Source-coordinate precision", "2 metres"],
+    ["Maximum transformation/frame allowance", "1 metres"],
+    ["Multi-interpretation envelope", "3 metres"],
+    ["Intentional generalization displacement", "5 metres"],
+    ["Support-area maximum distance", "30 metres"],
+    ["Displayed coordinate precision", "4 decimal places"],
+    ["Outward coverage", "40 metres"]
+  ]);
+  for (const [label, value] of expectedRows) {
+    const row = popup.locator(".map-point-card__facts > div").filter({ has: page.locator("dt", { hasText: new RegExp(`^${label}$`) }) });
+    await expect(row.locator("dd")).toHaveText(value);
+  }
+  await expect(popup.getByRole("link", { name: "Open spatial-basis source" })).toHaveAttribute("href", "https://example.gov.cn/synthetic-generalized-point");
+  await expect(popup.getByRole("link", { name: "Open limitation source" })).toHaveAttribute("href", "https://example.gov.cn/generalized-point-policy");
+  await page.keyboard.press("Escape");
+  await marker.focus();
+  await marker.press("Space");
+  await expect(popup).toBeVisible();
 });
 
 test("Layers tab controls overlays while Leaflet retains basemap selection only", async ({ page }) => {

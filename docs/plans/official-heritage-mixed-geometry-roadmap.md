@@ -163,10 +163,12 @@ representation meanings.
 - Phase 15C-18 completes the required all-55 reassessment without preselecting
   the Phase 15C-16 shortlist. It proposes only P04, the sole Outcome A, for a
   later publication review and publishes nothing.
-- Before any Phase 15C-17-based publication, a separate implementation must
-  resolve the current schema and presentation gap for recording source and
-  transformation uncertainty, intentional generalization, support-area extent,
-  final precision, and persistent limitations as distinct concepts.
+- Phase 15C-19 / PR #77 resolves the technical schema and presentation gap for
+  source and transformation uncertainty, intentional generalization,
+  support-area extent, final precision, persistent limitations, and active and
+  supersession references as distinct concepts. It publishes no candidate.
+- The ordered next step is a separately approved PR #78 publication proposal
+  for P04. Technical readiness is not candidate-specific publication approval.
 - Later representation-lifecycle extensions must land before the interface
   adapts public presentation to active-representation selection.
 - The adapted renderer, filters, provenance, and accessibility must be ready

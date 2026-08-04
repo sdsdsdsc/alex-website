@@ -1,14 +1,15 @@
 import { getOfficialMapCategory } from "./official-map-categories.js?v=2026-07-27-official-category-filters";
 import {
+  GENERALIZED_POINT_MANDATORY_LIMITATION,
   validateOfficialGeometry,
   validateOfficialGeometryMetadata
-} from "./official-geometry-schema.js?v=2026-08-01-xinyu-point-batch";
+} from "./official-geometry-schema.js?v=2026-08-04-generalized-point-contract";
 import {
   getFeatureGeometryMeaning,
   getOfficialGeometryRenderPresentation,
   getOfficialGeometrySourceLabel,
   prepareOfficialGeometryRenderModels
-} from "./official-geometry-rendering.js?v=2026-08-01-xinyu-point-batch";
+} from "./official-geometry-rendering.js?v=2026-08-04-generalized-point-contract";
 
 const SUPPORTED_SCHEMA_VERSION = "2.0.0";
 const PROVINCIAL_HERITAGE_DATASET_ID = "jiangxi-official-protected-heritage-map";
@@ -84,7 +85,7 @@ function getOfficialDesignationLevelLabel(value) {
   return OFFICIAL_DESIGNATION_LEVELS.get(String(value || "").trim()) || null;
 }
 
-function validateFeature(feature, index, seenIds) {
+function validateFeature(feature, index, seenIds, seenRepresentationIds) {
   const errors = [];
   const path = `features[${index}]`;
   addError(errors, isPlainObject(feature), `${path} must be an object.`);
@@ -236,6 +237,23 @@ function validateFeature(feature, index, seenIds) {
           && properties.generalizationRadiusMeters > 0,
         `${path} generalized markers require a positive radius.`
       );
+      const contract = properties.generalizedPointContract;
+      addError(errors, properties.geometryMeaning === "generalized-reference-point", `${path} generalized markers require generalized-reference-point geometry meaning.`);
+      addError(errors, properties.representationStatus === "project-reviewed-interpretation", `${path} generalized markers require project-reviewed-interpretation representation status.`);
+      addError(errors, contract?.representation?.identityId === feature.id, `${path}.properties.generalizedPointContract.representation.identityId must match feature.id.`);
+      addError(errors, contract?.representation?.status === "active", `${path}.properties.generalizedPointContract.representation.status must be active.`);
+      const representationId = contract?.representation?.representationId;
+      if (isNonEmptyString(representationId)) {
+        addError(errors, !seenRepresentationIds.has(representationId), `${path} duplicates active representation ID ${representationId}.`);
+        seenRepresentationIds.add(representationId);
+      }
+      addError(errors, properties.estimatedUncertaintyMeters === contract?.outwardCoverageMetres, `${path}.properties.estimatedUncertaintyMeters must equal the contract outward coverage summary.`);
+      addError(errors, properties.generalizationRadiusMeters === contract?.outwardCoverageMetres, `${path}.properties.generalizationRadiusMeters must equal the contract outward coverage summary.`);
+      const decimalPlaces = contract?.displayedCoordinatePrecision?.decimalPlaces;
+      const coordinates = feature.geometry?.coordinates;
+      if (Number.isInteger(decimalPlaces) && Array.isArray(coordinates)) {
+        addError(errors, coordinates.every((value) => Number(value.toFixed(decimalPlaces)) === value), `${path}.geometry.coordinates are sharper than the contract displayed precision.`);
+      }
     }
   }
 
@@ -295,8 +313,9 @@ function validateProvincialHeritagePublicationGeoJson(value) {
 
   if (Array.isArray(value.features)) {
     const seenIds = new Set();
+    const seenRepresentationIds = new Set();
     value.features.forEach((feature, index) => {
-      errors.push(...validateFeature(feature, index, seenIds));
+      errors.push(...validateFeature(feature, index, seenIds, seenRepresentationIds));
     });
   }
 
@@ -353,7 +372,11 @@ function buildProvincialMarkerAccessibleName(feature) {
         : properties.publicationLocationPolicy === "approximate"
           ? "Approximate reviewed location"
           : "Reviewed location";
-  return `Open Official Heritage record: ${title}${officialName}; Official designation level: ${officialDesignationLevel}; Map category: ${categoryLabel}; ${locationLabel}`;
+  const contract = properties.generalizedPointContract;
+  const limitations = properties.geometryMeaning === "generalized-reference-point" && contract
+    ? `; ${contract.mandatoryPublicLimitation}; ${contract.candidateSpecificLimitation}`
+    : "";
+  return `Open Official Heritage record: ${title}${officialName}; Official designation level: ${officialDesignationLevel}; Map category: ${categoryLabel}; ${locationLabel}${limitations}`;
 }
 
 function buildProvincialFeatureAccessibleName(feature) {
@@ -393,6 +416,12 @@ function buildProvincialPopupData(feature) {
     "generalized-reference-area",
     "uncertainty-area"
   ].includes(geometryMeaning);
+  const generalizedPointContract = geometryMeaning === "generalized-reference-point"
+    ? properties.generalizedPointContract
+    : null;
+  const maximumFrameAllowanceMetres = generalizedPointContract
+    ? Math.max(...generalizedPointContract.datumInterpretations.map(({ frameAllowanceMetres }) => frameAllowanceMetres))
+    : null;
   return {
     projectNameEn: String(properties.projectNameEn || "").trim(),
     officialNameZh: String(properties.officialNameZh || "").trim(),
@@ -424,6 +453,22 @@ function buildProvincialPopupData(feature) {
     geometryReviewedAt: String(properties.geometryReviewedAt || "").trim(),
     geometryReviewNotes: String(properties.geometryReviewNotes || "").trim(),
     representationStatus: String(properties.representationStatus || "").trim(),
+    generalizedPointContract,
+    generalizedPointMandatoryLimitation: generalizedPointContract?.mandatoryPublicLimitation || "",
+    generalizedPointCandidateLimitation: generalizedPointContract?.candidateSpecificLimitation || "",
+    generalizedPointSourcePrecisionMetres: generalizedPointContract?.sourceCoordinatePrecision?.metres ?? null,
+    generalizedPointSpatialBasis: generalizedPointContract?.originalSpatialBasis?.methodBasis || "",
+    generalizedPointSpatialBasisProvenance: generalizedPointContract?.provenance?.spatialBasis?.label || "",
+    generalizedPointSupportMeaning: generalizedPointContract?.supportArea?.meaning || "",
+    generalizedPointRepresentativeMethod: generalizedPointContract?.representativePoint?.method || "",
+    generalizedPointLimitationProvenance: generalizedPointContract?.provenance?.limitation?.label || "",
+    generalizedPointLimitationProvenanceUrl: normalizeHttpsUrl(generalizedPointContract?.provenance?.limitation?.url),
+    generalizedPointMaximumFrameAllowanceMetres: maximumFrameAllowanceMetres,
+    generalizedPointEnvelopeMetres: generalizedPointContract?.multiInterpretationEnvelope?.maximumSeparationMetres ?? null,
+    generalizedPointIntentionalDisplacementMetres: generalizedPointContract?.intentionalGeneralization?.displacementMetres ?? null,
+    generalizedPointSupportDistanceMetres: generalizedPointContract?.supportArea?.maximumDistanceFromRepresentativeMetres ?? null,
+    generalizedPointDisplayDecimalPlaces: generalizedPointContract?.displayedCoordinatePrecision?.decimalPlaces ?? null,
+    generalizedPointOutwardCoverageMetres: generalizedPointContract?.outwardCoverageMetres ?? null,
     geometryCaution: geometryType !== "Point" && (isProjectGeometry || isQualifiedGeometry)
       ? PROJECT_GEOMETRY_CAUTION
       : ""
@@ -431,6 +476,7 @@ function buildProvincialPopupData(feature) {
 }
 
 export {
+  GENERALIZED_POINT_MANDATORY_LIMITATION,
   PROJECT_COORDINATE_PROVENANCE,
   PROVINCIAL_HERITAGE_DATASET_ID,
   PROVINCIAL_HERITAGE_EMPTY_MESSAGE,

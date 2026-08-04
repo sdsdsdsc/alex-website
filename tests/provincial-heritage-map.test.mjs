@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { makeSyntheticGeneralizedPointContract } from "./fixtures/generalized-point-contract.mjs";
 
 const helper = await import(new URL(
   "../heritage-engine/official-heritage-map.js",
@@ -86,6 +87,27 @@ function makeValidFeature(overrides = {}) {
     .forEach(([key, value]) => {
       feature[key] = value;
     });
+  if (feature.geometry.type === "Point" && feature.properties.markerClass === "generalized") {
+    const contract = makeSyntheticGeneralizedPointContract({ identityId: feature.id });
+    if (Number.isFinite(feature.properties.generalizationRadiusMeters) && feature.properties.generalizationRadiusMeters > 0) {
+      contract.outwardCoverageMetres = feature.properties.generalizationRadiusMeters;
+      if (overrides.properties?.estimatedUncertaintyMeters === undefined) {
+        feature.properties.estimatedUncertaintyMeters = feature.properties.generalizationRadiusMeters;
+      }
+    }
+    Object.assign(feature.properties, {
+      geometryMeaning: "generalized-reference-point",
+      representationStatus: "project-reviewed-interpretation",
+      geometrySourceType: "project-generalized-reference",
+      geometrySourceLabel: "Synthetic project Generalized reference Point",
+      geometrySourceUrl: "https://example.gov.cn/synthetic-generalized-point",
+      geometryReviewedAt: "2026-08-04",
+      geometryReviewNotes: "Synthetic Generalized reference Point; not an exact feature or boundary.",
+      geometryPrecision: "generalized",
+      horizontalUncertaintyMetres: contract.outwardCoverageMetres,
+      generalizedPointContract: contract
+    });
+  }
   return feature;
 }
 
@@ -681,10 +703,58 @@ test("generalized and unknown-category accessible names retain both meanings", (
       generalizationRadiusMeters: 1500
     }
   });
-  assert.equal(
-    buildOfficialMarkerAccessibleName(generalized),
-    "Open Official Heritage record: Test Archaeological Site (测试遗址); Official designation level: Provincial; Map category: Other official heritage; Generalized official reference"
-  );
+  const name = buildOfficialMarkerAccessibleName(generalized);
+  assert.match(name, /^Open Official Heritage record: Test Archaeological Site/);
+  assert.match(name, /Map category: Other official heritage; Generalized project reference point/);
+  assert.match(name, /documented general vicinity/);
+  assert.match(name, /Synthetic candidate limitation/);
+});
+
+test("Generalized Point public features expose separate safe popup quantities and limitations", () => {
+  const generalized = makeValidFeature({
+    properties: {
+      locationEvidenceConfidence: "Medium",
+      publicationLocationPolicy: "generalized",
+      locationPrecision: "generalized",
+      displayLocationType: "generalized-locality",
+      publicLocationMeaning: "official-locality-centre",
+      markerClass: "generalized",
+      generalizationRadiusMeters: 40
+    }
+  });
+  const popup = buildOfficialPopupData(generalized);
+  assert.equal(popup.generalizedPointSourcePrecisionMetres, 2);
+  assert.match(popup.generalizedPointSpatialBasis, /predeclared centre/);
+  assert.match(popup.generalizedPointSupportMeaning, /not the heritage extent/);
+  assert.equal(popup.generalizedPointRepresentativeMethod, "minimum-enclosing-circle-centre");
+  assert.equal(popup.generalizedPointLimitationProvenance, "Phase 15C-17 Generalized reference Point policy");
+  assert.equal(popup.generalizedPointMaximumFrameAllowanceMetres, 1);
+  assert.equal(popup.generalizedPointEnvelopeMetres, 3);
+  assert.equal(popup.generalizedPointIntentionalDisplacementMetres, 5);
+  assert.equal(popup.generalizedPointSupportDistanceMetres, 30);
+  assert.equal(popup.generalizedPointDisplayDecimalPlaces, 4);
+  assert.equal(popup.generalizedPointOutwardCoverageMetres, 40);
+  assert.match(popup.generalizedPointMandatoryLimitation, /does not show the exact feature/);
+  assert.match(popup.generalizedPointCandidateLimitation, /source datum is unstated/);
+});
+
+test("public Feature validation rejects duplicate active representation IDs", () => {
+  const properties = {
+    locationEvidenceConfidence: "Medium",
+    publicationLocationPolicy: "generalized",
+    locationPrecision: "generalized",
+    displayLocationType: "generalized-locality",
+    publicLocationMeaning: "official-locality-centre",
+    markerClass: "generalized",
+    generalizationRadiusMeters: 40
+  };
+  const first = makeValidFeature({ properties });
+  const second = makeValidFeature({ properties, id: "JX-TEST-PCH-002" });
+  second.properties.recordId = second.id;
+  second.properties.generalizedPointContract.representation.identityId = second.id;
+  second.properties.generalizedPointContract.representation.representationId =
+    first.properties.generalizedPointContract.representation.representationId;
+  expectInvalid(makeFeatureCollection([first, second]), /duplicates active representation ID/);
 });
 
 test("non-Point accessible names include category and controlled geometry meaning", () => {

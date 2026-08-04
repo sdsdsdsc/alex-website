@@ -7,6 +7,7 @@ export {
   OFFICIAL_HERITAGE_FAILURE_MESSAGE,
   OFFICIAL_HERITAGE_LOADING_MESSAGE,
   OFFICIAL_HERITAGE_SOURCE_RECORD_COUNT,
+  GENERALIZED_POINT_MANDATORY_LIMITATION,
   OfficialHeritageMapValidationError,
   PROJECT_COORDINATE_PROVENANCE,
   SUPPORTED_SCHEMA_VERSION,
@@ -16,4 +17,4 @@ export {
   getOfficialDesignationLevelLabel,
   validateOfficialHeritageGeoJson,
   validateOfficialHeritagePublicationGeoJson
-} from "./provincial-heritage-map.js?v=2026-08-01-official-authority-neutral";
+} from "./provincial-heritage-map.js?v=2026-08-04-generalized-point-contract";

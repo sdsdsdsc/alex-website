@@ -4,12 +4,15 @@ import test from "node:test";
 import {
   OfficialProtectedHeritagePublicationError,
   AGGREGATE_SCHEMA_VERSION,
+  buildOfficialProtectedHeritageFeature,
   generateOfficialProtectedHeritageMap,
   generateProvincialCompatibilityMap,
   serializeJson,
   validateGeneratedFeatureGeometry,
+  validatePublicLocationDataset,
   validateProvincialCompatibilityDataset
 } from "../scripts/lib/official-protected-heritage-publication.mjs";
+import { makeSyntheticGeneralizedPointContract } from "./fixtures/generalized-point-contract.mjs";
 
 const readJson = (path) => readFile(new URL(path, import.meta.url), "utf8").then(JSON.parse);
 const [phase14, xinyu, legacyXinyu, locations, committedGeoJson, committedLegacyGeoJson] = await Promise.all([
@@ -40,6 +43,88 @@ const generateLegacy = (overrides = {}) => generateProvincialCompatibilityMap({
   legacyProvincialDataset: overrides.legacyXinyu || clone(legacyXinyu),
   publicLocationDataset: overrides.locations || clone(locations)
 });
+
+function makeSyntheticGeneralizedInputs() {
+  const recordId = "JX-TEST-PCH-001";
+  const sourceDatasetId = "synthetic-non-xinyu-official-records";
+  const generalizedRecord = {
+    sourceDatasetId,
+    sourcePath: "tests/fixtures/synthetic-non-xinyu.json",
+    official: {
+      officialNameZh: "合成非新余测试遗产",
+      protectionLevelZh: "省级文物保护单位",
+      officialCategoryZh: "古遗址",
+      officialLocationTextZh: "合成测试地点"
+    },
+    projectInterpretation: {
+      projectNameEn: "Synthetic Non-Xinyu Generalized Point"
+    },
+    officialSource: {
+      sourceTitleZh: "合成官方记录",
+      sourceIssuerZh: "合成测试机构",
+      sourceUrl: "https://example.gov.cn/synthetic-official-record",
+      sourceAccessedDate: "2026-08-04"
+    }
+  };
+
+  const generalizedDecision = clone(locations.decisions[0]);
+  generalizedDecision.recordId = recordId;
+  generalizedDecision.sourceDatasetId = sourceDatasetId;
+  generalizedDecision.siteLocationConfidence = "Low";
+  generalizedDecision.displayLocationType = "generalized-locality";
+  generalizedDecision.locationPrecision = "generalized";
+  generalizedDecision.publicLocationMeaning = "official-locality-centre";
+  generalizedDecision.publicationLocationPolicy = "generalized";
+  generalizedDecision.sensitivityAssessment = "public-generalized-only";
+  generalizedDecision.latitude = 27.6202;
+  generalizedDecision.longitude = 113.8825;
+  generalizedDecision.estimatedUncertaintyMeters = 40;
+  generalizedDecision.generalizationRadiusMeters = 40;
+  generalizedDecision.geometryMeaning = "generalized-reference-point";
+  generalizedDecision.representationStatus = "project-reviewed-interpretation";
+  generalizedDecision.generalizedPointContract = makeSyntheticGeneralizedPointContract({
+    identityId: recordId
+  });
+  generalizedDecision.publicLocationNote = "Synthetic project Generalized reference location; not an exact feature, centre, entrance, extent, or boundary.";
+  generalizedDecision.locationEvidenceSummary = "Synthetic bounded-support evidence for contract testing only.";
+  generalizedDecision.projectLocationSources = [
+    {
+      sourceId: "SYN-S01",
+      sourceType: "official-record",
+      sourceTitle: "Synthetic official identity source",
+      sourcePublisher: "Synthetic authority",
+      sourceUrl: "https://example.gov.cn/synthetic-official-record",
+      sourceAccessedDate: "2026-08-04",
+      supports: ["official-identity", "official-locality"]
+    },
+    {
+      sourceId: "SYN-S02",
+      sourceType: "institutional-description",
+      sourceTitle: "Synthetic institutional description",
+      sourcePublisher: "Synthetic institution",
+      sourceUrl: "https://example.gov.cn/synthetic-institutional-description",
+      sourceAccessedDate: "2026-08-04",
+      supports: ["independent-identity", "compound-description"]
+    },
+    {
+      sourceId: "SYN-S03",
+      sourceType: "official-map",
+      sourceTitle: "Synthetic bounded support map",
+      sourcePublisher: "Synthetic authority",
+      sourceUrl: "https://example.gov.cn/synthetic-support-map",
+      sourceAccessedDate: "2026-08-04",
+      supports: ["locality-match", "wgs84-reference"]
+    }
+  ];
+  generalizedDecision.originalProviderCoordinate = null;
+  generalizedDecision.transformationOrReconciliationMethod = "Synthetic deterministic two-path envelope and predeclared representative selection.";
+  const locationValue = {
+    ...clone(locations),
+    decisions: [generalizedDecision]
+  };
+  const recordIndex = new Map([[recordId, generalizedRecord]]);
+  return { locationValue, recordIndex, generalizedRecord, generalizedDecision };
+}
 
 const expandedIds = [
   "JX-XY-PCH-008",
@@ -401,34 +486,55 @@ test("generalized markers require a radius and compatible labels", () => {
   }, /generalizationRadiusMeters is required/);
 });
 
-test("deterministic aggregate supports mixed reviewed and generalized marker classes", () => {
-  const xinyuValue = clone(xinyu);
-  const generalizedRecord = clone(xinyuValue.records[0]);
-  generalizedRecord.recordId = "JX-XY-PCH-002";
-  generalizedRecord.sourceSequence = 5;
-  generalizedRecord.official.officialNameZh = "测试总表记录";
-  generalizedRecord.projectInterpretation.projectNameEn = "Test Generalized Record";
-  xinyuValue.records.push(generalizedRecord);
-
-  const locationValue = clone(locations);
-  const generalizedDecision = clone(locationValue.decisions[0]);
-  generalizedDecision.recordId = generalizedRecord.recordId;
-  generalizedDecision.siteLocationConfidence = "Low";
-  generalizedDecision.displayLocationType = "generalized-locality";
-  generalizedDecision.locationPrecision = "generalized";
-  generalizedDecision.publicLocationMeaning = "official-locality-centre";
-  generalizedDecision.publicationLocationPolicy = "generalized";
-  generalizedDecision.sensitivityAssessment = "public-generalized-only";
-  generalizedDecision.generalizationRadiusMeters = 1500;
-  locationValue.decisions.push(generalizedDecision);
-
-  const result = generate({ xinyu: xinyuValue, locations: locationValue });
-  assert.deepEqual(
-    result.geojson.features.map(({ properties }) => properties.markerClass),
-    ["reviewed", "reviewed", "generalized", "reviewed", "reviewed", "reviewed", "reviewed", "reviewed"]
+test("the deterministic generator path emits a complete synthetic non-Xinyu Generalized Point", () => {
+  const { locationValue, recordIndex, generalizedRecord, generalizedDecision } = makeSyntheticGeneralizedInputs();
+  const decisionValidation = validatePublicLocationDataset(locationValue, recordIndex);
+  assert.equal(decisionValidation.valid, true, decisionValidation.errors.join("; "));
+  const feature = buildOfficialProtectedHeritageFeature(
+    generalizedDecision.recordId,
+    generalizedRecord,
+    generalizedDecision
   );
-  assert.equal(result.geojson.metadata.sourceRecordCount, 18);
-  assert.equal(result.geojson.metadata.featureCount, 8);
+  assert.deepEqual(feature.geometry, { type: "Point", coordinates: [113.8825, 27.6202] });
+  assert.equal(feature.properties.markerClass, "generalized");
+  assert.equal(feature.properties.geometryMeaning, "generalized-reference-point");
+  assert.equal(feature.properties.geometrySourceType, "project-generalized-reference");
+  assert.equal(feature.properties.geometryPrecision, "generalized");
+  assert.equal(feature.properties.horizontalUncertaintyMetres, 40);
+  assert.deepEqual(feature.properties.generalizedPointContract, generalizedDecision.generalizedPointContract);
+  assert.equal(feature.properties.generalizedPointContract.representation.status, "active");
+  assert.equal(feature.properties.generalizedPointContract.mandatoryPublicLimitation.includes("exact feature"), true);
+  assert.deepEqual(validateGeneratedFeatureGeometry(feature, "syntheticFeature"), []);
+  const second = buildOfficialProtectedHeritageFeature(generalizedDecision.recordId, generalizedRecord, generalizedDecision);
+  assert.equal(serializeJson(feature), serializeJson(second));
+});
+
+test("Generalized Point decisions reject semantic, summary, precision, review, and representation contradictions", () => {
+  const cases = [
+    [decision => { decision.geometryMeaning = "approximate-site-point"; }, /geometryMeaning must be generalized-reference-point/],
+    [decision => { decision.estimatedUncertaintyMeters = 41; }, /estimatedUncertaintyMeters must equal/],
+    [decision => { decision.generalizationRadiusMeters = 41; }, /generalizationRadiusMeters must equal/],
+    [decision => { decision.longitude = 113.88251; }, /coordinates are sharper/],
+    [decision => { decision.generalizedPointContract.review.publicationDecision = "research-recommendation"; }, /publicationDecision is unsupported/],
+    [decision => { decision.publicLocationNote = "This marker shows the exact feature."; }, /publicLocationNote must not claim an exact feature/],
+    [decision => { decision.generalizedPointContract.representation.identityId = "JX-TEST-PCH-999"; }, /identityId must match recordId/],
+    [decision => { delete decision.generalizedPointContract; }, /generalizedPointContract is required/]
+  ];
+  cases.forEach(([mutate, pattern]) => {
+    const { locationValue, recordIndex, generalizedDecision } = makeSyntheticGeneralizedInputs();
+    mutate(generalizedDecision);
+    const result = validatePublicLocationDataset(locationValue, recordIndex);
+    assert.equal(result.valid, false);
+    assert.match(result.errors.join("\n"), pattern);
+  });
+});
+
+test("publication decisions reject simultaneous active representations for one identity", () => {
+  const { locationValue, recordIndex, generalizedDecision } = makeSyntheticGeneralizedInputs();
+  locationValue.decisions.push(clone(generalizedDecision));
+  const result = validatePublicLocationDataset(locationValue, recordIndex);
+  assert.equal(result.valid, false);
+  assert.match(result.errors.join("\n"), /duplicate record IDs|duplicate active representation IDs/);
 });
 
 test("Phase 14 multi-component parents cannot become Point features", () => {

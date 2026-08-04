@@ -35,7 +35,7 @@ import {
   buildOfficialMarkerAccessibleName,
   buildOfficialPopupData,
   validateOfficialHeritageGeoJson
-} from "./heritage-engine/official-heritage-map.js?v=2026-08-01-official-authority-neutral";
+} from "./heritage-engine/official-heritage-map.js?v=2026-08-04-generalized-point-contract";
 import {
   COMMUNITY_MAP_CATEGORY_DEFINITIONS,
   buildCommunityMarkerAccessibleName,
@@ -48,7 +48,7 @@ import {
   getPublishedOfficialMapCategories
 } from "./heritage-engine/official-map-categories.js?v=2026-07-27-official-category-filters";
 
-const OFFICIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-official-protected-heritage-map.geojson?v=2026-08-01-official-authority-neutral";
+const OFFICIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-official-protected-heritage-map.geojson?v=2026-08-04-generalized-point-contract";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -205,7 +205,24 @@ function buildOfficialHeritagePopup(feature) {
       ["Displayed location", data.markerClass === "generalized" ? "Generalized area reference" : "Reviewed approximate location"],
       ["Location meaning", data.publicLocationMeaning],
       ["Location evidence", data.locationEvidenceConfidence],
-      ["Estimated location uncertainty", `${data.estimatedUncertaintyMeters} metres`],
+      ...(data.generalizedPointContract
+        ? [
+            ["Spatial basis", data.generalizedPointSpatialBasis],
+            ["Spatial-basis provenance", data.generalizedPointSpatialBasisProvenance],
+            ["Support-area meaning", data.generalizedPointSupportMeaning],
+            ["Representative-Point method", data.generalizedPointRepresentativeMethod],
+            ["Limitation provenance", data.generalizedPointLimitationProvenance],
+            ["Source-coordinate precision", `${data.generalizedPointSourcePrecisionMetres} metres`],
+            ["Maximum transformation/frame allowance", `${data.generalizedPointMaximumFrameAllowanceMetres} metres`],
+            ...(data.generalizedPointContract.multiInterpretationEnvelope.applicable
+              ? [["Multi-interpretation envelope", `${data.generalizedPointEnvelopeMetres} metres`]]
+              : []),
+            ["Intentional generalization displacement", `${data.generalizedPointIntentionalDisplacementMetres} metres`],
+            ["Support-area maximum distance", `${data.generalizedPointSupportDistanceMetres} metres`],
+            ["Displayed coordinate precision", `${data.generalizedPointDisplayDecimalPlaces} decimal places`],
+            ["Outward coverage", `${data.generalizedPointOutwardCoverageMetres} metres`]
+          ]
+        : [["Estimated location uncertainty", `${data.estimatedUncertaintyMeters} metres`]]),
       ...(data.geometryMeaning
         ? [
             ["Geometry meaning", data.geometryMeaningLabel],
@@ -219,7 +236,7 @@ function buildOfficialHeritagePopup(feature) {
               : [])
           ]
         : []),
-      ...(data.markerClass === "generalized"
+      ...(data.markerClass === "generalized" && !data.generalizedPointContract
         ? [["Generalization radius", `${data.generalizationRadiusMeters} metres`]]
         : []),
       ["Official source", data.sourceLabel, "zh-Hans"],
@@ -265,7 +282,18 @@ function buildOfficialHeritagePopup(feature) {
     ? data.publicLocationNote
     : data.geometryCaution || data.publicLocationNote;
 
+  const generalizedLimitation = document.createElement("p");
+  generalizedLimitation.className = "official-heritage-map-popup__generalized-limitation";
+  generalizedLimitation.textContent = data.generalizedPointMandatoryLimitation;
+
+  const candidateLimitation = document.createElement("p");
+  candidateLimitation.className = "official-heritage-map-popup__candidate-limitation";
+  candidateLimitation.textContent = data.generalizedPointCandidateLimitation;
+
   article.append(title, locationBadge, officialName, facts, locationNote, provenance);
+  if (data.generalizedPointContract) {
+    article.append(generalizedLimitation, candidateLimitation);
+  }
   const sourceUrl = isPoint ? data.sourceUrl : data.geometrySourceUrl || data.sourceUrl;
   if (sourceUrl) {
     const sourceLink = document.createElement("a");
@@ -276,6 +304,22 @@ function buildOfficialHeritagePopup(feature) {
       ? "Open official source"
       : "Open geometry source";
     article.appendChild(sourceLink);
+  }
+  if (data.generalizedPointContract && data.geometrySourceUrl && data.geometrySourceUrl !== sourceUrl) {
+    const spatialSourceLink = document.createElement("a");
+    spatialSourceLink.href = data.geometrySourceUrl;
+    spatialSourceLink.target = "_blank";
+    spatialSourceLink.rel = "noopener noreferrer";
+    spatialSourceLink.textContent = "Open spatial-basis source";
+    article.appendChild(spatialSourceLink);
+  }
+  if (data.generalizedPointLimitationProvenanceUrl) {
+    const limitationSourceLink = document.createElement("a");
+    limitationSourceLink.href = data.generalizedPointLimitationProvenanceUrl;
+    limitationSourceLink.target = "_blank";
+    limitationSourceLink.rel = "noopener noreferrer";
+    limitationSourceLink.textContent = "Open limitation source";
+    article.appendChild(limitationSourceLink);
   }
   return article;
 }
@@ -600,7 +644,16 @@ function initCommunityMap({
         riseOnFocus: true
       });
       marker.on("add", () => {
-        marker.getElement()?.setAttribute("aria-label", markerName);
+        const element = marker.getElement();
+        element?.setAttribute("aria-label", markerName);
+        if (!element || element.dataset.officialKeyboardBound === "true") return;
+        element.dataset.officialKeyboardBound = "true";
+        element.addEventListener("keydown", (event) => {
+          if (!["Enter", " ", "Spacebar"].includes(event.key)) return;
+          event.preventDefault();
+          event.stopPropagation();
+          marker.openPopup();
+        });
       });
       marker.bindPopup(buildOfficialHeritagePopup(feature), {
         className: "community-map-popup official-heritage-map-popup",

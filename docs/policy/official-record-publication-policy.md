@@ -686,8 +686,9 @@ was empty. Phase 15C-17 changes no historical outcome or candidate status. The
 separate Phase 15C-18 whole-universe reassessment subsequently rescreens all 55
 identities under the recalibrated gate and records A/B/C/D/E totals of
 `1/8/36/10/0`. P04 Xieli is evidence eligible for a separate publication
-proposal, not publication approved; the required technical contract remains
-unimplemented and production is unchanged.
+proposal, not publication approved. Phase 15C-19 implements the reusable
+technical contract without a production decision or Feature; production is
+unchanged and P04 still requires separately approved PR #78 review.
 
 ## Explicit non-implementation boundary
 
@@ -707,3 +708,4 @@ add empty coordinates, placeholder geometries, migrations, or real records.
 - [Phase 15C-16 Generalized reference Point eligibility audit](../audits/phase-15c-16-xinyu-generalized-point-eligibility-audit.md)
 - [Phase 15C-17 Generalized reference Point policy recalibration](./phase-15c-17-generalized-point-policy-recalibration.md)
 - [Phase 15C-18 complete-universe Generalized reference Point reassessment](../audits/phase-15c-18-xinyu-generalized-point-reassessment.md)
+- [Phase 15C-19 Generalized reference Point contract implementation](../audits/phase-15c-19-generalized-point-contract-implementation.md)
