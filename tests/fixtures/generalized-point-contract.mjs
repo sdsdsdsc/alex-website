@@ -1,7 +1,5 @@
-import {
-  GENERALIZED_POINT_CONTRACT_VERSION,
-  GENERALIZED_POINT_MANDATORY_LIMITATION
-} from "../../heritage-engine/official-geometry-schema.js";
+const GENERALIZED_POINT_CONTRACT_VERSION = "phase-15c-19-v1";
+const GENERALIZED_POINT_MANDATORY_LIMITATION = "Generalized reference location. This marker represents the documented general vicinity of the heritage record. It does not show the exact feature, centre, entrance, extent, or legal protection boundary.";
 
 function makeSyntheticGeneralizedPointContract({
   identityId = "JX-TEST-PCH-001",
