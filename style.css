@@ -2193,6 +2193,20 @@ body.community-modal-open {
   background: #fff5e8;
 }
 
+.official-heritage-map-popup__generalized-limitation,
+.official-heritage-map-popup__candidate-limitation {
+  padding: 10px;
+  border-left: 4px solid #6f3100;
+  background: #fff5e8;
+  font-weight: 700;
+}
+
+.official-heritage-map-popup__candidate-limitation {
+  border-left-color: #7b6858;
+  background: #f7f3ed;
+  font-weight: 600;
+}
+
 .official-heritage-map-info {
   display: grid;
   gap: 8px;

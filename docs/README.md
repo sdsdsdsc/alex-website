@@ -148,12 +148,18 @@ Key groups include:
   unpublished identities. It records A/B/C/D/E totals of `1/8/36/10/0`, finds
   P04 Xieli evidence eligible for a separate publication proposal, and
   publishes nothing.
+- [Phase 15C-19 Generalized reference Point contract implementation](./audits/phase-15c-19-generalized-point-contract-implementation.md),
+  the bounded technical foundation for structured decisions and Features,
+  strict validation, deterministic generation, persistent popup limitations,
+  equivalent accessible text, lifecycle safeguards, and synthetic non-Xinyu
+  tests. It publishes no candidate; P04 remains a separate PR #78 proposal.
 
 Phase 15C-16 remains historically valid under its then-current gate. Phase
 15C-17 recalibrates future eligibility but reassesses no identity. Phase
 15C-18 separately completes the required all-55 reassessment. Its single
-Outcome A is a research eligibility result only; a technical contract and
-candidate-specific owner approval are still required before publication.
+Outcome A is a research eligibility result only. Phase 15C-19 supplies the
+technical contract without publishing it; candidate-specific owner approval
+and a separate PR #78 proposal are still required before publication.
 
 PR #69 is merged and production verified. The canonical dataset contains the
 five retained Points plus P19 and N07: seven ordinary Official Heritage Point

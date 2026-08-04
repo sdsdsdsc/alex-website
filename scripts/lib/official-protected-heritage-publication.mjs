@@ -5,7 +5,8 @@ import {
 } from "./provincial-heritage-data.mjs";
 import {
   validateOfficialGeometry,
-  validateOfficialGeometryMetadata
+  validateOfficialGeometryMetadata,
+  validateGeneralizedPointContract
 } from "../../heritage-engine/official-geometry-schema.js";
 
 const AGGREGATE_SCHEMA_VERSION = "2.0.0";
@@ -71,7 +72,8 @@ const REPRESENTATION_STATUSES = new Set([
   "project-reviewed-interpretation"
 ]);
 const EXPLICIT_POINT_GEOMETRY_MEANINGS = new Set([
-  "provider-located-project-reviewed-reference-point"
+  "provider-located-project-reviewed-reference-point",
+  "generalized-reference-point"
 ]);
 const SOURCE_TYPES = new Set([
   "official-record",
@@ -170,7 +172,8 @@ const PUBLIC_LOCATION_DECISION_KEYS = [
 ];
 const PUBLIC_LOCATION_DECISION_OPTIONAL_KEYS = [
   "geometryMeaning",
-  "representationStatus"
+  "representationStatus",
+  "generalizedPointContract"
 ];
 const PUBLIC_LOCATION_SOURCE_KEYS = [
   "sourceId",
@@ -495,6 +498,11 @@ function isGeneralizedDecision(decision) {
   return ["generalized-locality", "generalized-area-reference"].includes(decision.displayLocationType);
 }
 
+function hasProhibitedGeneralizedPointClaim(value) {
+  return typeof value === "string"
+    && /(?:shows?|marks?|is) (?:an? |the )?(?:exact (?:feature|centre|center|entrance|extent)|official (?:legal )?boundary|legal protection boundary)/i.test(value);
+}
+
 function deriveMarkerClass(decision) {
   return isGeneralizedDecision(decision) ? "generalized" : "reviewed";
 }
@@ -543,6 +551,7 @@ function validatePublicLocationDecision(errors, decision, path, recordIndex) {
       `${path}.representationStatus is unsupported.`
     );
   }
+  const hasGeneralizedPointContract = decision.generalizedPointContract !== undefined;
 
   const officialRecord = recordIndex.get(decision.recordId);
   addError(errors, Boolean(officialRecord), `${path}.recordId does not reference an official record.`);
@@ -589,7 +598,25 @@ function validatePublicLocationDecision(errors, decision, path, recordIndex) {
       Number.isFinite(decision.generalizationRadiusMeters) && decision.generalizationRadiusMeters > 0,
       `${path}.generalizationRadiusMeters is required for generalized display.`
     );
+    addError(errors, decision.geometryMeaning === "generalized-reference-point", `${path}.geometryMeaning must be generalized-reference-point for generalized display.`);
+    addError(errors, decision.representationStatus === "project-reviewed-interpretation", `${path}.representationStatus must be project-reviewed-interpretation for generalized display.`);
+    addError(errors, hasGeneralizedPointContract, `${path}.generalizedPointContract is required for generalized display.`);
+    addError(errors, !hasProhibitedGeneralizedPointClaim(decision.publicLocationNote), `${path}.publicLocationNote must not claim an exact feature, centre, entrance, extent, or legal boundary.`);
+    if (hasGeneralizedPointContract) {
+      errors.push(...validateGeneralizedPointContract(decision.generalizedPointContract, {
+        path: `${path}.generalizedPointContract`
+      }).errors);
+      const contract = decision.generalizedPointContract;
+      addError(errors, contract?.representation?.identityId === decision.recordId, `${path}.generalizedPointContract.representation.identityId must match recordId.`);
+      addError(errors, decision.estimatedUncertaintyMeters === contract?.outwardCoverageMetres, `${path}.estimatedUncertaintyMeters must equal generalizedPointContract.outwardCoverageMetres as the legacy outward-coverage summary.`);
+      addError(errors, decision.generalizationRadiusMeters === contract?.outwardCoverageMetres, `${path}.generalizationRadiusMeters must equal generalizedPointContract.outwardCoverageMetres as the legacy generalized-radius summary.`);
+      const decimalPlaces = contract?.displayedCoordinatePrecision?.decimalPlaces;
+      if (Number.isInteger(decimalPlaces) && hasCoordinates) {
+        addError(errors, Number(decision.latitude.toFixed(decimalPlaces)) === decision.latitude && Number(decision.longitude.toFixed(decimalPlaces)) === decision.longitude, `${path} coordinates are sharper than generalizedPointContract.displayedCoordinatePrecision.`);
+      }
+    }
   } else {
+    addError(errors, !hasGeneralizedPointContract, `${path}.generalizedPointContract is only permitted for generalized display.`);
     addError(errors, ["High", "Medium"].includes(decision.siteLocationConfidence), `${path} describes a site/reference Point without High or Medium site confidence.`);
     addError(errors, ["exact", "near-exact", "approximate"].includes(decision.locationPrecision), `${path} reviewed display has unsupported precision.`);
     addError(errors, ["exact", "approximate"].includes(decision.publicationLocationPolicy), `${path} reviewed display has unsupported publication policy.`);
@@ -658,6 +685,10 @@ function validatePublicLocationDataset(dataset, recordIndex) {
   } else {
     const ids = dataset.decisions.map((decision) => decision?.recordId);
     addError(errors, new Set(ids).size === ids.length, "publicLocations.decisions contains duplicate record IDs.");
+    const representationIds = dataset.decisions
+      .map((decision) => decision?.generalizedPointContract?.representation?.representationId)
+      .filter(Boolean);
+    addError(errors, new Set(representationIds).size === representationIds.length, "publicLocations.decisions contains duplicate active representation IDs.");
     dataset.decisions.forEach((decision, index) => {
       validatePublicLocationDecision(errors, decision, `publicLocations.decisions[${index}]`, recordIndex);
     });
@@ -723,17 +754,23 @@ function buildFeature(recordId, record, decision) {
     projectLocationProvenance: PROJECT_GEOMETRY_PROVENANCE
   };
   if (decision.geometryMeaning) {
+    const generalized = decision.geometryMeaning === "generalized-reference-point";
     Object.assign(properties, {
       geometryMeaning: decision.geometryMeaning,
       representationStatus: decision.representationStatus,
-      geometrySourceType: "project-reviewed-digitization",
-      geometrySourceLabel: "Project-reviewed provider-located reference Point",
-      geometrySourceUrl: decision.originalProviderCoordinate.providerUrl,
+      geometrySourceType: generalized ? "project-generalized-reference" : "project-reviewed-digitization",
+      geometrySourceLabel: generalized ? "Project-reviewed Generalized reference Point" : "Project-reviewed provider-located reference Point",
+      geometrySourceUrl: generalized
+        ? decision.generalizedPointContract.provenance.spatialBasis.url
+        : decision.originalProviderCoordinate.providerUrl,
       geometryReviewedAt: decision.reviewedDate,
       geometryReviewNotes: decision.publicLocationNote,
-      geometryPrecision: "approximate",
+      geometryPrecision: generalized ? "generalized" : "approximate",
       horizontalUncertaintyMetres: decision.estimatedUncertaintyMeters
     });
+    if (generalized) {
+      properties.generalizedPointContract = structuredClone(decision.generalizedPointContract);
+    }
   }
   return {
     type: "Feature",
@@ -904,6 +941,7 @@ export {
   SENSITIVITY_ASSESSMENTS,
   XINYU_DATASET_ID,
   assertAggregateInputs,
+  buildFeature as buildOfficialProtectedHeritageFeature,
   deriveMarkerClass,
   generateOfficialProtectedHeritageMap,
   generateProvincialCompatibilityMap,
