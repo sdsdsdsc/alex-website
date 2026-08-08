@@ -12,12 +12,12 @@
       {
         "datasetId": "xinyu-official-heritage-records",
         "sourcePath": "data/xinyu-official-heritage-records.json",
-        "recordCount": 7
+        "recordCount": 8
       }
     ],
     "publicLocationSource": "data/official-protected-heritage-public-locations.json",
-    "sourceRecordCount": 17,
-    "featureCount": 7,
+    "sourceRecordCount": 18,
+    "featureCount": 8,
     "excludedRecordCount": 10,
     "generationStatus": "valid",
     "deterministicSourceOrder": [
@@ -109,6 +109,142 @@
         "coordinates": [
           114.937042,
           27.798123
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "JX-XY-PCH-004",
+      "properties": {
+        "recordId": "JX-XY-PCH-004",
+        "sourceDatasetId": "xinyu-official-heritage-records",
+        "officialNameZh": "斜里遗址",
+        "projectNameEn": "Xieli Site",
+        "projectEnglishStatus": "Alex's Photo Board project interpretation",
+        "protectionLevelZh": "省级文物保护单位",
+        "officialCategoryZh": "古遗址",
+        "officialLocationTextZh": "渝水区珠珊镇洋津村",
+        "sourceTitleZh": "新余市市级以上文物保护单位名录（2025年）",
+        "sourceIssuerZh": "新余市文化广电旅游局",
+        "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+        "sourceAccessedDate": "2026-07-24",
+        "identityConfidence": "confirmed",
+        "siteLocationConfidence": "Low",
+        "locationEvidenceConfidence": "Medium",
+        "displayLocationType": "generalized-area-reference",
+        "locationPrecision": "generalized",
+        "publicLocationMeaning": "representative-area",
+        "markerClass": "generalized",
+        "estimatedUncertaintyMeters": 50,
+        "generalizationRadiusMeters": 50,
+        "publicationLocationPolicy": "generalized",
+        "publicLocationNote": "Generalized reference location for the source-described Xieli vicinity, constructed from the published GPS centre and four 30 m offsets. The reference is neither an excavation, grave, entrance, site centre, archaeological extent nor legal protection boundary. Outward support coverage is 50 metres.",
+        "coordinateReferenceSystem": "WGS84",
+        "projectLocationProvenance": "Alex's Photo Board reviewed public-location decision",
+        "geometryMeaning": "generalized-reference-point",
+        "representationStatus": "project-reviewed-interpretation",
+        "geometrySourceType": "project-generalized-reference",
+        "geometrySourceLabel": "Project-reviewed Generalized reference Point",
+        "geometrySourceUrl": "https://upload.wikimedia.org/wikipedia/commons/6/63/%E7%AC%AC%E5%85%AD%E6%89%B9%E6%B1%9F%E8%A5%BF%E7%9C%81%E6%96%87%E7%89%A9%E4%BF%9D%E6%8A%A4%E5%8D%95%E4%BD%8D%E4%BF%9D%E6%8A%A4%E8%8C%83%E5%9B%B4%E4%B8%80%E8%A7%88%E8%A1%A8.pdf",
+        "geometryReviewedAt": "2026-08-03",
+        "geometryReviewNotes": "Generalized reference location for the source-described Xieli vicinity, constructed from the published GPS centre and four 30 m offsets. The reference is neither an excavation, grave, entrance, site centre, archaeological extent nor legal protection boundary. Outward support coverage is 50 metres.",
+        "geometryPrecision": "generalized",
+        "horizontalUncertaintyMetres": 50,
+        "generalizedPointContract": {
+          "contractVersion": "phase-15c-19-v1",
+          "originalSpatialBasis": {
+            "basisType": "documented-support-area",
+            "sourceNotation": "GPS centre 27°45′45.3″ N, 114°55′11.2″ E, with 30 m extensions east, south, west and north",
+            "coordinateReferenceSystem": "Source datum unstated; WGS84 and CGCS2000 geographic interpretations retained as the finite plausible set",
+            "methodBasis": "Transcribe the published DMS centre literally, evaluate the accepted WGS84 and CGCS2000 paths, use their coincident envelope centre, then round longitude and latitude to four decimal places.",
+            "publicEvidenceReference": {
+              "label": "Jiangxi sixth-batch protection-range annex, Xieli row",
+              "url": "https://upload.wikimedia.org/wikipedia/commons/6/63/%E7%AC%AC%E5%85%AD%E6%89%B9%E6%B1%9F%E8%A5%BF%E7%9C%81%E6%96%87%E7%89%A9%E4%BF%9D%E6%8A%A4%E5%8D%95%E4%BD%8D%E4%BF%9D%E6%8A%A4%E8%8C%83%E5%9B%B4%E4%B8%80%E8%A7%88%E8%A1%A8.pdf"
+            },
+            "restrictedEvidenceReference": null
+          },
+          "sourceCoordinatePrecision": {
+            "kind": "notation-resolution",
+            "metres": 2.07,
+            "explanation": "Radial half-unit resolution of the published 0.1-second DMS notation, derived from approximately 1.37 m longitude and 1.55 m latitude components."
+          },
+          "datumInterpretations": [
+            {
+              "datum": "WGS84",
+              "rationale": "GPS broadcast positioning uses a WGS84 reference frame, making literal WGS84 geographic DMS a finite plausible interpretation without asserting that the source named it.",
+              "transformationMethod": "Literal DMS-to-decimal identity conversion to WGS84 longitude and latitude.",
+              "frameAllowanceMetres": 0
+            },
+            {
+              "datum": "CGCS2000",
+              "rationale": "CGCS2000 was the formal Chinese national geocentric frame before the annex and is a finite plausible interpretation for official GPS or GNSS control context.",
+              "transformationMethod": "Preserve the geographic numerals at public map precision and apply a conservative outward frame allowance; no unsupported survey parameters are invented.",
+              "frameAllowanceMetres": 1
+            }
+          ],
+          "multiInterpretationEnvelope": {
+            "applicable": true,
+            "method": "The accepted WGS84 and CGCS2000 interpretation centres coincide at retained precision; bound the complete interpretation path by the conservative 1 m outward allowance.",
+            "maximumSeparationMetres": 1
+          },
+          "supportArea": {
+            "meaning": "Source-described vicinity around the published GPS centre; not the archaeological extent, excavation, grave area or legal protection boundary.",
+            "shape": "60 m by 60 m cardinal support square",
+            "extentDescription": "Thirty metres east, south, west and north from the published centre; the farthest unadjusted corner is approximately 42.43 m from the representative centre.",
+            "maximumDistanceFromRepresentativeMetres": 42.43,
+            "sourceReferenceLabel": "Jiangxi sixth-batch protection-range annex, Xieli row",
+            "sourceReferenceUrl": "https://upload.wikimedia.org/wikipedia/commons/6/63/%E7%AC%AC%E5%85%AD%E6%89%B9%E6%B1%9F%E8%A5%BF%E7%9C%81%E6%96%87%E7%89%A9%E4%BF%9D%E6%8A%A4%E5%8D%95%E4%BD%8D%E4%BF%9D%E6%8A%A4%E8%8C%83%E5%9B%B4%E4%B8%80%E8%A7%88%E8%A1%A8.pdf"
+          },
+          "representativePoint": {
+            "method": "coincident-interpretation-envelope-centre",
+            "methodVersion": "phase-15c-18-p04-v1",
+            "selectionRule": "Use the literal published centre shared by both accepted interpretation paths before four-decimal display rounding; do not substitute a provider pin, site centroid or entrance."
+          },
+          "intentionalGeneralization": {
+            "method": "four-decimal WGS84 display rounding",
+            "displacementMetres": 2.87,
+            "explanation": "Deliberate displacement from rounding the literal transcription to [114.9198, 27.7626]; it is separate from source precision, datum allowance and support extent."
+          },
+          "displayedCoordinatePrecision": {
+            "decimalPlaces": 4,
+            "approximateResolutionMetres": 11
+          },
+          "outwardCoverageMetres": 50,
+          "provenance": {
+            "spatialBasis": {
+              "label": "Jiangxi sixth-batch protection-range annex, Xieli row",
+              "url": "https://upload.wikimedia.org/wikipedia/commons/6/63/%E7%AC%AC%E5%85%AD%E6%89%B9%E6%B1%9F%E8%A5%BF%E7%9C%81%E6%96%87%E7%89%A9%E4%BF%9D%E6%8A%A4%E5%8D%95%E4%BD%8D%E4%BF%9D%E6%8A%A4%E8%8C%83%E5%9B%B4%E4%B8%80%E8%A7%88%E8%A1%A8.pdf",
+              "accessedDate": "2026-08-03"
+            },
+            "limitation": {
+              "label": "Phase 15C-17 Generalized reference Point policy",
+              "url": "https://github.com/sdsdsdsc/alex-website/blob/b35448aba39e366ec19eeb76f5b241fa1a4f58ed/docs/policy/phase-15c-17-generalized-point-policy-recalibration.md",
+              "accessedDate": "2026-08-03"
+            }
+          },
+          "mandatoryPublicLimitation": "Generalized reference location. This marker represents the documented general vicinity of the heritage record. It does not show the exact feature, centre, entrance, extent, or legal protection boundary.",
+          "candidateSpecificLimitation": "Generalized reference location for the source-described Xieli vicinity. Constructed from the published GPS centre and four 30 m offsets. The reference is neither an excavation, grave, entrance, site centre, archaeological extent nor legal protection boundary.",
+          "review": {
+            "evidenceReviewer": "project owner",
+            "reviewDate": "2026-08-03",
+            "policyVersion": "Phase 15C-17",
+            "accountableRole": "Alex's Photo Board publication owner",
+            "publicationDecision": "approved-for-publication"
+          },
+          "representation": {
+            "identityId": "JX-XY-PCH-004",
+            "representationId": "JX-XY-PCH-004:generalized-point:v1",
+            "status": "active",
+            "supersedesRepresentationIds": [],
+            "supersessionHistoryReference": "No prior public representation; first publication proposal in Phase 15C-20 / PR #78."
+          }
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.9198,
+          27.7626
         ]
       }
     },

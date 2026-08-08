@@ -153,13 +153,18 @@ Key groups include:
   strict validation, deterministic generation, persistent popup limitations,
   equivalent accessible text, lifecycle safeguards, and synthetic non-Xinyu
   tests. It publishes no candidate; P04 remains a separate PR #78 proposal.
+- [Phase 15C-20 Xieli Generalized Point publication proposal](./audits/phase-15c-20-xieli-generalized-point-publication.md),
+  the separately approved P04-only draft publication using the Phase 15C-19
+  contract, hollow-diamond presentation, persistent limitations, deterministic
+  source/output updates, and focused production-candidate tests.
 
 Phase 15C-16 remains historically valid under its then-current gate. Phase
 15C-17 recalibrates future eligibility but reassesses no identity. Phase
 15C-18 separately completes the required all-55 reassessment. Its single
 Outcome A is a research eligibility result only. Phase 15C-19 supplies the
-technical contract without publishing it; candidate-specific owner approval
-and a separate PR #78 proposal are still required before publication.
+technical contract without publishing it. Phase 15C-20 records the separately
+approved P04-only PR #78 proposal; it does not become live production until a
+later controlled merge and automatic deployment are separately verified.
 
 PR #69 is merged and production verified. The canonical dataset contains the
 five retained Points plus P19 and N07: seven ordinary Official Heritage Point

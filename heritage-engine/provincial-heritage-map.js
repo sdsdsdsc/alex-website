@@ -13,7 +13,7 @@ import {
 
 const SUPPORTED_SCHEMA_VERSION = "2.0.0";
 const PROVINCIAL_HERITAGE_DATASET_ID = "jiangxi-official-protected-heritage-map";
-const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 17;
+const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 18;
 const PROVINCIAL_HERITAGE_LOADING_MESSAGE = "Loading Official Heritage…";
 const PROVINCIAL_HERITAGE_EMPTY_MESSAGE = "No approved Official Heritage locations are available to display yet.";
 const PROVINCIAL_HERITAGE_FAILURE_MESSAGE = "Official Heritage could not be loaded.";

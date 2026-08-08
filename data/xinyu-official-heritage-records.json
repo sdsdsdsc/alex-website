@@ -32,6 +32,25 @@
       }
     },
     {
+      "recordId": "JX-XY-PCH-004",
+      "sourceSequence": 3,
+      "official": {
+        "officialNameZh": "斜里遗址",
+        "officialCategoryZh": "古遗址",
+        "officialLocationTextZh": "渝水区珠珊镇洋津村",
+        "protectionLevelZh": "省级文物保护单位",
+        "officialDesignationNumber": "6-1-040",
+        "designationBatch": "第六批江西省文物保护单位",
+        "designationDate": null,
+        "periodZh": null
+      },
+      "projectInterpretation": {
+        "projectNameEn": "Xieli Site",
+        "translationStatus": "project-reviewed",
+        "translationNote": "Project English interpretation transliterates the established place name and translates the heritage type; the official source supplies no English name."
+      }
+    },
+    {
       "recordId": "JX-XY-PCH-008",
       "sourceSequence": 7,
       "official": {

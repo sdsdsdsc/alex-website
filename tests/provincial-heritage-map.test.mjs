@@ -37,9 +37,9 @@ function makeValidEmpty() {
     metadata: {
       schemaVersion: "2.0.0",
       datasetId: "jiangxi-official-protected-heritage-map",
-      sourceRecordCount: 17,
+      sourceRecordCount: 18,
       featureCount: 0,
-      excludedRecordCount: 17,
+      excludedRecordCount: 18,
       generationStatus: "valid-empty",
       geometryProvenance: "Alex's Photo Board project coordinate review"
     },
@@ -117,7 +117,7 @@ function makeFeatureCollection(features) {
     metadata: {
       ...makeValidEmpty().metadata,
       featureCount: features.length,
-      excludedRecordCount: 17 - features.length,
+      excludedRecordCount: 18 - features.length,
       generationStatus: features.length === 0 ? "valid-empty" : "valid"
     },
     features
@@ -135,7 +135,7 @@ test("accepts the committed valid-empty contract", () => {
   const result = validateOfficialHeritageGeoJson(makeValidEmpty());
   assert.equal(result.status, "valid-empty");
   assert.equal(result.features.length, 0);
-  assert.equal(result.metadata.excludedRecordCount, 17);
+  assert.equal(result.metadata.excludedRecordCount, 18);
 });
 
 test("rejects an unsupported schema", () => {
@@ -171,7 +171,7 @@ test("rejects non-array features", () => {
 test("rejects the wrong source record count", () => {
   const value = makeValidEmpty();
   value.metadata.sourceRecordCount = 9;
-  expectInvalid(value, /sourceRecordCount must be 17/);
+  expectInvalid(value, /sourceRecordCount must be 18/);
 });
 
 test("rejects a feature count mismatch", () => {
@@ -455,21 +455,32 @@ test("publication collection validation fails atomically for a malformed child g
   );
 });
 
-test("accepts the committed seven-marker Xinyu publication set", () => {
+test("accepts the committed eight-marker Xinyu publication set with Xieli generalized", () => {
   const result = validateOfficialHeritageGeoJson(committedGeoJson);
   assert.equal(result.status, "valid");
-  assert.equal(result.features.length, 7);
+  assert.equal(result.features.length, 8);
   assert.equal(result.features[0].id, "JX-XY-NCH-007");
   assert.deepEqual(result.features[0].geometry.coordinates, [115.011333, 27.805882]);
   assert.equal(result.features[0].properties.markerClass, "reviewed");
   assert.equal(result.features[0].properties.estimatedUncertaintyMeters, 100);
   assert.deepEqual(
     result.features.map(({ id }) => id),
-    ["JX-XY-NCH-007", "JX-XY-PCH-001", "JX-XY-PCH-008", "JX-XY-PCH-009", "JX-XY-PCH-014", "JX-XY-PCH-016", "JX-XY-PCH-018"]
+    ["JX-XY-NCH-007", "JX-XY-PCH-001", "JX-XY-PCH-004", "JX-XY-PCH-008", "JX-XY-PCH-009", "JX-XY-PCH-014", "JX-XY-PCH-016", "JX-XY-PCH-018"]
   );
+  const xieli = result.features.find(({ id }) => id === "JX-XY-PCH-004");
+  assert.deepEqual(xieli.geometry.coordinates, [114.9198, 27.7626]);
+  assert.equal(xieli.properties.markerClass, "generalized");
+  assert.equal(xieli.properties.generalizedPointContract.representation.status, "active");
+  assert.match(buildOfficialMarkerAccessibleName(xieli), /Generalized project reference point/);
+  assert.match(buildOfficialMarkerAccessibleName(xieli), /documented general vicinity/);
+  assert.match(buildOfficialMarkerAccessibleName(xieli), /source-described Xieli vicinity/);
+  const xieliPopup = buildOfficialPopupData(xieli);
+  assert.match(xieliPopup.generalizedPointMandatoryLimitation, /does not show the exact feature/);
+  assert.match(xieliPopup.generalizedPointCandidateLimitation, /neither an excavation, grave, entrance/);
+  assert.equal(xieliPopup.generalizedPointOutwardCoverageMetres, 50);
   assert.deepEqual(
     getPublishedOfficialMapCategories(result.features).map((category) => category.label),
-    ["Ancient buildings", "Important modern historic sites"]
+    ["Ancient buildings", "Important modern historic sites", "Archaeological sites"]
   );
   assert.deepEqual(
     Object.fromEntries(
@@ -482,6 +493,7 @@ test("accepts the committed seven-marker Xinyu publication set", () => {
     ),
     {
       "ancient-buildings": 3,
+      "archaeological-sites": 1,
       "important-modern-historic-sites": 4
     }
   );

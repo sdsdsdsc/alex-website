@@ -167,8 +167,13 @@ representation meanings.
   source and transformation uncertainty, intentional generalization,
   support-area extent, final precision, persistent limitations, and active and
   supersession references as distinct concepts. It publishes no candidate.
-- The ordered next step is a separately approved PR #78 publication proposal
-  for P04. Technical readiness is not candidate-specific publication approval.
+- Phase 15C-20 / draft PR #78 is the separately approved P04-only publication
+  proposal. Its branch result is one hollow-diamond Generalized Point with the
+  complete structured contract and persistent limitations. It remains
+  unmerged and is not live production until controlled merge verification.
+- After PR #78 is separately merged, the ordered next evidence task is the
+  focused audit of the 25 ordinary-Point-route identities; this phase does not
+  begin that work.
 - Later representation-lifecycle extensions must land before the interface
   adapts public presentation to active-representation selection.
 - The adapted renderer, filters, provenance, and accessibility must be ready
