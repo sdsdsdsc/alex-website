@@ -167,13 +167,12 @@ representation meanings.
   source and transformation uncertainty, intentional generalization,
   support-area extent, final precision, persistent limitations, and active and
   supersession references as distinct concepts. It publishes no candidate.
-- Phase 15C-20 / draft PR #78 is the separately approved P04-only publication
-  proposal. Its branch result is one hollow-diamond Generalized Point with the
-  complete structured contract and persistent limitations. It remains
-  unmerged and is not live production until controlled merge verification.
-- After PR #78 is separately merged, the ordered next evidence task is the
-  focused audit of the 25 ordinary-Point-route identities; this phase does not
-  begin that work.
+- Phase 15C-20 / PR #78 is merged and production verified. It publishes P04
+  Xieli as the first hollow-diamond Generalized Point with the complete
+  structured contract and persistent limitations.
+- Phase 15C-21 / draft PR #79 audits exactly the 25 ordinary-Point-route
+  identities without publishing them. Its A/B/C/D totals are `0/11/0/14`; no
+  future ordinary-Point publication batch is proposed.
 - Later representation-lifecycle extensions must land before the interface
   adapts public presentation to active-representation selection.
 - The adapted renderer, filters, provenance, and accessibility must be ready
@@ -186,16 +185,17 @@ representation meanings.
 
 ## Current production baseline
 
-- seven active ordinary Official Heritage Point features in live production:
-  one national and six provincial;
-- zero Generalized reference Points;
+- eight active Official Heritage Point features in live production: seven
+  ordinary Points and one Generalized reference Point;
+- one national and seven provincial published records;
 - zero real line features;
 - zero real polygon features;
 - Official Heritage remains off by default;
 - Community Heritage remains unchanged and Point-based;
 - P19 and N07 are production verified; the Xiabu parent and meeting-site
   component remain unpublished;
-- Xieli and Qipanshan are not published.
+- Xieli is the sole published Generalized reference Point; Qipanshan remains
+  unpublished.
 
 The complete-list, fallback-Point, policy-clarification, and six-candidate
 audits remain historical evidence records. PR #69 subsequently published the
