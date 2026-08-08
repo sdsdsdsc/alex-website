@@ -5,8 +5,8 @@ import { makeSyntheticGeneralizedPointContract } from "./fixtures/generalized-po
 const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
-const MAP_PAGE_VERSION = "2026-08-04-generalized-point-contract";
-const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-04-generalized-point-contract";
+const MAP_PAGE_VERSION = "2026-08-04-xieli-generalized-point";
+const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-04-xieli-generalized-point";
 const OFFICIAL_CATEGORY_VERSION = "2026-07-27-official-category-filters";
 const OFFICIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-official-protected-heritage-map.geojson*";
 const COMMITTED_OFFICIAL_HERITAGE = JSON.parse(await readFile(
@@ -138,9 +138,9 @@ function makeSyntheticOfficialCollection(features = []) {
     metadata: {
       schemaVersion: "2.0.0",
       datasetId: "jiangxi-official-protected-heritage-map",
-      sourceRecordCount: 17,
+      sourceRecordCount: 18,
       featureCount: features.length,
-      excludedRecordCount: 17 - features.length,
+      excludedRecordCount: 18 - features.length,
       generationStatus: features.length === 0 ? "valid-empty" : "valid",
       geometryProvenance: "Alex's Photo Board project coordinate review"
     },
@@ -486,7 +486,7 @@ test("official preview is lazy, default-off, valid-empty, cached, and map-stable
   expect(await getRenderedMapState(page)).toEqual(beforeEnable);
 });
 
-test("production-sized official fixture renders seven accessible markers across responsive and 200% zoom checks", async ({ page }) => {
+test("production-sized official fixture renders eight accessible markers across responsive and 200% zoom checks", async ({ page }) => {
   const appErrors = [];
   page.on("console", (message) => {
     if (message.type() === "error" && isAppOwnedConsoleError(message.text())) {
@@ -508,10 +508,13 @@ test("production-sized official fixture renders seven accessible markers across 
   });
   await expect(officialToggle).not.toBeChecked();
   await officialToggle.click();
-  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
-  await expect(page.locator("#officialHeritageStatus")).toContainText("7 official heritage locations");
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(8);
+  await expect(page.locator("#officialHeritageStatus")).toContainText("8 official heritage locations");
   await expect(page.locator("#officialReviewedPointStatus")).toHaveText(
     "Filled diamond. Currently displayed: 7."
+  );
+  await expect(page.locator("#officialGeneralizedPointStatus")).toHaveText(
+    "Hollow diamond. Currently displayed: 1."
   );
 
   const compoundMarker = page.getByRole("button", {
@@ -577,6 +580,25 @@ test("production-sized official fixture renders seven accessible markers across 
   await expect(n07Popup).toContainText("building footprint");
   await expect(n07Popup).toContainText("legal protection boundary");
 
+  const xieliMarker = page.getByRole("button", {
+    name: /Open Official Heritage record: Xieli Site \(斜里遗址\); Official designation level: Provincial; Map category: Archaeological sites; Generalized project reference point; Generalized reference location\./
+  });
+  await expect(xieliMarker).toHaveCount(1);
+  await expect(xieliMarker).toHaveClass(/official-heritage-map-marker--generalized/);
+  await xieliMarker.focus();
+  await xieliMarker.press("Space");
+  const xieliPopup = page.locator(".official-heritage-map-popup").filter({ hasText: "Xieli Site" });
+  await expect(xieliPopup.locator(".official-heritage-map-popup__generalized-limitation")).toHaveText(
+    "Generalized reference location. This marker represents the documented general vicinity of the heritage record. It does not show the exact feature, centre, entrance, extent, or legal protection boundary."
+  );
+  await expect(xieliPopup.locator(".official-heritage-map-popup__candidate-limitation")).toContainText(
+    "source-described Xieli vicinity"
+  );
+  await expect(xieliPopup).toContainText("50 metres");
+  await expect(xieliPopup).toContainText("coincident-interpretation-envelope-centre");
+  await expect(xieliPopup).toContainText("WGS84");
+  await expect(xieliPopup).toContainText("CGCS2000");
+
   const visitorMarker = page.getByRole("button", {
     name: "Open Official Heritage record: Fu Baoshi Former Residence (傅抱石故居); Official designation level: Provincial; Map category: Important modern historic sites; Visitor reference point",
     exact: true
@@ -614,7 +636,7 @@ test("production-sized official fixture renders seven accessible markers across 
     { width: 844, height: 390 }
   ]) {
     await page.setViewportSize(viewport);
-    await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
+    await expect(page.locator(".official-heritage-map-marker")).toHaveCount(8);
     await expect(officialToggle).toBeChecked();
     expect(await page.evaluate(() => (
       document.documentElement.scrollWidth <= document.documentElement.clientWidth
@@ -623,7 +645,7 @@ test("production-sized official fixture renders seven accessible markers across 
   await page.evaluate(() => {
     document.documentElement.style.zoom = "2";
   });
-  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(8);
   await expect(officialToggle).toBeChecked();
   expect(await page.evaluate(() => (
     document.documentElement.scrollWidth <= document.documentElement.clientWidth
@@ -866,7 +888,7 @@ test("official categories are published-only tri-state visibility controls with 
   expect(officialRequestCount).toBe(0);
 
   await officialLayer.click();
-  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(8);
   expect(officialRequestCount).toBe(1);
   const officialAll = layersPanel.getByRole("checkbox", {
     name: "All official categories",
@@ -880,26 +902,28 @@ test("official categories are published-only tri-state visibility controls with 
     name: "Important modern historic sites",
     exact: true
   });
+  const archaeologicalSites = layersPanel.getByRole("checkbox", {
+    name: "Archaeological sites",
+    exact: true
+  });
   await expect(page.locator("#officialCategoryControls")).toBeVisible();
   await expect(officialAll).toBeChecked();
   await expect(officialAll).toBeEnabled();
   await expect(ancientBuildings).toBeChecked();
   await expect(modernSites).toBeChecked();
-  await expect(layersPanel.getByRole("checkbox", {
-    name: "Archaeological sites",
-    exact: true
-  })).toHaveCount(0);
+  await expect(archaeologicalSites).toBeChecked();
   await expect(layersPanel.getByRole("checkbox", {
     name: "Other official heritage",
     exact: true
   })).toHaveCount(0);
-  await expect(page.locator("[data-official-map-category]")).toHaveCount(2);
+  await expect(page.locator("[data-official-map-category]")).toHaveCount(3);
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "7 of 7 published official locations displayed."
+    "8 of 8 published official locations displayed."
   );
   await expect(page.locator(".official-heritage-map-marker--ancient-buildings")).toHaveCount(3);
+  await expect(page.locator(".official-heritage-map-marker--archaeological-sites")).toHaveCount(1);
   await expect(page.locator(".official-heritage-map-marker--important-modern-historic-sites")).toHaveCount(4);
-  await expect(page.locator(".official-heritage-map-marker .official-map-marker__glyph")).toHaveCount(7);
+  await expect(page.locator(".official-heritage-map-marker .official-map-marker__glyph")).toHaveCount(8);
 
   await ancientBuildings.focus();
   await expect(ancientBuildings).toBeFocused();
@@ -908,9 +932,9 @@ test("official categories are published-only tri-state visibility controls with 
   await expect(modernSites).toBeChecked();
   await expect(officialAll).not.toBeChecked();
   await expect(officialAll).toHaveJSProperty("indeterminate", true);
-  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(4);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(5);
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "4 of 7 published official locations displayed."
+    "5 of 8 published official locations displayed."
   );
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
   await expect(communityParent).toBeChecked();
@@ -919,7 +943,7 @@ test("official categories are published-only tri-state visibility controls with 
   expect(officialRequestCount).toBe(1);
 
   await page.getByRole("tab", { name: "Search", exact: true }).click();
-  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(4);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(5);
   await openMapLayersTab(page);
   await expect(ancientBuildings).not.toBeChecked();
   await expect(modernSites).toBeChecked();
@@ -931,13 +955,14 @@ test("official categories are published-only tri-state visibility controls with 
   await expect(officialAll).toBeDisabled();
   await expect(ancientBuildings).toBeDisabled();
   await expect(modernSites).toBeDisabled();
+  await expect(archaeologicalSites).toBeDisabled();
   await expect(page.locator("#officialCategoryDisabledHelp")).toBeVisible();
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "0 of 7 published official locations displayed."
+    "0 of 8 published official locations displayed."
   );
 
   await officialLayer.click();
-  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(4);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(5);
   await expect(officialAll).toBeEnabled();
   await expect(officialAll).toHaveJSProperty("indeterminate", true);
   await expect(ancientBuildings).not.toBeChecked();
@@ -947,19 +972,19 @@ test("official categories are published-only tri-state visibility controls with 
 
   await officialAll.click();
   await expect(officialAll).toBeChecked();
-  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(8);
   await officialAll.click();
   await expect(officialAll).not.toBeChecked();
   await expect(officialAll).toHaveJSProperty("indeterminate", false);
   await expect(page.locator(".official-heritage-map-marker")).toHaveCount(0);
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "0 of 7 published official locations displayed."
+    "0 of 8 published official locations displayed."
   );
   await officialAll.click();
   await expect(officialAll).toBeChecked();
-  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(8);
   await expect(page.locator("#officialCategoryStatus")).toHaveText(
-    "7 of 7 published official locations displayed."
+    "8 of 8 published official locations displayed."
   );
   expect(page.url()).toBe(beforeEnableUrl);
   expect(await getRenderedMapState(page)).toEqual(beforeEnableMapState);
@@ -1095,7 +1120,9 @@ test("official preview renders a synthetic exact Point without changing communit
   await openMapLayersTab(page);
   await setOverlayChecked(page, "Show Official Heritage", true);
   await expect(layersPanel).toContainText("Generalized reference Points");
-  await expect(layersPanel).toContainText("Hollow diamond. Supported; none currently published.");
+  await expect(page.locator("#officialGeneralizedPointStatus")).toHaveText(
+    "Hollow diamond. Currently displayed: 0."
+  );
   await expect(page.locator("#officialHeritageStatus")).toHaveText(
     /\d+ community records? and 1 official heritage location displayed\./
   );
@@ -1277,20 +1304,20 @@ test("Layers tab controls overlays while Leaflet retains basemap selection only"
 
   await setOverlayChecked(page, "Show Official Heritage", true);
   await expect(page.locator("#officialHeritageStatus")).toHaveText(
-    "7 official heritage locations displayed."
+    "8 official heritage locations displayed."
   );
-  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(8);
 
   await setOverlayChecked(page, "All community records", true);
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
   await expect(page.locator("#officialHeritageStatus")).toHaveText(
-    new RegExp(`${communityCount} community records? and 7 official heritage locations displayed\\.`)
+    new RegExp(`${communityCount} community records? and 8 official heritage locations displayed\\.`)
   );
 
   await page.getByRole("tab", { name: "Search" }).click();
   await expect(page.locator("#mapLayersToolPanel")).toBeHidden();
   await expect(page.locator(".community-map-pin")).toHaveCount(communityCount);
-  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(7);
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(8);
   await page.getByRole("tab", { name: "Layers" }).click();
   await expect(communityToggle).toBeChecked();
   await expect(officialToggle).toBeChecked();

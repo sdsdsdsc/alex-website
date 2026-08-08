@@ -35,7 +35,7 @@ import {
   buildOfficialMarkerAccessibleName,
   buildOfficialPopupData,
   validateOfficialHeritageGeoJson
-} from "./heritage-engine/official-heritage-map.js?v=2026-08-04-generalized-point-contract";
+} from "./heritage-engine/official-heritage-map.js?v=2026-08-04-xieli-generalized-point";
 import {
   COMMUNITY_MAP_CATEGORY_DEFINITIONS,
   buildCommunityMarkerAccessibleName,
@@ -48,7 +48,7 @@ import {
   getPublishedOfficialMapCategories
 } from "./heritage-engine/official-map-categories.js?v=2026-07-27-official-category-filters";
 
-const OFFICIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-official-protected-heritage-map.geojson?v=2026-08-04-generalized-point-contract";
+const OFFICIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-official-protected-heritage-map.geojson?v=2026-08-04-xieli-generalized-point";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -364,6 +364,7 @@ function initCommunityMap({
   const officialCategoryDisabledHelpEl = document.getElementById("officialCategoryDisabledHelp");
   const officialCategoryStatusEl = document.getElementById("officialCategoryStatus");
   const officialReviewedPointStatusEl = document.getElementById("officialReviewedPointStatus");
+  const officialGeneralizedPointStatusEl = document.getElementById("officialGeneralizedPointStatus");
 
   const map = L.map(containerId).setView(fallbackCenter, 13);
   const communityLayer = L.layerGroup().addTo(map);
@@ -556,6 +557,12 @@ function initCommunityMap({
         geometry?.type === "Point" && properties?.markerClass === "reviewed"
       )).length;
       officialReviewedPointStatusEl.textContent = `Filled diamond. Currently displayed: ${reviewedPointCount}.`;
+    }
+    if (officialGeneralizedPointStatusEl) {
+      const generalizedPointCount = features.filter(({ geometry, properties }) => (
+        geometry?.type === "Point" && properties?.markerClass === "generalized"
+      )).length;
+      officialGeneralizedPointStatusEl.textContent = `Hollow diamond. Currently displayed: ${generalizedPointCount}.`;
     }
     availableOfficialCategories = getPublishedOfficialMapCategories(features);
 
