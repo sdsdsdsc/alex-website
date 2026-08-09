@@ -178,13 +178,16 @@ representation meanings.
   Its A/B/C/D totals are `1/10/0/0`: M13 魁星阁 is research-ready for a
   separate owner-approved proposal, while the other ten remain withheld.
   PR #80 creates no publication batch and changes no production data.
-- Phase 15C-23 / draft PR #81 is the separately owner-approved M13-only
-  publication proposal. Its branch adds one ordinary municipal
+- Phase 15C-23 / PR #81 is the separately owner-approved M13-only publication,
+  now merged, closed, automatically deployed through GitHub Pages, and
+  production verified at merge commit
+  `e215ae15f7851ba4d0a4b8ae416423c42543b164`. It adds stable identity
+  `JX-XY-MCH-013` as one ordinary municipal
   `heritage-building-reference-point` at WGS84
-  `[114.937158, 27.797890]` with 30 m uncertainty. It preserves all eight live
-  Points, keeps Xieli as the sole Generalized Point, and excludes M13 from the
-  provincial compatibility output. It does not authorize another candidate,
-  a line, or an area.
+  `[114.937158, 27.797890]` with 30 m uncertainty. It keeps Xieli as the sole
+  Generalized Point and excludes M13 from the seven-Point provincial
+  compatibility output because M13 is municipal. It does not authorize
+  another candidate, a line, or an area.
 - Later representation-lifecycle extensions must land before the interface
   adapts public presentation to active-representation selection.
 - The adapted renderer, filters, provenance, and accessibility must be ready
@@ -197,17 +200,21 @@ representation meanings.
 
 ## Current production baseline
 
-- eight active Official Heritage Point features in live production: seven
-  ordinary Points and one Generalized reference Point;
-- one national and seven provincial published records;
+- 19 official source records, nine active Official Heritage Point Features,
+  and ten exclusions in live production;
+- eight ordinary Points and one Generalized reference Point;
+- one national, seven provincial, and one municipal published record;
 - zero real line features;
-- zero real polygon features;
+- zero real area features (Polygon or MultiPolygon);
 - Official Heritage remains off by default;
 - Community Heritage remains unchanged and Point-based;
 - P19 and N07 are production verified; the Xiabu parent and meeting-site
   component remain unpublished;
-- Xieli is the sole published Generalized reference Point; Qipanshan remains
-  unpublished.
+- M13 魁星阁 is live as the sole municipal publication;
+- Xieli is the sole published Generalized reference Point; Qipanshan and the
+  ten remaining Phase 15C-22 Outcome B candidates remain unpublished; and
+- provincial compatibility remains seven Points—six ordinary plus Xieli—and
+  excludes municipal M13.
 
 The complete-list, fallback-Point, policy-clarification, and six-candidate
 audits remain historical evidence records. PR #69 subsequently published the
