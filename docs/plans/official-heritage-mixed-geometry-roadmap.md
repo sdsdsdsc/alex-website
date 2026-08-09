@@ -188,12 +188,23 @@ representation meanings.
   Generalized Point and excludes M13 from the seven-Point provincial
   compatibility output because M13 is municipal. It does not authorize
   another candidate, a line, or an area.
-- Later representation-lifecycle extensions must land before the interface
-  adapts public presentation to active-representation selection.
-- The adapted renderer, filters, provenance, and accessibility must be ready
-  before the first real production shape.
+- Phase 15C-24 / draft PR #83 is the documentation-only first-real-shape
+  investigation. It reconciles all 29 authoritative non-Point identities—8
+  line and 21 area candidates—and records A/B/C/D totals of `0/10/1/18`.
+  No first production shape candidate is research-ready. P09 蓉泉桥 remains
+  the highest-priority evidence target, but its 7.7 m alignment lacks reusable
+  bridge-accurate endpoints. Production remains at zero lines and zero areas.
+- The merged representation contract and one-active safeguards already cover
+  the lifecycle foundation; a candidate-specific publication must exercise
+  supersession when an active Point exists.
+- The renderer, category filters, provenance presentation and accessibility
+  already cover synthetic line/area fixtures and require candidate-specific
+  verification for the first real shape.
 - A production shape requires record-specific evidence and approval in
   addition to technical readiness.
+- Phase 15C-24 confirms that the current blocker is candidate evidence, not a
+  missing generic schema, validator, renderer, popup, accessibility, category,
+  master-layer or one-active-representation capability.
 - Authority GIS should be sought before project tracing.
 - A superseding shape must remove the former Point from active public output
   while preserving it in representation history.
