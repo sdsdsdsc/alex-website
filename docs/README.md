@@ -161,6 +161,11 @@ Key groups include:
   the documentation-only review of all 25 identities on the ordinary-Point
   route. It records A/B/C/D totals of `0/11/0/14`, recommends no publication
   batch, and leaves production unchanged.
+- [Phase 15C-22 Xinyu ordinary Point evidence investigation](./audits/phase-15c-22-xinyu-ordinary-point-evidence-investigation.md),
+  the documentation-only follow-up on exactly the 11 Phase 15C-21 Outcome B
+  identities. It records A/B/C/D totals of `1/10/0/0`, advances only M13
+  魁星阁 to research-ready status using a reproducible WGS84 building-footprint
+  centroid, and publishes nothing.
 
 Phase 15C-16 remains historically valid under its then-current gate. Phase
 15C-17 recalibrates future eligibility but reassesses no identity. Phase
@@ -169,13 +174,18 @@ Outcome A is a research eligibility result only. Phase 15C-19 supplies the
 technical contract without publishing it. Phase 15C-20 records the separately
 approved P04-only PR #78 publication, now merged and production verified.
 Phase 15C-21 separately audits the complete 25-identity ordinary-Point route;
-its zero Outcome A result creates no publication batch.
+its zero Outcome A result creates no publication batch. Phase 15C-22 then
+investigates only its 11 Outcome B identities. M13 is research-ready for a
+separate owner-approved proposal; the other ten remain Outcome B, and this
+research phase itself creates no batch or publication.
 
 PR #69 and PR #78 are merged and production verified. The canonical dataset
 contains seven ordinary Official Heritage Points plus the P04 Xieli
 Generalized Point: eight Points, one national and seven provincial, with no
 line or area geometry. The Xiabu parent and meeting-site component, Qipanshan,
-and the Phase 15C-21 B/D candidates remain unpublished.
+the ten Phase 15C-22 Outcome B candidates, and all Phase 15C-21 Outcome D
+candidates remain unpublished. M13 also remains unpublished pending separate
+owner approval.
 
 ## Archived history
 

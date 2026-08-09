@@ -170,9 +170,13 @@ representation meanings.
 - Phase 15C-20 / PR #78 is merged and production verified. It publishes P04
   Xieli as the first hollow-diamond Generalized Point with the complete
   structured contract and persistent limitations.
-- Phase 15C-21 / draft PR #79 audits exactly the 25 ordinary-Point-route
-  identities without publishing them. Its A/B/C/D totals are `0/11/0/14`; no
-  future ordinary-Point publication batch is proposed.
+- Phase 15C-21 / PR #79 is merged and production verified. It audits exactly
+  the 25 ordinary-Point-route identities without publishing them and records
+  A/B/C/D totals of `0/11/0/14`.
+- Phase 15C-22 / draft PR #80 investigates only those 11 Outcome B identities.
+  Its A/B/C/D totals are `1/10/0/0`: M13 魁星阁 is research-ready for a
+  separate owner-approved proposal, while the other ten remain withheld.
+  PR #80 creates no publication batch and changes no production data.
 - Later representation-lifecycle extensions must land before the interface
   adapts public presentation to active-representation selection.
 - The adapted renderer, filters, provenance, and accessibility must be ready
