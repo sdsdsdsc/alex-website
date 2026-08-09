@@ -35,7 +35,7 @@ import {
   buildOfficialMarkerAccessibleName,
   buildOfficialPopupData,
   validateOfficialHeritageGeoJson
-} from "./heritage-engine/official-heritage-map.js?v=2026-08-04-xieli-generalized-point";
+} from "./heritage-engine/official-heritage-map.js?v=2026-08-09-kuixing-pavilion-point";
 import {
   COMMUNITY_MAP_CATEGORY_DEFINITIONS,
   buildCommunityMarkerAccessibleName,
@@ -48,7 +48,7 @@ import {
   getPublishedOfficialMapCategories
 } from "./heritage-engine/official-map-categories.js?v=2026-07-27-official-category-filters";
 
-const OFFICIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-official-protected-heritage-map.geojson?v=2026-08-04-xieli-generalized-point";
+const OFFICIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-official-protected-heritage-map.geojson?v=2026-08-09-kuixing-pavilion-point";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",

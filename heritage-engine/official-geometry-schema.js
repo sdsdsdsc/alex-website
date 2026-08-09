@@ -12,6 +12,7 @@ const OFFICIAL_GEOMETRY_MEANINGS = Object.freeze([
   "compound-reference-point",
   "component-reference-point",
   "provider-located-project-reviewed-reference-point",
+  "heritage-building-reference-point",
   "approximate-site-point",
   "generalized-reference-point",
   "reviewed-line",
@@ -71,6 +72,7 @@ const GEOMETRY_MEANINGS_BY_TYPE = Object.freeze({
     "compound-reference-point",
     "component-reference-point",
     "provider-located-project-reviewed-reference-point",
+    "heritage-building-reference-point",
     "approximate-site-point",
     "generalized-reference-point"
   ]),
@@ -96,6 +98,7 @@ const GEOMETRY_MEANING_PRESENTATION_LABELS = Object.freeze({
   "compound-reference-point": "Compound reference point",
   "component-reference-point": "Component reference point",
   "provider-located-project-reviewed-reference-point": "Provider-located project-reviewed reference point",
+  "heritage-building-reference-point": "Heritage building reference point (approximate project-reviewed location)",
   "approximate-site-point": "Approximate site location",
   "generalized-reference-point": "Generalized project reference point",
   "reviewed-line": "Reviewed line",
@@ -109,6 +112,7 @@ const GEOMETRY_MEANING_PRESENTATION_LABELS = Object.freeze({
 const REQUIRED_PRECISION_BY_MEANING = Object.freeze({
   "reviewed-location-point": "reviewed",
   "provider-located-project-reviewed-reference-point": "approximate",
+  "heritage-building-reference-point": "approximate",
   "approximate-site-point": "approximate",
   "generalized-reference-point": "generalized",
   "reviewed-line": "reviewed",

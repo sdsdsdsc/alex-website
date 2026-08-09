@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
@@ -135,7 +136,9 @@ const expandedIds = [
 const xiabuId = "JX-XY-PCH-018";
 const xieliId = "JX-XY-PCH-004";
 const n07Id = "JX-XY-NCH-007";
+const m13Id = "JX-XY-MCH-013";
 const publishedIds = [
+  m13Id,
   n07Id,
   "JX-XY-PCH-001",
   xieliId,
@@ -143,11 +146,11 @@ const publishedIds = [
   xiabuId
 ];
 
-test("aggregate joins eighteen records and publishes seven ordinary Points plus Xieli", () => {
+test("aggregate joins nineteen records and publishes eight ordinary Points plus Xieli", () => {
   const result = generate();
   assert.equal(AGGREGATE_SCHEMA_VERSION, "2.0.0");
-  assert.equal(result.geojson.metadata.sourceRecordCount, 18);
-  assert.equal(result.geojson.metadata.featureCount, 8);
+  assert.equal(result.geojson.metadata.sourceRecordCount, 19);
+  assert.equal(result.geojson.metadata.featureCount, 9);
   assert.equal(result.geojson.metadata.excludedRecordCount, 10);
   assert.equal(result.exclusions.length, 10);
   assert.equal(result.hardErrorCount, 0);
@@ -155,7 +158,7 @@ test("aggregate joins eighteen records and publishes seven ordinary Points plus 
   assert.deepEqual(result.geojson.features.map(({ id }) => id), publishedIds);
 });
 
-test("authority-neutral source and aggregate preserve one national and seven provincial records", () => {
+test("authority-neutral source and aggregate publish one national, seven provincial and one municipal record", () => {
   assert.equal(xinyu.datasetId, "xinyu-official-heritage-records");
   assert.equal(xinyu.dataLayer, "official-heritage-records");
   assert.equal(Object.hasOwn(xinyu, "protectionLevelCode"), false);
@@ -163,9 +166,11 @@ test("authority-neutral source and aggregate preserve one national and seven pro
   const levels = features.map(({ properties }) => properties.protectionLevelZh);
   assert.equal(levels.filter((value) => value === "全国重点文物保护单位").length, 1);
   assert.equal(levels.filter((value) => value === "省级文物保护单位").length, 7);
+  assert.equal(levels.filter((value) => value === "市级文物保护单位").length, 1);
   assert.equal(features.find(({ id }) => id === n07Id).properties.protectionLevelZh, "全国重点文物保护单位");
   assert.equal(features.find(({ id }) => id === xiabuId).properties.protectionLevelZh, "省级文物保护单位");
-  assert.equal(features.filter(({ properties }) => properties.officialCategoryZh === "古建筑").length, 3);
+  assert.equal(features.find(({ id }) => id === m13Id).properties.protectionLevelZh, "市级文物保护单位");
+  assert.equal(features.filter(({ properties }) => properties.officialCategoryZh === "古建筑").length, 4);
   assert.equal(features.filter(({ properties }) => properties.officialCategoryZh === "近现代重要史迹").length, 4);
   assert.equal(features.filter(({ properties }) => properties.officialCategoryZh === "古遗址").length, 1);
   assert.equal(locations.decisions.every(({ sourceDatasetId }) => (
@@ -271,6 +276,55 @@ test("N07 preserves the documented coordinate construction and provider reconcil
   ].forEach((pattern) => assert.match(decision.transformationOrReconciliationMethod, pattern));
 });
 
+test("publishes only M13 as the approved municipal heritage-building reference Point", () => {
+  const records = xinyu.records.filter(({ recordId }) => recordId === m13Id);
+  const decisions = locations.decisions.filter(({ recordId }) => recordId === m13Id);
+  const features = generate().geojson.features.filter(({ id }) => id === m13Id);
+  assert.equal(records.length, 1);
+  assert.equal(decisions.length, 1);
+  assert.equal(features.length, 1);
+
+  const [record] = records;
+  const [decision] = decisions;
+  const [feature] = features;
+  assert.deepEqual(
+    [
+      record.sourceSequence,
+      record.official.officialNameZh,
+      record.official.officialCategoryZh,
+      record.official.officialLocationTextZh,
+      record.official.protectionLevelZh
+    ],
+    [13, "魁星阁", "古建筑", "渝水区城南办事处魁星路", "市级文物保护单位"]
+  );
+  assert.deepEqual(feature.geometry, {
+    type: "Point",
+    coordinates: [114.937158, 27.79789]
+  });
+  assert.equal(decision.coordinateReferenceSystem, "WGS84");
+  assert.equal(decision.estimatedUncertaintyMeters, 30);
+  assert.equal(decision.generalizationRadiusMeters, null);
+  assert.equal(decision.originalProviderCoordinate, null);
+  assert.equal(decision.geometryMeaning, "heritage-building-reference-point");
+  assert.equal(decision.representationStatus, "project-reviewed-interpretation");
+  assert.equal(feature.properties.markerClass, "reviewed");
+  assert.equal(feature.properties.geometryMeaning, "heritage-building-reference-point");
+  assert.equal(feature.properties.geometrySourceType, "project-reviewed-digitization");
+  assert.equal(feature.properties.geometrySourceLabel, "Project-reviewed building reference Point");
+  assert.equal(feature.properties.geometrySourceUrl, "https://www.openstreetmap.org/way/1255899576");
+  assert.equal(feature.properties.geometryPrecision, "approximate");
+  assert.equal(feature.properties.horizontalUncertaintyMetres, 30);
+  assert.match(feature.properties.publicLocationNote, /not an official GIS or survey coordinate/);
+  assert.match(feature.properties.publicLocationNote, /legal protection boundary/);
+  assert.match(decision.transformationOrReconciliationMethod, /signed-area shoelace centroid formula/);
+  assert.match(decision.transformationOrReconciliationMethod, /No datum conversion or Gaode\/Baidu coordinate is used/);
+  assert.match(decision.transformationOrReconciliationMethod, /30-metre horizontal uncertainty/);
+  assert.equal(
+    decision.projectLocationSources.some(({ sourceUrl }) => sourceUrl.endsWith("/way/1255899577")),
+    true
+  );
+});
+
 test("publishes only the approved Xiabu uprising-site component", () => {
   const record = xinyu.records.find(({ recordId }) => recordId === xiabuId);
   const decision = locations.decisions.find(({ recordId }) => recordId === xiabuId);
@@ -324,12 +378,12 @@ test("Xiabu preserves deterministic provider conversion and selection evidence",
   ].forEach((pattern) => assert.match(decision.transformationOrReconciliationMethod, pattern));
 });
 
-test("current generated Points pass the shared geometry foundation with explicit N07 and Xieli metadata", () => {
+test("current generated Points pass the shared geometry foundation with explicit M13, N07 and Xieli metadata", () => {
   const features = generate().geojson.features;
   features.forEach((feature, index) => {
     assert.deepEqual(validateGeneratedFeatureGeometry(feature, `features[${index}]`), []);
     assert.equal(feature.geometry.type, "Point");
-    const explicit = [n07Id, xieliId].includes(feature.id);
+    const explicit = [m13Id, n07Id, xieliId].includes(feature.id);
     assert.equal(Object.hasOwn(feature.properties, "geometryMeaning"), explicit);
     assert.equal(Object.hasOwn(feature.properties, "geometrySourceType"), explicit);
     assert.equal(Object.hasOwn(feature.properties, "geometryPrecision"), explicit);
@@ -448,6 +502,7 @@ test("published Xinyu points are WGS84 and carry project provenance", () => {
   assert.deepEqual(
     publishedIds.map((id) => features.get(id).geometry.coordinates),
     [
+      [114.937158, 27.79789],
       [115.011333, 27.805882],
       [114.937042, 27.798123],
       [114.9198, 27.7626],
@@ -470,6 +525,7 @@ test("published Xinyu points are WGS84 and carry project provenance", () => {
   });
   assert.equal(features.get(xiabuId).properties.publicLocationMeaning, "component-reference");
   assert.equal(features.get(n07Id).properties.publicLocationMeaning, "heritage-feature");
+  assert.equal(features.get(m13Id).properties.publicLocationMeaning, "heritage-feature");
 });
 
 test("official sequence remains distinct from a designation number", () => {
@@ -479,6 +535,36 @@ test("official sequence remains distinct from a designation number", () => {
 
 test("committed aggregate is deterministic", { skip: !committedGeoJson }, () => {
   assert.equal(serializeJson(generate().geojson), serializeJson(committedGeoJson));
+});
+
+test("M13 is the sole addition and every prior source record, decision, Feature and compatibility byte remains preserved", () => {
+  const digest = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+  assert.equal(
+    digest(xinyu.records.filter(({ recordId }) => recordId !== m13Id)),
+    "3d53db30aba7a0e873c0ca6cac9c4d0dacadbcee560f89011a9f16adf8b5213c"
+  );
+  assert.equal(
+    digest(locations.decisions.filter(({ recordId }) => recordId !== m13Id)),
+    "0e73fdf7acf4a43a04f8af79285a880440f1dcf1dc27562bedb2ae2327936682"
+  );
+  assert.equal(
+    digest(committedGeoJson.features.filter(({ id }) => id !== m13Id)),
+    "d85cb887bd40ab76ed6b2c5471271f43d5c726fe76e996187776ea38006a42c0"
+  );
+  assert.equal(
+    digest(committedLegacyGeoJson),
+    "ec4f73f66e95c4830e735f7dfc326fa3c40f6753658424b9cb079e1a530d4376"
+  );
+  assert.equal(committedLegacyGeoJson.features.some(({ id }) => id === m13Id), false);
+  assert.equal(committedLegacyGeoJson.features.length, 7);
+  assert.equal(
+    generate().geojson.features.filter(({ properties }) => properties.markerClass === "generalized").length,
+    1
+  );
+  assert.equal(
+    generate().geojson.features.every(({ geometry }) => geometry.type === "Point"),
+    true
+  );
 });
 
 test("rejects a cross-dataset ID collision before joining", () => {

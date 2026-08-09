@@ -173,10 +173,18 @@ representation meanings.
 - Phase 15C-21 / PR #79 is merged and production verified. It audits exactly
   the 25 ordinary-Point-route identities without publishing them and records
   A/B/C/D totals of `0/11/0/14`.
-- Phase 15C-22 / draft PR #80 investigates only those 11 Outcome B identities.
+- Phase 15C-22 / PR #80 is merged and production verified. It investigates
+  only those 11 Outcome B identities.
   Its A/B/C/D totals are `1/10/0/0`: M13 魁星阁 is research-ready for a
   separate owner-approved proposal, while the other ten remain withheld.
   PR #80 creates no publication batch and changes no production data.
+- Phase 15C-23 / draft PR #81 is the separately owner-approved M13-only
+  publication proposal. Its branch adds one ordinary municipal
+  `heritage-building-reference-point` at WGS84
+  `[114.937158, 27.797890]` with 30 m uncertainty. It preserves all eight live
+  Points, keeps Xieli as the sole Generalized Point, and excludes M13 from the
+  provincial compatibility output. It does not authorize another candidate,
+  a line, or an area.
 - Later representation-lifecycle extensions must land before the interface
   adapts public presentation to active-representation selection.
 - The adapted renderer, filters, provenance, and accessibility must be ready

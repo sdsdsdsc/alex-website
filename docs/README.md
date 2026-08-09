@@ -166,6 +166,12 @@ Key groups include:
   identities. It records A/B/C/D totals of `1/10/0/0`, advances only M13
   魁星阁 to research-ready status using a reproducible WGS84 building-footprint
   centroid, and publishes nothing.
+- [Phase 15C-23 Kuixing Pavilion Point publication proposal](./audits/phase-15c-23-kuixing-pavilion-point-publication.md),
+  the owner-approved draft PR #81 implementation for M13 only. It revalidates
+  the named building-footprint evidence and adds one ordinary municipal
+  `heritage-building-reference-point` at WGS84
+  `[114.937158, 27.797890]` with 30 m uncertainty while preserving Xieli as
+  the sole Generalized Point and the provincial compatibility boundary.
 
 Phase 15C-16 remains historically valid under its then-current gate. Phase
 15C-17 recalibrates future eligibility but reassesses no identity. Phase
@@ -175,17 +181,18 @@ technical contract without publishing it. Phase 15C-20 records the separately
 approved P04-only PR #78 publication, now merged and production verified.
 Phase 15C-21 separately audits the complete 25-identity ordinary-Point route;
 its zero Outcome A result creates no publication batch. Phase 15C-22 then
-investigates only its 11 Outcome B identities. M13 is research-ready for a
-separate owner-approved proposal; the other ten remain Outcome B, and this
-research phase itself creates no batch or publication.
+investigates only its 11 Outcome B identities and is merged and production
+verified. M13 is its sole research-ready result; the other ten remain Outcome
+B. Phase 15C-23 / draft PR #81 is the separate owner-approved M13-only
+publication proposal.
 
 PR #69 and PR #78 are merged and production verified. The canonical dataset
 contains seven ordinary Official Heritage Points plus the P04 Xieli
 Generalized Point: eight Points, one national and seven provincial, with no
 line or area geometry. The Xiabu parent and meeting-site component, Qipanshan,
 the ten Phase 15C-22 Outcome B candidates, and all Phase 15C-21 Outcome D
-candidates remain unpublished. M13 also remains unpublished pending separate
-owner approval.
+candidates remain unpublished. Live production still excludes M13 while draft
+PR #81 remains unmerged; its branch adds M13 only.
 
 ## Archived history
 

@@ -135,7 +135,8 @@ The engine boundary is coherent: Firebase initialization, reads/writes, DOM rend
 | Phase 15C-19 / PR #77 | Generalized reference Point publication contract | Complete; merged and production verified | Extends the existing geometry schema, generator, renderer, popup, and accessible presentation with a reusable structured contract, separated spatial quantities, public-safe provenance, mandatory plus additive limitations, accountable review, active representation, and supersession history. Synthetic non-Xinyu tests cover the complete path. | Publishes no candidate and leaves the seven ordinary Points, ten exclusions, zero Generalized Points, and zero real lines/areas unchanged. | Preserve the merged technical foundation. Candidate publication still requires separate approval and review. |
 | Phase 15C-20 / PR #78 | First Generalized Point publication | Complete; merged and production verified | Adds stable Xieli identity `JX-XY-PCH-004`, one approved Generalized-Point decision at `[114.9198, 27.7626]`, the complete Phase 15C-19 contract, 50 m outward support coverage, hollow-diamond count presentation, deterministic outputs, and candidate-specific tests and documentation. | Production contains 18 source records, eight Point features—seven ordinary and one Generalized—ten exclusions, one national and seven provincial, and zero lines/areas. P04 is the sole addition. | Preserve the verified Xieli publication and require separate evidence and approval for every later candidate. |
 | Phase 15C-21 / PR #79 | Complete ordinary-Point-route candidate audit | Documentation research complete; merged and production verified | Reviews exactly the 25 Phase 15C-18 ordinary-Point-route identities and records A/B/C/D totals of `0/11/0/14`. Eleven retain a plausible Point route with named evidence gaps; fourteen remain withheld. | Publishes nothing, creates no batch, and leaves the eight-Point production baseline and all three production files unchanged. | Preserve the zero-ready baseline. Phase 15C-22 is the separately authorized investigation of its 11 Outcome B identities. |
-| Phase 15C-22 / draft PR #80 | Eleven-candidate ordinary Point evidence investigation | Documentation research complete; draft and unmerged | Investigates exactly the 11 Phase 15C-21 Outcome B identities and records A/B/C/D totals of `1/10/0/0`. M13 魁星阁 is research-ready at project-derived WGS84 `[114.937158, 27.797890]` with 30 m uncertainty; the other ten retain named gaps. | Research eligibility only. It publishes nothing, creates no batch, and leaves all production files and counts unchanged. | Keep every candidate unpublished. Any M13 publication requires a separate candidate-specific owner-approved proposal. |
+| Phase 15C-22 / PR #80 | Eleven-candidate ordinary Point evidence investigation | Documentation research complete; merged and production verified | Investigates exactly the 11 Phase 15C-21 Outcome B identities and records A/B/C/D totals of `1/10/0/0`. M13 魁星阁 is research-ready at project-derived WGS84 `[114.937158, 27.797890]` with 30 m uncertainty; the other ten retain named gaps. | Research eligibility only. It publishes nothing, creates no batch, and leaves all production files and counts unchanged. | Preserve its evidence result. M13 publication belongs only to the separately approved Phase 15C-23 proposal. |
+| Phase 15C-23 / draft PR #81 | Kuixing Pavilion ordinary Point publication | Candidate-specific implementation complete; draft and unmerged | Revalidates M13's named OSM building footprint and distinct P10 compound, reproduces its centroid, and adds stable municipal identity `JX-XY-MCH-013` with one ordinary WGS84 `heritage-building-reference-point` at `[114.937158, 27.797890]` and 30 m uncertainty. | The branch result is 19 records, nine Points—eight ordinary plus Xieli—ten exclusions, one national/seven provincial/one municipal, and zero lines/areas. Live production remains at eight Points until separate merge approval. | Review M13 only. Keep the PR draft and do not merge or deploy within this phase. |
 | Official Heritage spatial policy and roadmap | Current controlling documentation | Defines five simplified public types, evidence-led natural forms, one active public representation per identity, authority-versus-project representation status, rejection gates, provider-located ordinary Point evidence, the recalibrated Generalized reference Point gate, and future sidebar/filter logic. Records completed work and the ordered whole-universe reassessment, lifecycle, interface, first-shape, context, and later-batch work. | Phase 15C-1 / PR #60 validation and Phase 15C-2 / PR #62 mixed-geometry rendering are production verified. Phase 15C-19 supplies the Generalized Point technical contract, and Phase 15C-20 / PR #78 publishes the first verified Generalized Point. No real line or area is published. | Preserve the Phase 15C-18 and Phase 15C-21 evidence outcomes; require separate evidence and owner approval for every later publication. |
 | Phase 15 | Testing/staging/deployment/rollback | Partly done | Pure-helper browser harness, manual phase checks, Git workflow, and GitHub Pages deployment history exist. | No staging environment, automated CI, release checklist, smoke suite, rollback procedure, or deployed-rules verification record tied to releases. | Make this one of the next structural priorities. |
 | Phase 16 | Configuration system for other towns/cities | Not started | Some location helpers and generic place fields are reusable. | Tenant/config model, branding/content configuration, collection isolation, security model, onboarding, and migration strategy. | Do not begin before current single-site workflows are tested and documented. |
@@ -165,8 +166,11 @@ contains 18 source records and eight Points: seven ordinary Points and the
 first hollow-diamond Generalized Point, P04 Xieli. Phase 15C-21 / PR #79 is
 merged and production verified; it audits the complete 25-identity
 ordinary-Point route without publishing it and finds no Outcome A. Phase
-15C-22 / draft PR #80 investigates only its 11 Outcome B identities, advances
-M13 to research-ready status, retains ten B identities, and publishes nothing.
+15C-22 / PR #80 is merged and production verified; it investigates only its 11
+Outcome B identities, advances M13 to research-ready status, retains ten B
+identities, and publishes nothing. Phase 15C-23 / draft PR #81 is the separate
+M13-only implementation. Its branch contains nine Points, but live production
+remains at eight while the PR is unmerged.
 
 Phase 15C-3 is preserved as the historical strict audit, Phase 15C-4 as the
 historical mixed-geometry re-audit, Phase 15C-5 as the authoritative detailed
@@ -254,20 +258,19 @@ The current sequence is maintained in the
     and its `0/11/0/14` result;
 12. preserve the Phase 15C-22 investigation of exactly its 11 Outcome B
     identities, the `1/10/0/0` result and the no-publication boundary;
-13. perform only separately authorized candidate-specific evidence work; and
-14. consider Outcome B candidates, lines, areas, and context layers separately.
+13. review the separately authorized M13-only Phase 15C-23 proposal; and
+14. consider every other candidate, line, area, and context layer separately.
 
 The remaining future PR numbers are unassigned; their relative order and
 approved policy scope are unchanged.
 
 ## 11. Current bounded activity
 
-### Phase 15C-22 ordinary Point evidence investigation — draft PR #80
+### Phase 15C-23 Kuixing Pavilion Point publication — draft PR #81
 
-Preserve the verified eight-Point production baseline while PR #80 records the
-documentation-only investigation of exactly the 11 Phase 15C-21 Outcome B
-identities. M13's Outcome A is research eligibility only and creates no
-publication decision, Feature or future batch; the other ten remain Outcome B.
-Do not investigate Phase 15C-21 Outcome D identities, the eight Generalized-
-Point Outcome B identities, add a line or area, change a provider, modify
-Community Heritage or Firebase, deploy, or merge without separate approval.
+Preserve the verified eight-Point live-production baseline while draft PR #81
+implements only the separately approved M13 ordinary Point. The branch adds
+one municipal source identity, one publication decision, and one canonical
+Feature; provincial compatibility remains unchanged. Do not investigate or
+publish another identity, add a line or area, change provider APIs, modify
+Community Heritage or Firebase, deploy manually, or merge this draft.

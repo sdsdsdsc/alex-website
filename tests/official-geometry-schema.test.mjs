@@ -68,9 +68,10 @@ test("controlled geometry vocabularies remain bounded", () => {
     "Polygon",
     "MultiPolygon"
   ]);
-  assert.equal(OFFICIAL_GEOMETRY_MEANINGS.length, 13);
+  assert.equal(OFFICIAL_GEOMETRY_MEANINGS.length, 14);
   assert.ok(OFFICIAL_GEOMETRY_MEANINGS.includes("component-reference-point"));
   assert.ok(OFFICIAL_GEOMETRY_MEANINGS.includes("provider-located-project-reviewed-reference-point"));
+  assert.ok(OFFICIAL_GEOMETRY_MEANINGS.includes("heritage-building-reference-point"));
   assert.equal(OFFICIAL_GEOMETRY_SOURCE_TYPES.length, 6);
   assert.deepEqual(OFFICIAL_GEOMETRY_PRECISIONS, [
     "reviewed",
@@ -96,6 +97,24 @@ test("accepts provider-located project-reviewed Point metadata", () => {
   assert.equal(
     getOfficialGeometryMeaningLabel("provider-located-project-reviewed-reference-point"),
     "Provider-located project-reviewed reference point"
+  );
+});
+
+test("accepts project-reviewed heritage-building reference Point metadata", () => {
+  const result = validateOfficialGeometryMetadata(makeMetadata({
+    geometryMeaning: "heritage-building-reference-point",
+    geometrySourceType: "project-reviewed-digitization",
+    geometrySourceLabel: "Project-reviewed building reference Point",
+    geometrySourceUrl: "https://www.openstreetmap.org/way/1255899576",
+    geometryReviewedAt: "2026-08-09",
+    geometryReviewNotes: "Approximate building reference; not an official GIS point, entrance, extent, legal centre, or boundary.",
+    geometryPrecision: "approximate",
+    horizontalUncertaintyMetres: 30
+  }), "Point");
+  assert.equal(result.valid, true, result.errors.join("; "));
+  assert.equal(
+    getOfficialGeometryMeaningLabel("heritage-building-reference-point"),
+    "Heritage building reference point (approximate project-reviewed location)"
   );
 });
 

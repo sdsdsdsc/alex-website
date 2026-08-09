@@ -12,12 +12,12 @@
       {
         "datasetId": "xinyu-official-heritage-records",
         "sourcePath": "data/xinyu-official-heritage-records.json",
-        "recordCount": 8
+        "recordCount": 9
       }
     ],
     "publicLocationSource": "data/official-protected-heritage-public-locations.json",
-    "sourceRecordCount": 18,
-    "featureCount": 8,
+    "sourceRecordCount": 19,
+    "featureCount": 9,
     "excludedRecordCount": 10,
     "generationStatus": "valid",
     "deterministicSourceOrder": [
@@ -27,6 +27,53 @@
     "geometryProvenance": "Alex's Photo Board reviewed public-location decision"
   },
   "features": [
+    {
+      "type": "Feature",
+      "id": "JX-XY-MCH-013",
+      "properties": {
+        "recordId": "JX-XY-MCH-013",
+        "sourceDatasetId": "xinyu-official-heritage-records",
+        "officialNameZh": "魁星阁",
+        "projectNameEn": "Kuixing Pavilion",
+        "projectEnglishStatus": "Alex's Photo Board project interpretation",
+        "protectionLevelZh": "市级文物保护单位",
+        "officialCategoryZh": "古建筑",
+        "officialLocationTextZh": "渝水区城南办事处魁星路",
+        "sourceTitleZh": "新余市市级以上文物保护单位名录（2025年）",
+        "sourceIssuerZh": "新余市文化广电旅游局",
+        "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+        "sourceAccessedDate": "2026-07-24",
+        "identityConfidence": "confirmed",
+        "siteLocationConfidence": "High",
+        "locationEvidenceConfidence": "Medium",
+        "displayLocationType": "site-point",
+        "locationPrecision": "approximate",
+        "publicLocationMeaning": "heritage-feature",
+        "markerClass": "reviewed",
+        "estimatedUncertaintyMeters": 30,
+        "generalizationRadiusMeters": null,
+        "publicationLocationPolicy": "approximate",
+        "publicLocationNote": "Approximate project-reviewed reference Point at the centroid of the named 魁星阁 building footprint. It identifies the pavilion building but is not an official GIS or survey coordinate, exact entrance, complete building or heritage extent, legal centre, or legal protection boundary. Estimated horizontal uncertainty is 30 metres.",
+        "coordinateReferenceSystem": "WGS84",
+        "projectLocationProvenance": "Alex's Photo Board reviewed public-location decision",
+        "geometryMeaning": "heritage-building-reference-point",
+        "representationStatus": "project-reviewed-interpretation",
+        "geometrySourceType": "project-reviewed-digitization",
+        "geometrySourceLabel": "Project-reviewed building reference Point",
+        "geometrySourceUrl": "https://www.openstreetmap.org/way/1255899576",
+        "geometryReviewedAt": "2026-08-09",
+        "geometryReviewNotes": "Approximate project-reviewed reference Point at the centroid of the named 魁星阁 building footprint. It identifies the pavilion building but is not an official GIS or survey coordinate, exact entrance, complete building or heritage extent, legal centre, or legal protection boundary. Estimated horizontal uncertainty is 30 metres.",
+        "geometryPrecision": "approximate",
+        "horizontalUncertaintyMetres": 30
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.937158,
+          27.79789
+        ]
+      }
+    },
     {
       "type": "Feature",
       "id": "JX-XY-NCH-007",

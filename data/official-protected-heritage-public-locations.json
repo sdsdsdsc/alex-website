@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "datasetId": "official-protected-heritage-public-location-decisions",
   "projectMaintainer": "Alex's Photo Board",
-  "projectLastReviewedDate": "2026-08-03",
+  "projectLastReviewedDate": "2026-08-09",
   "decisions": [
     {
       "recordId": "JX-XY-PCH-001",
@@ -687,6 +687,70 @@
         "providerUrl": "https://www.amap.com/place/B0IDTHR05Y"
       },
       "transformationOrReconciliationMethod": "Gaode POI B0IDTHR05Y supplied 115.016436, 27.802641 in GCJ-02 longitude/latitude order. The repository-established deterministic inverse GCJ-02 transform used Krasovsky 1940 constants a=6378245.0 and ee=0.00669342162296594323 with ten forward-residual correction iterations, producing 115.01133320220836, 27.805881566984727 WGS84 and the retained six-decimal Point 115.011333, 27.805882. Forward transformation reproduces the provider input at retained precision. Exact-name Baidu identity/locality/building evidence, institutional ancestral-hall descriptions and independent OpenStreetMap WGS84 locality review completed the reconciliation; the 100-metre uncertainty covers provider placement, basemap reconciliation, transformation and rounding."
+    },
+    {
+      "recordId": "JX-XY-MCH-013",
+      "sourceDatasetId": "xinyu-official-heritage-records",
+      "identityConfidence": "confirmed",
+      "siteLocationConfidence": "High",
+      "locationEvidenceConfidence": "Medium",
+      "displayLocationType": "site-point",
+      "locationPrecision": "approximate",
+      "publicLocationMeaning": "heritage-feature",
+      "publicationLocationPolicy": "approximate",
+      "sensitivityAssessment": "public-exact-acceptable",
+      "latitude": 27.79789,
+      "longitude": 114.937158,
+      "coordinateReferenceSystem": "WGS84",
+      "estimatedUncertaintyMeters": 30,
+      "generalizationRadiusMeters": null,
+      "geometryMeaning": "heritage-building-reference-point",
+      "representationStatus": "project-reviewed-interpretation",
+      "publicLocationNote": "Approximate project-reviewed reference Point at the centroid of the named 魁星阁 building footprint. It identifies the pavilion building but is not an official GIS or survey coordinate, exact entrance, complete building or heritage extent, legal centre, or legal protection boundary. Estimated horizontal uncertainty is 30 metres.",
+      "locationEvidenceSummary": "The official Xinyu register identifies municipal record M13 魁星阁 on Kuixing Road. Xinyu Museum visitor information independently identifies the pavilion as a managed public visitor feature associated with, but distinct from, the Confucian Temple. OpenStreetMap way 1255899576 is a closed WGS84 building footprint named 魁星阁; way 1255899577 separately maps the surrounding 新余孔庙 compound. Phase 15C-22 independently reconciled the identity, footprint relationship, centroid, uncertainty and misleading-risk gates.",
+      "reviewedBy": "project owner",
+      "reviewedDate": "2026-08-09",
+      "reviewStatus": "approved",
+      "projectLocationSources": [
+        {
+          "sourceId": "JX-XY-MCH-013-S01",
+          "sourceType": "official-record",
+          "sourceTitle": "新余市市级以上文物保护单位名录（2025年）",
+          "sourcePublisher": "新余市文化广电旅游局",
+          "sourceUrl": "https://wxj.xinyu.gov.cn/wxj/qtygwjfsh/2025-12/26/content_8c20af69612748c0ac4570ce91627770.shtml",
+          "sourceAccessedDate": "2026-08-09",
+          "supports": ["official-identity", "official-locality"]
+        },
+        {
+          "sourceId": "JX-XY-MCH-013-S02",
+          "sourceType": "institutional-description",
+          "sourceTitle": "参观须知（孔庙、魁星阁）",
+          "sourcePublisher": "江西省新余市博物馆",
+          "sourceUrl": "https://www.xysmuseum.com/pages_15/",
+          "sourceAccessedDate": "2026-08-09",
+          "supports": ["independent-identity", "visitor-information", "compound-description"]
+        },
+        {
+          "sourceId": "JX-XY-MCH-013-S03",
+          "sourceType": "open-map-geometry",
+          "sourceTitle": "Way: 魁星阁 (1255899576)",
+          "sourcePublisher": "OpenStreetMap contributors",
+          "sourceUrl": "https://www.openstreetmap.org/way/1255899576",
+          "sourceAccessedDate": "2026-08-09",
+          "supports": ["poi-name", "locality-match", "wgs84-reference"]
+        },
+        {
+          "sourceId": "JX-XY-MCH-013-S04",
+          "sourceType": "open-map-geometry",
+          "sourceTitle": "Way: 新余孔庙 (1255899577)",
+          "sourcePublisher": "OpenStreetMap contributors",
+          "sourceUrl": "https://www.openstreetmap.org/way/1255899577",
+          "sourceAccessedDate": "2026-08-09",
+          "supports": ["named-compound", "locality-match", "internal-venue-label"]
+        }
+      ],
+      "originalProviderCoordinate": null,
+      "transformationOrReconciliationMethod": "The accepted input is the closed WGS84 polygon from OpenStreetMap way 1255899576. Applying the standard signed-area shoelace centroid formula after translation to a local origin produces unrounded longitude/latitude [114.9371580, 27.7978904], retained at six decimals as [114.937158, 27.797890]. No datum conversion or Gaode/Baidu coordinate is used. The 30-metre horizontal uncertainty combines approximately 9 metres of centre-to-corner footprint extent with a conservative allowance for unsourced open-map digitization and cross-source physical-feature identification; it is not GPS or survey-grade accuracy. Way 1255899577 separately identifies the surrounding P10 新余孔庙 compound, preventing compound geometry from substituting for M13."
     }
   ]
 }

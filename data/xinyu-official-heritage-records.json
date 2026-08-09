@@ -163,6 +163,25 @@
         "translationStatus": "project-reviewed",
         "translationNote": "Project English interpretation follows the official designation; institutional sources identify the physical feature as the Liao ancestral hall, also described as Shabei ancestral hall. The official sources supply no English name."
       }
+    },
+    {
+      "recordId": "JX-XY-MCH-013",
+      "sourceSequence": 13,
+      "official": {
+        "officialNameZh": "魁星阁",
+        "officialCategoryZh": "古建筑",
+        "officialLocationTextZh": "渝水区城南办事处魁星路",
+        "protectionLevelZh": "市级文物保护单位",
+        "officialDesignationNumber": null,
+        "designationBatch": null,
+        "designationDate": null,
+        "periodZh": null
+      },
+      "projectInterpretation": {
+        "projectNameEn": "Kuixing Pavilion",
+        "translationStatus": "project-reviewed",
+        "translationNote": "Project English interpretation translates the established pavilion name; the official source supplies no English name."
+      }
     }
   ]
 }
