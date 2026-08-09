@@ -154,23 +154,28 @@ Key groups include:
   equivalent accessible text, lifecycle safeguards, and synthetic non-Xinyu
   tests. It publishes no candidate; P04 remains a separate PR #78 proposal.
 - [Phase 15C-20 Xieli Generalized Point publication proposal](./audits/phase-15c-20-xieli-generalized-point-publication.md),
-  the separately approved P04-only draft publication using the Phase 15C-19
+  the separately approved and production-verified P04-only publication using the Phase 15C-19
   contract, hollow-diamond presentation, persistent limitations, deterministic
   source/output updates, and focused production-candidate tests.
+- [Phase 15C-21 Xinyu ordinary Point candidate audit](./audits/phase-15c-21-xinyu-ordinary-point-candidate-audit.md),
+  the documentation-only review of all 25 identities on the ordinary-Point
+  route. It records A/B/C/D totals of `0/11/0/14`, recommends no publication
+  batch, and leaves production unchanged.
 
 Phase 15C-16 remains historically valid under its then-current gate. Phase
 15C-17 recalibrates future eligibility but reassesses no identity. Phase
 15C-18 separately completes the required all-55 reassessment. Its single
 Outcome A is a research eligibility result only. Phase 15C-19 supplies the
 technical contract without publishing it. Phase 15C-20 records the separately
-approved P04-only PR #78 proposal; it does not become live production until a
-later controlled merge and automatic deployment are separately verified.
+approved P04-only PR #78 publication, now merged and production verified.
+Phase 15C-21 separately audits the complete 25-identity ordinary-Point route;
+its zero Outcome A result creates no publication batch.
 
-PR #69 is merged and production verified. The canonical dataset contains the
-five retained Points plus P19 and N07: seven ordinary Official Heritage Point
-features, one national and six provincial, with no Generalized Point, line, or
-area geometry. The Xiabu parent, meeting-site component, Xieli, Qipanshan, and
-the five withheld Phase 15C-13 candidates remain unpublished.
+PR #69 and PR #78 are merged and production verified. The canonical dataset
+contains seven ordinary Official Heritage Points plus the P04 Xieli
+Generalized Point: eight Points, one national and seven provincial, with no
+line or area geometry. The Xiabu parent and meeting-site component, Qipanshan,
+and the Phase 15C-21 B/D candidates remain unpublished.
 
 ## Archived history
 
