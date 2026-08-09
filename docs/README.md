@@ -166,12 +166,15 @@ Key groups include:
   identities. It records A/B/C/D totals of `1/10/0/0`, advances only M13
   魁星阁 to research-ready status using a reproducible WGS84 building-footprint
   centroid, and publishes nothing.
-- [Phase 15C-23 Kuixing Pavilion Point publication proposal](./audits/phase-15c-23-kuixing-pavilion-point-publication.md),
-  the owner-approved draft PR #81 implementation for M13 only. It revalidates
+- [Phase 15C-23 Kuixing Pavilion Point publication](./audits/phase-15c-23-kuixing-pavilion-point-publication.md),
+  the merged, closed, automatically deployed, and production-verified PR #81
+  implementation for M13 only. It revalidates
   the named building-footprint evidence and adds one ordinary municipal
   `heritage-building-reference-point` at WGS84
   `[114.937158, 27.797890]` with 30 m uncertainty while preserving Xieli as
-  the sole Generalized Point and the provincial compatibility boundary.
+  the sole Generalized Point and the seven-Point provincial compatibility
+  boundary. The verified merge commit is
+  `e215ae15f7851ba4d0a4b8ae416423c42543b164`.
 
 Phase 15C-16 remains historically valid under its then-current gate. Phase
 15C-17 recalibrates future eligibility but reassesses no identity. Phase
@@ -183,16 +186,16 @@ Phase 15C-21 separately audits the complete 25-identity ordinary-Point route;
 its zero Outcome A result creates no publication batch. Phase 15C-22 then
 investigates only its 11 Outcome B identities and is merged and production
 verified. M13 is its sole research-ready result; the other ten remain Outcome
-B. Phase 15C-23 / draft PR #81 is the separate owner-approved M13-only
-publication proposal.
+B. Phase 15C-23 / PR #81 is the later, separate M13-only publication, now
+merged and production verified after automatic GitHub Pages deployment.
 
-PR #69 and PR #78 are merged and production verified. The canonical dataset
-contains seven ordinary Official Heritage Points plus the P04 Xieli
-Generalized Point: eight Points, one national and seven provincial, with no
-line or area geometry. The Xiabu parent and meeting-site component, Qipanshan,
-the ten Phase 15C-22 Outcome B candidates, and all Phase 15C-21 Outcome D
-candidates remain unpublished. Live production still excludes M13 while draft
-PR #81 remains unmerged; its branch adds M13 only.
+PR #69, PR #78, and PR #81 are merged and production verified. Current
+production contains 19 official source records, nine Point Features, and ten
+exclusions: eight ordinary Points plus the P04 Xieli Generalized Point, with
+one national, seven provincial, and one municipal published record. M13 魁星阁
+is the sole municipal publication. The Xiabu parent and meeting-site component,
+Qipanshan, the ten Phase 15C-22 Outcome B candidates, and all Phase 15C-21
+Outcome D candidates remain unpublished. There are zero lines and zero areas.
 
 ## Archived history
 

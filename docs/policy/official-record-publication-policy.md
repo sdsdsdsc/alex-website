@@ -675,10 +675,11 @@ The policy-to-production sequence is maintained in the
 Every implementation or publication step requires its own approval and
 evidence. Later shape expansion is open-ended rather than guaranteed.
 
-Current production contains exactly eight Official Heritage Point features:
-seven ordinary Points and the P04 Xieli Generalized reference Point, comprising
-one national and seven provincial published records, with no real line or
-polygon feature. Merged PR #69 published only Xiabu's `暴动举行地旧址`
+Current production contains 19 official source records, exactly nine Official
+Heritage Point Features, and ten exclusions: eight ordinary Points and the P04
+Xieli Generalized reference Point, comprising one national, seven provincial,
+and one municipal published record, with no real line or area feature.
+Merged PR #69 published only Xiabu's `暴动举行地旧址`
 component and N07 beyond the former five-Point baseline; merged PR #78 later
 published Xieli under the separately approved structured contract. The Xiabu
 parent and meeting-site component, Qipanshan, and all real line or polygon
@@ -692,9 +693,12 @@ proposal, not publication approved. Phase 15C-19 implemented the reusable
 technical contract without a production decision or Feature; Phase 15C-20 /
 PR #78 separately published Xieli and is production verified. Phase 15C-22 /
 PR #80 then advanced only M13 魁星阁 to research-ready status. Phase 15C-23 /
-draft PR #81 is its separate candidate-specific publication proposal; M13 does
-not become live production until that PR is separately approved, merged, and
-the automatic deployment is verified. These are factual status updates, not a
+PR #81 later published only M13 as stable identity `JX-XY-MCH-013`, an ordinary
+`heritage-building-reference-point` at WGS84 `[114.937158, 27.797890]` with
+30 m uncertainty. PR #81 is merged and closed at
+`e215ae15f7851ba4d0a4b8ae416423c42543b164`; its automatic GitHub Pages
+deployment is production verified. Xieli remains the sole Generalized Point,
+and no line or area was introduced. These are factual status updates, not a
 change to the policy gates.
 
 ## Explicit non-implementation boundary
