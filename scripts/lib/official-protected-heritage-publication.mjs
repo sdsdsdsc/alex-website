@@ -73,6 +73,7 @@ const REPRESENTATION_STATUSES = new Set([
 ]);
 const EXPLICIT_POINT_GEOMETRY_MEANINGS = new Set([
   "provider-located-project-reviewed-reference-point",
+  "heritage-building-reference-point",
   "generalized-reference-point"
 ]);
 const SOURCE_TYPES = new Set([
@@ -755,14 +756,24 @@ function buildFeature(recordId, record, decision) {
   };
   if (decision.geometryMeaning) {
     const generalized = decision.geometryMeaning === "generalized-reference-point";
+    const buildingReference = decision.geometryMeaning === "heritage-building-reference-point";
+    const buildingGeometrySource = buildingReference
+      ? decision.projectLocationSources.find(({ sourceType }) => sourceType === "open-map-geometry")
+      : null;
     Object.assign(properties, {
       geometryMeaning: decision.geometryMeaning,
       representationStatus: decision.representationStatus,
       geometrySourceType: generalized ? "project-generalized-reference" : "project-reviewed-digitization",
-      geometrySourceLabel: generalized ? "Project-reviewed Generalized reference Point" : "Project-reviewed provider-located reference Point",
+      geometrySourceLabel: generalized
+        ? "Project-reviewed Generalized reference Point"
+        : buildingReference
+          ? "Project-reviewed building reference Point"
+          : "Project-reviewed provider-located reference Point",
       geometrySourceUrl: generalized
         ? decision.generalizedPointContract.provenance.spatialBasis.url
-        : decision.originalProviderCoordinate.providerUrl,
+        : buildingReference
+          ? buildingGeometrySource?.sourceUrl
+          : decision.originalProviderCoordinate.providerUrl,
       geometryReviewedAt: decision.reviewedDate,
       geometryReviewNotes: decision.publicLocationNote,
       geometryPrecision: generalized ? "generalized" : "approximate",

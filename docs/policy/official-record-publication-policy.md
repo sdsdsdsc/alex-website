@@ -675,22 +675,27 @@ The policy-to-production sequence is maintained in the
 Every implementation or publication step requires its own approval and
 evidence. Later shape expansion is open-ended rather than guaranteed.
 
-Current production contains exactly seven ordinary Official Heritage Point
-features—one national and six provincial—and no Generalized reference Point,
-real line, or polygon feature. Merged PR #69 published only Xiabu's
-`暴动举行地旧址` component and N07 beyond the former five-Point baseline. The
-Xiabu parent and meeting-site component, Xieli, Qipanshan, and all real line or
-polygon features remain unpublished. Under the policy applied during Phase
+Current production contains exactly eight Official Heritage Point features:
+seven ordinary Points and the P04 Xieli Generalized reference Point, comprising
+one national and seven provincial published records, with no real line or
+polygon feature. Merged PR #69 published only Xiabu's `暴动举行地旧址`
+component and N07 beyond the former five-Point baseline; merged PR #78 later
+published Xieli under the separately approved structured contract. The Xiabu
+parent and meeting-site component, Qipanshan, and all real line or polygon
+features remain unpublished. Under the policy applied during Phase
 15C-16, zero generalized Point candidates were eligible and its future batch
 was empty. Phase 15C-17 changes no historical outcome or candidate status. The
 separate Phase 15C-18 whole-universe reassessment subsequently rescreens all 55
 identities under the recalibrated gate and records A/B/C/D/E totals of
 `1/8/36/10/0`. P04 Xieli is evidence eligible for a separate publication
-proposal, not publication approved. Phase 15C-19 implements the reusable
-technical contract without a production decision or Feature. Phase 15C-20 is
-the separately approved P04-only draft publication proposal; its branch data
-does not become live production until PR #78 is separately merged and the
-automatic deployment is verified.
+proposal, not publication approved. Phase 15C-19 implemented the reusable
+technical contract without a production decision or Feature; Phase 15C-20 /
+PR #78 separately published Xieli and is production verified. Phase 15C-22 /
+PR #80 then advanced only M13 魁星阁 to research-ready status. Phase 15C-23 /
+draft PR #81 is its separate candidate-specific publication proposal; M13 does
+not become live production until that PR is separately approved, merged, and
+the automatic deployment is verified. These are factual status updates, not a
+change to the policy gates.
 
 ## Explicit non-implementation boundary
 

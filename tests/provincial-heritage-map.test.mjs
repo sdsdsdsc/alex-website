@@ -37,9 +37,9 @@ function makeValidEmpty() {
     metadata: {
       schemaVersion: "2.0.0",
       datasetId: "jiangxi-official-protected-heritage-map",
-      sourceRecordCount: 18,
+      sourceRecordCount: 19,
       featureCount: 0,
-      excludedRecordCount: 18,
+      excludedRecordCount: 19,
       generationStatus: "valid-empty",
       geometryProvenance: "Alex's Photo Board project coordinate review"
     },
@@ -117,7 +117,7 @@ function makeFeatureCollection(features) {
     metadata: {
       ...makeValidEmpty().metadata,
       featureCount: features.length,
-      excludedRecordCount: 18 - features.length,
+      excludedRecordCount: 19 - features.length,
       generationStatus: features.length === 0 ? "valid-empty" : "valid"
     },
     features
@@ -135,7 +135,7 @@ test("accepts the committed valid-empty contract", () => {
   const result = validateOfficialHeritageGeoJson(makeValidEmpty());
   assert.equal(result.status, "valid-empty");
   assert.equal(result.features.length, 0);
-  assert.equal(result.metadata.excludedRecordCount, 18);
+  assert.equal(result.metadata.excludedRecordCount, 19);
 });
 
 test("rejects an unsupported schema", () => {
@@ -171,7 +171,7 @@ test("rejects non-array features", () => {
 test("rejects the wrong source record count", () => {
   const value = makeValidEmpty();
   value.metadata.sourceRecordCount = 9;
-  expectInvalid(value, /sourceRecordCount must be 18/);
+  expectInvalid(value, /sourceRecordCount must be 19/);
 });
 
 test("rejects a feature count mismatch", () => {
@@ -455,18 +455,35 @@ test("publication collection validation fails atomically for a malformed child g
   );
 });
 
-test("accepts the committed eight-marker Xinyu publication set with Xieli generalized", () => {
+test("accepts the committed nine-marker Xinyu publication set with M13 ordinary and Xieli generalized", () => {
   const result = validateOfficialHeritageGeoJson(committedGeoJson);
   assert.equal(result.status, "valid");
-  assert.equal(result.features.length, 8);
-  assert.equal(result.features[0].id, "JX-XY-NCH-007");
-  assert.deepEqual(result.features[0].geometry.coordinates, [115.011333, 27.805882]);
-  assert.equal(result.features[0].properties.markerClass, "reviewed");
-  assert.equal(result.features[0].properties.estimatedUncertaintyMeters, 100);
+  assert.equal(result.features.length, 9);
+  const n07 = result.features.find(({ id }) => id === "JX-XY-NCH-007");
+  assert.deepEqual(n07.geometry.coordinates, [115.011333, 27.805882]);
+  assert.equal(n07.properties.markerClass, "reviewed");
+  assert.equal(n07.properties.estimatedUncertaintyMeters, 100);
   assert.deepEqual(
     result.features.map(({ id }) => id),
-    ["JX-XY-NCH-007", "JX-XY-PCH-001", "JX-XY-PCH-004", "JX-XY-PCH-008", "JX-XY-PCH-009", "JX-XY-PCH-014", "JX-XY-PCH-016", "JX-XY-PCH-018"]
+    ["JX-XY-MCH-013", "JX-XY-NCH-007", "JX-XY-PCH-001", "JX-XY-PCH-004", "JX-XY-PCH-008", "JX-XY-PCH-009", "JX-XY-PCH-014", "JX-XY-PCH-016", "JX-XY-PCH-018"]
   );
+  const m13 = result.features.find(({ id }) => id === "JX-XY-MCH-013");
+  assert.deepEqual(m13.geometry.coordinates, [114.937158, 27.79789]);
+  assert.equal(m13.properties.protectionLevelZh, "市级文物保护单位");
+  assert.equal(m13.properties.markerClass, "reviewed");
+  assert.equal(m13.properties.geometryMeaning, "heritage-building-reference-point");
+  assert.equal(m13.properties.estimatedUncertaintyMeters, 30);
+  assert.equal(m13.properties.generalizationRadiusMeters, null);
+  assert.match(buildOfficialMarkerAccessibleName(m13), /Kuixing Pavilion \(魁星阁\)/);
+  assert.match(buildOfficialMarkerAccessibleName(m13), /Official designation level: Municipal/);
+  assert.match(buildOfficialMarkerAccessibleName(m13), /Map category: Ancient buildings/);
+  assert.match(buildOfficialMarkerAccessibleName(m13), /Heritage building reference point/);
+  const m13Popup = buildOfficialPopupData(m13);
+  assert.equal(m13Popup.geometryMeaning, "heritage-building-reference-point");
+  assert.equal(m13Popup.geometryMeaningLabel, "Heritage building reference point (approximate project-reviewed location)");
+  assert.equal(m13Popup.horizontalUncertaintyMetres, 30);
+  assert.match(m13Popup.publicLocationNote, /not an official GIS or survey coordinate/);
+  assert.match(m13Popup.publicLocationNote, /legal protection boundary/);
   const xieli = result.features.find(({ id }) => id === "JX-XY-PCH-004");
   assert.deepEqual(xieli.geometry.coordinates, [114.9198, 27.7626]);
   assert.equal(xieli.properties.markerClass, "generalized");
@@ -492,7 +509,7 @@ test("accepts the committed eight-marker Xinyu publication set with Xieli genera
       ])
     ),
     {
-      "ancient-buildings": 3,
+      "ancient-buildings": 4,
       "archaeological-sites": 1,
       "important-modern-historic-sites": 4
     }

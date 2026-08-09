@@ -1,7 +1,7 @@
 import {
   deriveLegacyPointGeometryMeaning,
   getOfficialGeometryMeaningLabel
-} from "./official-geometry-schema.js?v=2026-08-04-generalized-point-contract";
+} from "./official-geometry-schema.js?v=2026-08-09-kuixing-pavilion-point";
 
 const OFFICIAL_GEOMETRY_SOURCE_PRESENTATION_LABELS = Object.freeze({
   "official-published-geometry": "Official published geometry",

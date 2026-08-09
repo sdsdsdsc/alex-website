@@ -111,6 +111,26 @@ test("keeps legacy Point presentation separate and marker-compatible", () => {
   });
 });
 
+test("keeps the heritage-building reference Point ordinary and marker-compatible", () => {
+  const point = getOfficialGeometryRenderPresentation({
+    type: "Feature",
+    properties: {
+      geometryMeaning: "heritage-building-reference-point",
+      geometryPrecision: "approximate",
+      geometrySourceType: "project-reviewed-digitization"
+    },
+    geometry: { type: "Point", coordinates: [114.937158, 27.79789] }
+  });
+  assert.deepEqual(point, {
+    geometryType: "Point",
+    geometryMeaning: "heritage-building-reference-point",
+    meaningLabel: "Heritage building reference point (approximate project-reviewed location)",
+    renderer: "point",
+    className: null,
+    pathOptions: null
+  });
+});
+
 test("fails closed instead of inferring a style from geometry type", () => {
   assert.throws(
     () => getOfficialGeometryRenderPresentation(makeFeature({

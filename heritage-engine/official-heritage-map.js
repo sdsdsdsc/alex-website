@@ -17,4 +17,4 @@ export {
   getOfficialDesignationLevelLabel,
   validateOfficialHeritageGeoJson,
   validateOfficialHeritagePublicationGeoJson
-} from "./provincial-heritage-map.js?v=2026-08-04-xieli-generalized-point";
+} from "./provincial-heritage-map.js?v=2026-08-09-kuixing-pavilion-point";

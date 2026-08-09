@@ -3,17 +3,17 @@ import {
   GENERALIZED_POINT_MANDATORY_LIMITATION,
   validateOfficialGeometry,
   validateOfficialGeometryMetadata
-} from "./official-geometry-schema.js?v=2026-08-04-generalized-point-contract";
+} from "./official-geometry-schema.js?v=2026-08-09-kuixing-pavilion-point";
 import {
   getFeatureGeometryMeaning,
   getOfficialGeometryRenderPresentation,
   getOfficialGeometrySourceLabel,
   prepareOfficialGeometryRenderModels
-} from "./official-geometry-rendering.js?v=2026-08-04-generalized-point-contract";
+} from "./official-geometry-rendering.js?v=2026-08-09-kuixing-pavilion-point";
 
 const SUPPORTED_SCHEMA_VERSION = "2.0.0";
 const PROVINCIAL_HERITAGE_DATASET_ID = "jiangxi-official-protected-heritage-map";
-const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 18;
+const PROVINCIAL_HERITAGE_SOURCE_RECORD_COUNT = 19;
 const PROVINCIAL_HERITAGE_LOADING_MESSAGE = "Loading Official Heritage…";
 const PROVINCIAL_HERITAGE_EMPTY_MESSAGE = "No approved Official Heritage locations are available to display yet.";
 const PROVINCIAL_HERITAGE_FAILURE_MESSAGE = "Official Heritage could not be loaded.";
@@ -179,7 +179,10 @@ function validateFeature(feature, index, seenIds, seenRepresentationIds) {
           && properties.estimatedUncertaintyMeters > 0,
         `${path}.properties.estimatedUncertaintyMeters must be a positive finite number.`
       );
-      if (properties.geometryMeaning === "provider-located-project-reviewed-reference-point") {
+      if ([
+        "provider-located-project-reviewed-reference-point",
+        "heritage-building-reference-point"
+      ].includes(properties.geometryMeaning)) {
         addError(
           errors,
           properties.representationStatus === "project-reviewed-interpretation",
