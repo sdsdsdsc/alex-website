@@ -9,13 +9,34 @@ MultiLineString, Polygon, or MultiPolygon and does not change an active Point.
 The exact A/B/C/D totals are **0 / 10 / 1 / 18** across the authoritative
 29-identity non-Point universe.
 
-P09 蓉泉桥 is the highest-priority evidence target, not a preferred production
-candidate. Its exact identity, bridge meaning, official description and low
-sensitivity make it the strongest comparative lead, but its current reviewed
-Point has 75 m uncertainty while the bridge is only 7.7 m long. No reusable
-mapped bridge object was found in the bounded OpenStreetMap check. Inventing
-endpoints from the commercial basemap, modern road or an east–west dimension
-would fail the reproducibility and provenance gates.
+At the audit boundary P09 蓉泉桥 was the strongest relative line-evidence
+candidate, not a publication-ready or preferred production candidate. Its
+exact identity, bridge meaning, official description and low sensitivity made
+it the strongest comparative line lead, but its current reviewed Point has 75
+m uncertainty while the bridge is only 7.7 m long. No reusable mapped bridge
+object was found in the bounded OpenStreetMap check. Inventing endpoints from
+the commercial basemap, modern road or an east–west dimension would fail the
+reproducibility and provenance gates.
+
+## Post-audit owner decision
+
+**P09 蓉泉桥 will remain represented by its existing Point for the foreseeable
+publication path and will not be prioritized for LineString publication.**
+
+The documented bridge length is approximately 7.7 m, and the existing Point
+already communicates its location proportionately for the public map. A 7.7 m
+LineString would add little useful information at ordinary visitor zooms;
+current evidence also supplies no reusable bridge-accurate endpoints or
+centreline. Obtaining high-precision line geometry solely to replace the Point
+therefore offers insufficient present public benefit. This candidate-specific
+decision does not claim that short bridges can never be LineStrings.
+
+Natural spatial form informs geometry choice, but does not compel a line or
+area where a Point is already the clearer and more proportionate public-map
+representation. A shape must add meaningful spatial information; the project
+will not publish one merely to obtain its first non-Point feature. This
+usefulness principle does not weaken any evidence, CRS, provenance, licensing,
+uncertainty, sensitivity or misleading-risk gate.
 
 ## Scope, baseline and production boundary
 
@@ -69,7 +90,9 @@ rights; official or institutional corroboration; resolved component meaning;
 manageable uncertainty; low misleading-boundary risk; acceptable sensitivity;
 reproducible topology; and no reliance on proprietary provider shapes.
 
-The ordered serious set is:
+The ordered serious set below preserves the completed research comparison at
+the audit boundary. It is historical ranking context, not the current future
+investigation queue:
 
 1. P09 蓉泉桥 — B, strongest line lead; exact missing endpoint geometry.
 2. N02 拾年山遗址 — B, compact documented area; no reusable extent.
@@ -103,13 +126,13 @@ meaning gates and are individually recorded as Outcome D in the matrix.
 ### P09 蓉泉桥 — Outcome B
 
 - **1 identity / 2 name / 3 level / 4 classification / 5 category:** P09; 蓉泉桥; provincial; 古建筑; Routes & infrastructure.
-- **6 natural form / 7 type / 8 meaning:** short linear bridge; future LineString; reviewed historic bridge alignment, not the modern road or river.
+- **6 natural form / 7 type / 8 meaning:** short linear bridge; a LineString was considered; reviewed historic bridge alignment, not the modern road or river.
 - **9 strongest source / 10 authority:** Xinyu Museum `蓉泉桥`; 江西省新余市博物馆, corroborated by the current official register.
 - **11 provenance / 12 reuse:** museum prose plus existing reviewed Gaode feature Point and a negative bounded OSM check; no reusable endpoints exist. Museum imagery/geometry has no reuse grant; OSM would be ODbL if a reconciled object existed.
 - **13 CRS/datum / 14 WGS84 path / 15 construction:** current provider Point was GCJ-02 and deterministically inverted to WGS84, but its 75 m uncertainty cannot construct a 7.7 m line. A later line needs source endpoints in a stated datum and a documented transform; no construction is presently permitted.
 - **16 topology / 17 uncertainty:** one continuous two-or-more-vertex LineString is expected; MultiLineString is unnecessary unless evidence shows disconnected surviving fabric. Future uncertainty is unknown and must be materially smaller than 7.7 m.
 - **18 status / 19 boundary risk / 20 sensitivity:** future line would be authority-supplied or explicitly project-reviewed depending on its source; no legal-boundary risk; low sensitivity, but high false-alignment risk.
-- **21 ambiguity / 22 active representation / 23 supersession:** identity is exact, but endpoints versus road alignment remain ambiguous; active ordinary Point `JX-XY-PCH-009`; an approved line must supersede the Point while preserving its provenance/history.
+- **21 ambiguity / 22 active representation / 23 supersession:** identity is exact, but endpoints versus road alignment remain ambiguous; active ordinary Point `JX-XY-PCH-009`; no supersession is now prioritized. Any separately approved future line would still have to supersede the Point while preserving its provenance/history.
 - **24 exact gap / 25 outcome:** reusable bridge-specific endpoints or centreline, known CRS, precision, licence and independent review; **B**.
 
 ### N02 拾年山遗址 — Outcome B
@@ -264,17 +287,29 @@ there is no currently approved, reusable, georeferenced candidate geometry
 with a defensible meaning, CRS path, uncertainty and risk decision. No
 schema/sidebar/lifecycle/renderer change is justified by this audit.
 
-## What a later Outcome A proposal would need
+## Future shape-research direction
 
-No later publication PR is authorized here. If P09 obtains qualifying
-endpoints first, a separate proposal would need to touch only the
-candidate-specific canonical identity/decision and deterministic output,
-candidate tests, publication audit and minimal status documentation. It would
-need to make the LineString the sole active P09 representation, preserve the
-old Point in provenance/history, disclose that the line is a reviewed bridge
-alignment rather than a legal boundary, and prove the source CRS, transform,
-precision, uncertainty, licence and topology. Exact file scope must be
-re-derived from the then-current baseline rather than copied from this audit.
+P09 remains Outcome B as a research finding, but it is removed from the active
+forward investigation priority by the owner decision above. The future deep-
+investigation queue is exactly:
+
+`N01, N02, P01, P02, M01, M04, P12, P16, M31`
+
+No identity in this nine-candidate queue is approved, preferred or Outcome A.
+A separate owner-approved phase after PR #83 is merged may compare them by
+asking whether any supports a truthful, reusable, georeferenced Polygon,
+MultiPolygon or genuinely useful non-Point representation under the
+controlling policy. This correction performs no such research.
+
+The comparison should prioritize shapes that add meaningful information beyond
+a Point and may examine reusable official GIS, georeferenced official plans,
+heritage-management or protection documents, reusable institutional GIS,
+clearly reusable mapped footprints/extents, suitable OpenStreetMap geometry,
+or project-reviewed derivation from legitimate reusable evidence. Area totals,
+verbal dimensions and protection-distance descriptions are insufficient on
+their own. No crisp Polygon may be invented from an incomplete legal or
+protection description, and proprietary Gaode/Baidu shapes may not be copied
+or traced.
 
 ## Verification result and stop point
 
@@ -299,4 +334,5 @@ test change was made.
 This phase stops after one documentation commit and a draft pull request. It
 does not select a preferred production candidate, publish a shape, supersede a
 Point, begin an implementation PR, change providers, deploy, merge, or start a
-new candidate universe.
+new candidate universe. The nine-candidate investigation remains a separate
+owner-approved phase after PR #83 is merged.

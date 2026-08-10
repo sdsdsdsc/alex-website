@@ -192,8 +192,11 @@ representation meanings.
   investigation. It reconciles all 29 authoritative non-Point identities—8
   line and 21 area candidates—and records A/B/C/D totals of `0/10/1/18`.
   No first production shape candidate is research-ready. P09 蓉泉桥 remains
-  the highest-priority evidence target, but its 7.7 m alignment lacks reusable
-  bridge-accurate endpoints. Production remains at zero lines and zero areas.
+  Outcome B and the strongest historical line-evidence lead, but the owner
+  directs that its existing Point remain and that LineString publication not
+  be prioritized. A separate later investigation may compare only `N01, N02,
+  P01, P02, M01, M04, P12, P16, M31`; none is approved or preferred.
+  Production remains at zero lines and zero areas.
 - The merged representation contract and one-active safeguards already cover
   the lifecycle foundation; a candidate-specific publication must exercise
   supersession when an active Point exists.
@@ -202,6 +205,10 @@ representation meanings.
   verification for the first real shape.
 - A production shape requires record-specific evidence and approval in
   addition to technical readiness.
+- Natural spatial form informs geometry choice but does not compel a line or
+  area where a Point is the clearer, proportionate public representation. A
+  shape must add meaningful spatial information rather than exist only to make
+  the layer non-Point.
 - Phase 15C-24 confirms that the current blocker is candidate evidence, not a
   missing generic schema, validator, renderer, popup, accessibility, category,
   master-layer or one-active-representation capability.

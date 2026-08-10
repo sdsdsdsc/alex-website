@@ -178,8 +178,10 @@ Key groups include:
 - [Phase 15C-24 first real shape candidate investigation](./audits/phase-15c-24-first-real-shape-candidate-investigation.md),
   the documentation-only reconciliation of the authoritative 8-line/21-area,
   29-identity non-Point universe. Its A/B/C/D totals are `0/10/1/18`; no first
-  production shape candidate is research-ready. P09 蓉泉桥 is the strongest
-  evidence target but still lacks reusable, bridge-accurate endpoints. The
+  production shape candidate is research-ready. P09 蓉泉桥 remains Outcome B
+  and the strongest historical line lead, but the owner will retain its Point
+  and not prioritize a LineString. Future shape investigation is reserved for
+  `N01, N02, P01, P02, M01, M04, P12, P16, M31`, with no preferred candidate. The
   supporting [candidate matrix](./research/phase-15c-24-first-real-shape-candidate-matrix.md)
   records every identity exactly once.
 
