@@ -175,6 +175,15 @@ Key groups include:
   the sole Generalized Point and the seven-Point provincial compatibility
   boundary. The verified merge commit is
   `e215ae15f7851ba4d0a4b8ae416423c42543b164`.
+- [Phase 15C-24 first real shape candidate investigation](./audits/phase-15c-24-first-real-shape-candidate-investigation.md),
+  the documentation-only reconciliation of the authoritative 8-line/21-area,
+  29-identity non-Point universe. Its A/B/C/D totals are `0/10/1/18`; no first
+  production shape candidate is research-ready. P09 蓉泉桥 remains Outcome B
+  and the strongest historical line lead, but the owner will retain its Point
+  and not prioritize a LineString. Future shape investigation is reserved for
+  `N01, N02, P01, P02, M01, M04, P12, P16, M31`, with no preferred candidate. The
+  supporting [candidate matrix](./research/phase-15c-24-first-real-shape-candidate-matrix.md)
+  records every identity exactly once.
 
 Phase 15C-16 remains historically valid under its then-current gate. Phase
 15C-17 recalibrates future eligibility but reassesses no identity. Phase
@@ -188,6 +197,9 @@ investigates only its 11 Outcome B identities and is merged and production
 verified. M13 is its sole research-ready result; the other ten remain Outcome
 B. Phase 15C-23 / PR #81 is the later, separate M13-only publication, now
 merged and production verified after automatic GitHub Pages deployment.
+Phase 15C-24 then investigates the first real line/area candidate without
+publishing one. It finds no Outcome A and leaves the 19-record, nine-Point,
+ten-exclusion production baseline and all three protected hashes unchanged.
 
 PR #69, PR #78, and PR #81 are merged and production verified. Current
 production contains 19 official source records, nine Point Features, and ten
