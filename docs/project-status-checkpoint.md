@@ -137,7 +137,8 @@ The engine boundary is coherent: Firebase initialization, reads/writes, DOM rend
 | Phase 15C-21 / PR #79 | Complete ordinary-Point-route candidate audit | Documentation research complete; merged and production verified | Reviews exactly the 25 Phase 15C-18 ordinary-Point-route identities and records A/B/C/D totals of `0/11/0/14`. Eleven retain a plausible Point route with named evidence gaps; fourteen remain withheld. | Publishes nothing, creates no batch, and leaves the eight-Point production baseline and all three production files unchanged. | Preserve the zero-ready baseline. Phase 15C-22 is the separately authorized investigation of its 11 Outcome B identities. |
 | Phase 15C-22 / PR #80 | Eleven-candidate ordinary Point evidence investigation | Documentation research complete; merged and production verified | Investigates exactly the 11 Phase 15C-21 Outcome B identities and records A/B/C/D totals of `1/10/0/0`. M13 魁星阁 is research-ready at project-derived WGS84 `[114.937158, 27.797890]` with 30 m uncertainty; the other ten retain named gaps. | Research eligibility only. It publishes nothing, creates no batch, and leaves all production files and counts unchanged. | Preserve its evidence result. M13 publication belongs only to the separately approved Phase 15C-23 proposal. |
 | Phase 15C-23 / PR #81 | Kuixing Pavilion ordinary Point publication | Complete; merged, closed, automatically deployed, and production verified | Revalidates M13's named OSM building footprint and distinct P10 compound, reproduces its centroid, and adds stable municipal identity `JX-XY-MCH-013` with one ordinary WGS84 `heritage-building-reference-point` at `[114.937158, 27.797890]` and 30 m uncertainty. | Production contains 19 records, nine Points—eight ordinary plus Xieli—ten exclusions, one national/seven provincial/one municipal, and zero lines/areas. Provincial compatibility remains seven Points and excludes municipal M13. The verified merge commit is `e215ae15f7851ba4d0a4b8ae416423c42543b164`. | Preserve the M13-only scope and verified production state. Require separate owner approval for every later candidate or geometry. |
-| Phase 15C-24 / draft PR #83 | First real Official Heritage shape candidate investigation | Documentation research complete; owner direction recorded; draft and unmerged | Reconciles exactly 8 line and 21 area candidates, preserves A/B/C/D totals of `0/10/1/18`, and finds no research-ready first production shape. P09 蓉泉桥 remains Outcome B and the strongest historical line lead, but the owner will retain its existing Point and not prioritize LineString publication. | Publishes nothing; production remains 19 records, nine Points, ten exclusions and zero lines/areas. No runtime, sidebar, provider, Firebase, Community Heritage or deployment change. | After PR #83 is merged and only with separate owner approval, compare `N01, N02, P01, P02, M01, M04, P12, P16, M31` without preselecting or approving a candidate. |
+| Phase 15C-24 / PR #83 | First real Official Heritage shape candidate investigation | Complete; merged as `a178a682699708e08fb5944bb4effc46be468962` | Reconciles exactly 8 line and 21 area candidates, preserves A/B/C/D totals of `0/10/1/18`, and finds no research-ready first production shape. P09 蓉泉桥 remains Outcome B and the strongest historical line lead, but the owner will retain its existing Point and not prioritize LineString publication. | Publishes nothing; production remains 19 records, nine Points, ten exclusions and zero lines/areas. No runtime, sidebar, provider, Firebase, Community Heritage or deployment change. | Preserve the owner decision and the exact nine-candidate follow-up boundary. |
+| Phase 15C-25 / draft PR #84 | Nine remaining shape-candidate deep investigation | Documentation research complete; draft and unmerged | Investigates exactly `N01, N02, P01, P02, P12, P16, M01, M04, M31`; final A/B/C/D totals are `0/9/0/0`. M31 is the strongest new lead, but its compressed authority-plan copy does not support a reproducible WGS84 shape and reuse/disclosure remain unresolved. | Publishes nothing; production remains 19 records, nine Points, ten exclusions and zero lines/areas. P09 and P04 are not reopened; no infrastructure or deployment change. | No first production shape candidate is research-ready or preferred. Require a separate owner-approved phase if new original/raw spatial evidence emerges. |
 | Official Heritage spatial policy and roadmap | Current controlling documentation | Defines five simplified public types, evidence-led natural forms, one active public representation per identity, authority-versus-project representation status, rejection gates, provider-located ordinary Point evidence, the recalibrated Generalized reference Point gate, and future sidebar/filter logic. Records completed work and the ordered whole-universe reassessment, lifecycle, interface, first-shape, context, and later-batch work. | Phase 15C-1 / PR #60 validation and Phase 15C-2 / PR #62 mixed-geometry rendering are production verified. Phase 15C-19 supplies the Generalized Point technical contract, and Phase 15C-20 / PR #78 publishes the first verified Generalized Point. No real line or area is published. | Preserve the Phase 15C-18 and Phase 15C-21 evidence outcomes; require separate evidence and owner approval for every later publication. |
 | Phase 15 | Testing/staging/deployment/rollback | Partly done | Pure-helper browser harness, manual phase checks, Git workflow, and GitHub Pages deployment history exist. | No staging environment, automated CI, release checklist, smoke suite, rollback procedure, or deployed-rules verification record tied to releases. | Make this one of the next structural priorities. |
 | Phase 16 | Configuration system for other towns/cities | Not started | Some location helpers and generic place fields are reusable. | Tenant/config model, branding/content configuration, collection isolation, security model, onboarding, and migration strategy. | Do not begin before current single-site workflows are tested and documented. |
@@ -267,11 +268,14 @@ The current sequence is maintained in the
     identities, the `1/10/0/0` result and the no-publication boundary;
 13. preserve the completed, merged, and production-verified M13-only Phase
     15C-23 / PR #81 publication; and
-14. preserve the Phase 15C-24 29-identity shape investigation, its
-    `0/10/1/18` result and zero-candidate publication batch; and
-15. consider every other candidate, line, area, and context layer separately.
+14. preserve the merged Phase 15C-24 29-identity shape investigation, its
+    `0/10/1/18` result and zero-candidate publication batch;
+15. preserve the Phase 15C-25 deep investigation of exactly nine remaining
+    Outcome B area candidates, its `0/9/0/0` result and no-preferred-candidate
+    conclusion; and
+16. consider every other candidate, line, area, and context layer separately.
 
-The remaining future PR numbers are unassigned; their relative order and
+No later production PR is assigned by this research; relative order and
 approved policy scope are unchanged.
 
 ## 11. Current bounded activity
@@ -287,7 +291,7 @@ records remain unpublished. Do not investigate or publish another identity,
 add a line or area, change provider APIs, or modify Community Heritage or
 Firebase without separate owner approval.
 
-### Phase 15C-24 first real shape candidate investigation — draft PR #83
+### Phase 15C-24 first real shape candidate investigation — complete PR #83
 
 Preserve the research-only 8-line/21-area reconciliation and its `0/10/1/18`
 outcome. No first production shape candidate is currently research-ready.
@@ -295,8 +299,15 @@ Rongquan Bridge remains Outcome B and the strongest historical line lead, but
 the owner directs that it retain its existing Point and not be prioritized for
 LineString publication. The future active deep-investigation queue is exactly
 `N01, N02, P01, P02, M01, M04, P12, P16, M31`; none is approved or preferred,
-and that research requires a separate owner-approved phase after PR #83 is
-merged. Production stays at 19 records, nine Points, ten exclusions, zero
-lines and zero areas. Do not publish or supersede a representation, redesign
-runtime/sidebar behavior, change providers, deploy, merge PR #83, or begin the
-nine-candidate investigation from this correction.
+and its separate deep investigation is recorded by Phase 15C-25. Production
+stays at 19 records, nine Points, ten exclusions, zero lines and zero areas.
+
+### Phase 15C-25 nine-shape-candidate deep investigation — draft PR #84
+
+Preserve the exact nine-candidate reconciliation and `0/9/0/0` result. No first
+production shape candidate is research-ready after Phase 15C-25. M31 is the
+strongest newly discovered spatial-evidence lead but is not preferred or
+Outcome A: obtain the original/raw authority plan, reproducible WGS84 path,
+clear reuse and grave/access decision before reconsideration. Do not publish or
+supersede a representation, reopen P09/Xieli, redesign infrastructure, deploy,
+merge PR #84, or begin a publication implementation PR.

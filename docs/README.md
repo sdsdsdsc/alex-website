@@ -184,6 +184,16 @@ Key groups include:
   `N01, N02, P01, P02, M01, M04, P12, P16, M31`, with no preferred candidate. The
   supporting [candidate matrix](./research/phase-15c-24-first-real-shape-candidate-matrix.md)
   records every identity exactly once.
+- [Phase 15C-25 nine-shape-candidate deep investigation](./audits/phase-15c-25-nine-shape-candidate-deep-investigation.md),
+  the documentation-only evidence search across exactly the nine remaining
+  Phase 15C-24 Outcome B area candidates. Its final A/B/C/D totals are
+  `0/9/0/0`. M31 supplies the strongest new lead—an authority-approved 2024
+  protection-plan image with separate monument/grave areas and a named CRS—but
+  the compressed copy cannot support a reproducible WGS84 derivation and its
+  geometry reuse and grave/access decisions remain unresolved. Therefore no
+  first production shape candidate is research-ready or preferred. The
+  supporting [evidence matrix](./research/phase-15c-25-nine-shape-evidence-matrix.md)
+  records all nine exactly once and names every remaining blocker.
 
 Phase 15C-16 remains historically valid under its then-current gate. Phase
 15C-17 recalibrates future eligibility but reassesses no identity. Phase
@@ -198,10 +208,13 @@ verified. M13 is its sole research-ready result; the other ten remain Outcome
 B. Phase 15C-23 / PR #81 is the later, separate M13-only publication, now
 merged and production verified after automatic GitHub Pages deployment.
 Phase 15C-24 then investigates the first real line/area candidate without
-publishing one. It finds no Outcome A and leaves the 19-record, nine-Point,
-ten-exclusion production baseline and all three protected hashes unchanged.
+publishing one. Phase 15C-25 follows with deeper spatial-source research on
+exactly its nine remaining Outcome B area candidates. It finds no Outcome A
+and leaves the 19-record, nine-Point, ten-exclusion production baseline and all
+three protected hashes unchanged.
 
-PR #69, PR #78, and PR #81 are merged and production verified. Current
+PR #69, PR #78, and PR #81 are merged and production verified; research-only
+PR #83 is also merged. Current
 production contains 19 official source records, nine Point Features, and ten
 exclusions: eight ordinary Points plus the P04 Xieli Generalized Point, with
 one national, seven provincial, and one municipal published record. M13 魁星阁
