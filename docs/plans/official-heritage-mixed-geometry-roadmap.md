@@ -188,7 +188,7 @@ representation meanings.
   Generalized Point and excludes M13 from the seven-Point provincial
   compatibility output because M13 is municipal. It does not authorize
   another candidate, a line, or an area.
-- Phase 15C-24 / draft PR #83 is the documentation-only first-real-shape
+- Phase 15C-24 / merged PR #83 is the documentation-only first-real-shape
   investigation. It reconciles all 29 authoritative non-Point identities—8
   line and 21 area candidates—and records A/B/C/D totals of `0/10/1/18`.
   No first production shape candidate is research-ready. P09 蓉泉桥 remains
@@ -197,6 +197,14 @@ representation meanings.
   be prioritized. A separate later investigation may compare only `N01, N02,
   P01, P02, M01, M04, P12, P16, M31`; none is approved or preferred.
   Production remains at zero lines and zero areas.
+- Phase 15C-25 / draft PR #84 deeply investigates exactly those nine remaining
+  Outcome B area candidates. Its final A/B/C/D totals are `0/9/0/0`; none is
+  research-ready or preferred. M31 is the strongest new evidence lead because
+  a 2024 authority plan names its CRS, scale and separate monument/grave
+  protection areas, but only a compressed mirrored image is available and its
+  reproducible WGS84 path, geometry reuse and grave/access decisions remain
+  unresolved. No provisional or production geometry is created. P09 and P04
+  are not reopened, and production remains at zero lines and zero areas.
 - The merged representation contract and one-active safeguards already cover
   the lifecycle foundation; a candidate-specific publication must exercise
   supersession when an active Point exists.
@@ -212,6 +220,10 @@ representation meanings.
 - Phase 15C-24 confirms that the current blocker is candidate evidence, not a
   missing generic schema, validator, renderer, popup, accessibility, category,
   master-layer or one-active-representation capability.
+- Phase 15C-25 confirms the same conclusion after candidate-specific GIS,
+  plan, coordinate, PDF/map, OSM, CRS and reuse searches. A named CRS or verbal
+  protection rule without recoverable source coordinates and clear geometry
+  reuse is still insufficient for Outcome A.
 - Authority GIS should be sought before project tracing.
 - A superseding shape must remove the former Point from active public output
   while preserving it in representation history.
