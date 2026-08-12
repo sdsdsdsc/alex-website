@@ -209,7 +209,7 @@ representation meanings.
   created. P09 and P04 are not reopened, and production remains at zero lines
   and zero areas. Post-merge workflow `31548778269` and Pages deployment
   `31548777800` succeeded; live production returned HTTP 200.
-- Phase 15C-26 / draft PR #86 is the M31-only authority-geometry evidence
+- Phase 15C-26 / PR #86 is the M31-only authority-geometry evidence
   acquisition. It recovers the original Xinyu City government announcement
   and both government-hosted M31 images, but the official survey drawing is
   itself only `554 × 371`. No raw CAD/GIS, coordinate table, complete projected
