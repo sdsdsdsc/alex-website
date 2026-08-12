@@ -194,6 +194,12 @@ Key groups include:
   first production shape candidate is research-ready or preferred. The
   supporting [evidence matrix](./research/phase-15c-25-nine-shape-evidence-matrix.md)
   records all nine exactly once and names every remaining blocker.
+- [Phase 15C-26 M31 authority-shape evidence acquisition](./audits/phase-15c-26-m31-authority-shape-evidence.md),
+  the M31-only recovery of the original government announcement and its two
+  official inline attachments. The upstream survey drawing is still only
+  `554 × 371`; no raw geometry, complete CRS, WGS84 path, reusable-geometry
+  permission or exact-grave disclosure approval is recovered. M31 therefore
+  remains Outcome B and production remains Point-only.
 
 Phase 15C-16 remains historically valid under its then-current gate. Phase
 15C-17 recalibrates future eligibility but reassesses no identity. Phase
@@ -211,7 +217,9 @@ Phase 15C-24 then investigates the first real line/area candidate without
 publishing one. Phase 15C-25 follows with deeper spatial-source research on
 exactly its nine remaining Outcome B area candidates. It finds no Outcome A
 and leaves the 19-record, nine-Point, ten-exclusion production baseline and all
-three protected hashes unchanged.
+three protected hashes unchanged. Phase 15C-26 then investigates only M31,
+recovers the original authority host but not usable source geometry or the
+remaining CRS, reuse and disclosure evidence, and preserves Outcome B.
 
 PR #69, PR #78, and PR #81 are merged and production verified; research-only
 PR #83 is also merged. Current
