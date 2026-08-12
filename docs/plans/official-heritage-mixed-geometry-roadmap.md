@@ -197,14 +197,18 @@ representation meanings.
   be prioritized. A separate later investigation may compare only `N01, N02,
   P01, P02, M01, M04, P12, P16, M31`; none is approved or preferred.
   Production remains at zero lines and zero areas.
-- Phase 15C-25 / draft PR #84 deeply investigates exactly those nine remaining
-  Outcome B area candidates. Its final A/B/C/D totals are `0/9/0/0`; none is
-  research-ready or preferred. M31 is the strongest new evidence lead because
-  a 2024 authority plan names its CRS, scale and separate monument/grave
-  protection areas, but only a compressed mirrored image is available and its
-  reproducible WGS84 path, geometry reuse and grave/access decisions remain
-  unresolved. No provisional or production geometry is created. P09 and P04
-  are not reopened, and production remains at zero lines and zero areas.
+- Phase 15C-25 / PR #84 is complete, merged, closed, automatically deployed,
+  and production verified at merge commit
+  `48602d8968a977d90142cd97b8d5d7a20603dc0f`. It deeply investigates exactly
+  those nine remaining Outcome B area candidates. Its final A/B/C/D totals are
+  `0/9/0/0`; none is research-ready or preferred. M31 is the strongest new
+  evidence lead because a 2024 authority plan names its CRS, scale and separate
+  monument/grave protection areas, but only a compressed mirrored image is
+  available and its reproducible WGS84 path, geometry reuse and grave/access
+  decisions remain unresolved. No provisional or production geometry is
+  created. P09 and P04 are not reopened, and production remains at zero lines
+  and zero areas. Post-merge workflow `31548778269` and Pages deployment
+  `31548777800` succeeded; live production returned HTTP 200.
 - The merged representation contract and one-active safeguards already cover
   the lifecycle foundation; a candidate-specific publication must exercise
   supersession when an active Point exists.
