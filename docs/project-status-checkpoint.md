@@ -274,7 +274,15 @@ The current sequence is maintained in the
 15. preserve the Phase 15C-25 deep investigation of exactly nine remaining
     Outcome B area candidates, its `0/9/0/0` result and no-preferred-candidate
     conclusion; and
-16. consider every other candidate, line, area, and context layer separately.
+16. preserve the Phase 15C-26 / PR #86 M31-only authority-geometry evidence
+    investigation: the original Xinyu government announcement and hosted
+    attachments were recovered, but the upstream survey drawing remains only
+    `554 × 371`; no usable raw coordinate-bearing survey/GIS/CAD data, complete
+    CRS, reproducible WGS84 transformation, reuse/attribution permission, or
+    exact-grave disclosure approval was recovered. M31 remains Outcome B, no
+    provisional or production geometry exists, and no production shape is
+    authorized; and
+17. consider every other candidate, line, area, and context layer separately.
 
 No later production PR is assigned by this research; relative order and
 approved policy scope are unchanged.
