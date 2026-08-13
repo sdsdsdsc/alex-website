@@ -209,6 +209,13 @@ representation meanings.
   created. P09 and P04 are not reopened, and production remains at zero lines
   and zero areas. Post-merge workflow `31548778269` and Pages deployment
   `31548777800` succeeded; live production returned HTTP 200.
+- Phase 15C-26 / PR #86 is the M31-only authority-geometry evidence
+  acquisition. It recovers the original Xinyu City government announcement
+  and both government-hosted M31 images, but the official survey drawing is
+  itself only `554 × 371`. No raw CAD/GIS, coordinate table, complete projected
+  CRS, reproducible WGS84 path, clear geometry-reuse permission or exact-grave
+  disclosure approval is found. M31 remains Outcome B; no research or
+  production geometry is constructed, and no other candidate is reopened.
 - The merged representation contract and one-active safeguards already cover
   the lifecycle foundation; a candidate-specific publication must exercise
   supersession when an active Point exists.
@@ -228,6 +235,10 @@ representation meanings.
   plan, coordinate, PDF/map, OSM, CRS and reuse searches. A named CRS or verbal
   protection rule without recoverable source coordinates and clear geometry
   reuse is still insufficient for Outcome A.
+- Phase 15C-26 confirms that recovering the original authority host is not
+  sufficient by itself: Outcome A still requires source coordinates, the full
+  CRS, a reproducible transformation, lawful geometry reuse, verified topology
+  and an approved grave/access disclosure decision.
 - Authority GIS should be sought before project tracing.
 - A superseding shape must remove the former Point from active public output
   while preserving it in representation history.
