@@ -289,6 +289,18 @@ approved policy scope are unchanged.
 
 ## 11. Current bounded activity
 
+### Public heritage experience audit — PR #87
+
+PR #87 is an [audit-only product-quality review](./audits/public-heritage-experience-audit.md)
+from an ordinary visitor's perspective. It documents Home, Places,
+place-detail, Map, Official Heritage, guidance, account, nomination, mobile
+and practical accessibility findings and selects exactly one proposed next
+implementation: a guided, explicit-entry journey into the existing
+default-off Official Heritage map layer. It changes no product behavior,
+production data, Firebase configuration or rules, Community Heritage model,
+Official Heritage decision/geometry artifact, or deployment state. PR #88 is
+not started and still requires separate owner approval.
+
 ### Phase 15C-23 Kuixing Pavilion Point publication — complete PR #81
 
 Preserve the verified 19-record, nine-Point, ten-exclusion production baseline.
