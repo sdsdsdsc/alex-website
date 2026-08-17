@@ -40,6 +40,7 @@ import {
   normalizeCoordinate,
   toSafeUrl
 } from "./heritage-engine/places.js?v=2026-06-20-releasepolish";
+import { isPublicRecord } from "./heritage-engine/search.js";
 import {
   ARTICLE_RELATIONSHIP_COLLECTIONS,
   getRelationshipWarningSummary,
@@ -1211,12 +1212,17 @@ async function loadPlace() {
       return;
     }
     const data = snapshot.data();
-    renderPlace({
+    const place = {
       id: snapshot.id,
       ...data,
       lat: normalizeCoordinate(data.lat),
       lng: normalizeCoordinate(data.lng)
-    });
+    };
+    if (!isPublicRecord(place)) {
+      if (els.status) els.status.textContent = "Community place record not found.";
+      return;
+    }
+    renderPlace(place);
     await loadApprovedPlaceContributions(snapshot.id);
   } catch (err) {
     console.error("Failed to load community place:", err);

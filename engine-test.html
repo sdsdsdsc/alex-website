@@ -456,7 +456,10 @@
           lng: 113.9
         },
         { id: "private-place", title: "Private Memory", category: "Park", recordStatus: "private", lat: 27.6, lng: 113.8 },
-        { id: "rejected-place", title: "Rejected Memory", category: "Park", recordStatus: "rejected", lat: 27.6, lng: 113.8 }
+        { id: "rejected-place", title: "Rejected Memory", category: "Park", recordStatus: "rejected", lat: 27.6, lng: 113.8 },
+        { id: "draft-place", title: "Draft Memory", category: "Park", recordStatus: "draft", lat: 27.6, lng: 113.8 },
+        { id: "review-place", title: "Review Memory", category: "Park", recordStatus: "under review", lat: 27.6, lng: 113.8 },
+        { id: "archived-place", title: "Archived Memory", category: "Park", recordStatus: "archived", lat: 27.6, lng: 113.8 }
       ];
       const ids = (filters) => getMatchingPublicRecords(fixtures, filters).map((place) => place.id).join("|");
 
@@ -465,6 +468,7 @@
       assertEqual(ids({ assetType: "park" }), "gamma-garden", "Shared Discovery", "asset type falls back to category consistently");
       assertEqual(ids({ heritageCriteria: "historic interest" }), "beta-hall|gamma-garden|invalid-coordinate", "Shared Discovery", "heritage criteria matching is normalized and shared");
       assert(isPublicRecord(fixtures[0]) && !isPublicRecord(fixtures[4]) && !isPublicRecord(fixtures[5]), "Shared Discovery", "public and non-public eligibility is unchanged");
+      assert(!isPublicRecord(fixtures[6]) && !isPublicRecord(fixtures[7]) && !isPublicRecord(fixtures[8]), "Shared Discovery", "every established non-public status is excluded");
       assertEqual(getAssetType(fixtures[2]), "Park", "Shared Discovery", "missing asset type uses category fallback");
       assert(ids({ query: "gamma" }).includes("gamma-garden"), "Shared Discovery", "coordinate-less public record remains discoverable");
       assertEqual(buildDiscoveryMapUrl(fixtures[2]), "", "Shared Discovery", "coordinate-less record has map-unavailable state");
@@ -780,6 +784,14 @@
             title: "Community News",
             relatedPlaces: [{ collection: "communityPlaces", id: "alpha-square", title: "Alpha Community Square" }]
           }
+        },
+        {
+          id: "draft-place",
+          collectionName: "communityPlaces",
+          data: {
+            title: "Draft Place Must Stay Private",
+            recordStatus: "draft"
+          }
         }
       ];
 
@@ -803,6 +815,7 @@
       assert(Boolean(jsonLd["@context"]), "Export Helpers", "@context exists");
       assert(Array.isArray(jsonLd["@graph"]), "Export Helpers", "@graph exists");
       assertEqual(jsonLd["@graph"].length, 3, "Export Helpers", "public graph contains expected records");
+      assertNotContains(serialized, "Draft Place Must Stay Private", "Export Helpers", "public graph excludes non-public community places");
       JSON.parse(serialized);
       assert(true, "Export Helpers", "generated JSON is valid");
 

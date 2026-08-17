@@ -21,6 +21,7 @@ const NOMINATION_STATUSES = Object.freeze([
 
 const PUBLIC_RECORD_STATUSES = Object.freeze([
   "draft",
+  "under review",
   "published",
   "archived"
 ]);

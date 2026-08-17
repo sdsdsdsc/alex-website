@@ -35,6 +35,7 @@
       cleanText as cleanRelationshipText,
       normalizeRelationshipReferences
     } from "./heritage-engine/relationships.js?v=2026-06-19-12b";
+    import { PUBLIC_RECORD_STATUSES } from "./heritage-engine/validation.js?v=2026-08-17-community-publication-state";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -545,8 +546,8 @@
       });
 
       const recordStatus = getInputValue("recordStatus") || "published";
-      if (!["published", "draft", "under review"].includes(recordStatus)) {
-        throw new Error("Record status must be published, draft, or under review.");
+      if (!PUBLIC_RECORD_STATUSES.includes(recordStatus)) {
+        throw new Error(`Record status must be one of: ${PUBLIC_RECORD_STATUSES.join(", ")}.`);
       }
       payload.recordStatus = recordStatus;
       payload.heritageCriteria = parseHeritageCriteria();
@@ -1039,6 +1040,7 @@
               <option value="published" selected>Published</option>
               <option value="draft">Draft</option>
               <option value="under review">Under review</option>
+              <option value="archived">Archived</option>
             </select>
 
             <div class="admin-community-place-form__split">
