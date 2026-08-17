@@ -1735,6 +1735,10 @@ for (const viewport of [
   { width: 430, height: 932 }
 ]) {
   test(`public account journeys fit ${viewport.width}x${viewport.height} in signed-out and signed-in layouts`, async ({ page }) => {
+    await page.route(/\/(?:public-auth|my-nominations)\.js(?:\?.*)?$/, (route) => route.fulfill({
+      contentType: "application/javascript",
+      body: ""
+    }));
     await page.setViewportSize(viewport);
 
     await page.goto("/public-auth.html", { waitUntil: "domcontentloaded" });
