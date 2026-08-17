@@ -72,6 +72,64 @@ function isAppOwnedConsoleError(message) {
   return true;
 }
 
+async function expectNoPageLevelHorizontalOverflow(page) {
+  const dimensions = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth
+  }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
+}
+
+async function setPublicAccountView(page, { signedOutSelector, signedInSelector, signedIn }) {
+  await page.locator(signedOutSelector).evaluate((element, show) => {
+    element.hidden = !show;
+  }, !signedIn);
+  await page.locator(signedInSelector).evaluate((element, show) => {
+    element.hidden = !show;
+  }, signedIn);
+}
+
+async function expectAccountLayoutWithinViewport(page) {
+  const layout = await page.locator(".public-auth-layout").evaluate((element) => {
+    const note = element.querySelector(".public-auth-note").getBoundingClientRect();
+    const panels = element.querySelector(".public-auth-panels").getBoundingClientRect();
+    return {
+      columns: getComputedStyle(element).gridTemplateColumns,
+      viewportWidth: document.documentElement.clientWidth,
+      note: { left: note.left, right: note.right, bottom: note.bottom, width: note.width },
+      panels: { left: panels.left, right: panels.right, top: panels.top, width: panels.width }
+    };
+  });
+
+  expect(layout.columns.trim().split(/\s+/)).toHaveLength(1);
+  expect(layout.note.width).toBeGreaterThan(0);
+  expect(layout.panels.width).toBeGreaterThan(0);
+  expect(layout.note.left).toBeGreaterThanOrEqual(0);
+  expect(layout.panels.left).toBeGreaterThanOrEqual(0);
+  expect(layout.note.right).toBeLessThanOrEqual(layout.viewportWidth + 1);
+  expect(layout.panels.right).toBeLessThanOrEqual(layout.viewportWidth + 1);
+  expect(layout.panels.top).toBeGreaterThanOrEqual(layout.note.bottom - 1);
+}
+
+async function expectControlsWithinViewport(page, selectors) {
+  for (const selector of selectors) {
+    const control = page.locator(selector);
+    await expect(control).toBeVisible();
+    const bounds = await control.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        left: rect.left,
+        right: rect.right,
+        width: rect.width,
+        viewportWidth: document.documentElement.clientWidth
+      };
+    });
+    expect(bounds.width).toBeGreaterThan(0);
+    expect(bounds.left).toBeGreaterThanOrEqual(0);
+    expect(bounds.right).toBeLessThanOrEqual(bounds.viewportWidth + 1);
+  }
+}
+
 function makeSyntheticOfficialFeature({
   id = "JX-PCH-7-001",
   confidence = "High",
@@ -1669,6 +1727,92 @@ test("map workspace remains usable at 200 percent zoom", async ({ page }) => {
     clientWidth: document.documentElement.clientWidth
   }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
+});
+
+for (const viewport of [
+  { width: 320, height: 720 },
+  { width: 390, height: 844 },
+  { width: 430, height: 932 }
+]) {
+  test(`public account journeys fit ${viewport.width}x${viewport.height} in signed-out and signed-in layouts`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+
+    await page.goto("/public-auth.html", { waitUntil: "domcontentloaded" });
+    await setPublicAccountView(page, {
+      signedOutSelector: "#publicAuthSignedOut",
+      signedInSelector: "#publicAuthSignedIn",
+      signedIn: false
+    });
+    await expectAccountLayoutWithinViewport(page);
+    await expectNoPageLevelHorizontalOverflow(page);
+    await expectControlsWithinViewport(page, [
+      "#publicRegisterEmail",
+      "#publicRegisterForm button[type='submit']",
+      "#publicLoginEmail",
+      "#publicLoginForm button[type='submit']"
+    ]);
+
+    await setPublicAccountView(page, {
+      signedOutSelector: "#publicAuthSignedOut",
+      signedInSelector: "#publicAuthSignedIn",
+      signedIn: true
+    });
+    await expectAccountLayoutWithinViewport(page);
+    await expectNoPageLevelHorizontalOverflow(page);
+    await expectControlsWithinViewport(page, [
+      "#publicAuthSignOutButton",
+      "#publicAuthSignedIn a[href='my-nominations.html']",
+      "#publicAuthSignedIn a[href='nominate-place.html']"
+    ]);
+
+    await page.goto("/my-nominations.html", { waitUntil: "domcontentloaded" });
+    await setPublicAccountView(page, {
+      signedOutSelector: "#myNominationsSignedOut",
+      signedInSelector: "#myNominationsSignedIn",
+      signedIn: false
+    });
+    await expectAccountLayoutWithinViewport(page);
+    await expectNoPageLevelHorizontalOverflow(page);
+    await expectControlsWithinViewport(page, ["#myNominationsPrimarySignInLink"]);
+
+    await setPublicAccountView(page, {
+      signedOutSelector: "#myNominationsSignedOut",
+      signedInSelector: "#myNominationsSignedIn",
+      signedIn: true
+    });
+    await expectAccountLayoutWithinViewport(page);
+    await expectNoPageLevelHorizontalOverflow(page);
+    await expectControlsWithinViewport(page, ["#myNominationsSignedIn a[href='nominate-place.html']"]);
+
+    await page.goto("/nominate-place.html", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#nominationForm")).toBeVisible();
+    await expectNoPageLevelHorizontalOverflow(page);
+  });
+}
+
+test("public account pages retain their desktop two-column layout", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+
+  for (const path of ["/public-auth.html", "/my-nominations.html"]) {
+    await page.goto(path, { waitUntil: "domcontentloaded" });
+    const layout = await page.locator(".public-auth-layout").evaluate((element) => {
+      const note = element.querySelector(".public-auth-note").getBoundingClientRect();
+      const panels = element.querySelector(".public-auth-panels").getBoundingClientRect();
+      return {
+        columns: getComputedStyle(element).gridTemplateColumns,
+        note: { left: note.left, right: note.right, width: note.width },
+        panels: { left: panels.left, right: panels.right, width: panels.width },
+        viewportWidth: document.documentElement.clientWidth
+      };
+    });
+
+    expect(layout.columns.trim().split(/\s+/)).toHaveLength(2);
+    expect(layout.note.width).toBeGreaterThan(0);
+    expect(layout.panels.width).toBeGreaterThan(0);
+    expect(layout.panels.left).toBeGreaterThan(layout.note.right);
+    expect(layout.panels.right).toBeLessThanOrEqual(layout.viewportWidth + 1);
+    await expectNoPageLevelHorizontalOverflow(page);
+  }
 });
 
 for (const smokePage of SMOKE_PAGES) {

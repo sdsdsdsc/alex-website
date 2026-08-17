@@ -869,12 +869,6 @@ body > header h1 a.home-link:hover {
   }
 }
 
-@media (max-width: 860px) {
-  .public-auth-layout {
-    grid-template-columns: 1fr;
-  }
-}
-
 .home-feature-image {
   position: relative;
   width: 100%;
@@ -4696,6 +4690,18 @@ body.place-contribution-modal-open {
   grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
   gap: 24px;
   align-items: start;
+}
+
+@media (max-width: 860px) {
+  .public-auth-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .public-auth-hero,
+  .public-auth-note,
+  .public-auth-panels .admin-card {
+    box-sizing: border-box;
+  }
 }
 
 .public-auth-note {
