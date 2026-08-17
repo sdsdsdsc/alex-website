@@ -60,6 +60,40 @@ content are recorded here. Signed-out behavior was checked from the current
 source and existing browser tests; no account was created and the live session
 was not changed.
 
+### Owner-requested discoverability re-check
+
+The initial audit used “Official Heritage discoverability” too broadly and
+overstated the problem. A second read-only desktop/mobile review separated four
+questions that must not be treated as one:
+
+1. **Finding the Layers tab:** good. Search, Filters, Layers and Info are
+   presented together as four visible tabs. At the tested mobile viewport the
+   tabs remained in one row and were 46 pixels high.
+2. **Finding Official Heritage after opening Layers:** good on desktop and
+   adequate on mobile. At `1440 × 900`, the **Official Heritage** legend and
+   orange-diamond **Show Official Heritage** control reached the first viewport.
+   At `390 × 844`, the legend began at about 839 pixels and the control at about
+   875 pixels, so only a small downward scroll was needed. Once selected,
+   **Official categories** appeared directly below, followed by the three
+   available categories and the `9 of 9` status.
+3. **Understanding Community versus Official Heritage:** partial. The visible
+   Community help says those records are contributed and locally maintained,
+   and the two layers use separate headings, controls and symbols. The clearest
+   statement that Official records come from national, provincial or municipal
+   registers remains inside a collapsed, technical explanation.
+4. **Mobile discoverability/usability:** the Layers tab is discoverable, but the
+   long Layers panel weakens feedback. Before Official Heritage was enabled the
+   panel measured about 1,167 pixels and the map began about 1,829 pixels down
+   the page. The issue is distance between the choice and its result, not an
+   absent or unclear Official Heritage control.
+
+The supplied wide-desktop screenshot is consistent with the re-test: once
+Layers is open, the Official Heritage heading, orange symbol, toggle and
+categories form a visually prominent section. The corrected conclusion is
+therefore that **site-wide framing and the plain-language distinction are
+incomplete, but Official Heritage itself is not difficult to discover once a
+visitor opens Layers**.
+
 ## What already works well
 
 - The home page states that the project concerns community-valued places,
@@ -105,12 +139,12 @@ was not changed.
 
 ### Navigation / first visit
 
-**High — the home journey explains only Community Heritage and gives no clear
-entry to Official Heritage.** The hero, introductory text, Places action and
-Heritage Map card all frame the site around community records. The public
-navigation has no Official Heritage destination. A visitor can reasonably
-leave Home believing that the map contains only the same Community Places
-shown in Places.
+**Low — the home journey explains only Community Heritage.** The hero,
+introductory text, Places action and Heritage Map card all frame the site
+around community records. The public navigation has no separate Official
+Heritage destination. This is an incomplete introduction, but the re-test does
+not establish that a visitor who chooses Map will then struggle to find the
+visible Layers tab or its Official Heritage section.
 
 **Medium — mobile navigation is understandable but crowded.** Eleven links
 wrap into three rows before page content. At `390 × 844`, nav links were about
@@ -148,12 +182,13 @@ but it exceeded 4,500 pixels in height before contributions were expanded.
 
 ### Map
 
-**High — the default map experience describes and searches Community Heritage
+**Low — the default map introduction describes and searches Community Heritage
 only.** The opening copy says “Search, filter, and open published community
 heritage records.” Search and Filters apply to Community Heritage, and the
-live status initially reports only community records. The optional Official
-layer is not mentioned until the visitor deliberately chooses **Layers**, the
-third of four tool tabs.
+live status initially reports only community records. That framing could be
+more complete, but the adjacent **Layers** tab is plainly labelled and visible;
+the default state alone is not evidence that the Official layer is difficult
+to discover.
 
 **Medium — opening Layers on mobile puts the map far below a long control
 panel.** At `390 × 844`, the Layers panel was about 1,167 pixels tall and moved
@@ -169,31 +204,36 @@ in explanatory prose can drift from validated data.
 
 ### Official Heritage discoverability
 
-**High — a normal visitor is unlikely to discover the layer.** Official
-Heritage is absent from Home, Places, the About page’s description of the map,
-and the default map introduction. The only functional discovery route is:
+**Low — site-wide entry to the layer is indirect, but Map-level discovery is
+clear.** Official Heritage is absent from Home, Places, the About page’s
+description of the map and the default map introduction. The functional route
+is:
 
 `Map → Layers → Show Official Heritage`
 
-The default-off decision is sound, but there is no guided public entry into
-that choice and no URL state that introduces the layer while preserving user
-consent. The Open Data page contains an Official Heritage download, but that
-is not a normal visual discovery route.
+That path is short and uses familiar, visible labels. On desktop, the Layers
+tab and Official Heritage section are visually prominent. On mobile, the
+Official heading sits at the end of the first viewport after Layers opens and
+the toggle follows after a small scroll. The default-off decision remains
+sound. Once enabled, the official categories, `9 of 9` count and filled/hollow
+symbol legend are clear.
 
-Once enabled, category controls, counts and the filled/hollow symbol legend
-work well. The failure is primarily before activation, not in data loading or
-marker rendering.
+The remaining gap is an incomplete site-wide introduction, not a demonstrated
+Map control failure. A dedicated guided entry could be useful later, but the
+corrected evidence does not justify ranking it above confirmed layout defects
+or public-catalogue trust problems.
 
 ### Community vs Official Heritage comprehension
 
-**High — the distinction is accurate where explained but not introduced at
-the point most visitors need it.** Layers describes Community records as
-contributed and locally maintained, while Official Heritage comes from
-national, provincial or municipal registers. However, the fuller explanation
-is collapsed under Additional information and uses policy language about
-authority, geometry provenance and active representations. A first-time
-visitor receives no short, plain-language comparison on Home or in the
-default map state.
+**Medium — the visible distinction is strong, but its meaning is only partly
+explained in plain language.** Layers identifies Community records as
+contributed and locally maintained, and separates the layers with different
+headings, controls, colours and marker shapes. However, the sentence explaining
+that Official records come from national, provincial or municipal registers is
+collapsed under Additional information and is followed by policy language
+about authority, geometry provenance and active representations. A first-time
+visitor can see that the layers differ without necessarily understanding the
+difference in status and source.
 
 The two layers remain visually distinct and independently switchable. No
 evidence was found that the implementation merges their data models.
@@ -301,92 +341,89 @@ screen-reader session was performed.
 
 | Priority | Issue | Reason |
 | --- | --- | --- |
-| High | Official Heritage has no guided public discovery route | Affects first-time comprehension of a core nine-record layer and the distinction between Community and Official Heritage. |
-| High | Public-auth and My nominations overflow horizontally on mobile | Blocks an important signed-in journey and has a concrete CSS cascade cause. |
+| High | Public-auth and My nominations overflow horizontally on mobile | Places account content off-screen in a core sign-in/history journey and has a concrete CSS cascade cause. The re-test measured the sign-in document at 659 pixels in a 390-pixel viewport. |
 | High | Public Places exposes test/placeholder records | Damages trust in the catalogue; remediation requires an explicit production-content decision. |
+| Medium | Community and Official Heritage are visually distinct but their status/source difference is not explained concisely | Visitors can find and operate both layers, but the clearest source distinction is collapsed inside technical copy. |
+| Medium | The long mobile Layers panel separates controls from the map | The layer choice is findable, but the map starts about 1,829 pixels down the page after Layers opens. |
 | Medium | Generalized Point popup and accessible name are overly technical | The mandatory limitation is correct but appears within a large specialist payload. |
 | Medium | Sparse place records show long stacks of missing-field fallbacks | Honest but reduces readability and perceived record quality. |
 | Medium | Public copy contains stale counts, completed work described as future, and internal collection names | Creates avoidable confusion and maintenance drift. |
 | Medium | Mobile navigation is crowded and below recommended touch height | Still usable, but high-frequency navigation is less comfortable than it should be. |
+| Low | Home/default-map framing does not introduce Official Heritage | The introduction is incomplete, but the Layers tab and Official section are clear once a visitor uses the Map. |
 | Low | Long guidance pages repeat some explanations | Content remains accurate and navigable, so this is polish rather than a blocker. |
 
 ## Recommended next implementation
 
-### One recommendation: provide a guided entry into Official Heritage
+### One recommendation: repair the mobile account layout
 
 #### 1. Problem
 
-Official Heritage is a functioning, policy-controlled public layer with nine
-published representations, but ordinary visitors are not told that it exists
-before they find the third map tab and opt into it. The site therefore presents
-an incomplete picture of its own public heritage content.
+At a `390 × 844` viewport, the public sign-in page expands to 659 pixels wide,
+269 pixels beyond the viewport. The later two-column `.public-auth-layout`
+declaration overrides the earlier responsive one-column rule, leaving core
+account content collapsed or positioned off-screen. The signed-in My
+nominations presentation is affected by the same shared layout.
 
 #### 2. Why it matters
 
-This affects every visitor trying to understand what the website contains,
-not only authenticated contributors. It also creates a conceptual risk:
-visitors may assume Community Places are the whole catalogue, or may encounter
-official diamonds later without having learned why Official and Community
-Heritage are different.
+Sign-in and nomination history are real, current public features. Horizontal
+overflow can prevent a mobile visitor from seeing or comfortably using the
+account panel at all. This is a confirmed functional layout failure rather
+than an inference about whether a visible control will be noticed.
 
 #### 3. Evidence
 
-- Home has a prominent Places action and Community Heritage language but no
-  Official Heritage entry.
-- About says the Map explores the same Community Places records.
-- Places contains only Community Places.
-- The default map introduction, search and filters all describe Community
-  Heritage.
-- Official Heritage requires the undisclosed path
-  `Map → Layers → Show Official Heritage`.
-- After activation, the existing implementation works: nine locations, eight
-  ordinary Points, one Generalized Point, independent categories, distinct
-  symbols and the required limitations.
+- At `390 × 844`, the re-tested public-auth document was 659 pixels wide,
+  producing 269 pixels of horizontal overflow.
+- The first `.public-auth-layout` child remained visible, while the account
+  content column was positioned at the right edge with zero visible width in
+  the captured layout state.
+- My nominations uses the same shared layout and retained horizontal overflow
+  in the signed-out re-test; the earlier signed-in review showed the more severe
+  two-column overflow state.
+- Source inspection identifies the cascade cause: the mobile one-column rule
+  precedes a later base two-column declaration, so the later declaration wins.
+- The nomination form itself stacks correctly, isolating the recommendation to
+  the shared account layout rather than the nomination workflow or Firebase.
 
 #### 4. Why it ranks first
 
-The mobile account overflow is a serious, concrete defect and should follow
-promptly. Public test data also needs a separately governed cleanup decision.
-The Official Heritage entry ranks first because it affects the broadest public
-audience, determines whether a core public layer is understood at all, reduces
-Community-versus-Official confusion, and can be delivered without changing
-heritage data, Firebase, geometry policy or account behavior.
+It is the clearest reproducible usability defect, affects a current end-to-end
+public task and has a bounded presentation-layer cause. Public test data is
+also High priority, but remediation needs a separately governed production
+content decision. The corrected Official Heritage evidence shows clear
+Map-level controls, so a new guided entry no longer ranks first.
 
 #### 5. Approximate scope for PR #88
 
-Implement one coherent **Explore Official Heritage** journey:
+Implement one coherent **mobile account-layout repair**:
 
-- add one plain-language public entry point from the existing Home/About
-  discovery path;
-- open the Map with the Layers tool selected and keyboard focus placed at a
-  short Community-versus-Official explanation or the **Show Official
-  Heritage** control;
-- keep the Official layer off until the visitor explicitly enables it;
-- preserve the existing lazy loading, separate category controls and layer
-  independence;
-- replace the stale static seven-Point sentence with durable copy or a value
-  derived from the validated loaded data;
-- add focused browser coverage for desktop, mobile and keyboard use proving
-  that the guided entry is visible, the Layers panel is selected, the layer
-  remains off before consent, and the validated nine-marker state appears
-  after activation.
+- correct the `.public-auth-layout` cascade so public-auth and My nominations
+  use one column at the existing mobile breakpoint;
+- ensure both the explanatory panel and account content remain within the
+  viewport in signed-out and signed-in states;
+- preserve readable spacing, focus order, labels, status messages and desktop
+  two-column presentation;
+- add focused browser coverage at `390 × 844` for public-auth and My
+  nominations, asserting no page-level horizontal overflow and visible account
+  content; and
+- include a desktop regression check proving that the intended two-column
+  layout still applies above the breakpoint.
 
-This is one implementation outcome: make the existing Official Heritage layer
-findable and understandable without automatically turning it on.
+This is one bounded implementation outcome: make the existing account journey
+usable on mobile without changing authentication or nomination behavior.
 
 #### 6. PR #88 must not
 
-- change the 19 official source records, nine published Points, eight ordinary
-  Points, Xieli Generalized Point, ten exclusions, coordinates, evidence,
-  protection levels, classifications, categories or GeoJSON;
-- weaken, remove or paraphrase away the mandatory Generalized Point limitation;
-- merge Community and Official Heritage or apply community filters to official
-  data;
-- enable Official Heritage by default on ordinary map visits;
-- change Firebase data, Auth, Firestore/Storage rules, nomination privacy,
-  exports or deployment configuration;
-- reopen M31 or any GIS/geometry investigation; or
-- include the separate mobile account-layout or production-content cleanup.
+- change authentication, session, ownership, nomination or recovery behavior;
+- change Firebase data, Auth configuration, Firestore/Storage rules, nomination
+  privacy, exports or deployment configuration;
+- change the Official or Community Heritage experiences, data models or map;
+- change any official source record, publication decision, coordinate,
+  category, GeoJSON or Generalized Point limitation;
+- delete, hide or edit production test/placeholder records;
+- bundle navigation, guidance-copy, popup or place-detail improvements; or
+- reopen M31 or any GIS/geometry investigation.
 
 Those remain separately scoped follow-ups rather than additional PR #88
 deliverables.
