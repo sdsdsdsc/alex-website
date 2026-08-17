@@ -5,6 +5,7 @@ import { makeSyntheticGeneralizedPointContract } from "./fixtures/generalized-po
 const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
+const COMMUNITY_PUBLICATION_VERSION = "2026-08-17-community-publication-state";
 const MAP_PAGE_VERSION = "2026-08-09-kuixing-pavilion-point";
 const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-09-kuixing-pavilion-point";
 const OFFICIAL_CATEGORY_VERSION = "2026-07-27-official-category-filters";
@@ -57,6 +58,92 @@ const SMOKE_PAGES = [
     readySelector: "#mapSearchForm"
   }
 ];
+
+const COMMUNITY_CATEGORY_FIXTURES = [
+  { id: "fixture-building", title: "Published Fixture Building", category: "Building", recordStatus: "published", lat: 27.62, lng: 113.88 },
+  { id: "fixture-park", title: "Published Fixture Park", category: "Park", recordStatus: "published", lat: 27.63, lng: 113.89 },
+  { id: "fixture-landmark", title: "Published Fixture Landmark", category: "Landmark", recordStatus: "published", lat: 27.64, lng: 113.90 },
+  { id: "fixture-route", title: "Published Fixture Route", category: "Street or route", recordStatus: "published", lat: 27.65, lng: 113.91 },
+  { id: "fixture-unknown", title: "Published Fixture Unknown", category: "Unmapped fixture type", recordStatus: "published", lat: 27.66, lng: 113.92 },
+  { id: "fixture-hidden", title: "Unpublished Fixture", category: "Building", recordStatus: "under review", lat: 27.67, lng: 113.93 }
+];
+
+const COMMUNITY_PUBLICATION_FIXTURES = [
+  {
+    id: "fixture-published-place",
+    title: "Published Fixture Place",
+    category: "Building",
+    recordStatus: "published",
+    description: "A deterministic published browser fixture.",
+    lat: 27.62,
+    lng: 113.88
+  },
+  { id: "fixture-draft-place", title: "Draft Fixture Place", category: "Park", recordStatus: "draft", lat: 27.63, lng: 113.89 },
+  { id: "fixture-review-place", title: "Review Fixture Place", category: "Landmark", recordStatus: "under review", lat: 27.64, lng: 113.90 },
+  { id: "fixture-archived-place", title: "Archived Fixture Place", category: "Public space", recordStatus: "archived", lat: 27.65, lng: 113.91 }
+];
+
+async function mockFirestoreCollections(page, collections = {}) {
+  const moduleSource = `
+    const collections = ${JSON.stringify(collections)};
+    function collectionName(reference) {
+      return reference?.collectionName || "";
+    }
+    function documentSnapshot(record) {
+      return {
+        id: record.id,
+        exists: () => true,
+        data: () => ({ ...record })
+      };
+    }
+    export function getFirestore() { return {}; }
+    export function collection(_parent, name) {
+      return { collectionName: name, constraints: [] };
+    }
+    export function doc(parent, nameOrId, maybeId) {
+      return maybeId === undefined
+        ? { collectionName: collectionName(parent), id: nameOrId }
+        : { collectionName: nameOrId, id: maybeId };
+    }
+    export function where(field, operator, value) {
+      return { field, operator, value };
+    }
+    export function query(reference, ...constraints) {
+      return { ...reference, constraints };
+    }
+    export async function getDocs(reference) {
+      let rows = [...(collections[collectionName(reference)] || [])];
+      for (const constraint of reference?.constraints || []) {
+        if (constraint.operator === "==") {
+          rows = rows.filter((row) => row[constraint.field] === constraint.value);
+        }
+      }
+      const docs = rows.map(documentSnapshot);
+      return {
+        docs,
+        empty: docs.length === 0,
+        size: docs.length,
+        forEach(callback) { docs.forEach(callback); }
+      };
+    }
+    export async function getDoc(reference) {
+      const record = (collections[collectionName(reference)] || [])
+        .find((candidate) => candidate.id === reference.id);
+      return record
+        ? documentSnapshot(record)
+        : { id: reference.id, exists: () => false, data: () => undefined };
+    }
+    export function serverTimestamp() { return { seconds: 0, nanoseconds: 0 }; }
+    export async function addDoc() { throw new Error("Unexpected fixture write"); }
+  `;
+
+  await page.route(/firebase-firestore\.js(?:\?.*)?$/, (route) => route.fulfill({
+    status: 200,
+    contentType: "application/javascript",
+    headers: { "access-control-allow-origin": "*" },
+    body: moduleSource
+  }));
+}
 
 function isAppOwnedConsoleError(message) {
   if (!message) return false;
@@ -409,7 +496,7 @@ test("heritage engine helper harness passes", async ({ page }) => {
   await page.goto("/engine-test.html", { waitUntil: "domcontentloaded" });
   await expect(page.locator("#totalCount")).not.toHaveText("0");
   const sharedDiscovery = page.locator(".test-card", { has: page.locator("h2", { hasText: "Shared Discovery" }) });
-  await expect(sharedDiscovery.locator(".result")).toHaveCount(12);
+  await expect(sharedDiscovery.locator(".result")).toHaveCount(13);
   const failures = await sharedDiscovery.locator(".result:has(.badge--fail)").allTextContents();
   expect(failures).toEqual([]);
 
@@ -1399,11 +1486,72 @@ test("Layers tab controls overlays while Leaflet retains basemap selection only"
   await expect(officialToggle).toBeChecked();
 });
 
+test("Community Heritage publication state protects every public route", async ({ page }) => {
+  test.setTimeout(60000);
+  await mockFirestoreCollections(page, {
+    communityPlaces: COMMUNITY_PUBLICATION_FIXTURES,
+    news: [],
+    history: [{
+      id: "fixture-history",
+      title: "Fixture History",
+      relatedPlaces: [
+        { collection: "communityPlaces", id: "fixture-published-place", title: "Published Fixture Place" },
+        { collection: "communityPlaces", id: "fixture-draft-place", title: "Draft Fixture Place" }
+      ]
+    }],
+    placeContributions: [],
+    placeContributionReplies: []
+  });
+
+  await page.goto("/search.html", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#communitySearchCount")).toHaveText("Showing 1 of 1 community place");
+  await expect(page.locator(".community-result-card")).toHaveCount(1);
+  await expect(page.locator(".community-result-card")).toContainText("Published Fixture Place");
+  await expect(page.locator("#communitySearchResults")).not.toContainText("Draft Fixture Place");
+  await expect(page.locator("#communitySearchResults")).not.toContainText("Review Fixture Place");
+  await expect(page.locator("#communitySearchResults")).not.toContainText("Archived Fixture Place");
+
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  expect(await waitForCommunityMapReady(page)).toBe(1);
+  await expect(page.locator(".community-map-pin")).toHaveCount(1);
+  await expect(page.locator(".community-map-pin")).toHaveAttribute(
+    "aria-label",
+    /Published Fixture Place/
+  );
+
+  await page.goto("/place.html?id=fixture-published-place", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#placeRecordContent")).toBeVisible();
+  await expect(page.locator("#placeTitle")).toHaveText("Published Fixture Place");
+
+  for (const id of ["fixture-draft-place", "fixture-review-place", "fixture-archived-place"]) {
+    await page.goto(`/place.html?id=${id}`, { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#placeRecordStatus")).toHaveText("Community place record not found.");
+    await expect(page.locator("#placeRecordContent")).toBeHidden();
+  }
+
+  await page.goto("/export.html", { waitUntil: "domcontentloaded" });
+  const downloadPromise = page.waitForEvent("download");
+  await page.locator("#downloadBtn").click();
+  const download = await downloadPromise;
+  const downloadedPath = await download.path();
+  expect(downloadedPath).toBeTruthy();
+  const exported = JSON.parse(await readFile(downloadedPath, "utf8"));
+  expect(exported["@graph"].map((node) => node["@id"])).toEqual([
+    "article.html?id=fixture-history&type=history",
+    "place.html?id=fixture-published-place"
+  ]);
+  expect(JSON.stringify(exported)).not.toContain("Draft Fixture Place");
+  expect(JSON.stringify(exported)).not.toContain("Review Fixture Place");
+  expect(JSON.stringify(exported)).not.toContain("Archived Fixture Place");
+});
+
 test("community categories are accessible tri-state Map visibility controls", async ({ page }) => {
   test.setTimeout(60000);
-  await page.goto("/map.html?place=jiangxi-test-community-square", { waitUntil: "domcontentloaded" });
+  await mockFirestoreCollections(page, { communityPlaces: COMMUNITY_CATEGORY_FIXTURES });
+  await page.goto("/map.html?place=fixture-route", { waitUntil: "domcontentloaded" });
   const readyCommunityCount = await waitForCommunityMapReady(page);
-  await expect(page.locator("#mapFocusStatus")).toContainText("Focused on Jiangxi Test Community Square");
+  expect(readyCommunityCount).toBe(5);
+  await expect(page.locator("#mapFocusStatus")).toContainText("Focused on Published Fixture Route");
   const layersPanel = await openMapLayersTab(page);
   const parent = layersPanel.getByRole("checkbox", { name: "All community records", exact: true });
   const categoryLabels = [
@@ -1871,10 +2019,22 @@ test("place contribution upload modules use the current cache-busting version", 
   const response = await page.request.get("/place.html");
   expect(response.ok()).toBeTruthy();
   const pageHtml = await response.text();
-  expect(pageHtml).toContain(`place.js?v=${PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION}`);
+  expect(pageHtml).toContain(`place.js?v=${COMMUNITY_PUBLICATION_VERSION}`);
 
-  const scriptResponse = await page.request.get(`/place.js?v=${PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION}`);
+  const scriptResponse = await page.request.get(`/place.js?v=${COMMUNITY_PUBLICATION_VERSION}`);
   expect(scriptResponse.ok()).toBeTruthy();
   const scriptText = await scriptResponse.text();
   expect(scriptText).toContain(`./heritage-engine/place-contributions.js?v=${PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION}`);
+  expect(scriptText).toContain('./heritage-engine/search.js');
+});
+
+test("public-route browser coverage uses fixtures instead of the live placeholder record", async ({ page }) => {
+  const livePlaceholderId = ["jiangxi", "test", "community", "square"].join("-");
+  const browserTestSource = await readFile(new URL("./browser-smoke.spec.mjs", import.meta.url), "utf8");
+  expect(browserTestSource).not.toContain(livePlaceholderId);
+
+  const exportHtml = await (await page.request.get("/export.html")).text();
+  expect(exportHtml).toContain(`export.js?v=${COMMUNITY_PUBLICATION_VERSION}`);
+  const exportScript = await (await page.request.get(`/export.js?v=${COMMUNITY_PUBLICATION_VERSION}`)).text();
+  expect(exportScript).toContain(`./heritage-engine/export.js?v=${COMMUNITY_PUBLICATION_VERSION}`);
 });

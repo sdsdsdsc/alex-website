@@ -1,4 +1,5 @@
 import { stripUnsafePublicFields } from "./validation.js";
+import { isPublicRecord } from "./search.js";
 import {
   ARTICLE_RELATIONSHIP_COLLECTIONS,
   PLACE_RELATIONSHIP_COLLECTIONS,
@@ -260,6 +261,7 @@ function buildArticleJsonLdNode(docId, collectionName, data) {
 
 function buildGraphNode(docId, collectionName, data) {
   if (collectionName === "communityPlaces") {
+    if (!isPublicRecord(data)) return null;
     return buildPlaceJsonLdNode(docId, data);
   }
   if (ARTICLE_COLLECTIONS.has(collectionName)) {
@@ -269,8 +271,25 @@ function buildGraphNode(docId, collectionName, data) {
 }
 
 function buildPublicGraph(records) {
+  const publicPlaceIds = new Set(records
+    .filter((record) => record.collectionName === "communityPlaces" && isPublicRecord(record.data))
+    .map((record) => cleanText(record.id))
+    .filter(Boolean));
+
   return records
-    .map((record) => buildGraphNode(record.id, record.collectionName, record.data))
+    .map((record) => {
+      if (!ARTICLE_COLLECTIONS.has(record.collectionName)) {
+        return buildGraphNode(record.id, record.collectionName, record.data);
+      }
+
+      const publicRelatedPlaces = normalizeRelationshipReferences(record.data?.relatedPlaces, {
+        allowedCollections: PLACE_RELATIONSHIP_COLLECTIONS
+      }).references.filter((reference) => publicPlaceIds.has(reference.id));
+      return buildGraphNode(record.id, record.collectionName, {
+        ...record.data,
+        relatedPlaces: publicRelatedPlaces
+      });
+    })
     .filter(Boolean);
 }
 

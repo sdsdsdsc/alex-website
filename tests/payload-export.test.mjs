@@ -11,7 +11,7 @@ const tempEngineRoot = path.join(tempModuleRoot, "heritage-engine");
 
 await mkdir(tempEngineRoot, { recursive: true });
 
-for (const moduleName of ["validation", "relationships", "export", "nominations"]) {
+for (const moduleName of ["validation", "relationships", "search", "export", "nominations"]) {
   const sourcePath = path.join(workspaceRoot, "heritage-engine", `${moduleName}.js`);
   const targetPath = path.join(tempEngineRoot, `${moduleName}.mjs`);
   const source = await readFile(sourcePath, "utf8");
@@ -35,7 +35,12 @@ const {
   validateNominationAgreements,
   validateNominationEvidenceFields
 } = nominations;
-const { UNSAFE_PUBLIC_FIELD_NAMES, containsUnsafePublicField, stripUnsafePublicFields } = validation;
+const {
+  PUBLIC_RECORD_STATUSES,
+  UNSAFE_PUBLIC_FIELD_NAMES,
+  containsUnsafePublicField,
+  stripUnsafePublicFields
+} = validation;
 const { buildPublicGraph, buildPublicHeritageJsonLd } = publicExport;
 
 function buildValidNominationValues(overrides = {}) {
@@ -678,6 +683,42 @@ test("public validation and export helpers recursively strip unsafe private fiel
   ].forEach((privateValue) => {
     assert.doesNotMatch(exportSerialized, new RegExp(privateValue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   });
+});
+
+test("public export applies the shared Community Heritage publication rule", () => {
+  const graph = buildPublicGraph([
+    { id: "published-place", collectionName: "communityPlaces", data: { title: "Published Place", recordStatus: "published" } },
+    { id: "legacy-place", collectionName: "communityPlaces", data: { title: "Legacy Public Place" } },
+    { id: "draft-place", collectionName: "communityPlaces", data: { title: "Draft Place", recordStatus: "draft" } },
+    { id: "review-place", collectionName: "communityPlaces", data: { title: "Review Place", recordStatus: "under review" } },
+    { id: "archived-place", collectionName: "communityPlaces", data: { title: "Archived Place", recordStatus: "archived" } },
+    {
+      id: "history-story",
+      collectionName: "history",
+      data: {
+        title: "Published History",
+        relatedPlaces: [
+          { collection: "communityPlaces", id: "published-place", title: "Published Place" },
+          { collection: "communityPlaces", id: "draft-place", title: "Draft Place" }
+        ]
+      }
+    }
+  ]);
+
+  assert.deepEqual(
+    graph.map((node) => node["@id"]),
+    [
+      "place.html?id=published-place",
+      "place.html?id=legacy-place",
+      "article.html?id=history-story&type=history"
+    ]
+  );
+  assert.deepEqual(
+    PUBLIC_RECORD_STATUSES,
+    ["draft", "under review", "published", "archived"]
+  );
+  assert.match(JSON.stringify(graph), /Published Place/);
+  assert.doesNotMatch(JSON.stringify(graph), /Draft Place/);
 });
 
 test.todo("public export should recursively strip export-only nested fields like privateReviewData, adminBackupMetadata, promotedPlaceId, and promotedAt when stored JSON-LD contains them under non-blocklisted parent keys");

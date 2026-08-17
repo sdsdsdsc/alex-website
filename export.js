@@ -6,9 +6,9 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import {
-  buildGraphNode,
+  buildPublicGraph,
   buildPublicHeritageJsonLd
-} from "./heritage-engine/export.js?v=2026-06-20-13c";
+} from "./heritage-engine/export.js?v=2026-08-17-community-publication-state";
 
 // === Firebase config (reuse your existing settings) ===
 const firebaseConfig = {
@@ -34,17 +34,20 @@ async function exportHeritageJSON() {
   button.disabled = true;
 
   try {
-    const graphNodes = [];
+    const records = [];
 
     for (const col of COLLECTIONS) {
       const snapshot = await getDocs(collection(db, col));
       snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const node = buildGraphNode(docSnap.id, col, data);
-        if (node) graphNodes.push(node);
+        records.push({
+          id: docSnap.id,
+          collectionName: col,
+          data: docSnap.data()
+        });
       });
     }
 
+    const graphNodes = buildPublicGraph(records);
     const output = buildPublicHeritageJsonLd(graphNodes);
     status.textContent = `✅ ${graphNodes.length} JSON-LD records collected`;
 
