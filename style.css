@@ -1989,6 +1989,7 @@ body.community-modal-open {
   position: relative;
   z-index: 1;
   display: grid;
+  box-sizing: border-box;
   width: min(560px, 100%);
   max-height: min(680px, calc(100vh - 40px));
   gap: 18px;

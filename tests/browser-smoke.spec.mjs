@@ -680,6 +680,19 @@ test("Map layer guidance is contextual, keyboard accessible, concise, and respon
     await page.setViewportSize(viewport);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   }
+
+  await page.setViewportSize({ width: 320, height: 360 });
+  await communityHelp.click();
+  const shortViewportDialog = page.getByRole("dialog", { name: "Community heritage" });
+  const dialogBounds = await shortViewportDialog.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return { top: bounds.top, right: bounds.right, bottom: bounds.bottom, left: bounds.left };
+  });
+  expect(dialogBounds.top).toBeGreaterThanOrEqual(0);
+  expect(dialogBounds.left).toBeGreaterThanOrEqual(0);
+  expect(dialogBounds.right).toBeLessThanOrEqual(320);
+  expect(dialogBounds.bottom).toBeLessThanOrEqual(360);
+  await expect(shortViewportDialog.getByRole("button", { name: "Close help" })).toBeVisible();
 });
 
 test("Criteria distinguishes Asset Type from significance and exposes stable guidance anchors", async ({ page }) => {
