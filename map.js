@@ -378,10 +378,11 @@ function buildOfficialHeritagePopup(feature) {
   const locationNote = document.createElement("p");
   locationNote.className = "official-heritage-map-popup__location-note";
   locationNote.textContent = isPoint
-    ? ({
-        "visitor-reference-point": "This is a public visitor reference and may not coincide with the protected feature.",
-        "component-reference-point": data.publicLocationNote
-      }[data.displayLocationType] || "")
+    ? (data.generalizedPointContract
+        ? ""
+        : ({
+            "visitor-reference-point": "This is a public visitor reference and may not coincide with the protected feature."
+          }[data.displayLocationType] || data.publicLocationNote))
     : data.geometryCaution || data.publicLocationNote;
 
   const generalizedLimitation = document.createElement("p");

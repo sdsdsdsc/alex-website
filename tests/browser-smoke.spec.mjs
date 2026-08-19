@@ -793,7 +793,7 @@ test("production-sized official fixture renders nine accessible markers across r
   await expect(n07Popup.locator(".map-point-card__facts > div").filter({
     has: page.locator("dt", { hasText: /^Map location source$/ })
   })).toContainText("Project-reviewed digitization");
-  await expect(n07Popup).not.toContainText("not an authority-supplied coordinate");
+  await expect(n07Popup).toContainText("not an authority-supplied coordinate");
   const popupHelp = n07Popup.getByRole("button", { name: "? What does this location mean?" });
   await expect(popupHelp).toBeVisible();
   await popupHelp.click();
@@ -816,7 +816,7 @@ test("production-sized official fixture renders nine accessible markers across r
   await expect(m13Popup).toContainText("Heritage building reference point");
   await expect(m13Popup).toContainText("Municipal");
   await expect(m13Popup).toContainText("30 metres");
-  await expect(m13Popup).not.toContainText("not an official GIS or survey coordinate");
+  await expect(m13Popup).toContainText("not an official GIS or survey coordinate");
 
   const xieliMarker = page.getByRole("button", {
     name: /Open Official Heritage record: Xieli Site \(斜里遗址\); Official designation level: Provincial; Map category: Archaeological sites; Generalized project reference point; Generalized reference location\./
@@ -865,7 +865,7 @@ test("production-sized official fixture renders nine accessible markers across r
     hasText: "Rongquan Bridge"
   });
   await expect(bridgePopup).toContainText("Approximate site location");
-  await expect(bridgePopup).not.toContainText("project-reviewed approximate feature location");
+  await expect(bridgePopup).toContainText("project-reviewed approximate feature location");
 
   for (const viewport of [
     { width: 320, height: 720 },
@@ -1379,8 +1379,12 @@ test("official preview renders a synthetic exact Point without changing communit
   );
   const afterEnable = await getRenderedMapState(page);
   expect(afterEnable.communityMarkerCount).toBe(beforeEnable.communityMarkerCount);
-  const transformCoordinates = (transform) =>
-    [...transform.matchAll(/-?\d+(?:\.\d+)?/g)].slice(0, 2).map((value) => Number(value[0]));
+  const transformCoordinates = (transform) => {
+    const match = transform.match(
+      /translate(?:3d)?\(\s*(-?\d+(?:\.\d+)?)px,\s*(-?\d+(?:\.\d+)?)px/
+    );
+    return match ? match.slice(1, 3).map(Number) : [];
+  };
   const beforeCoordinates = transformCoordinates(beforeEnable.mapPaneTransform);
   const afterCoordinates = transformCoordinates(afterEnable.mapPaneTransform);
   expect(afterCoordinates).toHaveLength(2);
@@ -1391,7 +1395,7 @@ test("official preview renders a synthetic exact Point without changing communit
   await marker.press("Enter");
   await expect(page.locator(".official-heritage-map-popup")).toContainText("Test Archaeological Site");
   await expect(page.locator(".official-heritage-map-popup [lang='zh-Hans']").first()).toHaveText("测试遗址");
-  await expect(page.locator(".official-heritage-map-popup")).not.toContainText("not an official designation coordinate");
+  await expect(page.locator(".official-heritage-map-popup")).toContainText("not an official designation coordinate");
 });
 
 test("an unknown non-empty official category uses the static Other presentation without changing source text", async ({ page }) => {
