@@ -61,6 +61,135 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+const MAP_HELP_TOPICS = Object.freeze({
+  community: {
+    title: "Community heritage",
+    paragraphs: [
+      "Community records are contributed and maintained by this project. They describe places that people value locally; they are not statutory designations.",
+      "The category controls change which published community records are visible on this map."
+    ],
+    link: "about-local-heritage.html#community-and-official-heritage",
+    linkLabel: "Community and Official Heritage"
+  },
+  buildings: {
+    title: "Buildings",
+    paragraphs: ["Standing buildings and structures, such as homes, halls, places of worship, shops, schools, bridges and industrial buildings."],
+    link: "criteria.html#asset-type-buildings",
+    linkLabel: "Buildings in Asset Type guidance"
+  },
+  "parks-gardens": {
+    title: "Parks and gardens",
+    paragraphs: ["Designed or community-valued green spaces, such as parks, gardens, cemeteries, recreation grounds and planted public spaces."],
+    link: "criteria.html#asset-type-parks-gardens",
+    linkLabel: "Parks and gardens in Asset Type guidance"
+  },
+  "monuments-landmarks": {
+    title: "Monuments and landmarks",
+    paragraphs: ["Features that commemorate, orient or give identity to a place, such as memorials, statues, public art, gates and waymarkers."],
+    link: "criteria.html#asset-type-monuments-landmarks",
+    linkLabel: "Monuments and landmarks in Asset Type guidance"
+  },
+  "other-sites-landscapes": {
+    title: "Other sites and landscapes",
+    paragraphs: ["Heritage places that are not mainly a building, park or monument, including routes, archaeological sites, industrial remains, waterways and wider landscapes."],
+    link: "criteria.html#asset-type-other-sites-landscapes",
+    linkLabel: "Other sites and landscapes in Asset Type guidance"
+  },
+  unknown: {
+    title: "Unknown or uncategorized",
+    paragraphs: ["Published community records appear here when their asset type is missing or does not match a current map category. The record can still be explored and improved."],
+    link: "criteria.html#asset-type-uncategorized",
+    linkLabel: "Uncategorized records in Asset Type guidance"
+  },
+  official: {
+    title: "Official Heritage",
+    paragraphs: [
+      "Official Heritage records come from national, provincial or municipal registers. They are a separate layer from this project's Community heritage records.",
+      "An official record's designation authority and the source of its displayed map location are not always the same. Open a marker to see its designation level, location type, uncertainty and source."
+    ],
+    link: "about-local-heritage.html#community-and-official-heritage",
+    linkLabel: "Community and Official Heritage"
+  },
+  "official-symbols": {
+    title: "Official Heritage map symbols",
+    paragraphs: [
+      "A filled diamond is a project-reviewed reference Point. A hollow diamond is a generalized reference Point showing a documented vicinity rather than an exact feature.",
+      "The map also supports solid reviewed lines and areas, and dashed approximate or generalized geometry. No official lines or areas are currently published.",
+      "These symbols explain the map representation; they do not change the authority or legal meaning of the official record."
+    ],
+    link: "about-local-heritage.html#community-and-official-heritage",
+    linkLabel: "How official records are represented"
+  }
+});
+
+function initMapContextualHelp() {
+  const modal = document.getElementById("mapContextHelp");
+  const dialog = modal?.querySelector("[role='dialog']");
+  const title = document.getElementById("mapContextHelpTitle");
+  const body = document.getElementById("mapContextHelpBody");
+  const link = document.getElementById("mapContextHelpLink");
+  if (!modal || !dialog || !title || !body || !link) return;
+
+  let returnFocus = null;
+  const pageRegions = [document.querySelector("body > header"), document.querySelector("body > main"), document.querySelector("body > footer")].filter(Boolean);
+  const closeHelp = () => {
+    if (modal.hidden) return;
+    modal.hidden = true;
+    document.body.classList.remove("map-context-help-open");
+    pageRegions.forEach((region) => { region.inert = false; });
+    if (returnFocus?.isConnected) returnFocus.focus();
+    returnFocus = null;
+  };
+  const openHelp = (trigger, topicKey) => {
+    const topic = MAP_HELP_TOPICS[topicKey];
+    if (!topic) return;
+    returnFocus = trigger;
+    title.textContent = topic.title;
+    body.replaceChildren(...topic.paragraphs.map((text) => {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = text;
+      return paragraph;
+    }));
+    link.href = topic.link;
+    link.textContent = topic.linkLabel;
+    modal.hidden = false;
+    document.body.classList.add("map-context-help-open");
+    pageRegions.forEach((region) => { region.inert = true; });
+    modal.querySelector(".map-context-help__close")?.focus();
+  };
+
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest?.("[data-map-help-topic]");
+    if (trigger instanceof HTMLButtonElement) {
+      openHelp(trigger, trigger.dataset.mapHelpTopic);
+      return;
+    }
+    if (event.target.closest?.("[data-map-help-close]")) closeHelp();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (modal.hidden) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      closeHelp();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const focusable = Array.from(dialog.querySelectorAll("a[href], button:not([disabled])"));
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }, true);
+}
+
 function makeBluePinIcon(categoryKey) {
   const category = getCommunityMapCategoryByKey(categoryKey);
   return L.divIcon({
@@ -197,48 +326,24 @@ function buildOfficialHeritagePopup(feature) {
 
   const facts = document.createElement("dl");
   facts.className = "map-point-card__facts";
+  const officialCategory = getOfficialMapCategory(data.officialCategoryZh);
   const factRows = isPoint
     ? [
       ["Official designation level", data.officialDesignationLevelLabel],
-      ["Official category", data.officialCategoryZh, "zh-Hans"],
+      ["Map category", officialCategory.label],
+      ["Original official category", data.officialCategoryZh, "zh-Hans"],
       ["Official location", data.officialLocationTextZh, "zh-Hans"],
-      ["Displayed location", data.markerClass === "generalized" ? "Generalized area reference" : "Reviewed approximate location"],
-      ["Location meaning", data.publicLocationMeaning],
+      ["Displayed location", locationBadge.textContent],
       ["Location evidence", data.locationEvidenceConfidence],
+      ...(data.geometrySourceTypeLabel && data.geometrySourceLabel
+        ? [["Map location source", `${data.geometrySourceTypeLabel}: ${data.geometrySourceLabel}`]]
+        : []),
       ...(data.generalizedPointContract
         ? [
-            ["Spatial basis", data.generalizedPointSpatialBasis],
-            ["Spatial-basis provenance", data.generalizedPointSpatialBasisProvenance],
-            ["Support-area meaning", data.generalizedPointSupportMeaning],
             ["Representative-Point method", data.generalizedPointRepresentativeMethod],
-            ["Limitation provenance", data.generalizedPointLimitationProvenance],
-            ["Source-coordinate precision", `${data.generalizedPointSourcePrecisionMetres} metres`],
-            ["Maximum transformation/frame allowance", `${data.generalizedPointMaximumFrameAllowanceMetres} metres`],
-            ...(data.generalizedPointContract.multiInterpretationEnvelope.applicable
-              ? [["Multi-interpretation envelope", `${data.generalizedPointEnvelopeMetres} metres`]]
-              : []),
-            ["Intentional generalization displacement", `${data.generalizedPointIntentionalDisplacementMetres} metres`],
-            ["Support-area maximum distance", `${data.generalizedPointSupportDistanceMetres} metres`],
-            ["Displayed coordinate precision", `${data.generalizedPointDisplayDecimalPlaces} decimal places`],
-            ["Outward coverage", `${data.generalizedPointOutwardCoverageMetres} metres`]
+            ["Reference-area coverage", `${data.generalizedPointOutwardCoverageMetres} metres`]
           ]
         : [["Estimated location uncertainty", `${data.estimatedUncertaintyMeters} metres`]]),
-      ...(data.geometryMeaning
-        ? [
-            ["Geometry meaning", data.geometryMeaningLabel],
-            ...(data.representationStatus
-              ? [["Representation status", data.representationStatus === "project-reviewed-interpretation"
-                ? "Project-reviewed interpretation"
-                : data.representationStatus]]
-              : []),
-            ...(data.geometrySourceTypeLabel && data.geometrySourceLabel
-              ? [["Geometry provenance", `${data.geometrySourceTypeLabel}: ${data.geometrySourceLabel}`]]
-              : [])
-          ]
-        : []),
-      ...(data.markerClass === "generalized" && !data.generalizedPointContract
-        ? [["Generalization radius", `${data.generalizationRadiusMeters} metres`]]
-        : []),
       ["Official source", data.sourceLabel, "zh-Hans"],
       ["Source accessed", data.sourceAccessedDate]
     ]
@@ -270,16 +375,13 @@ function buildOfficialHeritagePopup(feature) {
     facts.appendChild(row);
   });
 
-  const provenance = document.createElement("p");
-  provenance.className = "official-heritage-map-popup__provenance";
-  provenance.textContent = isPoint
-    ? data.coordinateProvenance
-    : data.geometryReviewNotes;
-
   const locationNote = document.createElement("p");
   locationNote.className = "official-heritage-map-popup__location-note";
   locationNote.textContent = isPoint
-    ? data.publicLocationNote
+    ? ({
+        "visitor-reference-point": "This is a public visitor reference and may not coincide with the protected feature.",
+        "component-reference-point": data.publicLocationNote
+      }[data.displayLocationType] || "")
     : data.geometryCaution || data.publicLocationNote;
 
   const generalizedLimitation = document.createElement("p");
@@ -290,10 +392,17 @@ function buildOfficialHeritagePopup(feature) {
   candidateLimitation.className = "official-heritage-map-popup__candidate-limitation";
   candidateLimitation.textContent = data.generalizedPointCandidateLimitation;
 
-  article.append(title, locationBadge, officialName, facts, locationNote, provenance);
+  article.append(title, locationBadge, officialName, facts);
+  if (locationNote.textContent) article.append(locationNote);
   if (data.generalizedPointContract) {
     article.append(generalizedLimitation, candidateLimitation);
   }
+  const helpButton = document.createElement("button");
+  helpButton.type = "button";
+  helpButton.className = "map-popup-help-button";
+  helpButton.dataset.mapHelpTopic = "official-symbols";
+  helpButton.textContent = "? What does this location mean?";
+  article.appendChild(helpButton);
   const sourceUrl = isPoint ? data.sourceUrl : data.geometrySourceUrl || data.sourceUrl;
   if (sourceUrl) {
     const sourceLink = document.createElement("a");
@@ -305,21 +414,13 @@ function buildOfficialHeritagePopup(feature) {
       : "Open geometry source";
     article.appendChild(sourceLink);
   }
-  if (data.generalizedPointContract && data.geometrySourceUrl && data.geometrySourceUrl !== sourceUrl) {
-    const spatialSourceLink = document.createElement("a");
-    spatialSourceLink.href = data.geometrySourceUrl;
-    spatialSourceLink.target = "_blank";
-    spatialSourceLink.rel = "noopener noreferrer";
-    spatialSourceLink.textContent = "Open spatial-basis source";
-    article.appendChild(spatialSourceLink);
-  }
-  if (data.generalizedPointLimitationProvenanceUrl) {
-    const limitationSourceLink = document.createElement("a");
-    limitationSourceLink.href = data.generalizedPointLimitationProvenanceUrl;
-    limitationSourceLink.target = "_blank";
-    limitationSourceLink.rel = "noopener noreferrer";
-    limitationSourceLink.textContent = "Open limitation source";
-    article.appendChild(limitationSourceLink);
+  if (isPoint && data.geometrySourceUrl && data.geometrySourceUrl !== sourceUrl) {
+    const locationSourceLink = document.createElement("a");
+    locationSourceLink.href = data.geometrySourceUrl;
+    locationSourceLink.target = "_blank";
+    locationSourceLink.rel = "noopener noreferrer";
+    locationSourceLink.textContent = "Open map-location source";
+    article.appendChild(locationSourceLink);
   }
   return article;
 }
@@ -1388,4 +1489,5 @@ function initFullMap() {
   });
 }
 
+initMapContextualHelp();
 initFullMap();

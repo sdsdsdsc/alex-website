@@ -17,7 +17,7 @@
   <!-- Firebase -->
   <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="script.js" defer></script>
-  <script type="module" src="map.js?v=2026-08-09-kuixing-pavilion-point" defer></script>
+  <script type="module" src="map.js?v=2026-08-19-contextual-map-layer-guidance" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#mapWorkspace">Skip to map and list alternatives</a>
@@ -118,56 +118,68 @@
           <section class="map-explorer-section map-layers-panel" id="mapLayersToolPanel" data-tool-panel="layers" role="tabpanel" aria-labelledby="mapLayersTab" tabindex="-1" hidden>
             <h3>Map layers</h3>
 
-            <fieldset class="map-layers-group" aria-describedby="communityLayerHelp">
-              <legend>Community heritage</legend>
+            <fieldset class="map-layers-group">
+              <legend>
+                <span class="map-layer-heading">Community heritage
+                  <button class="map-context-help-button" type="button" data-map-help-topic="community" aria-label="About Community heritage">?</button>
+                </span>
+              </legend>
               <label class="map-layer-toggle" for="communityHeritageLayerToggle">
                 <input id="communityHeritageLayerToggle" type="checkbox" checked>
                 <span class="map-layer-symbol map-layer-symbol--community" aria-hidden="true"></span>
                 <span>All community records</span>
               </label>
               <div class="map-layer-category-list">
-                <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryBuildings">
-                  <input id="communityCategoryBuildings" type="checkbox" data-community-map-category="buildings" checked>
-                  <span class="map-layer-category-symbol" aria-hidden="true">
-                    <svg viewBox="0 0 16 16" focusable="false"><path d="M3.5 13.5v-9h9v9m-7-9v-2h5v2M5.5 7h1m3 0h1m-5 3h1m3 0h1M2.5 13.5h11"/></svg>
-                  </span>
-                  <span>Buildings</span>
-                </label>
-                <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryParksGardens">
-                  <input id="communityCategoryParksGardens" type="checkbox" data-community-map-category="parks-gardens" checked>
-                  <span class="map-layer-category-symbol" aria-hidden="true">
-                    <svg viewBox="0 0 16 16" focusable="false"><path d="M12.8 2.7C7.4 2.8 4 5.1 4 8.7c0 2.4 1.8 3.6 3.7 3.6 3.6 0 5.2-3.7 5.1-9.6ZM3.2 13.3c1.6-2.7 3.8-4.8 7-6.4"/></svg>
-                  </span>
-                  <span>Parks and gardens</span>
-                </label>
-                <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryMonumentsLandmarks">
-                  <input id="communityCategoryMonumentsLandmarks" type="checkbox" data-community-map-category="monuments-landmarks" checked>
-                  <span class="map-layer-category-symbol" aria-hidden="true">
-                    <svg viewBox="0 0 16 16" focusable="false"><path d="m8 2 2 3H6l2-3Zm-1.5 3h3v6h-3V5ZM4 13.5h8M5 11h6v2.5H5V11Z"/></svg>
-                  </span>
-                  <span>Monuments and landmarks</span>
-                </label>
-                <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryOtherSitesLandscapes">
-                  <input id="communityCategoryOtherSitesLandscapes" type="checkbox" data-community-map-category="other-sites-landscapes" checked>
-                  <span class="map-layer-category-symbol" aria-hidden="true">
-                    <svg viewBox="0 0 16 16" focusable="false"><path d="M2.5 11.5 6 7.8l2.1 2 2.2-3 3.2 4.7M2.5 13.5h11M3.5 4.5h2"/></svg>
-                  </span>
-                  <span>Other sites and landscapes</span>
-                </label>
-                <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryUnknown">
-                  <input id="communityCategoryUnknown" type="checkbox" data-community-map-category="unknown" checked>
-                  <span class="map-layer-category-symbol" aria-hidden="true">
-                    <svg viewBox="0 0 16 16" focusable="false"><circle cx="8" cy="8" r="3"/></svg>
-                  </span>
-                  <span>Unknown or uncategorized</span>
-                </label>
+                <div class="map-layer-control-row">
+                  <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryBuildings">
+                    <input id="communityCategoryBuildings" type="checkbox" data-community-map-category="buildings" checked>
+                    <span class="map-layer-category-symbol" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false"><path d="M3.5 13.5v-9h9v9m-7-9v-2h5v2M5.5 7h1m3 0h1m-5 3h1m3 0h1M2.5 13.5h11"/></svg></span>
+                    <span>Buildings</span>
+                  </label>
+                  <button class="map-context-help-button" type="button" data-map-help-topic="buildings" aria-label="About Buildings">?</button>
+                </div>
+                <div class="map-layer-control-row">
+                  <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryParksGardens">
+                    <input id="communityCategoryParksGardens" type="checkbox" data-community-map-category="parks-gardens" checked>
+                    <span class="map-layer-category-symbol" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false"><path d="M12.8 2.7C7.4 2.8 4 5.1 4 8.7c0 2.4 1.8 3.6 3.7 3.6 3.6 0 5.2-3.7 5.1-9.6ZM3.2 13.3c1.6-2.7 3.8-4.8 7-6.4"/></svg></span>
+                    <span>Parks and gardens</span>
+                  </label>
+                  <button class="map-context-help-button" type="button" data-map-help-topic="parks-gardens" aria-label="About Parks and gardens">?</button>
+                </div>
+                <div class="map-layer-control-row">
+                  <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryMonumentsLandmarks">
+                    <input id="communityCategoryMonumentsLandmarks" type="checkbox" data-community-map-category="monuments-landmarks" checked>
+                    <span class="map-layer-category-symbol" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false"><path d="m8 2 2 3H6l2-3Zm-1.5 3h3v6h-3V5ZM4 13.5h8M5 11h6v2.5H5V11Z"/></svg></span>
+                    <span>Monuments and landmarks</span>
+                  </label>
+                  <button class="map-context-help-button" type="button" data-map-help-topic="monuments-landmarks" aria-label="About Monuments and landmarks">?</button>
+                </div>
+                <div class="map-layer-control-row">
+                  <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryOtherSitesLandscapes">
+                    <input id="communityCategoryOtherSitesLandscapes" type="checkbox" data-community-map-category="other-sites-landscapes" checked>
+                    <span class="map-layer-category-symbol" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false"><path d="M2.5 11.5 6 7.8l2.1 2 2.2-3 3.2 4.7M2.5 13.5h11M3.5 4.5h2"/></svg></span>
+                    <span>Other sites and landscapes</span>
+                  </label>
+                  <button class="map-context-help-button" type="button" data-map-help-topic="other-sites-landscapes" aria-label="About Other sites and landscapes">?</button>
+                </div>
+                <div class="map-layer-control-row">
+                  <label class="map-layer-toggle map-layer-toggle--category" for="communityCategoryUnknown">
+                    <input id="communityCategoryUnknown" type="checkbox" data-community-map-category="unknown" checked>
+                    <span class="map-layer-category-symbol" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false"><circle cx="8" cy="8" r="3"/></svg></span>
+                    <span>Unknown or uncategorized</span>
+                  </label>
+                  <button class="map-context-help-button" type="button" data-map-help-topic="unknown" aria-label="About Unknown or uncategorized records">?</button>
+                </div>
               </div>
-              <p class="map-layers-group__help" id="communityLayerHelp">Contributed and locally maintained project records. Category choices affect Map visibility only.</p>
               <p class="map-layer-category-status" id="communityCategoryStatus" role="status" aria-live="polite">0 of 0 matching community locations displayed.</p>
             </fieldset>
 
             <fieldset class="map-layers-group" aria-describedby="officialLayerHelp">
-              <legend>Official Heritage</legend>
+              <legend>
+                <span class="map-layer-heading">Official Heritage
+                  <button class="map-context-help-button" type="button" data-map-help-topic="official" aria-label="About Official Heritage">?</button>
+                </span>
+              </legend>
               <label class="map-layer-toggle" for="officialHeritageLayerToggle">
                 <input id="officialHeritageLayerToggle" type="checkbox">
                 <span class="map-layer-symbol map-layer-symbol--official-filled" aria-hidden="true"></span>
@@ -189,7 +201,9 @@
             </fieldset>
 
             <section class="map-layers-group" aria-labelledby="officialHeritageSymbolsTitle">
-              <h4 id="officialHeritageSymbolsTitle">Official Heritage map symbols</h4>
+              <h4 id="officialHeritageSymbolsTitle" class="map-layer-heading">Official Heritage map symbols
+                <button class="map-context-help-button" type="button" data-map-help-topic="official-symbols" aria-label="About Official Heritage map symbols">?</button>
+              </h4>
               <ul class="map-layer-legend" aria-label="Official Heritage map symbols">
                 <li>
                   <span class="map-layer-symbol map-layer-symbol--official-filled" aria-hidden="true"></span>
@@ -199,28 +213,7 @@
                   <span class="map-layer-symbol map-layer-symbol--official-general" aria-hidden="true"></span>
                   <span><strong>Generalized reference Points</strong><small id="officialGeneralizedPointStatus">Currently displayed count is reported after loading.</small></span>
                 </li>
-                <li>
-                  <span class="map-layer-symbol map-layer-symbol--official-reviewed-geometry" aria-hidden="true"></span>
-                  <span><strong>Reviewed lines and areas</strong><small>Solid line or restrained fill. Supported; none currently published. The popup states whether geometry is authority-supplied or a project-reviewed interpretation.</small></span>
-                </li>
-                <li>
-                  <span class="map-layer-symbol map-layer-symbol--official-qualified-geometry" aria-hidden="true"></span>
-                  <span><strong>Approximate or generalized geometry</strong><small>Dashed line or lighter fill. Supported; none currently published. The popup explains its meaning, uncertainty and limitations.</small></span>
-                </li>
               </ul>
-            </section>
-
-            <section class="map-layers-group map-layers-information" aria-labelledby="additionalInformationTitle">
-              <h4 id="additionalInformationTitle">Additional information</h4>
-              <details>
-                <summary>About community records</summary>
-                <p>Community records are contributed and maintained by this local project. Search and Filters apply to these records only. Map categories use asset type first, with the legacy category field as a fallback; unknown values use the fallback symbol.</p>
-              </details>
-              <details>
-                <summary>About Official Heritage representations</summary>
-                <p>Official Heritage records come from national, provincial or municipal registers. The authority of a heritage record is separate from the authority of its map representation. The current map displays seven project-reviewed reference Points. Each popup states the record’s official designation level, geometry meaning, provenance, uncertainty and limitations. A project-reviewed Point is not an authority-supplied coordinate, surveyed heritage extent or legal protection boundary. Each official identity has one active public representation. If an approved line or area later supersedes a Point, only the new active representation will be displayed. Public category names and symbols support map browsing and do not replace the original official classification.</p>
-                <p>The symbol guide describes both representations currently displayed and representation styles supported for future publication. An entry marked “none currently published” is informational and does not indicate that such geometry is presently available.</p>
-              </details>
             </section>
           </section>
 
@@ -267,6 +260,19 @@
       </section>
     </div>
   </main>
+
+  <div class="map-context-help" id="mapContextHelp" hidden>
+    <button class="map-context-help__backdrop" type="button" data-map-help-close aria-label="Close help"></button>
+    <section class="map-context-help__dialog" role="dialog" aria-modal="true" aria-labelledby="mapContextHelpTitle" aria-describedby="mapContextHelpBody">
+      <header>
+        <h2 id="mapContextHelpTitle">Map layer help</h2>
+        <button class="map-context-help__close" type="button" data-map-help-close aria-label="Close help">×</button>
+      </header>
+      <div id="mapContextHelpBody"></div>
+      <a id="mapContextHelpLink" href="criteria.html">Find out more</a>
+      <button class="map-context-help__done" type="button" data-map-help-close>Close</button>
+    </section>
+  </div>
 
   <footer>
     © 2025 Alex's Photo Board | All Rights Reserved
