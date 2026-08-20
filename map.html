@@ -17,7 +17,7 @@
   <!-- Firebase -->
   <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="script.js" defer></script>
-  <script type="module" src="map.js?v=2026-08-19-contextual-map-layer-guidance" defer></script>
+  <script type="module" src="map.js?v=2026-08-20-pr91-owner-review" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#mapWorkspace">Skip to map and list alternatives</a>
@@ -201,17 +201,34 @@
             </fieldset>
 
             <section class="map-layers-group" aria-labelledby="officialHeritageSymbolsTitle">
-              <h4 id="officialHeritageSymbolsTitle" class="map-layer-heading">Official Heritage map symbols
-                <button class="map-context-help-button" type="button" data-map-help-topic="official-symbols" aria-label="About Official Heritage map symbols">?</button>
-              </h4>
+              <h4 id="officialHeritageSymbolsTitle" class="map-layer-heading">Official Heritage map symbols</h4>
               <ul class="map-layer-legend" aria-label="Official Heritage map symbols">
                 <li>
                   <span class="map-layer-symbol map-layer-symbol--official-filled" aria-hidden="true"></span>
-                  <span><strong>Project-reviewed reference Points</strong><small id="officialReviewedPointStatus">Currently displayed count is reported after loading.</small></span>
+                  <span>
+                    <span class="map-layer-legend__title">
+                      <strong>Project-reviewed reference Points</strong>
+                      <button class="map-context-help-button" type="button" data-map-help-topic="official-reviewed-points" aria-label="About Project-reviewed reference Points">?</button>
+                    </span>
+                    <small id="officialReviewedPointStatus">Currently displayed count is reported after loading.</small>
+                  </span>
                 </li>
                 <li>
                   <span class="map-layer-symbol map-layer-symbol--official-general" aria-hidden="true"></span>
-                  <span><strong>Generalized reference Points</strong><small id="officialGeneralizedPointStatus">Currently displayed count is reported after loading.</small></span>
+                  <span>
+                    <span class="map-layer-legend__title">
+                      <strong>Generalized reference Points</strong>
+                      <button class="map-context-help-button" type="button" data-map-help-topic="official-generalized-points" aria-label="About Generalized reference Points">?</button>
+                    </span>
+                    <small id="officialGeneralizedPointStatus">Currently displayed count is reported after loading.</small>
+                  </span>
+                </li>
+                <li>
+                  <span class="map-layer-symbol map-layer-symbol--official-reviewed-geometry" aria-hidden="true"></span>
+                  <span class="map-layer-legend__title">
+                    <strong>Other supported representations</strong>
+                    <button class="map-context-help-button" type="button" data-map-help-topic="official-other-representations" aria-label="About other supported Official Heritage representations">?</button>
+                  </span>
                 </li>
               </ul>
             </section>

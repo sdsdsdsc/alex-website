@@ -75,31 +75,31 @@ const MAP_HELP_TOPICS = Object.freeze({
   buildings: {
     title: "Buildings",
     paragraphs: ["Standing buildings and structures, such as homes, halls, places of worship, shops, schools, bridges and industrial buildings."],
-    link: "criteria.html#asset-type-buildings",
+    link: "asset-type-buildings.html",
     linkLabel: "Buildings in Asset Type guidance"
   },
   "parks-gardens": {
     title: "Parks and gardens",
     paragraphs: ["Designed or community-valued green spaces, such as parks, gardens, cemeteries, recreation grounds and planted public spaces."],
-    link: "criteria.html#asset-type-parks-gardens",
+    link: "asset-type-parks-gardens.html",
     linkLabel: "Parks and gardens in Asset Type guidance"
   },
   "monuments-landmarks": {
     title: "Monuments and landmarks",
     paragraphs: ["Features that commemorate, orient or give identity to a place, such as memorials, statues, public art, gates and waymarkers."],
-    link: "criteria.html#asset-type-monuments-landmarks",
+    link: "asset-type-monuments-landmarks.html",
     linkLabel: "Monuments and landmarks in Asset Type guidance"
   },
   "other-sites-landscapes": {
     title: "Other sites and landscapes",
     paragraphs: ["Heritage places that are not mainly a building, park or monument, including routes, archaeological sites, industrial remains, waterways and wider landscapes."],
-    link: "criteria.html#asset-type-other-sites-landscapes",
+    link: "asset-type-other-sites-landscapes.html",
     linkLabel: "Other sites and landscapes in Asset Type guidance"
   },
   unknown: {
     title: "Unknown or uncategorized",
     paragraphs: ["Published community records appear here when their asset type is missing or does not match a current map category. The record can still be explored and improved."],
-    link: "criteria.html#asset-type-uncategorized",
+    link: "asset-types.html",
     linkLabel: "Uncategorized records in Asset Type guidance"
   },
   official: {
@@ -111,12 +111,31 @@ const MAP_HELP_TOPICS = Object.freeze({
     link: "about-local-heritage.html#community-and-official-heritage",
     linkLabel: "Community and Official Heritage"
   },
-  "official-symbols": {
-    title: "Official Heritage map symbols",
+  "official-reviewed-points": {
+    title: "Project-reviewed reference Points",
     paragraphs: [
-      "A filled diamond is a project-reviewed reference Point. A hollow diamond is a generalized reference Point showing a documented vicinity rather than an exact feature.",
-      "The map also supports solid reviewed lines and areas, and dashed approximate or generalized geometry. No official lines or areas are currently published.",
-      "These symbols explain the map representation; they do not change the authority or legal meaning of the official record."
+      "A filled diamond is a Point reviewed by this project to give visitors a useful public reference location for an Official Heritage record.",
+      "The Point may not be an authority-supplied survey or GIS coordinate. It does not necessarily identify an entrance, centroid, complete extent, building footprint, legal centre or legal protection boundary.",
+      "Open an individual record for its location evidence, source and estimated uncertainty, including any record-specific limitation."
+    ],
+    link: "about-local-heritage.html#community-and-official-heritage",
+    linkLabel: "How project-reviewed Points are represented"
+  },
+  "official-generalized-points": {
+    title: "Generalized reference Points",
+    paragraphs: [
+      "A hollow diamond represents a documented general vicinity. It intentionally does not claim an exact heritage location.",
+      "The project may construct a Generalized Point from published reference evidence together with reviewed offsets, coverage or another approved method. Uncertainty and limitations are part of the representation.",
+      "Open the individual record for the authoritative record-specific warning, evidence and construction details."
+    ],
+    link: "about-local-heritage.html#community-and-official-heritage",
+    linkLabel: "How Generalized Points are represented"
+  },
+  "official-other-representations": {
+    title: "Other supported Official Heritage representations",
+    paragraphs: [
+      "The map can support solid reviewed lines and areas, as well as dashed approximate or generalized lines and areas.",
+      "No official lines or areas are currently published. The current Official Heritage layer contains Points only."
     ],
     link: "about-local-heritage.html#community-and-official-heritage",
     linkLabel: "How official records are represented"
@@ -341,9 +360,15 @@ function buildOfficialHeritagePopup(feature) {
       ...(data.generalizedPointContract
         ? [
             ["Representative-Point method", data.generalizedPointRepresentativeMethod],
-            ["Reference-area coverage", `${data.generalizedPointOutwardCoverageMetres} metres`]
+            ["Reference-area coverage", `${data.generalizedPointOutwardCoverageMetres} metres`],
+            ["Record-specific limitation", data.generalizedPointCandidateLimitation]
           ]
-        : [["Estimated location uncertainty", `${data.estimatedUncertaintyMeters} metres`]]),
+        : [
+            ["Estimated location uncertainty", `${data.estimatedUncertaintyMeters} metres`],
+            ...(data.displayLocationType === "component-reference-point"
+              ? [["Location limitation", data.publicLocationNote]]
+              : [])
+          ]),
       ["Official source", data.sourceLabel, "zh-Hans"],
       ["Source accessed", data.sourceAccessedDate]
     ]
@@ -377,33 +402,17 @@ function buildOfficialHeritagePopup(feature) {
 
   const locationNote = document.createElement("p");
   locationNote.className = "official-heritage-map-popup__location-note";
-  locationNote.textContent = isPoint
-    ? (data.generalizedPointContract
-        ? ""
-        : ({
-            "visitor-reference-point": "This is a public visitor reference and may not coincide with the protected feature."
-          }[data.displayLocationType] || data.publicLocationNote))
-    : data.geometryCaution || data.publicLocationNote;
+  locationNote.textContent = isPoint ? "" : data.geometryCaution || data.publicLocationNote;
 
   const generalizedLimitation = document.createElement("p");
   generalizedLimitation.className = "official-heritage-map-popup__generalized-limitation";
   generalizedLimitation.textContent = data.generalizedPointMandatoryLimitation;
 
-  const candidateLimitation = document.createElement("p");
-  candidateLimitation.className = "official-heritage-map-popup__candidate-limitation";
-  candidateLimitation.textContent = data.generalizedPointCandidateLimitation;
-
   article.append(title, locationBadge, officialName, facts);
   if (locationNote.textContent) article.append(locationNote);
   if (data.generalizedPointContract) {
-    article.append(generalizedLimitation, candidateLimitation);
+    article.append(generalizedLimitation);
   }
-  const helpButton = document.createElement("button");
-  helpButton.type = "button";
-  helpButton.className = "map-popup-help-button";
-  helpButton.dataset.mapHelpTopic = "official-symbols";
-  helpButton.textContent = "? What does this location mean?";
-  article.appendChild(helpButton);
   const sourceUrl = isPoint ? data.sourceUrl : data.geometrySourceUrl || data.sourceUrl;
   if (sourceUrl) {
     const sourceLink = document.createElement("a");
