@@ -111,6 +111,27 @@ const MAP_HELP_TOPICS = Object.freeze({
     link: "about-local-heritage.html#community-and-official-heritage",
     linkLabel: "Community and Official Heritage"
   },
+  "official-category-ancient-buildings": {
+    title: "Ancient buildings",
+    paragraphs: [
+      "This category groups Official Heritage records whose protected subject is principally an older or historic building or built structure.",
+      "Ancient buildings is this project's simplified public Map category. It does not replace the original official classification, which remains visible in the individual record popup."
+    ]
+  },
+  "official-category-important-modern-historic-sites": {
+    title: "Important modern historic sites",
+    paragraphs: [
+      "This category groups Official Heritage records associated principally with important modern historic buildings, places, events or sites.",
+      "It is this project's simplified public Map category. The source register's original classification remains visible in the record popup, and this Map category does not create or alter the official designation."
+    ]
+  },
+  "official-category-archaeological-sites": {
+    title: "Archaeological sites",
+    paragraphs: [
+      "This category groups Official Heritage records whose significance is principally archaeological or evidential, including places where physical remains or archaeological evidence are central to the official record.",
+      "It is a simplified public Map category, and the source register's original classification remains visible in the record popup. A displayed Point does not represent an archaeological extent or legal protection boundary."
+    ]
+  },
   "official-reviewed-points": {
     title: "Project-reviewed reference Points",
     paragraphs: [
@@ -170,8 +191,15 @@ function initMapContextualHelp() {
       paragraph.textContent = text;
       return paragraph;
     }));
-    link.href = topic.link;
-    link.textContent = topic.linkLabel;
+    const hasLink = Boolean(topic.link && topic.linkLabel);
+    link.hidden = !hasLink;
+    if (hasLink) {
+      link.href = topic.link;
+      link.textContent = topic.linkLabel;
+    } else {
+      link.removeAttribute("href");
+      link.textContent = "";
+    }
     modal.hidden = false;
     document.body.classList.add("map-context-help-open");
     pageRegions.forEach((region) => { region.inert = true; });
@@ -195,7 +223,7 @@ function initMapContextualHelp() {
       return;
     }
     if (event.key !== "Tab") return;
-    const focusable = Array.from(dialog.querySelectorAll("a[href], button:not([disabled])"));
+    const focusable = Array.from(dialog.querySelectorAll("a[href]:not([hidden]), button:not([disabled])"));
     if (!focusable.length) return;
     const first = focusable[0];
     const last = focusable.at(-1);
@@ -657,7 +685,23 @@ function initCommunityMap({
       text.textContent = category.label;
 
       label.append(input, symbol, text);
-      officialCategoryListEl.appendChild(label);
+
+      const row = document.createElement("div");
+      row.className = "map-layer-control-row";
+      row.appendChild(label);
+
+      const helpTopic = `official-category-${category.key}`;
+      if (MAP_HELP_TOPICS[helpTopic]) {
+        const helpButton = document.createElement("button");
+        helpButton.className = "map-context-help-button";
+        helpButton.type = "button";
+        helpButton.dataset.mapHelpTopic = helpTopic;
+        helpButton.setAttribute("aria-label", `About ${category.label} category`);
+        helpButton.textContent = "?";
+        row.appendChild(helpButton);
+      }
+
+      officialCategoryListEl.appendChild(row);
     });
   }
 

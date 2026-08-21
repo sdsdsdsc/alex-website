@@ -6,7 +6,7 @@ const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
 const COMMUNITY_PUBLICATION_VERSION = "2026-08-17-community-publication-state";
-const MAP_PAGE_VERSION = "2026-08-20-pr91-owner-review";
+const MAP_PAGE_VERSION = "2026-08-21-pr91-owner-follow-up";
 const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-09-kuixing-pavilion-point";
 const OFFICIAL_CATEGORY_VERSION = "2026-07-27-official-category-filters";
 const OFFICIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-official-protected-heritage-map.geojson*";
@@ -633,6 +633,11 @@ test("official preview is lazy, default-off, valid-empty, cached, and map-stable
 });
 
 test("Map layer guidance is contextual, keyboard accessible, concise, and responsive", async ({ page }) => {
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+    status: 200,
+    contentType: "application/geo+json",
+    body: JSON.stringify(COMMITTED_OFFICIAL_HERITAGE)
+  }));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   const layersPanel = await openMapLayersTab(page);
@@ -677,6 +682,36 @@ test("Map layer guidance is contextual, keyboard accessible, concise, and respon
   await expect(page.getByRole("dialog", { name: "Official Heritage" })).toContainText("national, provincial or municipal registers");
   await page.keyboard.press("Escape");
 
+  await getOverlayCheckbox(page, "Show Official Heritage").click();
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(9);
+  const officialCategoryHelp = [
+    {
+      label: "Ancient buildings",
+      text: ["older or historic building or built structure", "simplified public Map category"]
+    },
+    {
+      label: "Important modern historic sites",
+      text: ["modern historic buildings, places, events or sites", "does not create or alter the official designation"]
+    },
+    {
+      label: "Archaeological sites",
+      text: ["archaeological or evidential", "does not represent an archaeological extent or legal protection boundary"]
+    }
+  ];
+  for (const { label, text } of officialCategoryHelp) {
+    const helpButton = layersPanel.getByRole("button", { name: `About ${label} category`, exact: true });
+    await expect(helpButton).toBeVisible();
+    await helpButton.click();
+    const categoryDialog = page.getByRole("dialog", { name: label, exact: true });
+    for (const expectedText of text) await expect(categoryDialog).toContainText(expectedText);
+    await expect(categoryDialog.getByRole("link")).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(helpButton).toBeFocused();
+  }
+  for (const label of officialCategoryHelp.map(({ label }) => label)) {
+    await expect(layersPanel.getByRole("checkbox", { name: label, exact: true })).toBeChecked();
+  }
+
   const reviewedPointHelp = layersPanel.getByRole("button", { name: "About Project-reviewed reference Points" });
   await reviewedPointHelp.click();
   const reviewedPointDialog = page.getByRole("dialog", { name: "Project-reviewed reference Points" });
@@ -700,10 +735,16 @@ test("Map layer guidance is contextual, keyboard accessible, concise, and respon
   for (const viewport of [
     { width: 320, height: 720 },
     { width: 390, height: 844 },
-    { width: 430, height: 932 }
+    { width: 430, height: 932 },
+    { width: 768, height: 900 },
+    { width: 1280, height: 800 }
   ]) {
     await page.setViewportSize(viewport);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    const categoryRowsFit = await layersPanel.locator("#officialCategoryList .map-layer-control-row").evaluateAll((rows) => (
+      rows.every((row) => row.scrollWidth <= row.clientWidth)
+    ));
+    expect(categoryRowsFit).toBe(true);
   }
 
   await page.setViewportSize({ width: 320, height: 360 });
@@ -749,6 +790,10 @@ test("Criteria is a hub with dedicated criterion and Asset Type pages", async ({
     await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toContainText("Criteria");
     await expect(page.getByRole("heading", { name: "Consider when nominating" })).toBeVisible();
+    await expect(page.locator(".heritage-about-actions")).toHaveCount(0);
+    await expect(page.getByText("Back to Criteria", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Nomination guidance", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Nominate a place", { exact: true })).toHaveCount(0);
   }
 
   const assetTypePages = new Map([
@@ -769,6 +814,11 @@ test("Criteria is a hub with dedicated criterion and Asset Type pages", async ({
     await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toContainText("Asset Type");
     await expect(page.getByRole("heading", { name: "Asset Type is not significance" })).toBeVisible();
+    await expect(page.locator(".heritage-about-actions")).toHaveCount(0);
+    await expect(page.getByText("Back to Asset Types", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Choose Heritage Criteria", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Nominate a place", { exact: true })).toHaveCount(0);
+    await expect(page.locator('.heritage-about-content a[href="criteria.html"]')).toHaveCount(1);
   }
 });
 
