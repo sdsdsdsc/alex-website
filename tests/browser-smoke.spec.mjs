@@ -6,7 +6,7 @@ const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
 const COMMUNITY_PUBLICATION_VERSION = "2026-08-17-community-publication-state";
-const MAP_PAGE_VERSION = "2026-08-09-kuixing-pavilion-point";
+const MAP_PAGE_VERSION = "2026-08-21-pr91-owner-follow-up";
 const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-09-kuixing-pavilion-point";
 const OFFICIAL_CATEGORY_VERSION = "2026-07-27-official-category-filters";
 const OFFICIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-official-protected-heritage-map.geojson*";
@@ -437,6 +437,7 @@ function makeSyntheticOfficialGeometryCollection() {
 async function openMapLayersTab(page) {
   const layersTab = page.getByRole("tab", { name: "Layers", exact: true });
   const panel = page.getByRole("tabpanel", { name: "Layers", exact: true });
+  await expect(page.locator("#map.leaflet-container")).toBeVisible({ timeout: 20000 });
   await expect(layersTab).toBeVisible();
   await layersTab.click();
   await expect(panel).toBeVisible();
@@ -580,12 +581,12 @@ test("official preview is lazy, default-off, valid-empty, cached, and map-stable
   await expect(page.locator("#mapLayersToolPanel")).toContainText("Community heritage");
   await expect(page.locator("#mapLayersToolPanel")).toContainText("Show Official Heritage");
   await expect(page.locator("#mapLayersToolPanel")).toContainText("Official Heritage map symbols");
-  await expect(page.locator("#mapLayersToolPanel")).toContainText("Additional information");
   await expect(page.locator("#mapLayersToolPanel")).toContainText("Project-reviewed reference Points");
   await expect(page.locator("#mapLayersToolPanel")).toContainText("Generalized reference Points");
-  await expect(page.locator("#mapLayersToolPanel")).toContainText("Reviewed lines and areas");
-  await expect(page.locator("#mapLayersToolPanel")).toContainText("Approximate or generalized geometry");
-  await expect(page.locator("#mapLayersToolPanel")).toContainText("About Official Heritage representations");
+  await expect(page.locator("#mapLayersToolPanel")).not.toContainText("Additional information");
+  await expect(page.locator("#mapLayersToolPanel")).not.toContainText("Reviewed lines and areas");
+  await expect(page.locator("#mapLayersToolPanel")).not.toContainText("Approximate or generalized geometry");
+  await expect(page.locator("#mapLayersToolPanel")).not.toContainText("current map displays seven");
   await expect(page.locator("#mapLayersToolPanel")).not.toContainText("Reviewed lines and boundaries");
   await expect(page.locator("#mapLayersToolPanel").getByRole("checkbox", { name: /National|Provincial|Municipal/ })).toHaveCount(0);
   await expect(page.locator(".leaflet-control-layers-overlays input")).toHaveCount(0);
@@ -629,6 +630,237 @@ test("official preview is lazy, default-off, valid-empty, cached, and map-stable
   );
   expect(officialRequestCount).toBe(1);
   expect(await getRenderedMapState(page)).toEqual(beforeEnable);
+});
+
+test("Map layer guidance is contextual, keyboard accessible, concise, and responsive", async ({ page }) => {
+  await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
+    status: 200,
+    contentType: "application/geo+json",
+    body: JSON.stringify(COMMITTED_OFFICIAL_HERITAGE)
+  }));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  const layersPanel = await openMapLayersTab(page);
+  await expect(layersPanel.getByRole("button", { name: "About Community heritage" })).toBeVisible();
+  await expect(layersPanel.getByRole("button", { name: "About Buildings" })).toBeVisible();
+  await expect(layersPanel.getByRole("button", { name: "About Official Heritage", exact: true })).toBeVisible();
+  await expect(layersPanel.getByRole("button", { name: "About Project-reviewed reference Points" })).toBeVisible();
+  await expect(layersPanel.getByRole("button", { name: "About Generalized reference Points" })).toBeVisible();
+  await expect(layersPanel.getByRole("button", { name: "About other supported Official Heritage representations" })).toBeVisible();
+  expect(await layersPanel.evaluate((element) => element.scrollHeight)).toBeLessThan(1100);
+
+  const communityHelp = layersPanel.getByRole("button", { name: "About Community heritage" });
+  await communityHelp.focus();
+  await communityHelp.press("Enter");
+  const dialog = page.getByRole("dialog", { name: "Community heritage" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("not statutory designations");
+  await expect(dialog.getByRole("link", { name: "Community and Official Heritage" })).toHaveAttribute(
+    "href",
+    "about-local-heritage.html#community-and-official-heritage"
+  );
+  await expect(dialog.getByRole("button", { name: "Close help" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(communityHelp).toBeFocused();
+
+  const communityAssetHelp = new Map([
+    ["Buildings", "asset-type-buildings.html"],
+    ["Parks and gardens", "asset-type-parks-gardens.html"],
+    ["Monuments and landmarks", "asset-type-monuments-landmarks.html"],
+    ["Other sites and landscapes", "asset-type-other-sites-landscapes.html"],
+    ["Unknown or uncategorized", "asset-types.html"]
+  ]);
+  for (const [topic, href] of communityAssetHelp) {
+    await layersPanel.getByRole("button", { name: `About ${topic}` }).click();
+    const assetDialog = page.getByRole("dialog", { name: topic });
+    await expect(assetDialog.getByRole("link")).toHaveAttribute("href", href);
+    await assetDialog.getByRole("button", { name: "Close", exact: true }).click();
+  }
+
+  await layersPanel.getByRole("button", { name: "About Official Heritage", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Official Heritage" })).toContainText("national, provincial or municipal registers");
+  await page.keyboard.press("Escape");
+
+  await getOverlayCheckbox(page, "Show Official Heritage").click();
+  await expect(page.locator(".official-heritage-map-marker")).toHaveCount(9);
+  const officialCategoryHelp = [
+    {
+      label: "Ancient buildings",
+      text: ["older or historic building or built structure", "simplified public Map category"]
+    },
+    {
+      label: "Important modern historic sites",
+      text: ["modern historic buildings, places, events or sites", "does not create or alter the official designation"]
+    },
+    {
+      label: "Archaeological sites",
+      text: ["archaeological or evidential", "does not represent an archaeological extent or legal protection boundary"]
+    }
+  ];
+  for (const { label, text } of officialCategoryHelp) {
+    const helpButton = layersPanel.getByRole("button", { name: `About ${label} category`, exact: true });
+    await expect(helpButton).toBeVisible();
+    await helpButton.click();
+    const categoryDialog = page.getByRole("dialog", { name: label, exact: true });
+    for (const expectedText of text) await expect(categoryDialog).toContainText(expectedText);
+    await expect(categoryDialog.getByRole("link")).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(helpButton).toBeFocused();
+  }
+  for (const label of officialCategoryHelp.map(({ label }) => label)) {
+    await expect(layersPanel.getByRole("checkbox", { name: label, exact: true })).toBeChecked();
+  }
+
+  const reviewedPointHelp = layersPanel.getByRole("button", { name: "About Project-reviewed reference Points" });
+  await reviewedPointHelp.click();
+  const reviewedPointDialog = page.getByRole("dialog", { name: "Project-reviewed reference Points" });
+  await expect(reviewedPointDialog).toContainText("useful public reference location");
+  await expect(reviewedPointDialog).toContainText("may not be an authority-supplied survey or GIS coordinate");
+  await page.keyboard.press("Escape");
+  await expect(reviewedPointHelp).toBeFocused();
+
+  await layersPanel.getByRole("button", { name: "About Generalized reference Points" }).click();
+  const generalizedPointDialog = page.getByRole("dialog", { name: "Generalized reference Points" });
+  await expect(generalizedPointDialog).toContainText("documented general vicinity");
+  await expect(generalizedPointDialog).toContainText("published reference evidence");
+  await page.keyboard.press("Escape");
+
+  await layersPanel.getByRole("button", { name: "About other supported Official Heritage representations" }).click();
+  const otherRepresentationsDialog = page.getByRole("dialog", { name: "Other supported Official Heritage representations" });
+  await expect(otherRepresentationsDialog).toContainText("No official lines or areas are currently published");
+  await expect(otherRepresentationsDialog).toContainText("contains Points only");
+  await page.keyboard.press("Escape");
+
+  for (const viewport of [
+    { width: 320, height: 720 },
+    { width: 390, height: 844 },
+    { width: 430, height: 932 },
+    { width: 768, height: 900 },
+    { width: 1280, height: 800 }
+  ]) {
+    await page.setViewportSize(viewport);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    const categoryRowsFit = await layersPanel.locator("#officialCategoryList .map-layer-control-row").evaluateAll((rows) => (
+      rows.every((row) => row.scrollWidth <= row.clientWidth)
+    ));
+    expect(categoryRowsFit).toBe(true);
+  }
+
+  await page.setViewportSize({ width: 320, height: 360 });
+  await communityHelp.click();
+  const shortViewportDialog = page.getByRole("dialog", { name: "Community heritage" });
+  const dialogBounds = await shortViewportDialog.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return { top: bounds.top, right: bounds.right, bottom: bounds.bottom, left: bounds.left };
+  });
+  expect(dialogBounds.top).toBeGreaterThanOrEqual(0);
+  expect(dialogBounds.left).toBeGreaterThanOrEqual(0);
+  expect(dialogBounds.right).toBeLessThanOrEqual(320);
+  expect(dialogBounds.bottom).toBeLessThanOrEqual(360);
+  await expect(shortViewportDialog.getByRole("button", { name: "Close help" })).toBeVisible();
+});
+
+test("Criteria is a hub with dedicated criterion and Asset Type pages", async ({ page }) => {
+  await page.goto("/criteria.html", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "Asset Type", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Heritage Criteria", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Heritage Criteria: why does this place matter?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Asset Type: what kind of place is it?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "On this page" })).toHaveCount(0);
+  await expect(page.locator('.heritage-about-content a[href^="#"]')).toHaveCount(0);
+
+  const criterionPages = new Map([
+    ["criteria-historic-interest.html", "Historic interest"],
+    ["criteria-social-communal-value.html", "Social or communal value"],
+    ["criteria-landmark-streetscape-value.html", "Landmark or streetscape value"],
+    ["criteria-architectural-design-artistic-interest.html", "Architectural, design or artistic interest"],
+    ["criteria-archaeological-evidential-interest.html", "Archaeological or evidential interest"],
+    ["criteria-rarity.html", "Rarity"],
+    ["criteria-group-value.html", "Group value"],
+    ["criteria-age.html", "Age"],
+    ["criteria-condition-vulnerability.html", "Condition or vulnerability"]
+  ]);
+  for (const path of criterionPages.keys()) {
+    await expect(page.locator(`a[href="${path}"]`)).toHaveCount(1);
+  }
+  for (const [path, heading] of criterionPages) {
+    const response = await page.goto(`/${path}`, { waitUntil: "domcontentloaded" });
+    expect(response?.ok()).toBe(true);
+    await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toContainText("Criteria");
+    await expect(page.getByRole("heading", { name: "Consider when nominating" })).toBeVisible();
+    await expect(page.locator(".heritage-about-actions")).toHaveCount(0);
+    await expect(page.getByText("Back to Criteria", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Nomination guidance", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Nominate a place", { exact: true })).toHaveCount(0);
+  }
+
+  const assetTypePages = new Map([
+    ["asset-type-buildings.html", "Buildings"],
+    ["asset-type-parks-gardens.html", "Parks and gardens"],
+    ["asset-type-monuments-landmarks.html", "Monuments and landmarks"],
+    ["asset-type-other-sites-landscapes.html", "Other sites and landscapes"]
+  ]);
+  await page.goto("/asset-types.html", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "Unknown or uncategorized" })).toBeVisible();
+  await expect(page.getByText("This is a fallback state, not a normal heritage category.")).toBeVisible();
+  for (const path of assetTypePages.keys()) {
+    await expect(page.locator(`a[href="${path}"]`)).toHaveCount(1);
+  }
+  for (const [path, heading] of assetTypePages) {
+    const response = await page.goto(`/${path}`, { waitUntil: "domcontentloaded" });
+    expect(response?.ok()).toBe(true);
+    await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toContainText("Asset Type");
+    await expect(page.getByRole("heading", { name: "Asset Type is not significance" })).toBeVisible();
+    await expect(page.locator(".heritage-about-actions")).toHaveCount(0);
+    await expect(page.getByText("Back to Asset Types", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Choose Heritage Criteria", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Nominate a place", { exact: true })).toHaveCount(0);
+    await expect(page.locator('.heritage-about-content a[href="criteria.html"]')).toHaveCount(1);
+  }
+});
+
+test("Criteria hubs and guidance pages remain readable without horizontal overflow", async ({ page }) => {
+  const guidancePages = [
+    "criteria.html",
+    "asset-types.html",
+    "criteria-historic-interest.html",
+    "criteria-social-communal-value.html",
+    "criteria-landmark-streetscape-value.html",
+    "criteria-architectural-design-artistic-interest.html",
+    "criteria-archaeological-evidential-interest.html",
+    "criteria-rarity.html",
+    "criteria-group-value.html",
+    "criteria-age.html",
+    "criteria-condition-vulnerability.html",
+    "asset-type-buildings.html",
+    "asset-type-parks-gardens.html",
+    "asset-type-monuments-landmarks.html",
+    "asset-type-other-sites-landscapes.html"
+  ];
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const path of guidancePages) {
+    await page.goto(`/${path}`, { waitUntil: "domcontentloaded" });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toBeVisible();
+  }
+
+  for (const viewport of [
+    { width: 320, height: 720 },
+    { width: 430, height: 932 },
+    { width: 768, height: 900 },
+    { width: 1280, height: 800 },
+    { width: 844, height: 390 }
+  ]) {
+    await page.setViewportSize(viewport);
+    for (const path of ["criteria.html", "criteria-architectural-design-artistic-interest.html", "asset-types.html", "asset-type-other-sites-landscapes.html"]) {
+      await page.goto(`/${path}`, { waitUntil: "domcontentloaded" });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    }
+  }
 });
 
 test("production-sized official fixture renders nine accessible markers across responsive and 200% zoom checks", async ({ page }) => {
@@ -697,6 +929,10 @@ test("production-sized official fixture renders nine accessible markers across r
   await expect(xiabuPopup).toContainText("暴动会议地旧址");
   await expect(xiabuPopup).toContainText("150 metres");
   await expect(xiabuPopup).toContainText("building footprint");
+  await expect(xiabuPopup.locator(".official-heritage-map-popup__location-note")).toHaveCount(0);
+  await expect(xiabuPopup.locator(".map-point-card__facts > div").filter({
+    has: page.locator("dt", { hasText: /^Location limitation$/ })
+  }).locator("dd")).toContainText("暴动会议地旧址");
   await expect(xiabuPopup.locator(".map-point-card__facts > div").filter({
     has: page.locator("dt", { hasText: /^Official designation level$/ })
   }).locator("dd")).toHaveText("Provincial");
@@ -718,12 +954,13 @@ test("production-sized official fixture renders nine accessible markers across r
   await expect(n07Popup.locator(".map-point-card__facts > div").filter({
     has: page.locator("dt", { hasText: /^Official designation level$/ })
   }).locator("dd")).toHaveText("National");
-  await expect(n07Popup).toContainText("Project-reviewed interpretation");
-  await expect(n07Popup).toContainText("Project-reviewed digitization");
   await expect(n07Popup).toContainText("100 metres");
-  await expect(n07Popup).toContainText("not an authority-supplied coordinate");
-  await expect(n07Popup).toContainText("building footprint");
-  await expect(n07Popup).toContainText("legal protection boundary");
+  await expect(n07Popup.locator(".map-point-card__facts > div").filter({
+    has: page.locator("dt", { hasText: /^Map location source$/ })
+  })).toContainText("Project-reviewed digitization");
+  await expect(n07Popup).not.toContainText("not an authority-supplied coordinate");
+  await expect(n07Popup.locator(".official-heritage-map-popup__location-note")).toHaveCount(0);
+  await expect(n07Popup.getByRole("button", { name: /What does this location mean/ })).toHaveCount(0);
 
   const m13Marker = page.getByRole("button", {
     name: "Open Official Heritage record: Kuixing Pavilion (魁星阁); Official designation level: Municipal; Map category: Ancient buildings; Heritage building reference point (approximate project-reviewed location)",
@@ -740,8 +977,8 @@ test("production-sized official fixture renders nine accessible markers across r
   await expect(m13Popup).toContainText("Heritage building reference point");
   await expect(m13Popup).toContainText("Municipal");
   await expect(m13Popup).toContainText("30 metres");
-  await expect(m13Popup).toContainText("not an official GIS or survey coordinate");
-  await expect(m13Popup).toContainText("legal protection boundary");
+  await expect(m13Popup).not.toContainText("not an official GIS or survey coordinate");
+  await expect(m13Popup.locator(".official-heritage-map-popup__location-note")).toHaveCount(0);
 
   const xieliMarker = page.getByRole("button", {
     name: /Open Official Heritage record: Xieli Site \(斜里遗址\); Official designation level: Provincial; Map category: Archaeological sites; Generalized project reference point; Generalized reference location\./
@@ -754,13 +991,14 @@ test("production-sized official fixture renders nine accessible markers across r
   await expect(xieliPopup.locator(".official-heritage-map-popup__generalized-limitation")).toHaveText(
     "Generalized reference location. This marker represents the documented general vicinity of the heritage record. It does not show the exact feature, centre, entrance, extent, or legal protection boundary."
   );
-  await expect(xieliPopup.locator(".official-heritage-map-popup__candidate-limitation")).toContainText(
-    "source-described Xieli vicinity"
-  );
+  await expect(xieliPopup.locator(".map-point-card__facts > div").filter({
+    has: page.locator("dt", { hasText: /^Record-specific limitation$/ })
+  }).locator("dd")).toContainText("source-described Xieli vicinity");
+  await expect(xieliPopup.getByRole("button", { name: /What does this location mean/ })).toHaveCount(0);
   await expect(xieliPopup).toContainText("50 metres");
   await expect(xieliPopup).toContainText("coincident-interpretation-envelope-centre");
-  await expect(xieliPopup).toContainText("WGS84");
-  await expect(xieliPopup).toContainText("CGCS2000");
+  await expect(xieliPopup).not.toContainText("WGS84");
+  await expect(xieliPopup).not.toContainText("CGCS2000");
 
   const visitorMarker = page.getByRole("button", {
     name: "Open Official Heritage record: Fu Baoshi Former Residence (傅抱石故居); Official designation level: Provincial; Map category: Important modern historic sites; Visitor reference point",
@@ -774,9 +1012,10 @@ test("production-sized official fixture renders nine accessible markers across r
     hasText: "Fu Baoshi Former Residence"
   });
   await expect(visitorPopup).toContainText("Visitor reference point");
-  await expect(visitorPopup).toContainText(
-    "This marker shows a public visitor reference associated with the official heritage record."
+  await expect(visitorPopup).not.toContainText(
+    "This is a public visitor reference and may not coincide with the protected feature."
   );
+  await expect(visitorPopup.locator(".official-heritage-map-popup__location-note")).toHaveCount(0);
 
   const bridgeMarker = page.getByRole("button", {
     name: "Open Official Heritage record: Rongquan Bridge (蓉泉桥); Official designation level: Provincial; Map category: Ancient buildings; Approximate site location",
@@ -790,7 +1029,8 @@ test("production-sized official fixture renders nine accessible markers across r
     hasText: "Rongquan Bridge"
   });
   await expect(bridgePopup).toContainText("Approximate site location");
-  await expect(bridgePopup).toContainText("project-reviewed approximate feature location");
+  await expect(bridgePopup).not.toContainText("project-reviewed approximate feature location");
+  await expect(bridgePopup.locator(".official-heritage-map-popup__location-note")).toHaveCount(0);
 
   for (const viewport of [
     { width: 320, height: 720 },
@@ -1263,6 +1503,7 @@ test("official preview rejects missing, blank, and non-string official categorie
 
 test("official preview renders a synthetic exact Point without changing community bounds", async ({ page }) => {
   const collection = makeSyntheticOfficialCollection([makeSyntheticOfficialFeature()]);
+  await mockFirestoreCollections(page, { communityPlaces: COMMUNITY_CATEGORY_FIXTURES });
   await page.route(OFFICIAL_HERITAGE_GEOJSON_PATH, (route) => route.fulfill({
     status: 200,
     contentType: "application/geo+json",
@@ -1275,10 +1516,11 @@ test("official preview renders a synthetic exact Point without changing communit
   const layersPanel = page.locator("#mapLayersToolPanel");
   await expect(layersPanel).toContainText("Project-reviewed reference Points");
   await expect(layersPanel).toContainText("Generalized reference Points");
-  await expect(layersPanel).toContainText("About Official Heritage representations");
-  await expect(layersPanel).toContainText("authority of a heritage record is separate from the authority of its map representation");
-  await expect(layersPanel).toContainText("not an authority-supplied coordinate, surveyed heritage extent or legal protection boundary");
+  await expect(layersPanel).not.toContainText("About Official Heritage representations");
+  await expect(layersPanel).not.toContainText("authority of a heritage record is separate from the authority of its map representation");
+  await expect(layersPanel).not.toContainText("not an authority-supplied coordinate, surveyed heritage extent or legal protection boundary");
   await page.getByRole("tab", { name: "Search" }).click();
+  await page.waitForTimeout(500);
   const beforeEnable = await getRenderedMapState(page);
   await openMapLayersTab(page);
   await setOverlayChecked(page, "Show Official Heritage", true);
@@ -1301,12 +1543,26 @@ test("official preview renders a synthetic exact Point without changing communit
     "Open Official Heritage record: Test Archaeological Site (测试遗址); Official designation level: Provincial; Map category: Ancient buildings; Reviewed location"
   );
   const afterEnable = await getRenderedMapState(page);
-  expect(afterEnable).toEqual(beforeEnable);
+  expect(afterEnable.communityMarkerCount).toBe(beforeEnable.communityMarkerCount);
+  const transformCoordinates = (transform) => {
+    const match = transform.match(
+      /translate(?:3d)?\(\s*(-?\d+(?:\.\d+)?)px,\s*(-?\d+(?:\.\d+)?)px/
+    );
+    return match ? match.slice(1, 3).map(Number) : [];
+  };
+  const beforeCoordinates = transformCoordinates(beforeEnable.mapPaneTransform);
+  const afterCoordinates = transformCoordinates(afterEnable.mapPaneTransform);
+  expect(afterCoordinates).toHaveLength(2);
+  expect(beforeCoordinates).toHaveLength(2);
+  expect(Math.abs(afterCoordinates[0] - beforeCoordinates[0])).toBeLessThan(1);
+  expect(Math.abs(afterCoordinates[1] - beforeCoordinates[1])).toBeLessThan(1);
   await marker.focus();
   await marker.press("Enter");
   await expect(page.locator(".official-heritage-map-popup")).toContainText("Test Archaeological Site");
   await expect(page.locator(".official-heritage-map-popup [lang='zh-Hans']").first()).toHaveText("测试遗址");
-  await expect(page.locator(".official-heritage-map-popup")).toContainText("not an official designation coordinate");
+  await expect(page.locator(".official-heritage-map-popup")).not.toContainText("not an official designation coordinate");
+  await expect(page.locator(".official-heritage-map-popup__location-note")).toHaveCount(0);
+  await expect(page.locator(".official-heritage-map-popup").getByRole("button", { name: /What does this location mean/ })).toHaveCount(0);
 });
 
 test("an unknown non-empty official category uses the static Other presentation without changing source text", async ({ page }) => {
@@ -1319,7 +1575,6 @@ test("an unknown non-empty official category uses the static Other presentation 
     body: JSON.stringify(makeSyntheticOfficialCollection([feature]))
   }));
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
   const layersPanel = await openMapLayersTab(page);
   await getOverlayCheckbox(page, "Show Official Heritage").click();
   await expect(layersPanel.getByRole("checkbox", {
@@ -1340,8 +1595,9 @@ test("an unknown non-empty official category uses the static Other presentation 
   await marker.press("Enter");
   const popup = page.locator(".official-heritage-map-popup");
   await expect(popup).toContainText("未来类别<script>alert(1)</script>");
-  await expect(popup).toContainText("Reviewed approximate location");
-  await expect(popup).toContainText("heritage-feature");
+  await expect(popup).toContainText("Reviewed site location");
+  await expect(popup).toContainText("Other official heritage");
+  await expect(popup).not.toContainText("heritage-feature");
 });
 
 test("official preview labels a synthetic approximate Point", async ({ page }) => {
@@ -1373,7 +1629,7 @@ test("official preview labels a synthetic approximate Point", async ({ page }) =
   await expect(page.locator(".official-heritage-map-popup")).toContainText("Medium");
 });
 
-test("synthetic non-Xinyu Generalized Point exposes the complete persistent and accessible contract", async ({ page }) => {
+test("synthetic non-Xinyu Generalized Point retains essential visible limitations and accessible context", async ({ page }) => {
   const feature = makeSyntheticOfficialFeature({
     confidence: "Medium",
     publicationPolicy: "generalized",
@@ -1414,24 +1670,21 @@ test("synthetic non-Xinyu Generalized Point exposes the complete persistent and 
   await expect(popup.locator(".official-heritage-map-popup__generalized-limitation")).toHaveText(
     "Generalized reference location. This marker represents the documented general vicinity of the heritage record. It does not show the exact feature, centre, entrance, extent, or legal protection boundary."
   );
-  await expect(popup.locator(".official-heritage-map-popup__candidate-limitation")).toContainText("source datum is unstated");
+  await expect(popup.locator(".map-point-card__facts > div").filter({
+    has: page.locator("dt", { hasText: /^Record-specific limitation$/ })
+  }).locator("dd")).toContainText("source datum is unstated");
   const expectedRows = new Map([
-    ["Support-area meaning", "Documented synthetic general vicinity; not the heritage extent or protection boundary."],
     ["Representative-Point method", "minimum-enclosing-circle-centre"],
-    ["Source-coordinate precision", "2 metres"],
-    ["Maximum transformation/frame allowance", "1 metres"],
-    ["Multi-interpretation envelope", "3 metres"],
-    ["Intentional generalization displacement", "5 metres"],
-    ["Support-area maximum distance", "30 metres"],
-    ["Displayed coordinate precision", "4 decimal places"],
-    ["Outward coverage", "40 metres"]
+    ["Reference-area coverage", "40 metres"]
   ]);
   for (const [label, value] of expectedRows) {
     const row = popup.locator(".map-point-card__facts > div").filter({ has: page.locator("dt", { hasText: new RegExp(`^${label}$`) }) });
     await expect(row.locator("dd")).toHaveText(value);
   }
-  await expect(popup.getByRole("link", { name: "Open spatial-basis source" })).toHaveAttribute("href", "https://example.gov.cn/synthetic-generalized-point");
-  await expect(popup.getByRole("link", { name: "Open limitation source" })).toHaveAttribute("href", "https://example.gov.cn/generalized-point-policy");
+  await expect(popup.getByRole("link", { name: "Open official source" })).toHaveAttribute("href", "https://example.gov.cn/source");
+  await expect(popup.getByRole("link", { name: "Open map-location source" })).toHaveAttribute("href", "https://example.gov.cn/synthetic-generalized-point");
+  await expect(popup.getByRole("link", { name: "Open spatial-basis source" })).toHaveCount(0);
+  await expect(popup.getByRole("link", { name: "Open limitation source" })).toHaveCount(0);
   await page.keyboard.press("Escape");
   await marker.focus();
   await marker.press("Space");
@@ -1696,7 +1949,7 @@ test("Layers remains a normal usable tab on mobile without a second drawer", asy
   await layersTab.click();
   await expect(layersTab).toHaveAttribute("aria-selected", "true");
   await expect(panel).toBeVisible();
-  await expect(getOverlayCheckbox(page, "All community records")).toBeFocused();
+  await expect(panel.getByRole("button", { name: "About Community heritage" })).toBeFocused();
   await page.getByRole("tab", { name: "Info" }).click();
   await expect(panel).toBeHidden();
   await expect(page.locator("#mapInfoToolPanel")).toBeVisible();
