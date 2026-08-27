@@ -45,7 +45,7 @@
       buildPromotionUpdatePayload,
       buildPublicPlacePayloadFromNomination,
       shouldAllowPromotion
-    } from "./heritage-engine/promotion.js?v=2026-06-20-13c";
+    } from "./heritage-engine/promotion.js?v=2026-08-27-period-nominations";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -655,6 +655,7 @@
       [
         createDetailRow("Title", record.title),
         createDetailRow("Asset type", record.assetType),
+        createDetailRow("Period", record.period),
         createDetailRow("Area", record.area),
         createDetailRow("Address", record.address),
         createDetailRow("Latitude", record.lat),
@@ -891,6 +892,7 @@
         previewList.className = "manage-nominations-card__detail-grid";
         appendPreviewRow(previewList, "Title", record.title);
         appendPreviewRow(previewList, "Asset type", record.assetType);
+        appendPreviewRow(previewList, "Period", record.period);
         appendPreviewRow(previewList, "Area", record.area);
         appendPreviewRow(previewList, "Address", record.address);
         appendPreviewRow(previewList, "Latitude", record.lat);

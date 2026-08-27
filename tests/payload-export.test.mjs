@@ -51,6 +51,7 @@ function buildValidNominationValues(overrides = {}) {
     lat: "27.720570019360082",
     lng: "114.15617044085226",
     assetType: "Public space",
+    period: "c. 1900",
     description: "A test place used only for nomination helper validation.",
     localSignificanceSummary: "A locally valued test place.",
     heritageCriteria: ["Historic interest", "Rarity"],
@@ -176,6 +177,7 @@ test("builds a valid nomination payload with blank optional evidence fields", ()
   assert.equal(typeof payload.lng, "number");
   assert.equal(payload.lat, 27.720570019360082);
   assert.equal(payload.lng, 114.15617044085226);
+  assert.equal(payload.period, "c. 1900");
   assert.equal("evidenceImageUrl" in payload, false);
   assert.equal("evidenceImageCaption" in payload, false);
   assert.equal("evidenceSourceCredit" in payload, false);
@@ -205,6 +207,36 @@ test("builds a valid nomination payload with blank optional evidence fields", ()
   });
 
   assertNoUndefined(payload);
+});
+
+test("treats period as bounded optional nomination text", () => {
+  const ownershipMetadata = buildSignedInOwnership();
+  const withHistoricPeriod = buildSubmittedNominationPayload(buildValidNominationValues({
+    period: "  Late 19th century  "
+  }), {
+    createdAt: "created",
+    updatedAt: "updated",
+    submittedAt: "submitted",
+    ownershipMetadata
+  });
+  const withoutPeriod = buildSubmittedNominationPayload(buildValidNominationValues({ period: "   " }), {
+    createdAt: "created",
+    updatedAt: "updated",
+    submittedAt: "submitted",
+    ownershipMetadata
+  });
+
+  assert.equal(withHistoricPeriod.period, "Late 19th century");
+  assert.equal(Object.prototype.hasOwnProperty.call(withoutPeriod, "period"), false);
+  assert.throws(
+    () => buildSubmittedNominationPayload(buildValidNominationValues({ period: "x".repeat(161) }), {
+      createdAt: "created",
+      updatedAt: "updated",
+      submittedAt: "submitted",
+      ownershipMetadata
+    }),
+    /period is too long/
+  );
 });
 
 test("builds the stabilized normal evidence metadata payload shape", () => {

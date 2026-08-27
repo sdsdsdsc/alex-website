@@ -41,6 +41,7 @@ function buildApprovedNomination(overrides = {}) {
     province: "Jiangxi",
     category: "Submitted category",
     assetType: "Square",
+    period: "c. 1900",
     description: "A public place nominated by the community.",
     localSignificanceSummary: "A locally valued gathering space.",
     heritageCriteria: ["Social or communal value", "Rarity"],
@@ -91,7 +92,16 @@ test("preserves asset type without synthesizing category", () => {
   const payload = buildPromotedPlace();
 
   assert.equal(payload.assetType, "Square");
+  assert.equal(payload.period, "c. 1900");
   assert.equal(Object.prototype.hasOwnProperty.call(payload, "category"), false);
+});
+
+test("omits period when an approved nomination does not provide it", () => {
+  const payload = buildPromotedPlace({ period: "   " });
+
+  assert.equal(Object.prototype.hasOwnProperty.call(payload, "period"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(payload, "nominatorEmail"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(payload, "submittedByUid"), false);
 });
 
 test("promotes safe approved nomination evidence into public image fields", () => {

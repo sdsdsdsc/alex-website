@@ -8,7 +8,7 @@
   <title>Nominate a Community Place | Alex's Photo Board</title>
   <link rel="stylesheet" href="style.css">
   <script type="module" src="public-nav.js" defer></script>
-  <script type="module" src="nominate-place.js?v=2026-07-04-evidence-upload-timestamp-fix" defer></script>
+  <script type="module" src="nominate-place.js?v=2026-08-27-period-nominations" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#nominatePlaceMain">Skip to nomination form</a>
@@ -115,6 +115,12 @@
               <option>Natural or landscape feature</option>
               <option>Other</option>
             </select>
+          </div>
+
+          <div class="nomination-field nomination-field--full">
+            <label for="nominationPeriod">Period / approximate date <span>(optional)</span></label>
+            <input id="nominationPeriod" name="period" type="text" maxlength="160" aria-describedby="nominationPeriodHelp">
+            <p id="nominationPeriodHelp" class="nomination-field__help">Examples: 1815, c. 1900, late 19th century, Ming dynasty, 1950s, or contemporary. Leave blank if unknown.</p>
           </div>
         </fieldset>
 

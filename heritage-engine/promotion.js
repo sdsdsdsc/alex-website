@@ -11,6 +11,7 @@ const DEFAULT_PROMOTED_RECORD_STATUS = "published";
 const PROMOTION_ID_LIMIT = 120;
 const PUBLIC_PROMOTION_TEXT_FIELDS = Object.freeze([
   "assetType",
+  "period",
   "area",
   "address",
   "city",

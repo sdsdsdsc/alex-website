@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { makeSyntheticGeneralizedPointContract } from "./fixtures/generalized-point-contract.mjs";
 
 const APP_ORIGIN = "http://127.0.0.1:4173";
-const NOMINATION_UPLOAD_MODULE_VERSION = "2026-07-04-evidence-upload-timestamp-fix";
+const NOMINATION_UPLOAD_MODULE_VERSION = "2026-08-27-period-nominations";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
 const COMMUNITY_PUBLICATION_VERSION = "2026-08-17-community-publication-state";
 const MAP_PAGE_VERSION = "2026-08-21-pr91-owner-follow-up";
@@ -2028,6 +2028,26 @@ test("place Key facts keeps classification compatibility without changing herita
   expect(placeSource).not.toContain('appendMetadata("Heritage criteria"');
   expect(placeSource).toContain('appendMetadata("Category", category, "", { hideIfEmpty: true })');
   expect(placeSource).toContain('appendMetadata("Asset type", getAssetType(place)');
+  expect(placeSource).toContain('appendMetadata("Period", place.period, "No period recorded yet.", { hideIfEmpty: true })');
+});
+
+test("nomination form exposes optional free-text period and admin review preserves visibility", async ({ page }) => {
+  await page.goto("/nominate-place.html", { waitUntil: "domcontentloaded" });
+  const period = page.getByLabel("Period / approximate date (optional)");
+  await expect(period).toBeVisible();
+  await expect(period).not.toHaveAttribute("required", "");
+  await expect(period).toHaveAttribute("maxlength", "160");
+  await expect(page.locator("#nominationPeriodHelp")).toHaveText(
+    "Examples: 1815, c. 1900, late 19th century, Ming dynasty, 1950s, or contemporary. Leave blank if unknown."
+  );
+  await period.fill("c. 1900");
+  await expect(period).toHaveValue("c. 1900");
+
+  const nominationClient = await (await page.request.get(`/nominate-place.js?v=${NOMINATION_UPLOAD_MODULE_VERSION}`)).text();
+  expect(nominationClient).toContain('"period"');
+  const adminReview = await (await page.request.get("/manage-nominations.html")).text();
+  expect(adminReview).toContain('createDetailRow("Period", record.period)');
+  expect(adminReview).toContain('appendPreviewRow(previewList, "Period", record.period)');
 });
 
 test("map skip link and region provide an accessible workspace entry", async ({ page }) => {
