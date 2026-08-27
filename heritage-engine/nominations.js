@@ -35,6 +35,7 @@ const UPLOADED_EVIDENCE_FIELDS = Object.freeze([
 const PUBLIC_NOMINATION_FIELDS = Object.freeze([
   "title",
   "assetType",
+  "period",
   "area",
   "address",
   "lat",
@@ -116,6 +117,7 @@ const PUBLIC_DISALLOWED_NOMINATION_FIELDS = Object.freeze([
 const FIELD_LIMITS = Object.freeze({
   title: 160,
   assetType: 100,
+  period: 160,
   area: 160,
   address: 1000,
   description: 5000,
@@ -351,6 +353,7 @@ function sanitizePublicNominationPayload(payload = {}) {
       entry === ""
       && [
         "assetType",
+        "period",
         "area",
         "condition",
         "communityUse",
@@ -431,6 +434,7 @@ function buildSubmittedNominationPayload(values = {}, timestamps = {}) {
   };
 
   addOptionalText(payload, "assetType", textValues.assetType);
+  addOptionalText(payload, "period", textValues.period);
   addOptionalText(payload, "area", textValues.area);
   addOptionalText(payload, "condition", textValues.condition);
   addOptionalText(payload, "communityUse", textValues.communityUse);

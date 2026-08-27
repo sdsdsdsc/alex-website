@@ -119,6 +119,7 @@ service cloud.firestore {
       return request.resource.data.keys().hasOnly([
           'title',
           'assetType',
+          'period',
           'area',
           'address',
           'lat',
@@ -189,6 +190,13 @@ service cloud.firestore {
         && isTrimmedString(request.resource.data.localSignificanceSummary, 2000)
         && isAllowedCriteria(request.resource.data.heritageCriteria)
         && isTrimmedString(request.resource.data.criteriaExplanation, 5000)
+        && (
+          !request.resource.data.keys().hasAny(['period'])
+          || (
+            isTrimmedString(request.resource.data.period, 160)
+            && request.resource.data.period.matches('^\\S(?:.*\\S)?$')
+          )
+        )
         && isValidEmailString(request.resource.data.nominatorEmail, 254)
         && request.resource.data.submittedByUid == request.auth.uid
         && isValidEmailString(request.resource.data.submitterEmail, 254)

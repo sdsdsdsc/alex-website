@@ -19,7 +19,7 @@ import {
   buildNominationDebugSummary,
   buildNominationOwnershipMetadata,
   buildSubmittedNominationPayload
-} from "./heritage-engine/nominations.js?v=2026-07-04-evidence-upload-timestamp-fix";
+} from "./heritage-engine/nominations.js?v=2026-08-27-period-nominations";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDr8hSSoad4Ut1v5J1r2f0eSau0msrB6V4",
@@ -47,6 +47,7 @@ const ALLOWED_EVIDENCE_FILE_TYPES = new Set([
 const FORM_TEXT_FIELDS = [
   "title",
   "assetType",
+  "period",
   "area",
   "address",
   "lat",

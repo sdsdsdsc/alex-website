@@ -1121,6 +1121,29 @@ test("a signed-in owner can create a valid nomination", async () => {
   ));
 });
 
+test("nomination period is optional, bounded, and trimmed when present", async () => {
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeNominations", "without-period"),
+    validNomination()
+  ));
+  await assertSucceeds(setDoc(
+    doc(ownerFirestore(), "placeNominations", "valid-period"),
+    validNomination({ period: "Ming dynasty" })
+  ));
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "untrimmed-period"),
+    validNomination({ period: " c. 1900 " })
+  ));
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "oversized-period"),
+    validNomination({ period: "x".repeat(161) })
+  ));
+  await assertFails(setDoc(
+    doc(ownerFirestore(), "placeNominations", "period-with-forbidden-field"),
+    validNomination({ period: "1950s", unexpectedField: "not allowed" })
+  ));
+});
+
 test("a signed-in owner can create a valid nomination when the auth token omits email", async () => {
   await assertSucceeds(setDoc(
     doc(ownerFirestoreWithoutEmailClaim(), "placeNominations", "valid-create-no-email-claim"),
