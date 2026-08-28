@@ -1324,6 +1324,7 @@ body.community-modal-open {
 }
 
 .home-places-feature__panel a {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
