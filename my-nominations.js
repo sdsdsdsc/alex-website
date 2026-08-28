@@ -214,12 +214,12 @@ async function handleSignedInUser(user) {
     renderNominations([]);
     if (error?.code === "permission-denied" || error?.code === "firestore/permission-denied") {
       setStatus(
-        "You are signed in, but Firestore rules blocked loading your nominations. The deployed rules or page query may not match the owner-scoped model.",
+        "You are signed in, but this page could not access your nominations. Please try again later or contact the site admin.",
         "error"
       );
       return;
     }
-    setStatus("Could not load your nominations. Please check sign-in and Firestore rules.", "error");
+    setStatus("Could not load your nominations. Please try again later or contact the site admin.", "error");
   }
 }
 

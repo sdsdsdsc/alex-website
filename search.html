@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com https://cdn.quilljs.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.quilljs.com; img-src 'self' data: blob: https:; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com https://dev-alex-photo-cms.pantheonsite.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <title>Community Places | Alex's Photo Board</title>
+  <title>Community Heritage records | Alex's Photo Board</title>
   <link rel="stylesheet" href="style.css">
   <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="search.js" defer></script>
@@ -20,8 +20,8 @@
   <main id="communitySearchMain" class="community-search-page">
     <section class="community-search-hero" aria-labelledby="communitySearchTitle">
       <div class="community-search-hero__inner">
-        <h2 id="communitySearchTitle">Find Community Places</h2>
-        <p>Search structured place records for sites, buildings, parks, public spaces, and heritage places.</p>
+        <h2 id="communitySearchTitle">Find Community Heritage records</h2>
+        <p>Search published Community Heritage records for sites, buildings, parks, public spaces, and other locally valued places.</p>
         <form class="community-search-form" id="communitySearchForm">
           <label class="visually-hidden" for="communitySearchInput">Search place records by name, type, location, local significance, or heritage criteria</label>
           <input
@@ -106,7 +106,7 @@
 
       <section class="community-search-results" aria-label="Community place results">
         <div class="community-results-toolbar">
-          <p id="communitySearchCount" class="community-results-count" aria-live="polite">Loading community place records...</p>
+          <p id="communitySearchCount" class="community-results-count" aria-live="polite">Loading Community Heritage records...</p>
           <div class="community-results-controls">
             <label for="communitySearchSort">Sort by</label>
             <select id="communitySearchSort">

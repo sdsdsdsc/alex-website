@@ -21,7 +21,7 @@
     <section class="public-auth-hero" aria-labelledby="publicAuthTitle">
       <p class="public-auth-hero__kicker">Public account required for nominations</p>
       <h2 id="publicAuthTitle">Sign in before submitting a place nomination</h2>
-      <p>You need to sign in before submitting a place nomination. Your nomination will be linked privately to your account for review and future account features. Signing in does not give access to admin tools.</p>
+      <p>You need to sign in before submitting a place nomination. Your nomination will be linked privately to your account for review and for your My nominations page. Signing in does not give access to admin tools.</p>
     </section>
 
     <section class="public-auth-layout" aria-label="Public account options">
@@ -29,10 +29,10 @@
         <h3>What public sign in is for</h3>
         <ul>
           <li>Create a simple email/password account that is required before submitting nominations.</li>
-          <li>Link your nominations privately to your account for review and future account features.</li>
+          <li>Link your nominations privately to your account so you can review them in My nominations.</li>
           <li>Keep public and admin access clearly separate.</li>
         </ul>
-        <p>This public account page is separate from the admin sign-in. Nominations are reviewed before becoming public records, and public users cannot edit communityPlaces directly.</p>
+        <p>This public account page is separate from the admin sign-in. Nominations are reviewed before becoming public records, and public users cannot edit published Community Heritage records directly.</p>
         <div class="admin-actions">
           <a href="index.html">Back to Home</a>
           <a href="nominate-place.html" data-next-link>Nominate a place</a>
@@ -49,7 +49,7 @@
 
             <label for="publicRegisterDisplayName">Display name</label>
             <input id="publicRegisterDisplayName" name="registerDisplayName" type="text" maxlength="120" autocomplete="nickname" aria-describedby="publicRegisterDisplayNameHelp">
-            <p id="publicRegisterDisplayNameHelp" class="public-auth-help">This is the name we may use later to identify your community contributions. You can leave it blank for now.</p>
+            <p id="publicRegisterDisplayNameHelp" class="public-auth-help">This is the name we may use to identify your community contributions if they are approved for public display. You can leave it blank for now.</p>
 
             <label for="publicRegisterExperience">Relevant experience or local interest</label>
             <textarea id="publicRegisterExperience" name="registerExperience" rows="4" maxlength="500" aria-describedby="publicRegisterExperienceHelp"></textarea>
@@ -65,7 +65,7 @@
               <input id="publicRegisterConsent" name="registerConsent" type="checkbox">
               <span>I understand that this public account is separate from admin access, and that nominations are reviewed before becoming public records.</span>
             </label>
-            <p class="public-auth-help">By registering, you agree that account information may later be used to link your own nominations privately to your account.</p>
+            <p class="public-auth-help">By registering, you agree that account information is used to link your own nominations privately to your account.</p>
 
             <button type="submit">Register</button>
           </form>
@@ -88,7 +88,7 @@
           <h3 id="publicAccountTitle">Signed in</h3>
           <p class="public-auth-current-user">You are signed in as <strong id="publicAuthCurrentEmail"></strong>.</p>
           <p class="public-auth-current-user" id="publicAuthDisplayNameRow" hidden>Display name: <strong id="publicAuthCurrentDisplayName"></strong></p>
-          <p>You need to stay signed in before submitting a place nomination. Your nomination will be linked privately to your account for review and future account features.</p>
+          <p>You need to stay signed in before submitting a place nomination. Your nomination will be linked privately to your account for review and for your My nominations page.</p>
         <div class="admin-actions">
           <button id="publicAuthSignOutButton" type="button">Sign out</button>
           <a href="my-nominations.html">My nominations</a>

@@ -385,8 +385,8 @@ async function handleContributionSubmit(event) {
     if (error?.code === "permission-denied" || error?.code === "firestore/permission-denied") {
       setContributionFormStatus(
         uploadComplete
-          ? "Your image upload succeeded, but current Firestore rules blocked the contribution record. The uploaded file was cleaned up when possible."
-          : "Current Firestore rules blocked the contribution record.",
+          ? "Your image upload succeeded, but the contribution could not be saved. The uploaded file was cleaned up when possible."
+          : "The contribution could not be saved. Please try again later or contact the site admin.",
         "error"
       );
       return;

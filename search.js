@@ -289,7 +289,7 @@ function renderResults() {
 
   if (publicPlaces.length === 0) {
     renderPlaceCount(0, 0);
-    setEmptyMessage("No community place records have been added yet. Records will appear here once communityPlaces data is added in Firestore.");
+    setEmptyMessage("No published Community Heritage records have been added yet.");
     return;
   }
 
@@ -424,8 +424,8 @@ async function loadCommunityPlaces() {
     renderResults();
   } catch (err) {
     console.error("Failed to load communityPlaces:", err);
-    if (els.count) els.count.textContent = "Community place records unavailable";
-    setEmptyMessage("Could not load community place records. Please try again later.");
+    if (els.count) els.count.textContent = "Community Heritage records unavailable";
+    setEmptyMessage("Could not load Community Heritage records. Please try again later.");
   }
 }
 

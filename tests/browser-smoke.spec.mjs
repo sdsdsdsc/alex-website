@@ -49,7 +49,7 @@ const SMOKE_PAGES = [
   },
   {
     path: "/search.html",
-    title: /Community Places/,
+    title: /Community Heritage records/,
     readySelector: "#communitySearchForm"
   },
   {
