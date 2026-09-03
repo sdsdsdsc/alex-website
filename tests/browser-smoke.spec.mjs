@@ -60,7 +60,7 @@ const SMOKE_PAGES = [
 ];
 
 const COMMUNITY_CATEGORY_FIXTURES = [
-  { id: "fixture-building", title: "Published Fixture Building", category: "Building", recordStatus: "published", lat: 27.62, lng: 113.88 },
+  { id: "fixture-building", title: "Published Fixture Building", category: "Building", period: "c. 1900", heritageCriteria: ["Historic interest", "Group value"], recordStatus: "published", lat: 27.62, lng: 113.88 },
   { id: "fixture-park", title: "Published Fixture Park", category: "Park", recordStatus: "published", lat: 27.63, lng: 113.89 },
   { id: "fixture-landmark", title: "Published Fixture Landmark", category: "Landmark", recordStatus: "published", lat: 27.64, lng: 113.90 },
   { id: "fixture-route", title: "Published Fixture Route", category: "Street or route", recordStatus: "published", lat: 27.65, lng: 113.91 },
@@ -2180,6 +2180,8 @@ test("Community marker selection opens Info without moving focus and can be repl
   await expect(info).toContainText("Published Fixture Building");
   await expect(info).toContainText("Community Heritage record");
   await expect(info).toContainText("Building");
+  await expect(info).toContainText("c. 1900");
+  await expect(info).toContainText("Historic interest, Group value");
   await expect(info.getByRole("link", { name: "View full Community Heritage record" })).toHaveAttribute(
     "href",
     "place.html?id=fixture-building"

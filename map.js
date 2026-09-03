@@ -1030,6 +1030,14 @@ function initCommunityMap({
     const facts = document.createElement("dl");
     facts.className = "map-selection-info__facts";
     appendInfoFact(facts, "Asset Type", cleanText(record.assetType) || cleanText(record.category));
+    appendInfoFact(facts, "Period / approximate date", record.period);
+    const heritageCriteria = (Array.isArray(record.heritageCriteria)
+      ? record.heritageCriteria
+      : [record.heritageCriteria])
+      .map(cleanText)
+      .filter(Boolean)
+      .join(", ");
+    appendInfoFact(facts, "Heritage Criteria", heritageCriteria);
     appendInfoFact(facts, "Area", cleanText(record.district) || cleanText(record.city) || cleanText(record.area));
     appendInfoFact(facts, "Location", getCommunityDisplayLocation(record));
     const summaryValue = cleanText(record.localSignificanceSummary) || cleanText(record.description);
