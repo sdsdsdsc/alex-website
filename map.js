@@ -6,7 +6,6 @@ import {
   query
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import {
-  buildNominationUrlFromCoordinates,
   buildPlaceRecordUrl,
   cleanText,
   escapeHTML,
@@ -337,6 +336,23 @@ function buildCommunityPlacePopupHtml(record) {
   `;
 }
 
+function getOfficialDisplayLocationLabel(data) {
+  const badgeLabels = {
+    "site-point": data.locationPrecision === "approximate" ? "Approximate site location" : "Reviewed site location",
+    "compound-centroid": "Compound reference point",
+    "public-entrance": "Public entrance",
+    "visitor-reference-point": "Visitor reference point",
+    "component-reference-point": "Component reference point",
+    "generalized-locality": "General locality",
+    "generalized-area-reference": "General area reference"
+  };
+  return data.geometryType === "Point"
+    ? (data.representationStatus ? data.geometryMeaningLabel : null)
+      || badgeLabels[data.displayLocationType]
+      || "Reviewed official location"
+    : data.geometryMeaningLabel;
+}
+
 function buildOfficialHeritagePopup(feature) {
   const data = buildOfficialPopupData(feature);
   const isPoint = data.geometryType === "Point";
@@ -356,20 +372,7 @@ function buildOfficialHeritagePopup(feature) {
 
   const locationBadge = document.createElement("p");
   locationBadge.className = "official-heritage-map-popup__badge";
-  const badgeLabels = {
-    "site-point": data.locationPrecision === "approximate" ? "Approximate site location" : "Reviewed site location",
-    "compound-centroid": "Compound reference point",
-    "public-entrance": "Public entrance",
-    "visitor-reference-point": "Visitor reference point",
-    "component-reference-point": "Component reference point",
-    "generalized-locality": "General locality",
-    "generalized-area-reference": "General area reference"
-  };
-  locationBadge.textContent = isPoint
-    ? (data.representationStatus ? data.geometryMeaningLabel : null)
-      || badgeLabels[data.displayLocationType]
-      || "Reviewed official location"
-    : data.geometryMeaningLabel;
+  locationBadge.textContent = getOfficialDisplayLocationLabel(data);
 
   const facts = document.createElement("dl");
   facts.className = "map-point-card__facts";
@@ -481,13 +484,14 @@ function initCommunityMap({
   const resetButton = document.getElementById("mapFilterReset");
   const toolButtons = Array.from(document.querySelectorAll(".map-tool-index__button"));
   const toolPanels = Array.from(document.querySelectorAll("[data-tool-panel]"));
+  const explorerBodyEl = document.querySelector(".map-explorer-panel__body");
   const urlParams = new URLSearchParams(window.location.search);
   const initialDiscoveryState = parseSharedDiscoveryState(urlParams);
   const requestedPlaceId = cleanText(urlParams.get("place"));
   const fallbackCenter = [27.6202, 113.8825];
   const customFilters = Array.from(document.querySelectorAll(".map-custom-filter"));
-  const mapNominationToggle = document.getElementById("mapNominationToggle");
-  const mapNominationStatus = document.getElementById("mapNominationStatus");
+  const infoPanelEl = document.getElementById("mapSelectionInfo");
+  const infoStatusEl = document.getElementById("mapInfoStatus");
   const officialStatusEl = document.getElementById("officialHeritageStatus");
   const officialErrorEl = document.getElementById("officialHeritageError");
   const communityLayerToggle = document.getElementById("communityHeritageLayerToggle");
@@ -519,7 +523,7 @@ function initCommunityMap({
   };
 
   let allPublicRecords = [];
-  let isNominationPickMode = false;
+  let selectedFeature = null;
   let officialLoadPromise = null;
   let lastOfficialAnnouncement = "";
   let displayedOfficialMarkerCount = null;
@@ -817,6 +821,7 @@ function initCommunityMap({
           marker.openPopup();
         });
       });
+      marker.on("popupopen", () => selectMapFeature("official", feature));
       marker.bindPopup(buildOfficialHeritagePopup(feature), {
         className: "community-map-popup official-heritage-map-popup",
         closeButton: true,
@@ -863,6 +868,7 @@ function initCommunityMap({
       : L.polygon(latLngs, presentation.pathOptions);
     const accessibleName = buildOfficialFeatureAccessibleName(feature);
     decorateOfficialGeometryLayer(layer, accessibleName, feature.id);
+    layer.on("popupopen", () => selectMapFeature("official", feature));
     layer.bindPopup(buildOfficialHeritagePopup(feature), {
       className: "community-map-popup official-heritage-map-popup",
       closeButton: true,
@@ -876,6 +882,12 @@ function initCommunityMap({
       const category = getOfficialMapCategory(feature.properties.officialCategoryZh);
       return category && selectedOfficialCategoryKeys.has(category.key);
     });
+    if (
+      selectedFeature?.source === "official"
+      && !visibleModels.some(({ feature }) => String(feature.id) === selectedFeature.id)
+    ) {
+      clearSelectedFeature({ closePopup: false });
+    }
     let renderedLayers;
     try {
       renderedLayers = visibleModels.map(buildOfficialGeometryLayer);
@@ -976,32 +988,152 @@ function initCommunityMap({
     });
   }
 
-  function setNominationStatus(message = "") {
-    if (!mapNominationStatus) return;
-    mapNominationStatus.textContent = message;
-    mapNominationStatus.hidden = !message;
+  function appendInfoFact(list, label, value, language = "") {
+    const cleanValue = cleanText(value);
+    if (!cleanValue) return;
+    const row = document.createElement("div");
+    const term = document.createElement("dt");
+    const description = document.createElement("dd");
+    term.textContent = label;
+    description.textContent = cleanValue;
+    if (language) description.lang = language;
+    row.append(term, description);
+    list.appendChild(row);
   }
 
-  function stopMapNominationMode() {
-    isNominationPickMode = false;
-    container.classList.remove("is-nomination-pick-mode");
-    if (mapNominationToggle) {
-      mapNominationToggle.textContent = "Nominate a place";
-      mapNominationToggle.setAttribute("aria-pressed", "false");
-    }
-    setNominationStatus("");
+  function renderInfoEmptyState() {
+    if (!infoPanelEl) return;
+    const title = document.createElement("h3");
+    title.textContent = "Selected feature";
+    const message = document.createElement("p");
+    message.className = "map-explorer-section__text";
+    message.textContent = "Select a Community Heritage or Official Heritage feature on the map to see information about it here.";
+    infoPanelEl.replaceChildren(title, message);
   }
 
-  function startMapNominationMode() {
-    isNominationPickMode = true;
-    closeAllCustomFilters();
-    map.closePopup();
-    container.classList.add("is-nomination-pick-mode");
-    if (mapNominationToggle) {
-      mapNominationToggle.textContent = "Cancel nomination";
-      mapNominationToggle.setAttribute("aria-pressed", "true");
+  function appendClearSelectionButton(parent) {
+    const button = document.createElement("button");
+    button.className = "map-selection-info__clear";
+    button.id = "mapClearSelection";
+    button.type = "button";
+    button.textContent = "Clear selection";
+    parent.appendChild(button);
+  }
+
+  function renderCommunityInfo(record) {
+    if (!infoPanelEl) return;
+    const title = document.createElement("h3");
+    title.textContent = cleanText(record.title) || "Untitled community place";
+    const recordType = document.createElement("p");
+    recordType.className = "map-selection-info__type";
+    recordType.textContent = "Community Heritage record";
+    const facts = document.createElement("dl");
+    facts.className = "map-selection-info__facts";
+    appendInfoFact(facts, "Asset Type", cleanText(record.assetType) || cleanText(record.category));
+    appendInfoFact(facts, "Area", cleanText(record.district) || cleanText(record.city) || cleanText(record.area));
+    appendInfoFact(facts, "Location", getCommunityDisplayLocation(record));
+    const summaryValue = cleanText(record.localSignificanceSummary) || cleanText(record.description);
+    const summary = document.createElement("p");
+    summary.className = "map-selection-info__summary";
+    summary.textContent = summaryValue;
+    const recordLink = document.createElement("a");
+    recordLink.className = "map-selection-info__link";
+    recordLink.href = buildPlaceRecordUrl(record.id);
+    recordLink.textContent = "View full Community Heritage record";
+    const children = [title, recordType];
+    if (facts.children.length) children.push(facts);
+    if (summaryValue) children.push(summary);
+    children.push(recordLink);
+    infoPanelEl.replaceChildren(...children);
+    appendClearSelectionButton(infoPanelEl);
+  }
+
+  function appendExternalInfoLink(parent, label, href) {
+    if (!href) return;
+    const link = document.createElement("a");
+    link.className = "map-selection-info__link";
+    link.href = href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = label;
+    parent.appendChild(link);
+  }
+
+  function renderOfficialInfo(feature) {
+    if (!infoPanelEl) return;
+    const data = buildOfficialPopupData(feature);
+    const title = document.createElement("h3");
+    title.textContent = data.projectNameEn || "Untitled Official Heritage record";
+    const recordType = document.createElement("p");
+    recordType.className = "map-selection-info__type map-selection-info__type--official";
+    recordType.textContent = "Official Heritage record";
+    const officialName = document.createElement("p");
+    officialName.className = "map-selection-info__official-name";
+    officialName.append("Official name: ");
+    const officialNameValue = document.createElement("span");
+    officialNameValue.lang = "zh-Hans";
+    officialNameValue.textContent = data.officialNameZh;
+    officialName.appendChild(officialNameValue);
+    const facts = document.createElement("dl");
+    facts.className = "map-selection-info__facts";
+    const category = getOfficialMapCategory(data.officialCategoryZh);
+    appendInfoFact(facts, "Designation level", data.officialDesignationLevelLabel);
+    appendInfoFact(facts, "Map category", category.label);
+    appendInfoFact(facts, "Original official category", data.officialCategoryZh, "zh-Hans");
+    appendInfoFact(facts, "Official location", data.officialLocationTextZh, "zh-Hans");
+    appendInfoFact(facts, "Map representation", getOfficialDisplayLocationLabel(data));
+    appendInfoFact(facts, "Location evidence", data.locationEvidenceConfidence);
+    if (data.geometrySourceTypeLabel && data.geometrySourceLabel) {
+      appendInfoFact(facts, "Map location source", `${data.geometrySourceTypeLabel}: ${data.geometrySourceLabel}`);
     }
-    setNominationStatus("Click the map to choose the place you want to nominate.");
+    appendInfoFact(facts, "Official source", data.sourceLabel, "zh-Hans");
+    infoPanelEl.replaceChildren(title, recordType);
+    if (data.officialNameZh) infoPanelEl.appendChild(officialName);
+    if (facts.children.length) infoPanelEl.appendChild(facts);
+    if (data.geometryCaution || data.publicLocationNote) {
+      const caution = document.createElement("p");
+      caution.className = "map-selection-info__caution";
+      caution.textContent = data.geometryCaution || data.publicLocationNote;
+      infoPanelEl.appendChild(caution);
+    }
+    if (data.generalizedPointContract) {
+      const warning = document.createElement("p");
+      warning.className = "map-selection-info__warning";
+      warning.textContent = data.generalizedPointMandatoryLimitation;
+      infoPanelEl.appendChild(warning);
+    }
+    appendExternalInfoLink(infoPanelEl, "Open official source", data.sourceUrl);
+    if (data.geometrySourceUrl && data.geometrySourceUrl !== data.sourceUrl) {
+      appendExternalInfoLink(infoPanelEl, "Open map-location source", data.geometrySourceUrl);
+    }
+    appendClearSelectionButton(infoPanelEl);
+  }
+
+  function selectMapFeature(source, value) {
+    selectedFeature = { source, id: String(value?.id || ""), value };
+    setActiveToolPanel("info", { moveFocus: false });
+    if (explorerBodyEl) explorerBodyEl.scrollTop = 0;
+    if (source === "community") {
+      renderCommunityInfo(value);
+    } else {
+      renderOfficialInfo(value);
+    }
+    if (infoStatusEl) {
+      const title = source === "community"
+        ? cleanText(value.title) || "community record"
+        : buildOfficialPopupData(value).projectNameEn || "Official Heritage record";
+      infoStatusEl.textContent = `Showing information for ${title}.`;
+    }
+  }
+
+  function clearSelectedFeature({ closePopup = true, announce = true } = {}) {
+    if (!selectedFeature) return;
+    selectedFeature = null;
+    if (closePopup) map.closePopup();
+    renderInfoEmptyState();
+    if (announce && infoStatusEl) {
+      infoStatusEl.textContent = "Selection cleared.";
+    }
   }
 
   function getCustomFilter(key) {
@@ -1224,6 +1356,12 @@ function initCommunityMap({
     const visiblePoints = matchingPoints.filter((point) => (
       selectedCommunityCategoryKeys.has(getCommunityMapCategory(point).key)
     ));
+    if (
+      selectedFeature?.source === "community"
+      && !visiblePoints.some((point) => String(point.id) === selectedFeature.id)
+    ) {
+      clearSelectedFeature({ closePopup: false });
+    }
     matchingCommunityPointCount = matchingPoints.length;
     visibleCommunityPointCount = visiblePoints.length;
 
@@ -1245,6 +1383,7 @@ function initCommunityMap({
         closeButton: true,
         autoClose: true
       });
+      marker.on("popupopen", () => selectMapFeature("community", point));
       markersById.set(point.id, marker);
       boundsItems.push([point.lat, point.lng]);
     });
@@ -1467,20 +1606,15 @@ function initCommunityMap({
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
-      if (isNominationPickMode) {
-        stopMapNominationMode();
-        return;
-      }
       closeAllCustomFilters();
       map.closePopup();
     }
   });
 
-  map.on("click", (event) => {
-    if (!isNominationPickMode) return;
-    const { lat, lng } = event.latlng;
-    stopMapNominationMode();
-    window.location.href = buildNominationUrlFromCoordinates(lat, lng);
+  infoPanelEl?.addEventListener("click", (event) => {
+    if (event.target.closest?.("#mapClearSelection")) {
+      clearSelectedFeature();
+    }
   });
 
   map.on("layeradd", (event) => {
@@ -1497,11 +1631,17 @@ function initCommunityMap({
 
   map.on("layerremove", (event) => {
     if (event.layer === communityLayer) {
+      if (selectedFeature?.source === "community") {
+        clearSelectedFeature({ closePopup: false });
+      }
       syncLayerControls();
       updateVisibleLayerStatus("community-layer-removed");
       return;
     }
     if (event.layer === officialLayer) {
+      if (selectedFeature?.source === "official") {
+        clearSelectedFeature({ closePopup: false });
+      }
       officialLayer.clearLayers();
       displayedOfficialMarkerCount = null;
       if (officialLayerState !== "failed") {
@@ -1512,14 +1652,6 @@ function initCommunityMap({
       updateOfficialCategoryStatus();
       updateVisibleLayerStatus(`official-layer-removed-${officialLayerState}`);
     }
-  });
-
-  mapNominationToggle?.addEventListener("click", () => {
-    if (isNominationPickMode) {
-      stopMapNominationMode();
-      return;
-    }
-    startMapNominationMode();
   });
 
   syncLayerControls();

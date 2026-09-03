@@ -6,7 +6,7 @@ const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-08-27-period-nominations";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
 const COMMUNITY_PUBLICATION_VERSION = "2026-08-17-community-publication-state";
-const MAP_PAGE_VERSION = "2026-08-21-pr91-owner-follow-up";
+const MAP_PAGE_VERSION = "2026-09-03-selection-info";
 const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-09-kuixing-pavilion-point";
 const OFFICIAL_CATEGORY_VERSION = "2026-07-27-official-category-filters";
 const OFFICIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-official-protected-heritage-map.geojson*";
@@ -926,10 +926,7 @@ test("production-sized official fixture renders nine accessible markers across r
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   const layersPanel = await openMapLayersTab(page);
-  const officialToggle = layersPanel.getByRole("checkbox", {
-    name: "Show Official Heritage",
-    exact: true
-  });
+  const officialToggle = page.locator("#officialHeritageLayerToggle");
   await expect(officialToggle).not.toBeChecked();
   await officialToggle.click();
   await expect(page.locator(".official-heritage-map-marker")).toHaveCount(9);
@@ -1230,6 +1227,7 @@ test("validated official line and area geometries render with accessible meaning
     hasText: "Heritage Uncertainty Area"
   })).toContainText("Uncertainty area");
 
+  await openMapLayersTab(page);
   const ancientBuildings = layersPanel.getByRole("checkbox", {
     name: "Ancient buildings",
     exact: true
@@ -1852,6 +1850,8 @@ test("community categories are accessible tri-state Map visibility controls", as
   const readyCommunityCount = await waitForCommunityMapReady(page);
   expect(readyCommunityCount).toBe(5);
   await expect(page.locator("#mapFocusStatus")).toContainText("Focused on Published Fixture Route");
+  await expect(page.getByRole("tab", { name: "Info" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator("#mapSelectionInfo")).toContainText("Published Fixture Route");
   const layersPanel = await openMapLayersTab(page);
   const parent = layersPanel.getByRole("checkbox", { name: "All community records", exact: true });
   const categoryLabels = [
@@ -2146,23 +2146,159 @@ test("Map tools expose four accessible tabs with automatic arrow-key activation"
   await expect(infoTab).toBeFocused();
 });
 
-test("map offers a keyboard-accessible nomination path without map picking", async ({ page }) => {
+test("Map Info starts empty and map-only nomination controls and dependencies are removed", async ({ page }) => {
   await page.goto("/map.html", { waitUntil: "domcontentloaded" });
   await page.getByRole("tab", { name: "Info" }).click();
-  const fallback = page.getByRole("link", { name: "Open the nomination form without choosing a map point" });
-  await expect(fallback).toBeVisible();
-  await expect(fallback).toHaveAttribute("href", "nominate-place.html");
-  await expect(page.locator("#mapInfoToolPanel")).toContainText("Keyboard users can describe the location manually");
+  const info = page.locator("#mapInfoToolPanel");
+  await expect(info).toContainText("Select a Community Heritage or Official Heritage feature on the map");
+  await expect(info.locator("#mapClearSelection")).toHaveCount(0);
+  await expect(page.locator("#mapNominationToggle, #mapNominationStatus, .map-nomination-entry__link")).toHaveCount(0);
+
+  const sources = await page.evaluate(async () => ({
+    html: await (await fetch("/map.html")).text(),
+    script: await (await fetch("/map.js")).text(),
+    css: await (await fetch("/style.css")).text()
+  }));
+  expect(sources.html).not.toContain("leaflet-draw");
+  expect(sources.html).not.toContain("Open the nomination form without choosing a map point");
+  expect(sources.script).not.toContain("buildNominationUrlFromCoordinates");
+  expect(sources.script).not.toContain("isNominationPickMode");
+  expect(sources.css).not.toContain("is-nomination-pick-mode");
+});
+
+test("Community marker selection opens Info without moving focus and can be replaced or cleared", async ({ page }) => {
+  await mockFirestoreCollections(page, { communityPlaces: COMMUNITY_CATEGORY_FIXTURES });
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await waitForCommunityMapReady(page);
+  const firstMarker = page.getByRole("button", { name: /Published Fixture Building/ });
+  await firstMarker.focus();
+  await firstMarker.press("Enter");
+
+  await expect(page.getByRole("tab", { name: "Info" })).toHaveAttribute("aria-selected", "true");
+  await expect(firstMarker).toBeFocused();
+  const info = page.locator("#mapSelectionInfo");
+  await expect(info).toContainText("Published Fixture Building");
+  await expect(info).toContainText("Community Heritage record");
+  await expect(info).toContainText("Building");
+  await expect(info.getByRole("link", { name: "View full Community Heritage record" })).toHaveAttribute(
+    "href",
+    "place.html?id=fixture-building"
+  );
+  await expect(page.locator(".community-map-popup")).toContainText("Published Fixture Building");
+
+  const secondMarker = page.getByRole("button", { name: /Published Fixture Park/ });
+  await secondMarker.focus();
+  await secondMarker.press("Enter");
+  await expect(info).toContainText("Published Fixture Park");
+  await expect(info).not.toContainText("Published Fixture Building");
+  await info.getByRole("button", { name: "Clear selection" }).click();
+  await expect(info).toContainText("Select a Community Heritage or Official Heritage feature on the map");
+  await expect(info).not.toContainText("Published Fixture Park");
+  await expect(page.locator(".community-map-popup")).toHaveCount(0);
+});
+
+test("selected Community Info clears when its category is hidden and layer choices persist", async ({ page }) => {
+  await mockFirestoreCollections(page, { communityPlaces: COMMUNITY_CATEGORY_FIXTURES });
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await waitForCommunityMapReady(page);
+  const marker = page.getByRole("button", { name: /Published Fixture Building/ });
+  await marker.focus();
+  await marker.press("Enter");
+  await expect(page.locator("#mapSelectionInfo")).toContainText("Published Fixture Building");
+
+  const layers = await openMapLayersTab(page);
+  await layers.getByRole("checkbox", { name: "Buildings", exact: true }).click();
+  await expect(page.locator(".community-map-pin--buildings")).toHaveCount(0);
+  await page.getByRole("tab", { name: "Info" }).click();
+  await expect(page.locator("#mapSelectionInfo")).toContainText("Select a Community Heritage or Official Heritage feature");
+  await page.getByRole("tab", { name: "Layers" }).click();
+  await expect(layers.getByRole("checkbox", { name: "Buildings", exact: true })).not.toBeChecked();
+
+  await layers.getByRole("checkbox", { name: "Buildings", exact: true }).click();
+  const restoredMarker = page.getByRole("button", { name: /Published Fixture Building/ });
+  await restoredMarker.focus();
+  await restoredMarker.press("Enter");
+  await expect(page.locator("#mapSelectionInfo")).toContainText("Published Fixture Building");
+  await openMapLayersTab(page);
+  await layers.getByRole("checkbox", { name: "All community records", exact: true }).click();
+  await page.getByRole("tab", { name: "Info" }).click();
+  await expect(page.locator("#mapSelectionInfo")).toContainText("Select a Community Heritage or Official Heritage feature");
+});
+
+test("Official selection populates Info, preserves the Xieli warning, and clears when hidden", async ({ page }) => {
+  await mockFirestoreCollections(page, { communityPlaces: COMMUNITY_CATEGORY_FIXTURES });
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await waitForCommunityMapReady(page);
+  const layers = await openMapLayersTab(page);
+  await setOverlayChecked(page, "Show Official Heritage", true);
+  const templeMarker = page.getByRole("button", { name: /Open Official Heritage record: Xinyu Confucian Temple/ });
+  await templeMarker.focus();
+  await templeMarker.press("Enter");
+  const info = page.locator("#mapSelectionInfo");
+  await expect(info).toContainText("Xinyu Confucian Temple");
+  await page.locator(".map-explorer-panel__body").evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  const xieliMarker = page.getByRole("button", { name: /Open Official Heritage record: Xieli Site/ });
+  await xieliMarker.focus();
+  await xieliMarker.press("Enter");
+
+  await expect(page.getByRole("tab", { name: "Info" })).toHaveAttribute("aria-selected", "true");
+  await expect(xieliMarker).toBeFocused();
+  await expect(info).toContainText("Xieli Site");
+  await expect(info).not.toContainText("Xinyu Confucian Temple");
+  await expect.poll(() => page.locator(".map-explorer-panel__body").evaluate((element) => element.scrollTop)).toBe(0);
+  await expect(info).toContainText("Official Heritage record");
+  await expect(info).toContainText("Provincial");
+  await expect(info).toContainText("Archaeological sites");
+  await expect(info).toContainText("Generalized project reference point");
+  await expect(info.locator(".map-selection-info__warning")).toHaveText(
+    "Generalized reference location. This marker represents the documented general vicinity of the heritage record. It does not show the exact feature, centre, entrance, extent, or legal protection boundary."
+  );
+  const xieliPopup = page.locator(".official-heritage-map-popup").filter({ hasText: "Xieli Site" });
+  await expect(xieliPopup).toContainText("Xieli Site");
+  await expect(xieliPopup.locator(".official-heritage-map-popup__generalized-limitation")).toHaveText(
+    "Generalized reference location. This marker represents the documented general vicinity of the heritage record. It does not show the exact feature, centre, entrance, extent, or legal protection boundary."
+  );
+
+  await openMapLayersTab(page);
+  await layers.getByRole("checkbox", { name: "Archaeological sites", exact: true }).click();
+  await expect(xieliMarker).toHaveCount(0);
+  await page.getByRole("tab", { name: "Info" }).click();
+  await expect(info).toContainText("Select a Community Heritage or Official Heritage feature");
+});
+
+test("Guidance owns general Map operation and public pages do not claim Map-started nomination", async ({ page }) => {
+  await page.goto("/guidance.html", { waitUntil: "domcontentloaded" });
+  const mapGuidance = page.getByRole("heading", { name: "Using the heritage map" }).locator("..");
+  await expect(mapGuidance).toContainText("Search");
+  await expect(mapGuidance).toContainText("Filters");
+  await expect(mapGuidance).toContainText("Layers");
+  await expect(mapGuidance).toContainText("Info");
+  await expect(mapGuidance.getByRole("link", { name: "Places list" })).toHaveAttribute("href", "search.html");
+  await expect(page.locator("#coordinatesTitle").locator("..")).toContainText("complete the nomination form");
+  await expect(page.locator("main")).not.toContainText("map nomination entry point");
+  await expect(page.locator("main")).not.toContainText("pass latitude and longitude into the nomination form");
+
+  await page.goto("/get-involved.html", { waitUntil: "domcontentloaded" });
+  const participation = page.locator("#howToParticipateTitle").locator("..");
+  await expect(participation).toContainText("Explore published Community Heritage and Official Heritage information");
+  await expect(participation.getByRole("link", { name: "heritage map" })).toHaveAttribute("href", "map.html");
+  await expect(participation).not.toContainText("start a nomination from");
+  await expect(participation).not.toContainText("passes the selected latitude and longitude");
+  await expect(page.locator(".heritage-participation-links, .guidance-actions")).toHaveCount(0);
 });
 
 for (const viewport of [
   { width: 320, height: 720 },
-  { width: 375, height: 812 },
+  { width: 390, height: 844 },
+  { width: 430, height: 932 },
   { width: 768, height: 1024 },
   { width: 1280, height: 800 },
   { width: 844, height: 390 }
 ]) {
   test(`map workspace fits ${viewport.width}x${viewport.height} without page-level horizontal overflow`, async ({ page }) => {
+    await mockFirestoreCollections(page, { communityPlaces: COMMUNITY_CATEGORY_FIXTURES });
     await page.setViewportSize(viewport);
     await page.goto("/map.html", { waitUntil: "domcontentloaded" });
     await expect(page.locator("#mapSearchStatus")).not.toHaveText("", { timeout: 20000 });
@@ -2178,6 +2314,12 @@ for (const viewport of [
       clientWidth: document.documentElement.clientWidth
     }));
     expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
+    const marker = page.getByRole("button", { name: /Published Fixture Building/ });
+    await marker.focus();
+    await marker.press("Enter");
+    await expect(page.locator("#mapSelectionInfo")).toContainText("Published Fixture Building");
+    await expect(page.locator("#mapClearSelection")).toBeVisible();
+    await expectNoPageLevelHorizontalOverflow(page);
   });
 }
 
