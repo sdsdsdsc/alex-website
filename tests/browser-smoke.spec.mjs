@@ -763,10 +763,11 @@ test("Map layer guidance is contextual, keyboard accessible, concise, and respon
 
 test("Criteria is a hub with dedicated criterion and Asset Type pages", async ({ page }) => {
   await page.goto("/criteria.html", { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("heading", { name: "Asset Type", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Heritage Criteria", exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Heritage Criteria: why does this place matter?" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Asset Type: what kind of place is it?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "How Heritage Criteria are used" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Classify the place separately" })).toBeVisible();
+  await expect(page.locator('.heritage-about-content a[href="asset-types.html"]')).toHaveCount(2);
+  await expect(page.locator('.heritage-about-content a[href^="asset-type-"]')).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "On this page" })).toHaveCount(0);
   await expect(page.locator('.heritage-about-content a[href^="#"]')).toHaveCount(0);
 
@@ -822,6 +823,31 @@ test("Criteria is a hub with dedicated criterion and Asset Type pages", async ({
   }
 });
 
+test("Get involved and Guidance use contextual participation links instead of duplicate navigation", async ({ page }) => {
+  await page.goto("/get-involved.html", { waitUntil: "domcontentloaded" });
+  const participation = page.locator('[aria-labelledby="howToParticipateTitle"]');
+  for (const path of [
+    "nominate-place.html",
+    "guidance.html",
+    "asset-types.html",
+    "criteria.html",
+    "map.html",
+    "public-auth.html",
+    "my-nominations.html"
+  ]) {
+    await expect(participation.locator(`a[href="${path}"]`)).toHaveCount(1);
+  }
+  await expect(participation.locator('a[href="search.html"], a[href="history.html"]')).toHaveCount(0);
+  await expect(page.locator(".heritage-about-pathways, .heritage-about-actions")).toHaveCount(0);
+
+  await page.goto("/guidance.html", { waitUntil: "domcontentloaded" });
+  const guidance = page.locator(".heritage-about-content");
+  for (const path of ["asset-types.html", "criteria.html", "map.html", "nominate-place.html"]) {
+    await expect(guidance.locator(`a[href="${path}"]`)).toHaveCount(1);
+  }
+  await expect(page.locator(".heritage-about-actions")).toHaveCount(0);
+});
+
 test("Criteria hubs and guidance pages remain readable without horizontal overflow", async ({ page }) => {
   const guidancePages = [
     "criteria.html",
@@ -857,6 +883,27 @@ test("Criteria hubs and guidance pages remain readable without horizontal overfl
   ]) {
     await page.setViewportSize(viewport);
     for (const path of ["criteria.html", "criteria-architectural-design-artistic-interest.html", "asset-types.html", "asset-type-other-sites-landscapes.html"]) {
+      await page.goto(`/${path}`, { waitUntil: "domcontentloaded" });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    }
+  }
+
+  const consolidatedContentPages = [
+    "about-local-heritage.html",
+    "guidance.html",
+    "criteria.html",
+    "get-involved.html",
+    "nominate-place.html"
+  ];
+  for (const viewport of [
+    { width: 320, height: 720 },
+    { width: 390, height: 844 },
+    { width: 430, height: 932 },
+    { width: 768, height: 900 },
+    { width: 1280, height: 800 }
+  ]) {
+    await page.setViewportSize(viewport);
+    for (const path of consolidatedContentPages) {
       await page.goto(`/${path}`, { waitUntil: "domcontentloaded" });
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
     }
