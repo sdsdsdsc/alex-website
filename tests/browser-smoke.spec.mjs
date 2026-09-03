@@ -823,6 +823,31 @@ test("Criteria is a hub with dedicated criterion and Asset Type pages", async ({
   }
 });
 
+test("Get involved and Guidance use contextual participation links instead of duplicate navigation", async ({ page }) => {
+  await page.goto("/get-involved.html", { waitUntil: "domcontentloaded" });
+  const participation = page.locator('[aria-labelledby="howToParticipateTitle"]');
+  for (const path of [
+    "nominate-place.html",
+    "guidance.html",
+    "asset-types.html",
+    "criteria.html",
+    "map.html",
+    "public-auth.html",
+    "my-nominations.html"
+  ]) {
+    await expect(participation.locator(`a[href="${path}"]`)).toHaveCount(1);
+  }
+  await expect(participation.locator('a[href="search.html"], a[href="history.html"]')).toHaveCount(0);
+  await expect(page.locator(".heritage-about-pathways, .heritage-about-actions")).toHaveCount(0);
+
+  await page.goto("/guidance.html", { waitUntil: "domcontentloaded" });
+  const guidance = page.locator(".heritage-about-content");
+  for (const path of ["asset-types.html", "criteria.html", "map.html", "nominate-place.html"]) {
+    await expect(guidance.locator(`a[href="${path}"]`)).toHaveCount(1);
+  }
+  await expect(page.locator(".heritage-about-actions")).toHaveCount(0);
+});
+
 test("Criteria hubs and guidance pages remain readable without horizontal overflow", async ({ page }) => {
   const guidancePages = [
     "criteria.html",
