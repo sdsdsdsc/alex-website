@@ -11,13 +11,10 @@
   <!-- Leaflet Map Library -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" integrity="sha384-NZLkVuBRMEeB4VeZz27WwTRvlhec30biQ8Xx7zG7JJnkvEKRg5qi6BNbEXo9ydwv" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin" />
-  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js" integrity="sha384-JP5UPxIO2Tm2o79Fb0tGYMa44jkWar53aBoCbd8ah0+LcCDoohTIYr+zIXyfGIJN" crossorigin="anonymous" referrerpolicy="strict-origin-when-cross-origin"></script>
- 
   <!-- Firebase -->
   <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="script.js" defer></script>
-  <script type="module" src="map.js?v=2026-08-21-pr91-owner-follow-up" defer></script>
+  <script type="module" src="map.js?v=2026-09-04-hover-info" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#mapWorkspace">Skip to map and list alternatives</a>
@@ -41,7 +38,7 @@
           <button class="map-tool-index__button is-active" id="mapSearchTab" type="button" role="tab" data-tool-target="search" aria-selected="true" aria-controls="mapSearchToolPanel" tabindex="0">Search</button>
           <button class="map-tool-index__button" id="mapFiltersTab" type="button" role="tab" data-tool-target="filters" aria-selected="false" aria-controls="mapFiltersToolPanel" tabindex="-1">Filters</button>
           <button class="map-tool-index__button" id="mapLayersTab" type="button" role="tab" data-tool-target="layers" aria-selected="false" aria-controls="mapLayersToolPanel" tabindex="-1">Layers</button>
-          <button class="map-tool-index__button" id="mapInfoTab" type="button" role="tab" data-tool-target="help" aria-selected="false" aria-controls="mapInfoToolPanel" tabindex="-1">Info</button>
+          <button class="map-tool-index__button" id="mapInfoTab" type="button" role="tab" data-tool-target="info" aria-selected="false" aria-controls="mapInfoToolPanel" tabindex="-1">Info</button>
         </nav>
 
         <div class="map-explorer-panel__body">
@@ -234,21 +231,12 @@
             </section>
           </section>
 
-          <section class="map-explorer-section map-explorer-section--info" id="mapInfoToolPanel" data-tool-panel="help" role="tabpanel" aria-labelledby="mapInfoTab" tabindex="-1" hidden>
-            <h3 id="mapHelpTitle">Map guide</h3>
-            <p class="map-explorer-section__text">Use the search and filters to focus the map, then open a place record for full details.</p>
-            <p class="map-explorer-section__text">Use Layers to show or hide community records and Official Heritage representations. Layer choices remain active when you switch tabs.</p>
-
-            <div class="map-explorer-cta" aria-labelledby="mapNominationTitle">
-              <h3 id="mapNominationTitle">Nominate a place</h3>
-              <p>Choose coordinates by activating the button and then clicking or tapping the map.</p>
-              <button class="map-nomination-entry__button" id="mapNominationToggle" type="button" aria-pressed="false">
-                Nominate a place
-              </button>
-              <a class="map-nomination-entry__link" href="nominate-place.html">Open the nomination form without choosing a map point</a>
-              <p class="map-explorer-section__text">Keyboard users can describe the location manually in the form.</p>
-              <p class="map-nomination-entry__status" id="mapNominationStatus" role="status" aria-live="polite" hidden></p>
+          <section class="map-explorer-section map-explorer-section--info" id="mapInfoToolPanel" data-tool-panel="info" role="tabpanel" aria-labelledby="mapInfoTab" tabindex="-1" hidden>
+            <div id="mapSelectionInfo">
+              <h3>Selected feature</h3>
+              <p class="map-explorer-section__text">Select a Community Heritage or Official Heritage feature on the map to see information about it here.</p>
             </div>
+            <p class="visually-hidden" id="mapInfoStatus" role="status" aria-live="polite" aria-atomic="true"></p>
           </section>
         </div>
       </aside>
