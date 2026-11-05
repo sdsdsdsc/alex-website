@@ -1794,37 +1794,22 @@ body.community-modal-open {
   width: 24px;
   height: 24px;
   place-items: center;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  background: #263f8f;
-  box-shadow: 0 0 0 1px #263f8f;
 }
 
 .map-layer-category-symbol svg {
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
   overflow: visible;
-  fill: none;
-  stroke: #fff;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.5;
-}
-
-.map-layer-category-symbol--official {
-  border-radius: 4px;
-  background: #a94700;
-  box-shadow: 0 0 0 1px #a94700;
-  transform: rotate(45deg) scale(0.82);
+  fill: #263f8f;
+  fill-rule: evenodd;
 }
 
 .map-layer-category-symbol--official svg {
-  transform: rotate(-45deg) scale(1.08);
+  fill: #a94700;
 }
 
 .map-layer-category-symbol--official .official-map-marker__glyph-dot {
   fill: #fff;
-  stroke: none;
 }
 
 .map-layer-toggle:has(input:disabled) {
@@ -1848,56 +1833,24 @@ body.community-modal-open {
   flex: 0 0 24px;
 }
 
-.map-layer-symbol--community::before {
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: 2px;
-  width: 14px;
-  height: 14px;
-  border: 3px solid #fff;
-  border-radius: 50% 50% 50% 0;
-  background: #263f8f;
-  box-shadow: 0 0 0 1px #263f8f;
-  transform: rotate(-45deg);
+.map-layer-symbol svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: #a94700;
+  fill-rule: evenodd;
 }
 
-.map-layer-symbol--community::after {
-  content: "";
-  position: absolute;
-  left: 10px;
-  top: 8px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #fff;
+.map-layer-symbol--community svg {
+  fill: #263f8f;
 }
 
-.map-layer-symbol--official-filled::before,
-.map-layer-symbol--official-general::before {
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: 4px;
-  width: 14px;
-  height: 14px;
-  border: 2px solid #a94700;
-  background: #a94700;
-  transform: rotate(45deg);
-}
-
-.map-layer-symbol--official-general::before {
-  background: #fff;
-}
-
-.map-layer-symbol--official-general::after {
-  content: "";
-  position: absolute;
-  left: 7px;
-  top: 11px;
-  width: 10px;
-  height: 3px;
-  background: #a94700;
+.map-layer-symbol--official-general svg {
+  fill: #fff;
+  stroke: #a94700;
+  stroke-linejoin: round;
+  stroke-width: 1.1;
 }
 
 .map-layer-symbol--official-reviewed-geometry::before,
@@ -2237,91 +2190,38 @@ body.community-modal-open {
   right: 14px;
 }
 
-.community-map-pin {
+.community-map-pin,
+.official-heritage-map-marker {
   position: relative;
-  width: 30px;
-  height: 42px;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }
 
-.community-map-pin::before {
-  content: "";
+.community-map-pin__glyph,
+.official-heritage-map-marker .official-map-marker__glyph {
   position: absolute;
-  left: 4px;
-  top: 0;
-  width: 22px;
-  height: 22px;
-  background: #263f8f;
-  border: 4px solid #fff;
-  border-radius: 50% 50% 50% 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-  transform: rotate(-45deg);
-}
-
-.community-map-pin__glyph {
-  position: absolute;
-  left: 8px;
-  top: 5px;
-  width: 14px;
-  height: 14px;
-  z-index: 1;
+  inset: 0;
+  width: 28px;
+  height: 28px;
   overflow: visible;
-  fill: none;
+  fill: #263f8f;
+  fill-rule: evenodd;
+  paint-order: stroke;
   stroke: #fff;
-  stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.6;
 }
 
-.community-map-pin__glyph--fallback {
-  stroke-width: 2;
-}
-
-.official-heritage-map-marker {
-  position: relative;
-  width: 34px;
-  height: 34px;
-  background: transparent;
-}
-
-.official-heritage-map-marker::before {
-  content: "";
-  position: absolute;
-  left: 5px;
-  top: 5px;
-  width: 20px;
-  height: 20px;
-  background: #a94700;
-  border: 3px solid #fff;
-  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.42);
-  transform: rotate(45deg);
-}
-
-.official-heritage-map-marker--reviewed::before {
-  background: #a94700;
-}
-
-.official-heritage-map-marker--generalized::before {
-  background: #fff;
-  border-color: #a94700;
-}
-
 .official-heritage-map-marker .official-map-marker__glyph {
-  position: absolute;
-  left: 9px;
-  top: 9px;
-  z-index: 1;
-  width: 16px;
-  height: 16px;
-  overflow: visible;
-  fill: none;
-  stroke: #fff;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.35;
+  fill: #a94700;
 }
 
 .official-heritage-map-marker--generalized .official-map-marker__glyph {
+  fill: #fff;
   stroke: #a94700;
+  stroke-width: 1.2;
 }
 
 .official-heritage-map-marker .official-map-marker__glyph-dot {

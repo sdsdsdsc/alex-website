@@ -41,12 +41,12 @@ import {
   buildCommunityMarkerAccessibleName,
   getCommunityMapCategory,
   getCommunityMapCategoryByKey
-} from "./heritage-engine/community-map-categories.js?v=2026-07-26-community-category-icons";
+} from "./heritage-engine/community-map-categories.js?v=2026-11-04-solid-map-symbols";
 import {
   getOfficialMapCategory,
   getOfficialMapCategoryByKey,
   getPublishedOfficialMapCategories
-} from "./heritage-engine/official-map-categories.js?v=2026-07-27-official-category-filters";
+} from "./heritage-engine/official-map-categories.js?v=2026-11-04-solid-map-symbols";
 
 const OFFICIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-official-protected-heritage-map.geojson?v=2026-08-09-kuixing-pavilion-point";
 
@@ -135,7 +135,7 @@ const MAP_HELP_TOPICS = Object.freeze({
   "official-reviewed-points": {
     title: "Project-reviewed reference Points",
     paragraphs: [
-      "A filled diamond is a Point reviewed by this project to give visitors a useful public reference location for an Official Heritage record.",
+      "A solid rust symbol is a Point reviewed by this project to give visitors a useful public reference location for an Official Heritage record.",
       "The Point may not be an authority-supplied survey or GIS coordinate. It does not necessarily identify an entrance, centroid, complete extent, building footprint, legal centre or legal protection boundary.",
       "Open an individual record for its location evidence, source and estimated uncertainty, including any record-specific limitation."
     ],
@@ -145,7 +145,7 @@ const MAP_HELP_TOPICS = Object.freeze({
   "official-generalized-points": {
     title: "Generalized reference Points",
     paragraphs: [
-      "A hollow diamond represents a documented general vicinity. It intentionally does not claim an exact heritage location.",
+      "A white symbol with a rust outline represents a documented general vicinity. It intentionally does not claim an exact heritage location.",
       "The project may construct a Generalized Point from published reference evidence together with reviewed offsets, coverage or another approved method. Uncertainty and limitations are part of the representation.",
       "Open the individual record for the authoritative record-specific warning, evidence and construction details."
     ],
@@ -242,9 +242,9 @@ function makeBluePinIcon(categoryKey) {
   return L.divIcon({
     className: `community-map-pin community-map-pin--${category.key}`,
     html: category.glyphSvg,
-    iconSize: [30, 42],
-    iconAnchor: [15, 42],
-    popupAnchor: [0, -42]
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14]
   });
 }
 
@@ -257,9 +257,9 @@ function makeOfficialHeritageIcon(markerClass = "reviewed", categoryKey) {
       `official-heritage-map-marker--${category.key}`
     ].join(" "),
     html: category.glyphSvg,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
-    popupAnchor: [0, -19]
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14]
   });
 }
 
@@ -711,13 +711,13 @@ function initCommunityMap({
       const reviewedPointCount = features.filter(({ geometry, properties }) => (
         geometry?.type === "Point" && properties?.markerClass === "reviewed"
       )).length;
-      officialReviewedPointStatusEl.textContent = `Filled diamond. Currently displayed: ${reviewedPointCount}.`;
+      officialReviewedPointStatusEl.textContent = `Solid rust symbol. Currently displayed: ${reviewedPointCount}.`;
     }
     if (officialGeneralizedPointStatusEl) {
       const generalizedPointCount = features.filter(({ geometry, properties }) => (
         geometry?.type === "Point" && properties?.markerClass === "generalized"
       )).length;
-      officialGeneralizedPointStatusEl.textContent = `Hollow diamond. Currently displayed: ${generalizedPointCount}.`;
+      officialGeneralizedPointStatusEl.textContent = `White symbol with rust outline. Currently displayed: ${generalizedPointCount}.`;
     }
     availableOfficialCategories = getPublishedOfficialMapCategories(features);
 

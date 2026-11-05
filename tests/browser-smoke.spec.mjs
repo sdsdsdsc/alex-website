@@ -6,9 +6,9 @@ const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-08-27-period-nominations";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
 const COMMUNITY_PUBLICATION_VERSION = "2026-08-17-community-publication-state";
-const MAP_PAGE_VERSION = "2026-08-21-pr91-owner-follow-up";
+const MAP_PAGE_VERSION = "2026-11-04-solid-map-symbols";
 const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-09-kuixing-pavilion-point";
-const OFFICIAL_CATEGORY_VERSION = "2026-07-27-official-category-filters";
+const OFFICIAL_CATEGORY_VERSION = "2026-11-04-solid-map-symbols";
 const OFFICIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-official-protected-heritage-map.geojson*";
 const COMMITTED_OFFICIAL_HERITAGE = JSON.parse(await readFile(
   new URL("../data/jiangxi-official-protected-heritage-map.geojson", import.meta.url),
@@ -935,10 +935,10 @@ test("production-sized official fixture renders nine accessible markers across r
   await expect(page.locator(".official-heritage-map-marker")).toHaveCount(9);
   await expect(page.locator("#officialHeritageStatus")).toContainText("9 official heritage locations");
   await expect(page.locator("#officialReviewedPointStatus")).toHaveText(
-    "Filled diamond. Currently displayed: 8."
+    "Solid rust symbol. Currently displayed: 8."
   );
   await expect(page.locator("#officialGeneralizedPointStatus")).toHaveText(
-    "Hollow diamond. Currently displayed: 1."
+    "White symbol with rust outline. Currently displayed: 1."
   );
 
   const compoundMarker = page.getByRole("button", {
@@ -949,10 +949,10 @@ test("production-sized official fixture renders nine accessible markers across r
   await expect(compoundMarker).not.toHaveAttribute("aria-label", /approximate reviewed location/);
   await expect(compoundMarker.locator(".official-map-marker__glyph")).toHaveCount(1);
   const reviewedPresentation = await compoundMarker.evaluate((element) => ({
-    background: getComputedStyle(element, "::before").backgroundColor,
+    glyphFill: getComputedStyle(element.querySelector(".official-map-marker__glyph")).fill,
     glyphStroke: getComputedStyle(element.querySelector(".official-map-marker__glyph")).stroke
   }));
-  expect(reviewedPresentation.background).toBe("rgb(169, 71, 0)");
+  expect(reviewedPresentation.glyphFill).toBe("rgb(169, 71, 0)");
   expect(reviewedPresentation.glyphStroke).toBe("rgb(255, 255, 255)");
   await compoundMarker.focus();
   await expect(compoundMarker).toBeFocused();
@@ -1573,13 +1573,13 @@ test("official preview renders a synthetic exact Point without changing communit
   await setOverlayChecked(page, "Show Official Heritage", true);
   await expect(layersPanel).toContainText("Generalized reference Points");
   await expect(page.locator("#officialGeneralizedPointStatus")).toHaveText(
-    "Hollow diamond. Currently displayed: 0."
+    "White symbol with rust outline. Currently displayed: 0."
   );
   await expect(page.locator("#officialHeritageStatus")).toHaveText(
     /\d+ community records? and 1 official heritage location displayed\./
   );
   await expect(page.locator("#officialReviewedPointStatus")).toHaveText(
-    "Filled diamond. Currently displayed: 1."
+    "Solid rust symbol. Currently displayed: 1."
   );
   const marker = page.locator(".official-heritage-map-marker");
   await expect(marker).toHaveCount(1);
@@ -1703,12 +1703,10 @@ test("synthetic non-Xinyu Generalized Point retains essential visible limitation
   await expect(marker).toHaveAttribute("aria-label", /Synthetic candidate limitation/);
   await expect(marker.locator(".official-map-marker__glyph")).toHaveCount(1);
   const generalizedPresentation = await marker.evaluate((element) => ({
-    background: getComputedStyle(element, "::before").backgroundColor,
-    borderColor: getComputedStyle(element, "::before").borderColor,
+    glyphFill: getComputedStyle(element.querySelector(".official-map-marker__glyph")).fill,
     glyphStroke: getComputedStyle(element.querySelector(".official-map-marker__glyph")).stroke
   }));
-  expect(generalizedPresentation.background).toBe("rgb(255, 255, 255)");
-  expect(generalizedPresentation.borderColor).toBe("rgb(169, 71, 0)");
+  expect(generalizedPresentation.glyphFill).toBe("rgb(255, 255, 255)");
   expect(generalizedPresentation.glyphStroke).toBe("rgb(169, 71, 0)");
   await marker.focus();
   await marker.press("Enter");

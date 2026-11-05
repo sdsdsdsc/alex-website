@@ -1,4 +1,4 @@
-import { getOfficialMapCategory } from "./official-map-categories.js?v=2026-07-27-official-category-filters";
+import { getOfficialMapCategory } from "./official-map-categories.js?v=2026-11-04-solid-map-symbols";
 import {
   GENERALIZED_POINT_MANDATORY_LIMITATION,
   validateOfficialGeometry,
