@@ -2303,21 +2303,54 @@ body.community-modal-open {
   margin-top: 5px;
 }
 
-.community-map-popup .leaflet-popup-content-wrapper {
-  border-radius: 0;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
+.map-selected-record__back {
+  margin-bottom: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #1c4a5e;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
 }
 
-.community-map-popup .leaflet-popup-content {
-  width: min(260px, calc(100vw - 86px));
-  margin: 0;
+.map-selected-record .map-point-card {
+  padding: 0 0 16px;
 }
 
-.community-map-popup .leaflet-popup-close-button {
-  width: 34px;
-  height: 34px;
-  font-size: 24px;
-  color: #111;
+.map-selected-record .map-point-card h3 {
+  margin-right: 0;
+  font-size: 1.15rem;
+}
+
+.map-selected-record .map-point-card h3:focus {
+  outline: none;
+}
+
+.map-point-tooltip {
+  padding: 4px 8px;
+  border: 1px solid #d9d3c5;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(24, 33, 43, 0.18);
+  color: #18212b;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.community-map-pin.is-selected-map-point::before,
+.official-heritage-map-marker.is-selected-map-point::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 2px solid #f2b84b;
+  border-radius: 50%;
+  background: rgba(242, 184, 75, 0.28);
+}
+
+.leaflet-marker-icon:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .map-point-card {
@@ -2336,12 +2369,6 @@ body.community-modal-open {
   margin: 0 0 10px;
   font-size: 0.92rem;
   line-height: 1.5;
-}
-
-.map-point-card--record {
-  max-height: 240px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 
 .map-point-card__meta span {
@@ -3006,14 +3033,6 @@ footer {
 
   .map-canvas.map-search-canvas {
     height: 480px;
-  }
-
-  .community-map-popup .leaflet-popup-content {
-    width: min(240px, calc(100vw - 80px));
-  }
-
-  .map-point-card--record {
-    max-height: 210px;
   }
 
   .map-search-form__row {

@@ -17,7 +17,7 @@
   <!-- Firebase -->
   <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="script.js" defer></script>
-  <script type="module" src="map.js?v=2026-11-04-solid-map-symbols" defer></script>
+  <script type="module" src="map.js?v=2026-11-05-map-info-details" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#mapWorkspace">Skip to map and list alternatives</a>
@@ -235,9 +235,17 @@
           </section>
 
           <section class="map-explorer-section map-explorer-section--info" id="mapInfoToolPanel" data-tool-panel="help" role="tabpanel" aria-labelledby="mapInfoTab" tabindex="-1" hidden>
-            <h3 id="mapHelpTitle">Map guide</h3>
-            <p class="map-explorer-section__text">Use the search and filters to focus the map, then open a place record for full details.</p>
-            <p class="map-explorer-section__text">Use Layers to show or hide community records and Official Heritage representations. Layer choices remain active when you switch tabs.</p>
+            <section class="map-selected-record" id="mapSelectedRecord" aria-label="Selected map record" hidden>
+              <button class="map-selected-record__back" id="mapSelectedRecordBack" type="button">Back to map guide</button>
+              <div id="mapSelectedRecordContent"></div>
+            </section>
+
+            <div id="mapGuide">
+              <h3 id="mapHelpTitle">Map guide</h3>
+              <p class="map-explorer-section__text">Select a point on the map to see its details here.</p>
+              <p class="map-explorer-section__text">Use the search and filters to focus the map, then open a place record for full details.</p>
+              <p class="map-explorer-section__text">Use Layers to show or hide community records and Official Heritage representations. Layer choices remain active when you switch tabs.</p>
+            </div>
 
             <div class="map-explorer-cta" aria-labelledby="mapNominationTitle">
               <h3 id="mapNominationTitle">Nominate a place</h3>

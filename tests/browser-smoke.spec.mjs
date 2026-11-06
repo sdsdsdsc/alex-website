@@ -6,7 +6,7 @@ const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-08-27-period-nominations";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
 const COMMUNITY_PUBLICATION_VERSION = "2026-08-17-community-publication-state";
-const MAP_PAGE_VERSION = "2026-11-04-solid-map-symbols";
+const MAP_PAGE_VERSION = "2026-11-05-map-info-details";
 const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-09-kuixing-pavilion-point";
 const OFFICIAL_CATEGORY_VERSION = "2026-11-04-solid-map-symbols";
 const OFFICIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-official-protected-heritage-map.geojson*";
@@ -1079,6 +1079,7 @@ test("production-sized official fixture renders nine accessible markers across r
   await expect(bridgePopup).not.toContainText("project-reviewed approximate feature location");
   await expect(bridgePopup.locator(".official-heritage-map-popup__location-note")).toHaveCount(0);
 
+  await openMapLayersTab(page);
   for (const viewport of [
     { width: 320, height: 720 },
     { width: 390, height: 844 },
@@ -1734,6 +1735,48 @@ test("synthetic non-Xinyu Generalized Point retains essential visible limitation
   await marker.focus();
   await marker.press("Space");
   await expect(popup).toBeVisible();
+});
+
+test("selected map point details open in the Info tab instead of a popup", async ({ page }) => {
+  await mockFirestoreCollections(page, { communityPlaces: COMMUNITY_CATEGORY_FIXTURES });
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await waitForCommunityMapReady(page);
+
+  const marker = page.getByRole("button", { name: /Published Fixture Park/ });
+  await expect(marker).not.toHaveAttribute("title", /.+/);
+  await marker.hover();
+  await expect(page.locator(".map-point-tooltip")).toHaveText("Published Fixture Park");
+
+  const infoTab = page.getByRole("tab", { name: "Info", exact: true });
+  const selectedRecord = page.locator("#mapSelectedRecord");
+  const guide = page.getByRole("heading", { name: "Map guide" });
+  await marker.click();
+  await expect(infoTab).toHaveAttribute("aria-selected", "true");
+  await expect(selectedRecord).toContainText("Published Fixture Park");
+  await expect(selectedRecord.getByRole("link", { name: "View record" })).toBeVisible();
+  await expect(page.locator(".leaflet-popup")).toHaveCount(0);
+  await expect(marker).toHaveClass(/is-selected-map-point/);
+  await expect(guide).toBeHidden();
+  await expect(page.locator("#mapNominationToggle")).toBeVisible();
+
+  await page.getByRole("button", { name: "Back to map guide" }).click();
+  await expect(selectedRecord).toBeHidden();
+  await expect(guide).toBeVisible();
+  await expect(marker).toBeFocused();
+  await expect(marker).not.toHaveClass(/is-selected-map-point/);
+
+  await marker.press("Enter");
+  await expect(selectedRecord).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(selectedRecord).toBeHidden();
+  await expect(marker).toBeFocused();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await marker.evaluate((element) => element.click());
+  await expect(selectedRecord).toBeVisible();
+  const headerBottom = await page.locator("body > header").evaluate((element) => element.getBoundingClientRect().bottom);
+  const recordTop = await selectedRecord.evaluate((element) => element.getBoundingClientRect().top);
+  expect(recordTop).toBeGreaterThanOrEqual(headerBottom);
 });
 
 test("Layers tab controls overlays while Leaflet retains basemap selection only", async ({ page }) => {

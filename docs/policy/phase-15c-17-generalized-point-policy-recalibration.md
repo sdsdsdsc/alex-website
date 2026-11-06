@@ -186,6 +186,7 @@ uncertainty value must not replace the underlying records.
 > hollow diamond. Read each present-tense "hollow diamond" in this decision
 > record as that symbol. The meaning, limitations, eligibility rules, and the
 > requirement to stay visually distinct from an ordinary Point are unchanged.
+> Record details now open in the Map Info tab, so read "popup" as those details.
 
 Use the existing canonical `generalized-reference-point` meaning and hollow
 diamond. The controlled public meaning is a representative location for the

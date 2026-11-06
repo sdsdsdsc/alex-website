@@ -115,21 +115,21 @@ const MAP_HELP_TOPICS = Object.freeze({
     title: "Ancient buildings",
     paragraphs: [
       "This category groups Official Heritage records whose protected subject is principally an older or historic building or built structure.",
-      "Ancient buildings is this project's simplified public Map category. It does not replace the original official classification, which remains visible in the individual record popup."
+      "Ancient buildings is this project's simplified public Map category. It does not replace the original official classification, which remains visible in the individual record details."
     ]
   },
   "official-category-important-modern-historic-sites": {
     title: "Important modern historic sites",
     paragraphs: [
       "This category groups Official Heritage records associated principally with important modern historic buildings, places, events or sites.",
-      "It is this project's simplified public Map category. The source register's original classification remains visible in the record popup, and this Map category does not create or alter the official designation."
+      "It is this project's simplified public Map category. The source register's original classification remains visible in the record details, and this Map category does not create or alter the official designation."
     ]
   },
   "official-category-archaeological-sites": {
     title: "Archaeological sites",
     paragraphs: [
       "This category groups Official Heritage records whose significance is principally archaeological or evidential, including places where physical remains or archaeological evidence are central to the official record.",
-      "It is a simplified public Map category, and the source register's original classification remains visible in the record popup. A displayed Point does not represent an archaeological extent or legal protection boundary."
+      "It is a simplified public Map category, and the source register's original classification remains visible in the record details. A displayed Point does not represent an archaeological extent or legal protection boundary."
     ]
   },
   "official-reviewed-points": {
@@ -244,7 +244,7 @@ function makeBluePinIcon(categoryKey) {
     html: category.glyphSvg,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
-    popupAnchor: [0, -14]
+    tooltipAnchor: [0, -14]
   });
 }
 
@@ -259,7 +259,7 @@ function makeOfficialHeritageIcon(markerClass = "reviewed", categoryKey) {
     html: category.glyphSvg,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
-    popupAnchor: [0, -14]
+    tooltipAnchor: [0, -14]
   });
 }
 
@@ -463,6 +463,11 @@ function buildOfficialHeritagePopup(feature) {
   return article;
 }
 
+const MAP_POINT_TOOLTIP_OPTIONS = Object.freeze({
+  className: "map-point-tooltip",
+  direction: "top"
+});
+
 function initCommunityMap({
   containerId,
   mode,
@@ -488,6 +493,10 @@ function initCommunityMap({
   const customFilters = Array.from(document.querySelectorAll(".map-custom-filter"));
   const mapNominationToggle = document.getElementById("mapNominationToggle");
   const mapNominationStatus = document.getElementById("mapNominationStatus");
+  const mapGuide = document.getElementById("mapGuide");
+  const mapSelectedRecord = document.getElementById("mapSelectedRecord");
+  const mapSelectedRecordContent = document.getElementById("mapSelectedRecordContent");
+  const mapSelectedRecordBack = document.getElementById("mapSelectedRecordBack");
   const officialStatusEl = document.getElementById("officialHeritageStatus");
   const officialErrorEl = document.getElementById("officialHeritageError");
   const communityLayerToggle = document.getElementById("communityHeritageLayerToggle");
@@ -506,6 +515,7 @@ function initCommunityMap({
   const officialGeneralizedPointStatusEl = document.getElementById("officialGeneralizedPointStatus");
 
   const map = L.map(containerId).setView(fallbackCenter, 13);
+  let selectedMapRecordLayer = null;
   const communityLayer = L.layerGroup().addTo(map);
   const officialLayer = L.layerGroup();
   const baseLayers = createBaseLayers();
@@ -800,11 +810,11 @@ function initCommunityMap({
       const category = getOfficialMapCategory(feature.properties.officialCategoryZh);
       const marker = L.marker([latitude, longitude], {
         icon: makeOfficialHeritageIcon(feature.properties.markerClass, category.key),
-        title: markerName,
         alt: markerName,
         keyboard: true,
         riseOnFocus: true
       });
+      marker.bindTooltip(feature.properties.projectNameEn, MAP_POINT_TOOLTIP_OPTIONS);
       marker.on("add", () => {
         const element = marker.getElement();
         element?.setAttribute("aria-label", markerName);
@@ -814,14 +824,10 @@ function initCommunityMap({
           if (!["Enter", " ", "Spacebar"].includes(event.key)) return;
           event.preventDefault();
           event.stopPropagation();
-          marker.openPopup();
+          selectMapRecord(buildOfficialHeritagePopup(feature), marker, { official: true });
         });
       });
-      marker.bindPopup(buildOfficialHeritagePopup(feature), {
-        className: "community-map-popup official-heritage-map-popup",
-        closeButton: true,
-        autoClose: true
-      });
+      bindMapRecordSelection(marker, () => buildOfficialHeritagePopup(feature), { official: true });
       return marker;
   }
 
@@ -832,7 +838,7 @@ function initCommunityMap({
     return coordinates.map(convertOfficialCoordinatesToLatLngs);
   }
 
-  function decorateOfficialGeometryLayer(layer, accessibleName, featureId) {
+  function decorateOfficialGeometryLayer(layer, accessibleName, featureId, feature) {
     layer.on("add", () => {
       const element = layer.getElement();
       if (!element) return;
@@ -847,7 +853,7 @@ function initCommunityMap({
         if (!["Enter", " ", "Spacebar"].includes(event.key)) return;
         event.preventDefault();
         event.stopPropagation();
-        layer.openPopup();
+        selectMapRecord(buildOfficialHeritagePopup(feature), layer, { official: true });
       });
     });
   }
@@ -862,12 +868,9 @@ function initCommunityMap({
       ? L.polyline(latLngs, presentation.pathOptions)
       : L.polygon(latLngs, presentation.pathOptions);
     const accessibleName = buildOfficialFeatureAccessibleName(feature);
-    decorateOfficialGeometryLayer(layer, accessibleName, feature.id);
-    layer.bindPopup(buildOfficialHeritagePopup(feature), {
-      className: "community-map-popup official-heritage-map-popup",
-      closeButton: true,
-      autoClose: true
-    });
+    decorateOfficialGeometryLayer(layer, accessibleName, feature.id, feature);
+    layer.bindTooltip(feature.properties.projectNameEn, { className: "map-point-tooltip", sticky: true });
+    bindMapRecordSelection(layer, () => buildOfficialHeritagePopup(feature), { official: true });
     return layer;
   }
 
@@ -976,6 +979,65 @@ function initCommunityMap({
     });
   }
 
+  function clearSelectedMapRecord({ restoreFocus = false } = {}) {
+    if (!selectedMapRecordLayer) return;
+    const layerElement = selectedMapRecordLayer.getElement?.();
+    layerElement?.classList.remove("is-selected-map-point");
+    selectedMapRecordLayer = null;
+    if (mapSelectedRecordContent) {
+      mapSelectedRecordContent.className = "";
+      mapSelectedRecordContent.replaceChildren();
+    }
+    if (mapSelectedRecord) mapSelectedRecord.hidden = true;
+    if (mapGuide) mapGuide.hidden = false;
+    if (restoreFocus) layerElement?.focus();
+  }
+
+  function selectMapRecord(content, layer, { official = false, moveFocus = true } = {}) {
+    if (!mapSelectedRecord || !mapSelectedRecordContent) return;
+    clearSelectedMapRecord();
+    selectedMapRecordLayer = layer;
+    layer.getElement?.()?.classList.add("is-selected-map-point");
+
+    mapSelectedRecordContent.className = official ? "official-heritage-map-popup" : "community-map-record";
+    if (typeof content === "string") {
+      mapSelectedRecordContent.innerHTML = content;
+    } else {
+      mapSelectedRecordContent.replaceChildren(content);
+    }
+    mapSelectedRecord.hidden = false;
+    if (mapGuide) mapGuide.hidden = true;
+    setActiveToolPanel("help", { moveFocus: false });
+    mapSelectedRecord.closest("[data-tool-panel]")?.scrollTo?.({ top: 0 });
+
+    const stackedLayout = window.matchMedia("(max-width: 900px)").matches;
+    if (stackedLayout) {
+      const headerHeight = document.querySelector("body > header")?.offsetHeight || 0;
+      const recordTop = mapSelectedRecord.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: Math.max(recordTop - headerHeight - 12, 0) });
+    }
+    if (moveFocus) {
+      const heading = mapSelectedRecordContent.querySelector("h3");
+      if (heading) {
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
+      }
+    }
+  }
+
+  function bindMapRecordSelection(layer, buildContent, { official = false } = {}) {
+    layer.on("click", (event) => {
+      if (event.originalEvent) L.DomEvent.stop(event.originalEvent);
+      selectMapRecord(buildContent(), layer, { official });
+    });
+    layer.on("keypress", (event) => {
+      if (event.originalEvent?.key === "Enter") selectMapRecord(buildContent(), layer, { official });
+    });
+    layer.on("remove", () => {
+      if (selectedMapRecordLayer === layer) clearSelectedMapRecord();
+    });
+  }
+
   function setNominationStatus(message = "") {
     if (!mapNominationStatus) return;
     mapNominationStatus.textContent = message;
@@ -995,7 +1057,7 @@ function initCommunityMap({
   function startMapNominationMode() {
     isNominationPickMode = true;
     closeAllCustomFilters();
-    map.closePopup();
+    clearSelectedMapRecord();
     container.classList.add("is-nomination-pick-mode");
     if (mapNominationToggle) {
       mapNominationToggle.textContent = "Cancel nomination";
@@ -1197,7 +1259,7 @@ function initCommunityMap({
     }
 
     marker.setZIndexOffset(1000);
-    marker.openPopup();
+    marker.fire("focusrecord");
     map.setView(marker.getLatLng(), Math.max(map.getZoom(), 15));
     focusStatusEl.append(`Focused on ${cleanText(record.title) || "the requested public place"}.`);
     appendFocusLink("View its public record", recordUrl);
@@ -1233,17 +1295,16 @@ function initCommunityMap({
       const markerName = buildCommunityMarkerAccessibleName(point);
       const marker = L.marker([point.lat, point.lng], {
         icon: makeBluePinIcon(category.key),
-        title: markerName,
         alt: markerName,
         keyboard: true,
         riseOnFocus: true
       }).addTo(communityLayer);
+      marker.bindTooltip(cleanText(point.title) || "Untitled community place", MAP_POINT_TOOLTIP_OPTIONS);
       const markerElement = marker.getElement();
       markerElement?.setAttribute("aria-label", markerName);
-      marker.bindPopup(buildCommunityPlacePopupHtml(point), {
-        className: "community-map-popup",
-        closeButton: true,
-        autoClose: true
+      bindMapRecordSelection(marker, () => buildCommunityPlacePopupHtml(point));
+      marker.on("focusrecord", () => {
+        selectMapRecord(buildCommunityPlacePopupHtml(point), marker, { moveFocus: false });
       });
       markersById.set(point.id, marker);
       boundsItems.push([point.lat, point.lng]);
@@ -1472,12 +1533,19 @@ function initCommunityMap({
         return;
       }
       closeAllCustomFilters();
-      map.closePopup();
+      clearSelectedMapRecord({ restoreFocus: true });
     }
   });
 
+  mapSelectedRecordBack?.addEventListener("click", () => {
+    clearSelectedMapRecord({ restoreFocus: true });
+  });
+
   map.on("click", (event) => {
-    if (!isNominationPickMode) return;
+    if (!isNominationPickMode) {
+      clearSelectedMapRecord();
+      return;
+    }
     const { lat, lng } = event.latlng;
     stopMapNominationMode();
     window.location.href = buildNominationUrlFromCoordinates(lat, lng);
