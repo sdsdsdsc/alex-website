@@ -1241,6 +1241,7 @@ test("validated official line and area geometries render with accessible meaning
   });
   await page.keyboard.press("Escape");
   await expect(page.locator(".official-heritage-map-popup")).toHaveCount(0);
+  await openMapLayersTab(page);
   const beforeCategoryFilterState = await getRenderedMapState(page);
   await ancientBuildings.focus();
   await ancientBuildings.press("Space");

@@ -1027,7 +1027,7 @@ function initCommunityMap({
 
   function bindMapRecordSelection(layer, buildContent, { official = false } = {}) {
     layer.on("click", (event) => {
-      if (event.originalEvent) L.DomEvent.stop(event.originalEvent);
+      L.DomEvent.stop(event);
       selectMapRecord(buildContent(), layer, { official });
     });
     layer.on("keypress", (event) => {
