@@ -6,7 +6,7 @@ const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-08-27-period-nominations";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
 const COMMUNITY_PUBLICATION_VERSION = "2026-08-17-community-publication-state";
-const MAP_PAGE_VERSION = "2026-11-05-map-info-details";
+const MAP_PAGE_VERSION = "2026-11-06-map-hover-list";
 const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-09-kuixing-pavilion-point";
 const OFFICIAL_CATEGORY_VERSION = "2026-11-04-solid-map-symbols";
 const OFFICIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-official-protected-heritage-map.geojson*";
@@ -1746,7 +1746,7 @@ test("selected map point details open in the Info tab instead of a popup", async
   const marker = page.getByRole("button", { name: /Published Fixture Park/ });
   await expect(marker).not.toHaveAttribute("title", /.+/);
   await marker.hover();
-  await expect(page.locator(".map-point-tooltip")).toHaveText("Published Fixture Park");
+  await expect(page.locator(".map-point-tooltip")).toContainText("Published Fixture Park");
 
   const infoTab = page.getByRole("tab", { name: "Info", exact: true });
   const selectedRecord = page.locator("#mapSelectedRecord");
@@ -1778,6 +1778,32 @@ test("selected map point details open in the Info tab instead of a popup", async
   const headerBottom = await page.locator("body > header").evaluate((element) => element.getBoundingClientRect().bottom);
   const recordTop = await selectedRecord.evaluate((element) => element.getBoundingClientRect().top);
   expect(recordTop).toBeGreaterThanOrEqual(headerBottom);
+});
+
+test("hovering overlapping map points lists each point in one box", async ({ page }) => {
+  await mockFirestoreCollections(page, {
+    communityPlaces: [
+      { id: "overlap-a", title: "First Overlap Hall", address: "1 River Road", category: "Building", recordStatus: "published", lat: 27.62, lng: 113.88 },
+      { id: "overlap-b", title: "Second Overlap Hall", address: "2 River Road", category: "Building", recordStatus: "published", lat: 27.62, lng: 113.88 },
+      { id: "overlap-far", title: "Faraway Hall", category: "Building", recordStatus: "published", lat: 27.9, lng: 114.4 }
+    ]
+  });
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await waitForCommunityMapReady(page);
+
+  await page.waitForTimeout(600);
+  await page.getByRole("button", { name: /Second Overlap Hall/ }).hover({ force: true });
+  const tooltip = page.locator(".map-point-tooltip");
+  await expect(tooltip).toHaveCount(1);
+  await expect(tooltip).toContainText("First Overlap Hall");
+  await expect(tooltip).toContainText("1 River Road");
+  await expect(tooltip).toContainText("Second Overlap Hall");
+  await expect(tooltip).toContainText("2 River Road");
+  await expect(tooltip).not.toContainText("Faraway Hall");
+  await expect(tooltip).toHaveCSS("color", "rgb(255, 255, 255)");
+
+  await page.mouse.move(0, 0);
+  await expect(tooltip).toHaveCount(0);
 });
 
 test("Layers tab controls overlays while Leaflet retains basemap selection only", async ({ page }) => {

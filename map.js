@@ -243,8 +243,7 @@ function makeBluePinIcon(categoryKey) {
     className: `community-map-pin community-map-pin--${category.key}`,
     html: category.glyphSvg,
     iconSize: [28, 28],
-    iconAnchor: [14, 14],
-    tooltipAnchor: [0, -14]
+    iconAnchor: [14, 14]
   });
 }
 
@@ -258,8 +257,7 @@ function makeOfficialHeritageIcon(markerClass = "reviewed", categoryKey) {
     ].join(" "),
     html: category.glyphSvg,
     iconSize: [28, 28],
-    iconAnchor: [14, 14],
-    tooltipAnchor: [0, -14]
+    iconAnchor: [14, 14]
   });
 }
 
@@ -463,10 +461,8 @@ function buildOfficialHeritagePopup(feature) {
   return article;
 }
 
-const MAP_POINT_TOOLTIP_OPTIONS = Object.freeze({
-  className: "map-point-tooltip",
-  direction: "top"
-});
+const MAP_HOVER_OVERLAP_PIXELS = 24;
+const MAP_HOVER_MAX_ENTRIES = 6;
 
 function initCommunityMap({
   containerId,
@@ -516,6 +512,8 @@ function initCommunityMap({
 
   const map = L.map(containerId).setView(fallbackCenter, 13);
   let selectedMapRecordLayer = null;
+  let mapHoverTooltip = null;
+  const mapHoverEntries = new Map();
   const communityLayer = L.layerGroup().addTo(map);
   const officialLayer = L.layerGroup();
   const baseLayers = createBaseLayers();
@@ -814,7 +812,11 @@ function initCommunityMap({
         keyboard: true,
         riseOnFocus: true
       });
-      marker.bindTooltip(feature.properties.projectNameEn, MAP_POINT_TOOLTIP_OPTIONS);
+      bindMapPointHover(marker, {
+        name: feature.properties.projectNameEn,
+        location: feature.properties.officialLocationTextZh,
+        locationLang: "zh-Hans"
+      });
       marker.on("add", () => {
         const element = marker.getElement();
         element?.setAttribute("aria-label", markerName);
@@ -979,6 +981,90 @@ function initCommunityMap({
     });
   }
 
+  function hideMapHoverTooltip() {
+    if (!mapHoverTooltip) return;
+    mapHoverTooltip.remove();
+    mapHoverTooltip = null;
+  }
+
+  function buildMapHoverContent(entries) {
+    const list = document.createElement("div");
+    entries.slice(0, MAP_HOVER_MAX_ENTRIES).forEach(({ name, location, locationLang }) => {
+      const item = document.createElement("div");
+      item.className = "map-point-tooltip__item";
+      const nameEl = document.createElement("div");
+      nameEl.textContent = name;
+      item.appendChild(nameEl);
+      if (location) {
+        const locationEl = document.createElement("div");
+        locationEl.textContent = location;
+        if (locationLang) locationEl.lang = locationLang;
+        item.appendChild(locationEl);
+      }
+      list.appendChild(item);
+    });
+    const hiddenCount = entries.length - MAP_HOVER_MAX_ENTRIES;
+    if (hiddenCount > 0) {
+      const more = document.createElement("div");
+      more.className = "map-point-tooltip__item";
+      more.textContent = `and ${hiddenCount} more`;
+      list.appendChild(more);
+    }
+    return list;
+  }
+
+  function showMapHoverTooltip(marker) {
+    hideMapHoverTooltip();
+    const anchor = map.latLngToContainerPoint(marker.getLatLng());
+    const entries = Array.from(mapHoverEntries.entries())
+      .filter(([layer]) => map.hasLayer(layer))
+      .map(([layer, entry]) => ({
+        entry,
+        distance: map.latLngToContainerPoint(layer.getLatLng()).distanceTo(anchor)
+      }))
+      .filter(({ distance }) => distance <= MAP_HOVER_OVERLAP_PIXELS)
+      .sort((first, second) => first.distance - second.distance)
+      .map(({ entry }) => entry);
+
+    const mapSize = map.getSize();
+    const estimatedHeight = Math.min(entries.length, MAP_HOVER_MAX_ENTRIES + 1) * 48 + 24;
+    let direction = "top";
+    let offset = [0, -14];
+    if (anchor.x < 130) {
+      direction = "right";
+      offset = [14, 0];
+    } else if (anchor.x > mapSize.x - 130) {
+      direction = "left";
+      offset = [-14, 0];
+    } else if (anchor.y < estimatedHeight) {
+      direction = "bottom";
+      offset = [0, 14];
+    }
+    mapHoverTooltip = L.tooltip({ className: "map-point-tooltip", direction, offset })
+      .setLatLng(marker.getLatLng())
+      .setContent(buildMapHoverContent(entries));
+    mapHoverTooltip.addTo(map);
+  }
+
+  function bindMapPointHover(marker, entry) {
+    marker.on("mouseover", () => showMapHoverTooltip(marker));
+    marker.on("mouseout", hideMapHoverTooltip);
+    marker.on("remove", () => {
+      mapHoverEntries.delete(marker);
+      hideMapHoverTooltip();
+    });
+    marker.on("add", () => {
+      mapHoverEntries.set(marker, entry);
+      const element = marker.getElement();
+      if (!element || element.dataset.hoverBound === "true") return;
+      element.dataset.hoverBound = "true";
+      element.addEventListener("focus", () => {
+        if (element.matches(":focus-visible")) showMapHoverTooltip(marker);
+      });
+      element.addEventListener("blur", hideMapHoverTooltip);
+    });
+  }
+
   function clearSelectedMapRecord({ restoreFocus = false } = {}) {
     if (!selectedMapRecordLayer) return;
     const layerElement = selectedMapRecordLayer.getElement?.();
@@ -996,6 +1082,7 @@ function initCommunityMap({
   function selectMapRecord(content, layer, { official = false, moveFocus = true } = {}) {
     if (!mapSelectedRecord || !mapSelectedRecordContent) return;
     clearSelectedMapRecord();
+    hideMapHoverTooltip();
     selectedMapRecordLayer = layer;
     layer.getElement?.()?.classList.add("is-selected-map-point");
 
@@ -1298,8 +1385,12 @@ function initCommunityMap({
         alt: markerName,
         keyboard: true,
         riseOnFocus: true
-      }).addTo(communityLayer);
-      marker.bindTooltip(cleanText(point.title) || "Untitled community place", MAP_POINT_TOOLTIP_OPTIONS);
+      });
+      bindMapPointHover(marker, {
+        name: cleanText(point.title) || "Untitled community place",
+        location: getCommunityDisplayLocation(point)
+      });
+      marker.addTo(communityLayer);
       const markerElement = marker.getElement();
       markerElement?.setAttribute("aria-label", markerName);
       bindMapRecordSelection(marker, () => buildCommunityPlacePopupHtml(point));
@@ -1536,6 +1627,8 @@ function initCommunityMap({
       clearSelectedMapRecord({ restoreFocus: true });
     }
   });
+
+  map.on("zoomstart movestart", hideMapHoverTooltip);
 
   mapSelectedRecordBack?.addEventListener("click", () => {
     clearSelectedMapRecord({ restoreFocus: true });
