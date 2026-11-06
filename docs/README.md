@@ -60,7 +60,8 @@ Point-based.
 
 The candidate-neutral
 [Phase 15C-17 Generalized reference Point policy recalibration](./policy/phase-15c-17-generalized-point-policy-recalibration.md)
-is the controlling detailed eligibility model for hollow-diamond markers. It
+is the controlling detailed eligibility model for Generalized reference Point
+markers. It
 defines the R1–R13 gate, bounded-support and unknown-datum-envelope decisions,
 method classifications, scale/usefulness test, A–E outcomes, and the current
 schema/presentation gap. It changes no candidate outcome or production record.
