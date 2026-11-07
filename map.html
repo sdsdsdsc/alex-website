@@ -17,7 +17,7 @@
   <!-- Firebase -->
   <script type="module" src="public-nav.js" defer></script>
   <script type="module" src="script.js" defer></script>
-  <script type="module" src="map.js?v=2026-11-06-map-hover-list" defer></script>
+  <script type="module" src="map.js?v=2026-11-06-project-area-outline" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#mapWorkspace">Skip to map and list alternatives</a>
@@ -172,6 +172,20 @@
                 </div>
               </div>
               <p class="map-layer-category-status" id="communityCategoryStatus" role="status" aria-live="polite">0 of 0 matching community locations displayed.</p>
+            </fieldset>
+
+            <fieldset class="map-layers-group">
+              <legend>
+                <span class="map-layer-heading">Project area
+                  <button class="map-context-help-button" type="button" data-map-help-topic="project-area" aria-label="About the project area outline">?</button>
+                </span>
+              </legend>
+              <label class="map-layer-toggle" for="projectAreaLayerToggle">
+                <input id="projectAreaLayerToggle" type="checkbox" checked>
+                <span class="map-layer-symbol map-layer-symbol--project-area" aria-hidden="true"></span>
+                <span>Jiangxi province outline</span>
+              </label>
+              <p class="map-layers-group__help" id="projectAreaLayerError" role="status" hidden>The province outline could not be loaded.</p>
             </fieldset>
 
             <fieldset class="map-layers-group" aria-describedby="officialLayerHelp">

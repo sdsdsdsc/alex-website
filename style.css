@@ -1833,6 +1833,16 @@ body.community-modal-open {
   flex: 0 0 24px;
 }
 
+.map-layer-symbol--project-area::before {
+  content: "";
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 10px;
+  border-top: 4px solid #d9921a;
+  border-radius: 2px;
+}
+
 .map-layer-symbol svg {
   display: block;
   width: 100%;

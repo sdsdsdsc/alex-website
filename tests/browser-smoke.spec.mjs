@@ -6,7 +6,7 @@ const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-08-27-period-nominations";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
 const COMMUNITY_PUBLICATION_VERSION = "2026-08-17-community-publication-state";
-const MAP_PAGE_VERSION = "2026-11-06-map-hover-list";
+const MAP_PAGE_VERSION = "2026-11-06-project-area-outline";
 const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-09-kuixing-pavilion-point";
 const OFFICIAL_CATEGORY_VERSION = "2026-11-04-solid-map-symbols";
 const OFFICIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-official-protected-heritage-map.geojson*";
@@ -1804,6 +1804,27 @@ test("hovering overlapping map points lists each point in one box", async ({ pag
 
   await page.mouse.move(0, 0);
   await expect(tooltip).toHaveCount(0);
+});
+
+test("Jiangxi project area outline is on by default and can be switched off", async ({ page }) => {
+  await mockFirestoreCollections(page, { communityPlaces: COMMUNITY_CATEGORY_FIXTURES });
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await waitForCommunityMapReady(page);
+
+  const outline = page.locator("#map path.map-project-area-outline");
+  await expect(outline).toHaveCount(1);
+  await expect(outline).toHaveAttribute("fill", "none");
+
+  await openMapLayersTab(page);
+  const toggle = page.getByRole("checkbox", { name: "Jiangxi province outline", exact: true });
+  await expect(toggle).toBeChecked();
+  await toggle.uncheck();
+  await expect(outline).toHaveCount(0);
+  await toggle.check();
+  await expect(outline).toHaveCount(1);
+
+  await page.getByRole("button", { name: "About the project area outline" }).click();
+  await expect(page.getByText("not an official or legal administrative boundary", { exact: false })).toBeVisible();
 });
 
 test("Layers tab controls overlays while Leaflet retains basemap selection only", async ({ page }) => {

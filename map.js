@@ -48,6 +48,15 @@ import {
   getPublishedOfficialMapCategories
 } from "./heritage-engine/official-map-categories.js?v=2026-11-04-solid-map-symbols";
 
+const PROJECT_AREA_GEOJSON_URL = "./data/jiangxi-province-outline.geojson?v=2026-11-06";
+const PROJECT_AREA_STYLE = Object.freeze({
+  className: "map-project-area-outline",
+  color: "#d9921a",
+  weight: 3,
+  opacity: 0.9,
+  fill: false,
+  interactive: false
+});
 const OFFICIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-official-protected-heritage-map.geojson?v=2026-08-09-kuixing-pavilion-point";
 
 const firebaseConfig = {
@@ -151,6 +160,13 @@ const MAP_HELP_TOPICS = Object.freeze({
     ],
     link: "about-local-heritage.html#community-and-official-heritage",
     linkLabel: "How Generalized Points are represented"
+  },
+  "project-area": {
+    title: "Project area outline",
+    paragraphs: [
+      "The gold line marks Jiangxi Province, the area this community heritage project covers.",
+      "It is a simplified outline from Natural Earth, shown for orientation only. It is not an official or legal administrative boundary."
+    ]
   },
   "official-other-representations": {
     title: "Other supported Official Heritage representations",
@@ -501,6 +517,8 @@ function initCommunityMap({
   );
   const communityCategoryStatusEl = document.getElementById("communityCategoryStatus");
   const officialLayerToggle = document.getElementById("officialHeritageLayerToggle");
+  const projectAreaLayerToggle = document.getElementById("projectAreaLayerToggle");
+  const projectAreaLayerError = document.getElementById("projectAreaLayerError");
   const officialCategoryAvailabilityEl = document.getElementById("officialCategoryAvailability");
   const officialCategoryControlsEl = document.getElementById("officialCategoryControls");
   const officialCategoryAllToggle = document.getElementById("officialCategoryAll");
@@ -1596,6 +1614,31 @@ function initCommunityMap({
     } else {
       syncLayerControls();
       updateOfficialCategoryStatus();
+    }
+  });
+
+  const projectAreaLayer = L.geoJSON(null, PROJECT_AREA_STYLE);
+  if (projectAreaLayerToggle?.checked) projectAreaLayer.addTo(map);
+  fetch(PROJECT_AREA_GEOJSON_URL)
+    .then((response) => {
+      if (!response.ok) throw new Error(`Project area outline request failed: ${response.status}`);
+      return response.json();
+    })
+    .then((data) => projectAreaLayer.addData(data))
+    .catch(() => {
+      map.removeLayer(projectAreaLayer);
+      if (projectAreaLayerToggle) {
+        projectAreaLayerToggle.checked = false;
+        projectAreaLayerToggle.disabled = true;
+      }
+      if (projectAreaLayerError) projectAreaLayerError.hidden = false;
+    });
+
+  projectAreaLayerToggle?.addEventListener("change", () => {
+    if (projectAreaLayerToggle.checked) {
+      projectAreaLayer.addTo(map);
+    } else {
+      map.removeLayer(projectAreaLayer);
     }
   });
 
