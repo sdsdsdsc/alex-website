@@ -6,9 +6,9 @@ const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-08-27-period-nominations";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
 const COMMUNITY_PUBLICATION_VERSION = "2026-08-17-community-publication-state";
-const MAP_PAGE_VERSION = "2026-08-21-pr91-owner-follow-up";
+const MAP_PAGE_VERSION = "2026-11-08-pink-project-area";
 const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-09-kuixing-pavilion-point";
-const OFFICIAL_CATEGORY_VERSION = "2026-07-27-official-category-filters";
+const OFFICIAL_CATEGORY_VERSION = "2026-11-04-solid-map-symbols";
 const OFFICIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-official-protected-heritage-map.geojson*";
 const COMMITTED_OFFICIAL_HERITAGE = JSON.parse(await readFile(
   new URL("../data/jiangxi-official-protected-heritage-map.geojson", import.meta.url),
@@ -935,10 +935,10 @@ test("production-sized official fixture renders nine accessible markers across r
   await expect(page.locator(".official-heritage-map-marker")).toHaveCount(9);
   await expect(page.locator("#officialHeritageStatus")).toContainText("9 official heritage locations");
   await expect(page.locator("#officialReviewedPointStatus")).toHaveText(
-    "Filled diamond. Currently displayed: 8."
+    "Solid rust symbol. Currently displayed: 8."
   );
   await expect(page.locator("#officialGeneralizedPointStatus")).toHaveText(
-    "Hollow diamond. Currently displayed: 1."
+    "White symbol with rust outline. Currently displayed: 1."
   );
 
   const compoundMarker = page.getByRole("button", {
@@ -949,10 +949,10 @@ test("production-sized official fixture renders nine accessible markers across r
   await expect(compoundMarker).not.toHaveAttribute("aria-label", /approximate reviewed location/);
   await expect(compoundMarker.locator(".official-map-marker__glyph")).toHaveCount(1);
   const reviewedPresentation = await compoundMarker.evaluate((element) => ({
-    background: getComputedStyle(element, "::before").backgroundColor,
+    glyphFill: getComputedStyle(element.querySelector(".official-map-marker__glyph")).fill,
     glyphStroke: getComputedStyle(element.querySelector(".official-map-marker__glyph")).stroke
   }));
-  expect(reviewedPresentation.background).toBe("rgb(169, 71, 0)");
+  expect(reviewedPresentation.glyphFill).toBe("rgb(169, 71, 0)");
   expect(reviewedPresentation.glyphStroke).toBe("rgb(255, 255, 255)");
   await compoundMarker.focus();
   await expect(compoundMarker).toBeFocused();
@@ -1079,6 +1079,7 @@ test("production-sized official fixture renders nine accessible markers across r
   await expect(bridgePopup).not.toContainText("project-reviewed approximate feature location");
   await expect(bridgePopup.locator(".official-heritage-map-popup__location-note")).toHaveCount(0);
 
+  await openMapLayersTab(page);
   for (const viewport of [
     { width: 320, height: 720 },
     { width: 390, height: 844 },
@@ -1240,6 +1241,7 @@ test("validated official line and area geometries render with accessible meaning
   });
   await page.keyboard.press("Escape");
   await expect(page.locator(".official-heritage-map-popup")).toHaveCount(0);
+  await openMapLayersTab(page);
   const beforeCategoryFilterState = await getRenderedMapState(page);
   await ancientBuildings.focus();
   await ancientBuildings.press("Space");
@@ -1573,13 +1575,13 @@ test("official preview renders a synthetic exact Point without changing communit
   await setOverlayChecked(page, "Show Official Heritage", true);
   await expect(layersPanel).toContainText("Generalized reference Points");
   await expect(page.locator("#officialGeneralizedPointStatus")).toHaveText(
-    "Hollow diamond. Currently displayed: 0."
+    "White symbol with rust outline. Currently displayed: 0."
   );
   await expect(page.locator("#officialHeritageStatus")).toHaveText(
     /\d+ community records? and 1 official heritage location displayed\./
   );
   await expect(page.locator("#officialReviewedPointStatus")).toHaveText(
-    "Filled diamond. Currently displayed: 1."
+    "Solid rust symbol. Currently displayed: 1."
   );
   const marker = page.locator(".official-heritage-map-marker");
   await expect(marker).toHaveCount(1);
@@ -1703,12 +1705,10 @@ test("synthetic non-Xinyu Generalized Point retains essential visible limitation
   await expect(marker).toHaveAttribute("aria-label", /Synthetic candidate limitation/);
   await expect(marker.locator(".official-map-marker__glyph")).toHaveCount(1);
   const generalizedPresentation = await marker.evaluate((element) => ({
-    background: getComputedStyle(element, "::before").backgroundColor,
-    borderColor: getComputedStyle(element, "::before").borderColor,
+    glyphFill: getComputedStyle(element.querySelector(".official-map-marker__glyph")).fill,
     glyphStroke: getComputedStyle(element.querySelector(".official-map-marker__glyph")).stroke
   }));
-  expect(generalizedPresentation.background).toBe("rgb(255, 255, 255)");
-  expect(generalizedPresentation.borderColor).toBe("rgb(169, 71, 0)");
+  expect(generalizedPresentation.glyphFill).toBe("rgb(255, 255, 255)");
   expect(generalizedPresentation.glyphStroke).toBe("rgb(169, 71, 0)");
   await marker.focus();
   await marker.press("Enter");
@@ -1736,6 +1736,98 @@ test("synthetic non-Xinyu Generalized Point retains essential visible limitation
   await marker.focus();
   await marker.press("Space");
   await expect(popup).toBeVisible();
+});
+
+test("selected map point details open in the Info tab instead of a popup", async ({ page }) => {
+  await mockFirestoreCollections(page, { communityPlaces: COMMUNITY_CATEGORY_FIXTURES });
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await waitForCommunityMapReady(page);
+
+  const marker = page.getByRole("button", { name: /Published Fixture Park/ });
+  await expect(marker).not.toHaveAttribute("title", /.+/);
+  await marker.hover();
+  await expect(page.locator(".map-point-tooltip")).toContainText("Published Fixture Park");
+
+  const infoTab = page.getByRole("tab", { name: "Info", exact: true });
+  const selectedRecord = page.locator("#mapSelectedRecord");
+  const guide = page.getByRole("heading", { name: "Map guide" });
+  await marker.click();
+  await expect(infoTab).toHaveAttribute("aria-selected", "true");
+  await expect(selectedRecord).toContainText("Published Fixture Park");
+  await expect(selectedRecord.getByRole("link", { name: "View record" })).toBeVisible();
+  await expect(page.locator(".leaflet-popup")).toHaveCount(0);
+  await expect(marker).toHaveClass(/is-selected-map-point/);
+  await expect(guide).toBeHidden();
+  await expect(page.locator("#mapNominationToggle")).toBeVisible();
+
+  await page.getByRole("button", { name: "Back to map guide" }).click();
+  await expect(selectedRecord).toBeHidden();
+  await expect(guide).toBeVisible();
+  await expect(marker).toBeFocused();
+  await expect(marker).not.toHaveClass(/is-selected-map-point/);
+
+  await marker.press("Enter");
+  await expect(selectedRecord).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(selectedRecord).toBeHidden();
+  await expect(marker).toBeFocused();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await marker.evaluate((element) => element.click());
+  await expect(selectedRecord).toBeVisible();
+  const headerBottom = await page.locator("body > header").evaluate((element) => element.getBoundingClientRect().bottom);
+  const recordTop = await selectedRecord.evaluate((element) => element.getBoundingClientRect().top);
+  expect(recordTop).toBeGreaterThanOrEqual(headerBottom);
+});
+
+test("hovering overlapping map points lists each point in one box", async ({ page }) => {
+  await mockFirestoreCollections(page, {
+    communityPlaces: [
+      { id: "overlap-a", title: "First Overlap Hall", address: "1 River Road", category: "Building", recordStatus: "published", lat: 27.62, lng: 113.88 },
+      { id: "overlap-b", title: "Second Overlap Hall", address: "2 River Road", category: "Building", recordStatus: "published", lat: 27.62, lng: 113.88 },
+      { id: "overlap-far", title: "Faraway Hall", category: "Building", recordStatus: "published", lat: 27.9, lng: 114.4 }
+    ]
+  });
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await waitForCommunityMapReady(page);
+
+  await page.waitForTimeout(600);
+  await page.getByRole("button", { name: /Second Overlap Hall/ }).hover({ force: true });
+  const tooltip = page.locator(".map-point-tooltip");
+  await expect(tooltip).toHaveCount(1);
+  await expect(tooltip).toContainText("First Overlap Hall");
+  await expect(tooltip).toContainText("1 River Road");
+  await expect(tooltip).toContainText("Second Overlap Hall");
+  await expect(tooltip).toContainText("2 River Road");
+  await expect(tooltip).not.toContainText("Faraway Hall");
+  await expect(tooltip).toHaveCSS("color", "rgb(255, 255, 255)");
+
+  await page.mouse.move(0, 0);
+  await expect(tooltip).toHaveCount(0);
+});
+
+test("Jiangxi project area outline is on by default and can be switched off", async ({ page }) => {
+  await mockFirestoreCollections(page, { communityPlaces: COMMUNITY_CATEGORY_FIXTURES });
+  await page.goto("/map.html", { waitUntil: "domcontentloaded" });
+  await waitForCommunityMapReady(page);
+
+  const outline = page.locator("#map path.map-project-area-outline");
+  await expect(outline).toHaveCount(1);
+  await expect(outline).toHaveAttribute("fill", "none");
+  await expect(outline).toHaveAttribute("stroke", "#c8178a");
+  await expect(page.locator("#map path.map-project-area-outline-casing")).toHaveCount(1);
+
+  await openMapLayersTab(page);
+  const toggle = page.getByRole("checkbox", { name: "Jiangxi province outline", exact: true });
+  await expect(toggle).toBeChecked();
+  await toggle.uncheck();
+  await expect(outline).toHaveCount(0);
+  await expect(page.locator("#map path.map-project-area-outline-casing")).toHaveCount(0);
+  await toggle.check();
+  await expect(outline).toHaveCount(1);
+
+  await page.getByRole("button", { name: "About the project area outline" }).click();
+  await expect(page.getByText("not an official or legal administrative boundary", { exact: false })).toBeVisible();
 });
 
 test("Layers tab controls overlays while Leaflet retains basemap selection only", async ({ page }) => {

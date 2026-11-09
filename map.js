@@ -41,13 +41,30 @@ import {
   buildCommunityMarkerAccessibleName,
   getCommunityMapCategory,
   getCommunityMapCategoryByKey
-} from "./heritage-engine/community-map-categories.js?v=2026-07-26-community-category-icons";
+} from "./heritage-engine/community-map-categories.js?v=2026-11-04-solid-map-symbols";
 import {
   getOfficialMapCategory,
   getOfficialMapCategoryByKey,
   getPublishedOfficialMapCategories
-} from "./heritage-engine/official-map-categories.js?v=2026-07-27-official-category-filters";
+} from "./heritage-engine/official-map-categories.js?v=2026-11-04-solid-map-symbols";
 
+const PROJECT_AREA_GEOJSON_URL = "./data/jiangxi-province-outline.geojson?v=2026-11-06";
+const PROJECT_AREA_CASING_STYLE = Object.freeze({
+  className: "map-project-area-outline-casing",
+  color: "#ffffff",
+  weight: 6,
+  opacity: 0.85,
+  fill: false,
+  interactive: false
+});
+const PROJECT_AREA_STYLE = Object.freeze({
+  className: "map-project-area-outline",
+  color: "#c8178a",
+  weight: 3,
+  opacity: 1,
+  fill: false,
+  interactive: false
+});
 const OFFICIAL_HERITAGE_GEOJSON_URL = "./data/jiangxi-official-protected-heritage-map.geojson?v=2026-08-09-kuixing-pavilion-point";
 
 const firebaseConfig = {
@@ -115,27 +132,27 @@ const MAP_HELP_TOPICS = Object.freeze({
     title: "Ancient buildings",
     paragraphs: [
       "This category groups Official Heritage records whose protected subject is principally an older or historic building or built structure.",
-      "Ancient buildings is this project's simplified public Map category. It does not replace the original official classification, which remains visible in the individual record popup."
+      "Ancient buildings is this project's simplified public Map category. It does not replace the original official classification, which remains visible in the individual record details."
     ]
   },
   "official-category-important-modern-historic-sites": {
     title: "Important modern historic sites",
     paragraphs: [
       "This category groups Official Heritage records associated principally with important modern historic buildings, places, events or sites.",
-      "It is this project's simplified public Map category. The source register's original classification remains visible in the record popup, and this Map category does not create or alter the official designation."
+      "It is this project's simplified public Map category. The source register's original classification remains visible in the record details, and this Map category does not create or alter the official designation."
     ]
   },
   "official-category-archaeological-sites": {
     title: "Archaeological sites",
     paragraphs: [
       "This category groups Official Heritage records whose significance is principally archaeological or evidential, including places where physical remains or archaeological evidence are central to the official record.",
-      "It is a simplified public Map category, and the source register's original classification remains visible in the record popup. A displayed Point does not represent an archaeological extent or legal protection boundary."
+      "It is a simplified public Map category, and the source register's original classification remains visible in the record details. A displayed Point does not represent an archaeological extent or legal protection boundary."
     ]
   },
   "official-reviewed-points": {
     title: "Project-reviewed reference Points",
     paragraphs: [
-      "A filled diamond is a Point reviewed by this project to give visitors a useful public reference location for an Official Heritage record.",
+      "A solid rust symbol is a Point reviewed by this project to give visitors a useful public reference location for an Official Heritage record.",
       "The Point may not be an authority-supplied survey or GIS coordinate. It does not necessarily identify an entrance, centroid, complete extent, building footprint, legal centre or legal protection boundary.",
       "Open an individual record for its location evidence, source and estimated uncertainty, including any record-specific limitation."
     ],
@@ -145,12 +162,19 @@ const MAP_HELP_TOPICS = Object.freeze({
   "official-generalized-points": {
     title: "Generalized reference Points",
     paragraphs: [
-      "A hollow diamond represents a documented general vicinity. It intentionally does not claim an exact heritage location.",
+      "A white symbol with a rust outline represents a documented general vicinity. It intentionally does not claim an exact heritage location.",
       "The project may construct a Generalized Point from published reference evidence together with reviewed offsets, coverage or another approved method. Uncertainty and limitations are part of the representation.",
       "Open the individual record for the authoritative record-specific warning, evidence and construction details."
     ],
     link: "about-local-heritage.html#community-and-official-heritage",
     linkLabel: "How Generalized Points are represented"
+  },
+  "project-area": {
+    title: "Project area outline",
+    paragraphs: [
+      "The pink line marks Jiangxi Province, the area this community heritage project covers.",
+      "It is a simplified outline from Natural Earth, shown for orientation only. It is not an official or legal administrative boundary."
+    ]
   },
   "official-other-representations": {
     title: "Other supported Official Heritage representations",
@@ -242,9 +266,8 @@ function makeBluePinIcon(categoryKey) {
   return L.divIcon({
     className: `community-map-pin community-map-pin--${category.key}`,
     html: category.glyphSvg,
-    iconSize: [30, 42],
-    iconAnchor: [15, 42],
-    popupAnchor: [0, -42]
+    iconSize: [28, 28],
+    iconAnchor: [14, 14]
   });
 }
 
@@ -257,9 +280,8 @@ function makeOfficialHeritageIcon(markerClass = "reviewed", categoryKey) {
       `official-heritage-map-marker--${category.key}`
     ].join(" "),
     html: category.glyphSvg,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
-    popupAnchor: [0, -19]
+    iconSize: [28, 28],
+    iconAnchor: [14, 14]
   });
 }
 
@@ -463,6 +485,9 @@ function buildOfficialHeritagePopup(feature) {
   return article;
 }
 
+const MAP_HOVER_OVERLAP_PIXELS = 24;
+const MAP_HOVER_MAX_ENTRIES = 6;
+
 function initCommunityMap({
   containerId,
   mode,
@@ -488,6 +513,10 @@ function initCommunityMap({
   const customFilters = Array.from(document.querySelectorAll(".map-custom-filter"));
   const mapNominationToggle = document.getElementById("mapNominationToggle");
   const mapNominationStatus = document.getElementById("mapNominationStatus");
+  const mapGuide = document.getElementById("mapGuide");
+  const mapSelectedRecord = document.getElementById("mapSelectedRecord");
+  const mapSelectedRecordContent = document.getElementById("mapSelectedRecordContent");
+  const mapSelectedRecordBack = document.getElementById("mapSelectedRecordBack");
   const officialStatusEl = document.getElementById("officialHeritageStatus");
   const officialErrorEl = document.getElementById("officialHeritageError");
   const communityLayerToggle = document.getElementById("communityHeritageLayerToggle");
@@ -496,6 +525,8 @@ function initCommunityMap({
   );
   const communityCategoryStatusEl = document.getElementById("communityCategoryStatus");
   const officialLayerToggle = document.getElementById("officialHeritageLayerToggle");
+  const projectAreaLayerToggle = document.getElementById("projectAreaLayerToggle");
+  const projectAreaLayerError = document.getElementById("projectAreaLayerError");
   const officialCategoryAvailabilityEl = document.getElementById("officialCategoryAvailability");
   const officialCategoryControlsEl = document.getElementById("officialCategoryControls");
   const officialCategoryAllToggle = document.getElementById("officialCategoryAll");
@@ -506,6 +537,9 @@ function initCommunityMap({
   const officialGeneralizedPointStatusEl = document.getElementById("officialGeneralizedPointStatus");
 
   const map = L.map(containerId).setView(fallbackCenter, 13);
+  let selectedMapRecordLayer = null;
+  let mapHoverTooltip = null;
+  const mapHoverEntries = new Map();
   const communityLayer = L.layerGroup().addTo(map);
   const officialLayer = L.layerGroup();
   const baseLayers = createBaseLayers();
@@ -711,13 +745,13 @@ function initCommunityMap({
       const reviewedPointCount = features.filter(({ geometry, properties }) => (
         geometry?.type === "Point" && properties?.markerClass === "reviewed"
       )).length;
-      officialReviewedPointStatusEl.textContent = `Filled diamond. Currently displayed: ${reviewedPointCount}.`;
+      officialReviewedPointStatusEl.textContent = `Solid rust symbol. Currently displayed: ${reviewedPointCount}.`;
     }
     if (officialGeneralizedPointStatusEl) {
       const generalizedPointCount = features.filter(({ geometry, properties }) => (
         geometry?.type === "Point" && properties?.markerClass === "generalized"
       )).length;
-      officialGeneralizedPointStatusEl.textContent = `Hollow diamond. Currently displayed: ${generalizedPointCount}.`;
+      officialGeneralizedPointStatusEl.textContent = `White symbol with rust outline. Currently displayed: ${generalizedPointCount}.`;
     }
     availableOfficialCategories = getPublishedOfficialMapCategories(features);
 
@@ -800,10 +834,14 @@ function initCommunityMap({
       const category = getOfficialMapCategory(feature.properties.officialCategoryZh);
       const marker = L.marker([latitude, longitude], {
         icon: makeOfficialHeritageIcon(feature.properties.markerClass, category.key),
-        title: markerName,
         alt: markerName,
         keyboard: true,
         riseOnFocus: true
+      });
+      bindMapPointHover(marker, {
+        name: feature.properties.projectNameEn,
+        location: feature.properties.officialLocationTextZh,
+        locationLang: "zh-Hans"
       });
       marker.on("add", () => {
         const element = marker.getElement();
@@ -814,14 +852,10 @@ function initCommunityMap({
           if (!["Enter", " ", "Spacebar"].includes(event.key)) return;
           event.preventDefault();
           event.stopPropagation();
-          marker.openPopup();
+          selectMapRecord(buildOfficialHeritagePopup(feature), marker, { official: true });
         });
       });
-      marker.bindPopup(buildOfficialHeritagePopup(feature), {
-        className: "community-map-popup official-heritage-map-popup",
-        closeButton: true,
-        autoClose: true
-      });
+      bindMapRecordSelection(marker, () => buildOfficialHeritagePopup(feature), { official: true });
       return marker;
   }
 
@@ -832,7 +866,7 @@ function initCommunityMap({
     return coordinates.map(convertOfficialCoordinatesToLatLngs);
   }
 
-  function decorateOfficialGeometryLayer(layer, accessibleName, featureId) {
+  function decorateOfficialGeometryLayer(layer, accessibleName, featureId, feature) {
     layer.on("add", () => {
       const element = layer.getElement();
       if (!element) return;
@@ -847,7 +881,7 @@ function initCommunityMap({
         if (!["Enter", " ", "Spacebar"].includes(event.key)) return;
         event.preventDefault();
         event.stopPropagation();
-        layer.openPopup();
+        selectMapRecord(buildOfficialHeritagePopup(feature), layer, { official: true });
       });
     });
   }
@@ -862,12 +896,9 @@ function initCommunityMap({
       ? L.polyline(latLngs, presentation.pathOptions)
       : L.polygon(latLngs, presentation.pathOptions);
     const accessibleName = buildOfficialFeatureAccessibleName(feature);
-    decorateOfficialGeometryLayer(layer, accessibleName, feature.id);
-    layer.bindPopup(buildOfficialHeritagePopup(feature), {
-      className: "community-map-popup official-heritage-map-popup",
-      closeButton: true,
-      autoClose: true
-    });
+    decorateOfficialGeometryLayer(layer, accessibleName, feature.id, feature);
+    layer.bindTooltip(feature.properties.projectNameEn, { className: "map-point-tooltip", sticky: true });
+    bindMapRecordSelection(layer, () => buildOfficialHeritagePopup(feature), { official: true });
     return layer;
   }
 
@@ -976,6 +1007,150 @@ function initCommunityMap({
     });
   }
 
+  function hideMapHoverTooltip() {
+    if (!mapHoverTooltip) return;
+    mapHoverTooltip.remove();
+    mapHoverTooltip = null;
+  }
+
+  function buildMapHoverContent(entries) {
+    const list = document.createElement("div");
+    entries.slice(0, MAP_HOVER_MAX_ENTRIES).forEach(({ name, location, locationLang }) => {
+      const item = document.createElement("div");
+      item.className = "map-point-tooltip__item";
+      const nameEl = document.createElement("div");
+      nameEl.textContent = name;
+      item.appendChild(nameEl);
+      if (location) {
+        const locationEl = document.createElement("div");
+        locationEl.textContent = location;
+        if (locationLang) locationEl.lang = locationLang;
+        item.appendChild(locationEl);
+      }
+      list.appendChild(item);
+    });
+    const hiddenCount = entries.length - MAP_HOVER_MAX_ENTRIES;
+    if (hiddenCount > 0) {
+      const more = document.createElement("div");
+      more.className = "map-point-tooltip__item";
+      more.textContent = `and ${hiddenCount} more`;
+      list.appendChild(more);
+    }
+    return list;
+  }
+
+  function showMapHoverTooltip(marker) {
+    hideMapHoverTooltip();
+    const anchor = map.latLngToContainerPoint(marker.getLatLng());
+    const entries = Array.from(mapHoverEntries.entries())
+      .filter(([layer]) => map.hasLayer(layer))
+      .map(([layer, entry]) => ({
+        entry,
+        distance: map.latLngToContainerPoint(layer.getLatLng()).distanceTo(anchor)
+      }))
+      .filter(({ distance }) => distance <= MAP_HOVER_OVERLAP_PIXELS)
+      .sort((first, second) => first.distance - second.distance)
+      .map(({ entry }) => entry);
+
+    const mapSize = map.getSize();
+    const estimatedHeight = Math.min(entries.length, MAP_HOVER_MAX_ENTRIES + 1) * 48 + 24;
+    let direction = "top";
+    let offset = [0, -14];
+    if (anchor.x < 130) {
+      direction = "right";
+      offset = [14, 0];
+    } else if (anchor.x > mapSize.x - 130) {
+      direction = "left";
+      offset = [-14, 0];
+    } else if (anchor.y < estimatedHeight) {
+      direction = "bottom";
+      offset = [0, 14];
+    }
+    mapHoverTooltip = L.tooltip({ className: "map-point-tooltip", direction, offset })
+      .setLatLng(marker.getLatLng())
+      .setContent(buildMapHoverContent(entries));
+    mapHoverTooltip.addTo(map);
+  }
+
+  function bindMapPointHover(marker, entry) {
+    marker.on("mouseover", () => showMapHoverTooltip(marker));
+    marker.on("mouseout", hideMapHoverTooltip);
+    marker.on("remove", () => {
+      mapHoverEntries.delete(marker);
+      hideMapHoverTooltip();
+    });
+    marker.on("add", () => {
+      mapHoverEntries.set(marker, entry);
+      const element = marker.getElement();
+      if (!element || element.dataset.hoverBound === "true") return;
+      element.dataset.hoverBound = "true";
+      element.addEventListener("focus", () => {
+        if (element.matches(":focus-visible")) showMapHoverTooltip(marker);
+      });
+      element.addEventListener("blur", hideMapHoverTooltip);
+    });
+  }
+
+  function clearSelectedMapRecord({ restoreFocus = false } = {}) {
+    if (!selectedMapRecordLayer) return;
+    const layerElement = selectedMapRecordLayer.getElement?.();
+    layerElement?.classList.remove("is-selected-map-point");
+    selectedMapRecordLayer = null;
+    if (mapSelectedRecordContent) {
+      mapSelectedRecordContent.className = "";
+      mapSelectedRecordContent.replaceChildren();
+    }
+    if (mapSelectedRecord) mapSelectedRecord.hidden = true;
+    if (mapGuide) mapGuide.hidden = false;
+    if (restoreFocus) layerElement?.focus();
+  }
+
+  function selectMapRecord(content, layer, { official = false, moveFocus = true } = {}) {
+    if (!mapSelectedRecord || !mapSelectedRecordContent) return;
+    clearSelectedMapRecord();
+    hideMapHoverTooltip();
+    selectedMapRecordLayer = layer;
+    layer.getElement?.()?.classList.add("is-selected-map-point");
+
+    mapSelectedRecordContent.className = official ? "official-heritage-map-popup" : "community-map-record";
+    if (typeof content === "string") {
+      mapSelectedRecordContent.innerHTML = content;
+    } else {
+      mapSelectedRecordContent.replaceChildren(content);
+    }
+    mapSelectedRecord.hidden = false;
+    if (mapGuide) mapGuide.hidden = true;
+    setActiveToolPanel("help", { moveFocus: false });
+    mapSelectedRecord.closest("[data-tool-panel]")?.scrollTo?.({ top: 0 });
+
+    const stackedLayout = window.matchMedia("(max-width: 900px)").matches;
+    if (stackedLayout) {
+      const headerHeight = document.querySelector("body > header")?.offsetHeight || 0;
+      const recordTop = mapSelectedRecord.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: Math.max(recordTop - headerHeight - 12, 0) });
+    }
+    if (moveFocus) {
+      const heading = mapSelectedRecordContent.querySelector("h3");
+      if (heading) {
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
+      }
+    }
+  }
+
+  function bindMapRecordSelection(layer, buildContent, { official = false } = {}) {
+    layer.on("click", (event) => {
+      L.DomEvent.stop(event);
+      selectMapRecord(buildContent(), layer, { official });
+    });
+    layer.on("keypress", (event) => {
+      if (event.originalEvent?.key === "Enter") selectMapRecord(buildContent(), layer, { official });
+    });
+    layer.on("remove", () => {
+      if (selectedMapRecordLayer === layer) clearSelectedMapRecord();
+    });
+  }
+
   function setNominationStatus(message = "") {
     if (!mapNominationStatus) return;
     mapNominationStatus.textContent = message;
@@ -995,7 +1170,7 @@ function initCommunityMap({
   function startMapNominationMode() {
     isNominationPickMode = true;
     closeAllCustomFilters();
-    map.closePopup();
+    clearSelectedMapRecord();
     container.classList.add("is-nomination-pick-mode");
     if (mapNominationToggle) {
       mapNominationToggle.textContent = "Cancel nomination";
@@ -1197,7 +1372,7 @@ function initCommunityMap({
     }
 
     marker.setZIndexOffset(1000);
-    marker.openPopup();
+    marker.fire("focusrecord");
     map.setView(marker.getLatLng(), Math.max(map.getZoom(), 15));
     focusStatusEl.append(`Focused on ${cleanText(record.title) || "the requested public place"}.`);
     appendFocusLink("View its public record", recordUrl);
@@ -1233,17 +1408,20 @@ function initCommunityMap({
       const markerName = buildCommunityMarkerAccessibleName(point);
       const marker = L.marker([point.lat, point.lng], {
         icon: makeBluePinIcon(category.key),
-        title: markerName,
         alt: markerName,
         keyboard: true,
         riseOnFocus: true
-      }).addTo(communityLayer);
+      });
+      bindMapPointHover(marker, {
+        name: cleanText(point.title) || "Untitled community place",
+        location: getCommunityDisplayLocation(point)
+      });
+      marker.addTo(communityLayer);
       const markerElement = marker.getElement();
       markerElement?.setAttribute("aria-label", markerName);
-      marker.bindPopup(buildCommunityPlacePopupHtml(point), {
-        className: "community-map-popup",
-        closeButton: true,
-        autoClose: true
+      bindMapRecordSelection(marker, () => buildCommunityPlacePopupHtml(point));
+      marker.on("focusrecord", () => {
+        selectMapRecord(buildCommunityPlacePopupHtml(point), marker, { moveFocus: false });
       });
       markersById.set(point.id, marker);
       boundsItems.push([point.lat, point.lng]);
@@ -1447,6 +1625,36 @@ function initCommunityMap({
     }
   });
 
+  const projectAreaCasing = L.geoJSON(null, PROJECT_AREA_CASING_STYLE);
+  const projectAreaLine = L.geoJSON(null, PROJECT_AREA_STYLE);
+  const projectAreaLayer = L.layerGroup([projectAreaCasing, projectAreaLine]);
+  if (projectAreaLayerToggle?.checked) projectAreaLayer.addTo(map);
+  fetch(PROJECT_AREA_GEOJSON_URL)
+    .then((response) => {
+      if (!response.ok) throw new Error(`Project area outline request failed: ${response.status}`);
+      return response.json();
+    })
+    .then((data) => {
+      projectAreaCasing.addData(data);
+      projectAreaLine.addData(data);
+    })
+    .catch(() => {
+      map.removeLayer(projectAreaLayer);
+      if (projectAreaLayerToggle) {
+        projectAreaLayerToggle.checked = false;
+        projectAreaLayerToggle.disabled = true;
+      }
+      if (projectAreaLayerError) projectAreaLayerError.hidden = false;
+    });
+
+  projectAreaLayerToggle?.addEventListener("change", () => {
+    if (projectAreaLayerToggle.checked) {
+      projectAreaLayer.addTo(map);
+    } else {
+      map.removeLayer(projectAreaLayer);
+    }
+  });
+
   officialLayerToggle?.addEventListener("change", () => {
     if (officialLayerToggle.checked) {
       officialLayerState = "loading";
@@ -1472,12 +1680,21 @@ function initCommunityMap({
         return;
       }
       closeAllCustomFilters();
-      map.closePopup();
+      clearSelectedMapRecord({ restoreFocus: true });
     }
   });
 
+  map.on("zoomstart movestart", hideMapHoverTooltip);
+
+  mapSelectedRecordBack?.addEventListener("click", () => {
+    clearSelectedMapRecord({ restoreFocus: true });
+  });
+
   map.on("click", (event) => {
-    if (!isNominationPickMode) return;
+    if (!isNominationPickMode) {
+      clearSelectedMapRecord();
+      return;
+    }
     const { lat, lng } = event.latlng;
     stopMapNominationMode();
     window.location.href = buildNominationUrlFromCoordinates(lat, lng);

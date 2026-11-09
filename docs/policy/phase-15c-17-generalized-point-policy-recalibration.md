@@ -181,6 +181,13 @@ uncertainty value must not replace the underlying records.
 
 ### R8 — honest Point meaning
 
+> **Presentation update, 2026-11-05.** The public Map now draws a Generalized
+> reference Point as a white category symbol with a rust outline instead of a
+> hollow diamond. Read each present-tense "hollow diamond" in this decision
+> record as that symbol. The meaning, limitations, eligibility rules, and the
+> requirement to stay visually distinct from an ordinary Point are unchanged.
+> Record details now open in the Map Info tab, so read "popup" as those details.
+
 Use the existing canonical `generalized-reference-point` meaning and hollow
 diamond. The controlled public meaning is a representative location for the
 documented general vicinity. It must not claim a feature location, exact
