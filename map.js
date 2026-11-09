@@ -49,11 +49,19 @@ import {
 } from "./heritage-engine/official-map-categories.js?v=2026-11-04-solid-map-symbols";
 
 const PROJECT_AREA_GEOJSON_URL = "./data/jiangxi-province-outline.geojson?v=2026-11-06";
+const PROJECT_AREA_CASING_STYLE = Object.freeze({
+  className: "map-project-area-outline-casing",
+  color: "#ffffff",
+  weight: 6,
+  opacity: 0.85,
+  fill: false,
+  interactive: false
+});
 const PROJECT_AREA_STYLE = Object.freeze({
   className: "map-project-area-outline",
-  color: "#d9921a",
+  color: "#c8178a",
   weight: 3,
-  opacity: 0.9,
+  opacity: 1,
   fill: false,
   interactive: false
 });
@@ -164,7 +172,7 @@ const MAP_HELP_TOPICS = Object.freeze({
   "project-area": {
     title: "Project area outline",
     paragraphs: [
-      "The gold line marks Jiangxi Province, the area this community heritage project covers.",
+      "The pink line marks Jiangxi Province, the area this community heritage project covers.",
       "It is a simplified outline from Natural Earth, shown for orientation only. It is not an official or legal administrative boundary."
     ]
   },
@@ -1617,14 +1625,19 @@ function initCommunityMap({
     }
   });
 
-  const projectAreaLayer = L.geoJSON(null, PROJECT_AREA_STYLE);
+  const projectAreaCasing = L.geoJSON(null, PROJECT_AREA_CASING_STYLE);
+  const projectAreaLine = L.geoJSON(null, PROJECT_AREA_STYLE);
+  const projectAreaLayer = L.layerGroup([projectAreaCasing, projectAreaLine]);
   if (projectAreaLayerToggle?.checked) projectAreaLayer.addTo(map);
   fetch(PROJECT_AREA_GEOJSON_URL)
     .then((response) => {
       if (!response.ok) throw new Error(`Project area outline request failed: ${response.status}`);
       return response.json();
     })
-    .then((data) => projectAreaLayer.addData(data))
+    .then((data) => {
+      projectAreaCasing.addData(data);
+      projectAreaLine.addData(data);
+    })
     .catch(() => {
       map.removeLayer(projectAreaLayer);
       if (projectAreaLayerToggle) {

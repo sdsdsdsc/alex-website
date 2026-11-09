@@ -6,7 +6,7 @@ const APP_ORIGIN = "http://127.0.0.1:4173";
 const NOMINATION_UPLOAD_MODULE_VERSION = "2026-08-27-period-nominations";
 const PLACE_CONTRIBUTION_UPLOAD_MODULE_VERSION = "2026-07-11-13d-public-reply-query";
 const COMMUNITY_PUBLICATION_VERSION = "2026-08-17-community-publication-state";
-const MAP_PAGE_VERSION = "2026-11-06-project-area-outline";
+const MAP_PAGE_VERSION = "2026-11-08-pink-project-area";
 const OFFICIAL_HERITAGE_PREVIEW_VERSION = "2026-08-09-kuixing-pavilion-point";
 const OFFICIAL_CATEGORY_VERSION = "2026-11-04-solid-map-symbols";
 const OFFICIAL_HERITAGE_GEOJSON_PATH = "**/data/jiangxi-official-protected-heritage-map.geojson*";
@@ -1814,12 +1814,15 @@ test("Jiangxi project area outline is on by default and can be switched off", as
   const outline = page.locator("#map path.map-project-area-outline");
   await expect(outline).toHaveCount(1);
   await expect(outline).toHaveAttribute("fill", "none");
+  await expect(outline).toHaveAttribute("stroke", "#c8178a");
+  await expect(page.locator("#map path.map-project-area-outline-casing")).toHaveCount(1);
 
   await openMapLayersTab(page);
   const toggle = page.getByRole("checkbox", { name: "Jiangxi province outline", exact: true });
   await expect(toggle).toBeChecked();
   await toggle.uncheck();
   await expect(outline).toHaveCount(0);
+  await expect(page.locator("#map path.map-project-area-outline-casing")).toHaveCount(0);
   await toggle.check();
   await expect(outline).toHaveCount(1);
 
