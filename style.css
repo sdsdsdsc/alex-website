@@ -1283,6 +1283,11 @@ body.community-modal-open {
   color: #111;
 }
 
+.home-places-feature__media {
+  position: relative;
+  overflow: hidden;
+}
+
 .home-places-feature__image {
   display: block;
   width: 100%;
@@ -1293,21 +1298,23 @@ body.community-modal-open {
 
 .home-places-feature__panel {
   position: relative;
+  z-index: 1;
   max-width: 860px;
   margin: 0 auto;
   padding: clamp(44px, 6vw, 76px) 24px;
   text-align: center;
 }
 
-.home-places-feature__panel::before {
+.home-places-feature__panel::after {
   content: "";
   position: absolute;
   left: 50%;
-  top: -20px;
-  width: 42px;
-  height: 42px;
+  bottom: -22px;
+  width: 44px;
+  height: 44px;
   background: #fff;
   transform: translateX(-50%) rotate(45deg);
+  z-index: 2;
 }
 
 .home-places-feature__panel h2 {

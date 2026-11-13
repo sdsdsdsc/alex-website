@@ -70,15 +70,16 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// === Homepage image caption panel ===
-const imageCaption = document.querySelector(".image-caption");
-const imageCaptionToggle = imageCaption?.querySelector(".image-caption__toggle");
-const imageCaptionContent = imageCaption?.querySelector(".image-caption__content");
+// === Homepage image caption panels ===
+document.querySelectorAll(".image-caption").forEach((imageCaption) => {
+  const imageCaptionToggle = imageCaption.querySelector(".image-caption__toggle");
+  const imageCaptionContent = imageCaption.querySelector(".image-caption__content");
 
-imageCaptionToggle?.addEventListener("click", () => {
-  const isOpen = imageCaption.classList.toggle("is-open");
-  imageCaptionToggle.setAttribute("aria-expanded", String(isOpen));
-  imageCaptionContent?.setAttribute("aria-hidden", String(!isOpen));
+  imageCaptionToggle?.addEventListener("click", () => {
+    const isOpen = imageCaption.classList.toggle("is-open");
+    imageCaptionToggle.setAttribute("aria-expanded", String(isOpen));
+    imageCaptionContent?.setAttribute("aria-hidden", String(!isOpen));
+  });
 });
 
 // === Connecting Communities modal ===
